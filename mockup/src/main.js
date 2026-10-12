@@ -57,6 +57,8 @@ const tweens = [];
 let stakeN = 10;
 let mode = 'keeps'; // 'keeps' = 따먹기(딴 만큼 내 것) / 'fun' = 친선(끝나면 돌려받음)
 let match = null;
+let runId = 0; // 매치 세대 번호: 중간에 홈으로 나가면 이전 매치의 비동기 흐름·입력을 끊는다
+let cancelInput = null;
 let aimCtl = null; // 플레이어 조준 컨트롤러
 const piles = { me: [], ai: [] };
 
@@ -653,6 +655,10 @@ function backImage() {
 }
 
 function goHome() {
+  runId++;
+  cancelInput?.();
+  tension(false);
+  simWatch.resolve = null;
   // 파산 방지: 딱지가 바닥나면 문방구 할머니가 기본 딱지 10장 (리서치: 빈털터리 방지)
   if (Store.maxStake(profile) < 5) {
     const rng = mulberry32((Date.now() & 0xffff) + 11);
@@ -714,6 +720,7 @@ function aiStakeFor(n, rng) {
 
 async function startMatch() {
   sfx.unlock();
+  const my = ++runId;
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
   const seed = (Math.floor(performance.now() * 1000) ^ 0x5bd1e995) >>> 0;
@@ -747,9 +754,12 @@ async function startMatch() {
   puffer.p = 0;
   show('#hud');
   await vsSplash();
+  if (my !== runId) return;
   await introDrop();
+  if (my !== runId) return;
   match.turn = await rps();
-  await gameLoop();
+  if (my !== runId) return;
+  await gameLoop(my);
 }
 
 async function vsSplash() {
@@ -812,25 +822,30 @@ async function rps() {
   return match.rng() < 0.5 ? 'me' : 'ai';
 }
 
-async function gameLoop() {
-  while (table.liveDiscs().length > 0 && match.turnNo < MAX_TURNS) {
+async function gameLoop(my) {
+  const alive = () => my === runId && table;
+  while (alive() && table.liveDiscs().length > 0 && match.turnNo < MAX_TURNS) {
     const who = match.turn;
     await banner(who === 'me' ? t('yourTurn') : t('rivalTurn'), who === 'me' ? 'b-me' : 'b-ai');
     const left = table.liveDiscs().length;
     tension(left <= 3);
     const shot = who === 'me' ? await playerShot() : await aiShot();
     tension(false);
-    if (!table) return; // 홈으로 나감
+    if (!alive() || !shot) return; // 홈으로 나감
     await blow(shot, who);
     const flipped = await simulate();
+    if (!alive()) return;
     await react(flipped, who);
     await collect(flipped, who);
+    if (!alive()) return;
     await maybeOfferMic(flipped.length, who);
     if (table.liveDiscs().length === 0) break;
     await restack();
+    if (!alive()) return;
     match.turn = who === 'me' ? 'ai' : 'me';
     match.turnNo++;
   }
+  if (!alive()) return;
   await endMatch();
 }
 
@@ -894,7 +909,9 @@ function playerShot() {
     $('#hint').hidden = false;
     $('#hint').className = 'hint' + (first ? ' first' : '');
     $('#hintText').textContent = micEnabled && mic.ready ? t('hintMic') : `${t('hintAim')} · ${t('hintPull')}`;
+    cancelInput = () => finish(null);
     const finish = (shot) => {
+      cancelInput = null;
       el.removeEventListener('pointerdown', down);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
