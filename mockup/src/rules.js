@@ -23,19 +23,32 @@ function gauss(rng) {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
-// 숨 해석: shot = {power, lat, h} (power 는 플레이어 입력 그대로), n = 남은 딱지 수, top = 더미 꼭대기 높이
-// 너무 세게 불면 힘은 더 안 오르고, 숨이 차서 조준이 흔들린다 (게임 규칙으로 만든 '과유불급')
+// 숨 해석 (재윤님 3차 피드백: '딱 좋은 숨'인데 안 넘어가고 빨강이 더 넘어간다 / 세기별 차이가 안 보인다)
+//  - 약한 숨(초록 아래): 들어 올리는 힘이 급격히 줄어 '들썩'만 → 거의 안 넘어감
+//  - 초록 구간(정답의 0.78~1.0배): 전부 최대로 들어 올림 → 초록이면 확실히 넘어간다
+//  - 너무 센 숨(1.0배 초과): 들어 올리기보다 '밀어 날려 버리는' 돌풍(blast) → 딱지가 분필 원 밖으로 날아가 무효
+//  + 숨이 차서 조준이 약간 흔들림
+export const GREEN_LO = 0.78;
+export const WEAK_ZERO = +(globalThis.process?.env?.WEAK_ZERO ?? 0.45); // 이 비율 이하는 들썩도 거의 없음
+export const WEAK_FLOOR = +(globalThis.process?.env?.WEAK_FLOOR ?? 0.3); // 아주 약한 숨의 물리 세기(들썩)
+export const WEAK_EXP = +(globalThis.process?.env?.WEAK_EXP ?? 2.0);
+export const BLAST_SPAN = +(globalThis.process?.env?.BLAST_SPAN ?? 0.4); // 초록 끝에서 이만큼 더 세면 돌풍 최대
 export function resolveShot(shot, n, top, rng, overShake = 1) {
   const hi = sweetHiFor(n);
   const ratio = shot.power / hi;
-  if (shot.power <= hi) return { ...shot, power: PHYS_SWEET * ratio, ratio };
-  const ex = shot.power - hi;
-  const k = overShake * (0.95 / hi); // 적은 더미에서 과하게 불면 더 크게 흔들림
+  if (ratio < GREEN_LO) {
+    const lift = Math.pow(clamp((ratio - WEAK_ZERO) / (GREEN_LO - WEAK_ZERO), 0, 1), WEAK_EXP);
+    return { ...shot, power: WEAK_FLOOR + (PHYS_SWEET - WEAK_FLOOR) * lift, ratio, blast: 0 };
+  }
+  if (ratio <= 1.0) return { ...shot, power: PHYS_SWEET, ratio, blast: 0 };
+  const ex = ratio - 1.0;
+  const k = overShake;
   return {
     ...shot,
-    power: PHYS_SWEET + ex * 0.25,
-    lat: clamp(shot.lat + gauss(rng) * ex * 3.2 * k, -1.6, 1.6),
-    h: clamp(shot.h + gauss(rng) * ex * 2.4 * k, 0.03, top),
+    power: PHYS_SWEET,
+    blast: clamp(ex / BLAST_SPAN, 0, 1.4),
+    h: clamp(shot.h + gauss(rng) * ex * 1.2 * k, 0.03, top),
+    lat: 0,
     over: true,
     ratio,
   };

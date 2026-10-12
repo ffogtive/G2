@@ -301,6 +301,7 @@ function buildScene() {
   desk.position.y = -0.5;
   desk.receiveShadow = true;
   scene.add(desk);
+  buildChalkCircle();
   // 책상 모서리 띠 (클래시식 두툼한 테두리)
   const trim = new THREE.Mesh(new THREE.BoxGeometry(22.6, 0.5, 16.6), new THREE.MeshStandardMaterial({ color: 0x8a5a2f, roughness: 0.6 }));
   trim.position.y = -1.0;
@@ -339,6 +340,50 @@ function layout() {
   bc.width = Math.round(w * dpr); bc.height = Math.round(h * dpr); bc._dpr = dpr;
 }
 
+// ── 분필 원 (재윤님 3차: 너무 세게 불면 손해인 이유를 '눈에 보이는 규칙'으로) ─────────────
+// 골목 딱지치기의 분필 원: 원 밖으로 날아간 딱지는 그림이 보여도 무효 → 다시 쌓는다.
+let chalk = null;
+function buildChalkCircle() {
+  const R = table?.T?.circleR ?? 3.2;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 512;
+  const ctx = cv.getContext('2d');
+  const rng = mulberry32(77);
+  ctx.translate(256, 256);
+  const rr = 256 * (R / (R + 0.5));
+  ctx.lineCap = 'round';
+  // 손으로 두 번 그은 듯한 분필 선 (살짝 어긋난 두 바퀴 + 가루)
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.strokeStyle = `rgba(255,255,250,${pass ? 0.55 : 0.8})`;
+    ctx.lineWidth = pass ? 7 : 10;
+    ctx.beginPath();
+    for (let i = 0; i <= 120; i++) {
+      const a = (i / 120) * Math.PI * 2 + pass * 0.3;
+      const r = rr + Math.sin(a * 3 + pass) * 3 + (rng() - 0.5) * 2.5;
+      i ? ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 900; i++) { const a = rng() * Math.PI * 2, r = rr + (rng() - 0.5) * 14; ctx.fillRect(Math.cos(a) * r, Math.sin(a) * r, 2, 2); }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(255,255,250,0.35)';
+  for (let i = 0; i < 260; i++) { const a = rng() * Math.PI * 2, r = rr + (rng() - 0.5) * 30; ctx.fillRect(Math.cos(a) * r, Math.sin(a) * r, 2, 2); }
+  const tx = new THREE.CanvasTexture(cv);
+  tx.colorSpace = THREE.SRGBColorSpace;
+  const size = (R + 0.5) * 2;
+  chalk = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false, opacity: 0.85 }));
+  chalk.rotation.x = -Math.PI / 2;
+  chalk.position.y = 0.004;
+  chalk.renderOrder = 1;
+  scene.add(chalk);
+}
+// 원 밖으로 날아간 딱지가 있을 때: 분필 원이 번쩍 (규칙을 가리킨다)
+function chalkPulse() {
+  if (!chalk) return;
+  addTween(0.8, (k) => { chalk.material.color.setRGB(1, 1 - 0.55 * Math.sin(Math.PI * k), 1 - 0.55 * Math.sin(Math.PI * k)); chalk.material.opacity = 0.85 + 0.15 * Math.sin(Math.PI * k); }, () => { chalk.material.color.setRGB(1, 1, 1); chalk.material.opacity = 0.85; });
+}
+
 // ── 조준 기즈모 ──────────────────────────────────────────
 let reticle, layerRing, aimLine, ghostRing;
 function buildAimGizmo() {
@@ -357,8 +402,8 @@ function buildAimGizmo() {
   ghostRing.visible = false;
   scene.add(ghostRing);
   layerRing = new THREE.Mesh(
-    new THREE.TorusGeometry(DISC_R * 1.08, 0.025, 8, 64),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthTest: false }),
+    new THREE.TorusGeometry(DISC_R * 1.1, 0.045, 8, 64),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthTest: false }),
   );
   layerRing.rotation.x = Math.PI / 2;
   layerRing.renderOrder = 9;
@@ -374,7 +419,7 @@ function buildAimGizmo() {
 function powerColor(p) {
   if (!guideOn()) return 0xffffff; // 가이드 끝나면 색으로 정답을 알려 주지 않는다
   const n = liveCount();
-  if (p > sweetHiFor(n) * 1.05) return 0xff4d4d;
+  if (p > sweetHiFor(n)) return 0xff4d4d;
   if (p >= sweetLoFor(n)) return 0x6dff5a;
   return 0xffe066;
 }
@@ -589,12 +634,12 @@ function drawPuffer() {
   ctx.strokeStyle = 'rgba(109,255,90,0.55)';
   ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_LO), ang(SWEET_HI)); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,77,77,0.5)';
-  ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_HI + 0.05), a1); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_HI + 0.02), a1); ctx.stroke();
   const pv = snap ? puffer.snapP : p;
   if (pv > 0.01) {
     ctx.lineWidth = S * 0.045;
     const hiN = sweetHiFor(n);
-    ctx.strokeStyle = pv > hiN * 1.05 ? '#ff4d4d' : pv >= sweetLoFor(n) ? '#6dff5a' : '#ffe066';
+    ctx.strokeStyle = pv > hiN ? '#ff4d4d' : pv >= sweetLoFor(n) ? '#6dff5a' : '#ffe066';
     ctx.beginPath(); ctx.arc(0, 0, R, a0, ang(Math.min(pv, POWER_MAX))); ctx.stroke();
   }
   ctx.restore();
@@ -668,7 +713,7 @@ function syncMeshes() {
   }
 }
 
-const simWatch = { revealed: new Set(), count: 0, lastClack: 0, vy: new Map(), resolve: null, simTime: 0, quiet: 0, glowed: new Set() };
+const simWatch = { revealed: new Set(), count: 0, lastClack: 0, vy: new Map(), resolve: null, simTime: 0, quiet: 0, glowed: new Set(), outShown: new Set(), outs: 0 };
 
 function frame(now) {
   requestAnimationFrame(frame);
@@ -747,7 +792,14 @@ function watchSim() {
     simWatch.vy.set(d.id, v.y);
     const up = table.faceUp(d);
     const speed = Math.hypot(v.x, v.y, v.z);
-    if (up > 0.5 && speed < 2.2 && !simWatch.revealed.has(d.id)) {
+    if (up > 0.5 && speed < 2.2 && !simWatch.revealed.has(d.id) && !table.inCircle(d)) {
+      if (!simWatch.outShown.has(d.id) && !d.off) {
+        simWatch.outShown.add(d.id);
+        const p = d.body.translation();
+        fx.text(new THREE.Vector3(p.x, p.y + 0.5, p.z), 'OUT', 'out');
+        sfx.tone(196, 0.12, 'square', 0.05);
+      }
+    } else if (up > 0.5 && speed < 2.2 && !simWatch.revealed.has(d.id)) {
       simWatch.revealed.add(d.id);
       simWatch.count++;
       sfx.flip(simWatch.count - 1);
@@ -1112,11 +1164,10 @@ function pointerAim(ev) {
   const hit = new THREE.Vector3();
   if (!ray.ray.intersectPlane(plane, hit)) return null;
   const dir = toCam.clone().negate();
-  const side = new THREE.Vector3(-dir.z, 0, dir.x);
-  const lat = clamp(new THREE.Vector3(hit.x - c.x, 0, hit.z - c.z).dot(side), -1.35, 1.35);
+  // 조준 = '몇 번째 층을 부나'(높이)만. 입은 언제나 더미 정면 한가운데를 향한다 (재윤님 3차: 좌우 동그라미가 비논리적)
   const top = table.columnTop();
   const h = clamp(hit.y, 0.03, Math.max(0.05, top - 0.02));
-  return { dir: { x: dir.x, z: dir.z }, lat, h, power: 0 };
+  return { dir: { x: dir.x, z: dir.z }, lat: 0, h, power: 0 };
 }
 
 function playerShot() {
@@ -1147,7 +1198,7 @@ function playerShot() {
       sfx.unlock();
       const s = pointerAim(ev);
       if (!s) return;
-      aiming = { ...s, sx: ev.clientX, sy: ev.clientY, lat0: s.lat };
+      aiming = { ...s, sx: ev.clientX, sy: ev.clientY };
       el.setPointerCapture?.(ev.pointerId);
       puffer.mode = 'charge';
       puffer.p = 0;
@@ -1181,9 +1232,7 @@ function playerShot() {
       }
       if (micEnabled && mic.ready) return;
       const dy = ev.clientY - aiming.sy;
-      const dx = ev.clientX - aiming.sx;
       aiming.power = clamp(dy / (minDim * feel.pull), 0, POWER_MAX);
-      aiming.lat = clamp(aiming.lat0 - dx / (minDim * 0.5), -1.35, 1.35);
       puffer.p = aiming.power;
       inhale?.set(aiming.power);
       // 절대 피치 계단: 숨 크기를 8칸 음계로 (같은 크기 = 같은 음 → 귀로 익히는 자)
@@ -1224,18 +1273,18 @@ async function aiShot() {
   const dir = toCam.clone(); // 상대는 맞은편에서 내 쪽으로 분다
   const shot = {
     dir: { x: dir.x, z: dir.z },
-    lat: clamp(g() * 0.35 / feel.aiSkill, -1.2, 1.2),
+    lat: 0,
     h: clamp(top * clamp(0.68 + 0.18 * clamp(((match.aiSkill || 1) - 1) / 1.2, 0, 1) + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
-    power: clamp(sweetHiFor(table.liveDiscs().length) * (0.92 + g() * 0.14 / feel.aiSkill), 0.2, POWER_MAX),
+    power: clamp(sweetHiFor(table.liveDiscs().length) * (0.89 + g() * 0.14 / feel.aiSkill), 0.2, POWER_MAX),
   };
   puffer.mode = 'charge';
   puffer.who = 'ai';
   $('#puffWrap').classList.add('ai');
   // 조준 흔들기 연출
-  const startLat = shot.lat + (rng() - 0.5) * 1.6, startH = top * rng();
+  const startH = top * rng();
   await addTween(0.9, (k) => {
     const e = easeInOut(k);
-    const s = { ...shot, lat: lerp(startLat, shot.lat, e), h: lerp(startH, shot.h, e), power: shot.power * e };
+    const s = { ...shot, h: lerp(startH, shot.h, e), power: shot.power * e };
     puffer.p = s.power;
     showGizmo(s, powerColor(s.power));
   });
@@ -1251,12 +1300,12 @@ function resolveShot(shot, rng) {
 
 // 불고 난 뒤 '숨 결과' 피드백 — 게이지 없이 감을 익히게 하는 결과 지식(knowledge of results)
 function breathFeedback(ratio, who) {
-  const key = ratio < 0.62 ? 'fbTooWeak' : ratio < 0.86 ? 'fbWeak' : ratio <= 1.0 ? 'fbPerfect' : ratio <= 1.15 ? 'fbStrong' : 'fbTooStrong';
+  const key = ratio < 0.66 ? 'fbTooWeak' : ratio < Rules.GREEN_LO ? 'fbWeak' : ratio <= 1.0 ? 'fbPerfect' : ratio <= 1.12 ? 'fbStrong' : 'fbTooStrong';
   if (who === 'me') {
     const st = guideStage();
     if (key === 'fbPerfect' && st >= 2) sfx.tone(1568, 0.25, 'sine', 0.12); // '칭' — 좋은 숨엔 소리
     if (st === 3) return; // 16번째 숨부터 글자 없음
-    if (st === 2 && key !== 'fbPerfect' && ratio >= 0.68 && ratio <= 1.18) return; // 크게 틀렸을 때만 교정
+    if (st === 2 && key !== 'fbPerfect' && ratio >= 0.7 && ratio <= 1.12) return; // 크게 틀렸을 때만 교정
   } else if (who === 'ai' && guideStage() >= 2) return;
   const el = $('#breathFb');
   el.textContent = (who === 'ai' ? t('rival') + ': ' : '') + t(key);
@@ -1293,10 +1342,18 @@ async function blow(rawShot, who) {
   flash(0.55 * Math.min(1, rawShot.power));
   shockwave(table.pileCenter(), rawShot.power);
   // 물리에 바람 적용
-  table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power });
+  table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power, blast: shot.blast || 0 });
+  if (shot.blast > 0.15) {
+    // 너무 센 숨 = 돌풍: 휘잉~ 먼지바람이 더미를 통째로 밀어 버린다 (들어 올리지 못하고 날려 버림)
+    sfx.whoosh();
+    shake += 0.25 * Math.min(1, shot.blast);
+    for (let i = 0; i < 3; i++) fx.emit({ at: { x: g.aim.x, y: 0.15 + i * 0.4, z: g.aim.z }, n: 22, color: 0xd9c7a8, speed: 7 * Math.min(1.2, shot.blast), up: 0.6, life: 0.9, size: 0.38, gravity: 0.5, dir: { x: g.dir.x, y: 0, z: g.dir.z } });
+  }
   simWatch.revealed = new Set(table.liveDiscs().filter((d) => table.faceUp(d) > 0.5).map((d) => d.id));
   simWatch.count = 0;
   simWatch.glowed = new Set();
+  simWatch.outShown = new Set();
+  simWatch.outs = 0;
   simWatch.shooter = who;
   simWatch.simTime = 0;
   simWatch.quiet = 0;
@@ -1311,7 +1368,16 @@ function simulate() {
   return new Promise((resolve) => {
     simWatch.resolve = () => {
       simOn = false;
-      const flipped = table.liveDiscs().filter((d) => table.faceUp(d) > 0.2);
+      // 분필 원 안에서 그림이 보이는 것만 내 것. 원 밖(또는 책상 밖)으로 날아간 건 그림이 보여도 무효 → 다시 쌓임
+      const flipped = table.liveDiscs().filter((d) => table.faceUp(d) > 0.2 && table.inCircle(d));
+      const outs = table.liveDiscs().filter((d) => !table.inCircle(d));
+      simWatch.outs = outs.length;
+      for (const d of outs) {
+        if (simWatch.outShown.has(d.id) || d.off) continue;
+        const p = d.body.translation();
+        fx.text(new THREE.Vector3(p.x, p.y + 0.5, p.z), 'OUT', 'out');
+      }
+      if (outs.length) chalkPulse();
       resolve(flipped);
     };
   });
@@ -1322,7 +1388,8 @@ async function react(flipped, who) {
   const remainingBefore = table.liveDiscs().length;
   let key = 'miss', cls = 'r0';
   const nearMiss = table.liveDiscs().some((d) => Math.abs(table.faceUp(d)) < 0.45);
-  if (n === 0) { key = nearMiss ? 'close' : 'miss'; cls = 'r0'; }
+  const blown = simWatch.outs >= 2 && simWatch.outs >= n;
+  if (n === 0) { key = blown ? 'blownOut' : nearMiss ? 'close' : 'miss'; cls = 'r0'; }
   else if ((n >= 2 && n === remainingBefore) || n >= 12) { key = 'perfect'; cls = 'r4'; }
   else if (n >= Math.max(6, Math.ceil(remainingBefore * 0.5))) { key = 'amazing'; cls = 'r3'; }
   else if (n >= 3) { key = 'great'; cls = 'r2'; }
@@ -1336,7 +1403,9 @@ async function react(flipped, who) {
     fx.confetti({ x: 0, y: 0, z: 0 }, cls === 'r4' ? 220 : 110);
     sfx.big();
   }
-  const label = n > 0 ? `${t(key)} <small>${n} ${t('flipped')}</small>` : t(key);
+  let label = n > 0 ? `${t(key)} <small>${n} ${t('flipped')}</small>` : t(key);
+  if (simWatch.outs > 0 && (blown || n > 0)) label += `<small class="outs">${fmt(t('outCount'), { k: simWatch.outs })}</small>`;
+  if (simWatch.outs > 0 && !profile.settings.outTipSeen) { profile.settings.outTipSeen = true; Store.save(profile); setTimeout(() => toast(t('outTip')), 900); }
   const el = $('#big');
   el.innerHTML = label;
   el.className = 'big ' + cls + (who === 'ai' ? ' ai' : '');

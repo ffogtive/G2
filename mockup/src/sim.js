@@ -11,6 +11,8 @@ import RAPIER from '@dimforge/rapier3d-compat';
 export const DISC_R = 1.0;
 export const DISC_H = 0.11; // 게임용 과장 두께(실물보다 두꺼움 → 장난감 같은 볼륨감 + 물리 안정)
 export const TABLE_R = 9.0;
+// 책상 크기(렌더러의 책상 상자와 같게). 돌풍에 책상 밖으로 날아간 딱지는 떨어져서 'off' → 다시 쌓기 때 회수
+export const DESK_HX = 11, DESK_HZ = 8;
 
 export const TUNE = {
   gravity: 38,
@@ -36,6 +38,11 @@ export const TUNE = {
   sweet: 0.938, // 이 파워를 넘으면 텀블(혼돈) 시작
   tumble: 9.931,
   jitter: 0.12, // 결과의 변동(같은 입력 → 조금씩 다른 결과)
+  // 돌풍(너무 센 숨, 재윤님 3차 피드백): 들어 올리기보다 '밀어 날려 버림' → 분필 원 밖이면 무효
+  blastLift: 0.6, // blast=1 일 때 들어 올림 감소 비율
+  blastPush: 15, // blast=1 일 때 가장자리 미는 힘 배수
+  blastShove: 3, // blast=1 일 때 중심을 수평으로 미는 힘(미끄러져 날아감)
+  circleR: 3.2, // 분필 원 반지름 (딱지 반지름 1 기준). 원 밖에 떨어진 딱지는 그림이 보여도 무효
 };
 
 export async function initPhysics() {
@@ -101,7 +108,7 @@ export class Table {
     ip.erp = this.T.erp;
     // 바닥(책상)
     const ground = this.world.createRigidBody(RAPIER.RigidBodyDesc.fixed().setTranslation(0, -0.5, 0));
-    this.world.createCollider(RAPIER.ColliderDesc.cuboid(TABLE_R * 2, 0.5, TABLE_R * 2).setFriction(0.9), ground);
+    this.world.createCollider(RAPIER.ColliderDesc.cuboid(DESK_HX, 0.5, DESK_HZ).setFriction(0.9), ground);
     this.discs = []; // {id, body, collider, cardId, owner:null}
     this.puff = null;
     this.time = 0;
@@ -154,6 +161,7 @@ export class Table {
 
   applyRestack(targets) {
     for (const { d, p, q } of targets) {
+      if (d.off) { d.off = false; d.body.setGravityScale(1, true); }
       d.body.setTranslation(p, true);
       d.body.setRotation(q, true);
       d.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
@@ -192,6 +200,7 @@ export class Table {
   maxSpeed() {
     let m = 0;
     for (const d of this.liveDiscs()) {
+      if (d.off) continue;
       const v = d.body.linvel();
       const w = d.body.angvel();
       m = Math.max(m, Math.hypot(v.x, v.y, v.z), Math.hypot(w.x, w.y, w.z) * 0.5);
@@ -217,13 +226,13 @@ export class Table {
 
   // 바람!  aim: 맞힐 지점(원기둥 표면 근처 x,y,z), dir: 부는 수평 방향(x,z), dist: 입~조준점 거리,
   //         power: 0..1 (1 초과 = 오버파워), pitch: 아래로 내려 부는 각(라디안)
-  blow({ aim, dir, power, dist = 2.6, pitch = 0.1, origin }) {
+  blow({ aim, dir, power, dist = 2.6, pitch = 0.1, origin, blast = 0 }) {
     const len = Math.hypot(dir.x, dir.z) || 1;
     const dx = dir.x / len, dz = dir.z / len;
     const cp = Math.cos(pitch), sp = Math.sin(pitch);
     const d = { x: dx * cp, y: -sp, z: dz * cp };
     const o = origin ?? { x: aim.x - d.x * dist, y: aim.y - d.y * dist, z: aim.z - d.z * dist };
-    this.puff = { o, d, power, t: 0, jit: new Map() };
+    this.puff = { o, d, power, t: 0, jit: new Map(), blast };
     // 딱지별 변동 계수(같은 입력도 결과가 조금씩 다름 → 물리의 가변 보상)
     for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
   }
@@ -268,9 +277,11 @@ export class Table {
       const k = s * m * T.dt;
       // 파워 곡선: 들어 올림은 파워에 비례, 미는 힘은 파워^pushExp → 너무 세게 불면 '뒤집히기보다 밀려남'(스윗스팟 생성)
       const pw = P.power;
-      const liftK = T.lift * liftF * k;
-      const pushK = T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k;
+      const bl = P.blast || 0;
+      const liftK = T.lift * liftF * k * (1 - T.blastLift * Math.min(1, bl));
+      const pushK = T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k * (1 + T.blastPush * bl);
       b.applyImpulseAtPoint({ x: P.d.x * pushK, y: liftK, z: P.d.z * pushK }, e, true);
+      if (bl > 0) b.applyImpulse({ x: P.d.x * T.push * T.blastShove * bl * k, y: 0, z: P.d.z * T.push * T.blastShove * bl * k }, true);
       // 오버파워: 무작위 텀블(결과가 운에 맡겨짐)
       if (pw > T.sweet) {
         const ch = (pw - T.sweet) * T.tumble * k;
@@ -288,12 +299,16 @@ export class Table {
     this.lastHits = this.puff ? this.applyWind() : null;
     this.world.step();
     this.time += this.T.dt;
-    // 책상 밖으로 너무 멀리 날아간 딱지는 테이블 가장자리 근처로 클램프(게임 가독성)
+    // 책상 밖으로 떨어진 딱지: 책상 밑에 멈춰 둔다(off). 무효 처리되고 다음 '다시 쌓기'에서 회수
     for (const d of this.liveDiscs()) {
+      if (d.off) continue;
       const p = d.body.translation();
       if (p.y < -3) {
-        d.body.setTranslation({ x: p.x * 0.5, y: 1, z: p.z * 0.5 }, true);
-        d.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+        d.off = true;
+        d.body.setGravityScale(0, false);
+        d.body.setLinvel({ x: 0, y: 0, z: 0 }, false);
+        d.body.setAngvel({ x: 0, y: 0, z: 0 }, false);
+        d.body.setTranslation({ x: p.x, y: -4, z: p.z }, false);
       }
     }
   }
@@ -306,7 +321,14 @@ export class Table {
       this.step();
       if (!this.puff && i > 30 && this.isSettled()) break;
     }
-    return { steps: i, flipped: this.liveDiscs().filter((d) => this.faceUp(d) > 0.2) };
+    return { steps: i, flipped: this.liveDiscs().filter((d) => this.faceUp(d) > 0.2 && this.inCircle(d)) };
+  }
+
+  // 분필 원 안인가 (원 밖에 떨어진 딱지는 그림이 보여도 무효 → 다시 쌓임)
+  inCircle(d) {
+    if (d.off) return false;
+    const p = d.body.translation();
+    return Math.hypot(p.x, p.z) <= this.T.circleR;
   }
 
   remove(d) {

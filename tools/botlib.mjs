@@ -9,25 +9,26 @@ export function mulberry32(seed) {
 }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-// 정책: h=조준 높이 비율, p=더미 양에 맞는 숨 대비 비율
+// 정책: h=조준 높이 비율, p=더미 양에 맞는 숨 대비 비율 (초록 구간 0.78~1.0 의 가운데 0.89 를 노린다)
+// 좌우 조준은 없앴다(3차 피드백) → 입은 항상 더미 정면 한가운데
 export const BOTS = {
-  learner: { hMean: 0.82, hSd: 0.12, latSd: 0.3, pMean: 0.95, pSd: 0.15 }, // 보정 기준: 감 익히는 중인 보통 사람
-  typical: { hMean: 0.86, hSd: 0.08, latSd: 0.25, pMean: 0.95, pSd: 0.08 },
-  novice: { hMean: 0.6, hSd: 0.25, latSd: 0.5, pMean: 0.9, pSd: 0.25 },
-  expert: { hMean: 0.9, hSd: 0.04, latSd: 0.12, pMean: 0.97, pSd: 0.04 },
+  learner: { hMean: 0.82, hSd: 0.12, pMean: 0.89, pSd: 0.15 }, // 보정 기준: 감 익히는 중인 보통 사람
+  typical: { hMean: 0.86, hSd: 0.08, pMean: 0.89, pSd: 0.08 },
+  novice: { hMean: 0.6, hSd: 0.25, pMean: 0.85, pSd: 0.25 },
+  expert: { hMean: 0.9, hSd: 0.04, pMean: 0.9, pSd: 0.04 },
 };
 
 function puff(t, rng, pol, aimH) {
   const n = t.liveDiscs().length;
   const top = t.columnTop();
   const raw = {
-    lat: gauss(rng) * pol.latSd,
+    lat: 0,
     h: clamp(aimH ?? top * clamp(pol.hMean + gauss(rng) * pol.hSd, 0.03, 1), 0.03, top),
     power: sweetHiFor(n) * clamp(pol.pMean + gauss(rng) * pol.pSd, 0.2, 1.3),
   };
   const s = resolveShot(raw, n, top, rng, 1);
   const c = t.pileCenter();
-  t.blow({ aim: { x: c.x - 1, y: s.h, z: c.z + s.lat }, dir: { x: 1, z: 0 }, power: s.power });
+  t.blow({ aim: { x: c.x - 1, y: s.h, z: c.z }, dir: { x: 1, z: 0 }, power: s.power, blast: s.blast || 0 });
   const flipped = t.runUntilSettled(4).flipped;
   for (const d of flipped) t.remove(d);
   return flipped;
@@ -47,7 +48,7 @@ function buildTable(spec, rng) {
 
 // 상대 AI 정책 (main.js aiShot 과 동일): 실력이 오르면 조준 높이도 맨 위 근처로 (고수는 위를 노린다)
 export function aiPolicy(skill) {
-  return { hMean: 0.68 + 0.18 * clamp((skill - 1) / 1.2, 0, 1), hSd: 0.17 / skill, latSd: 0.35 / skill, pMean: 0.92, pSd: 0.14 / skill };
+  return { hMean: 0.68 + 0.18 * clamp((skill - 1) / 1.2, 0, 1), hSd: 0.17 / skill, pMean: 0.89, pSd: 0.14 / skill };
 }
 
 export function playLevel(spec, rng, bot) {
