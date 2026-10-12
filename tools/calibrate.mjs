@@ -6,7 +6,8 @@ import { levelSpec } from '../mockup/src/levels.js';
 await initPhysics();
 const [from, to, tries = 24, out = 'tools/scratch/cal.json'] = process.argv.slice(2);
 const res = {};
-for (let n = +from; n <= +to; n++) {
+const list = process.env.LIST ? process.env.LIST.split(',').map(Number) : Array.from({ length: +to - +from + 1 }, (_, i) => +from + i);
+for (const n of list) {
   const target = levelSpec(n).rate;
   let lo = 0, hi = 1, best = null;
   for (let it = 0; it < 5; it++) {

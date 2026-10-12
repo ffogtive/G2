@@ -317,6 +317,12 @@ function buildScene() {
 let camBase = new THREE.Vector3(0, 7.2, 10.5);
 let camTarget = new THREE.Vector3(0, 0.9, 0);
 let pileX = 4.2;
+// 판 시작 때 카메라를 즉시 제자리에 (홈 회전 카메라에서 천천히 끌려오며 첫 프레임이 엉뚱해지는 것 방지)
+function snapCam() {
+  camera.position.copy(camBase);
+  camera.lookAt(camTarget);
+}
+
 function layout() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
@@ -422,7 +428,7 @@ function hideGizmo() {
 // ── 숨 줄기 (재윤님 피드백 2: '입 → 바람 → 딱지' 인과를 눈으로) ─────────────
 // 당기는 동안: 입과 조준점 사이에 숨 줄기가 생기고 공기가 입으로 빨려 들어간다(들숨).
 // 놓으면: 줄기가 번쩍이며 공기가 조준점으로 쏟아진다(날숨). 이후 3D 에선 가장자리 밑으로 공기가 파고드는 입자.
-const breath = { mode: 'off', p: 0, t: 0, who: 'me', aim: null };
+const breath = { mode: 'off', p: 0, t: 0, who: 'me', aim: null, ratio: 1 };
 function drawBreath(dt) {
   const cv = $('#breath');
   const ctx = cv.getContext('2d');
@@ -456,11 +462,16 @@ function drawBreath(dt) {
   const blow = breath.mode === 'blow';
   const N = blow ? 26 : 16;
   ctx.lineCap = 'round';
+  // 실패 서명(글자 없이 원인 보이기): 숨 부족 = 닿기 전에 흐려지며 위로 흩어짐 / 과호흡 = 지그재그로 흔들림
+  const weak = blow && breath.ratio < 0.75;
+  const reach = weak ? 0.45 + 0.55 * (breath.ratio / 0.75) : 1;
+  const zig = blow && breath.ratio > 1.1 ? Math.min(1, (breath.ratio - 1.1) * 4) : 0;
   for (let i = 0; i < N; i++) {
-    const u = blow ? Math.min(1, breath.t * 3 + (i / N) * 0.55) : 1 - ((breath.t * (0.5 + p * 0.6) + i / N) % 1);
-    const off = Math.sin(i * 12.9898) * 0.85;
+    let u = blow ? Math.min(reach, breath.t * 3 + (i / N) * 0.55) : 1 - ((breath.t * (0.5 + p * 0.6) + i / N) % 1);
+    const off = Math.sin(i * 12.9898) * 0.85 + zig * Math.sin(u * 18 + breath.t * 40) * 1.4;
     const wl = w0 + (w1 - w0) * u;
-    const x = mx + dx * u + nx * off * wl, y = my + dy * u + ny * off * wl;
+    let x = mx + dx * u + nx * off * wl, y = my + dy * u + ny * off * wl;
+    if (weak && u >= reach - 0.02) y -= (breath.t * 3 + (i / N) * 0.55 - reach) * 120 * dpr; // 힘이 빠져 위로 흩어짐
     const len = (blow ? 30 : 9) * dpr * (0.5 + p);
     const sgn = blow ? 1 : -1;
     ctx.strokeStyle = `rgba(255,255,255,${blow ? 0.95 * (1 - breath.t / 0.55) : 0.55})`;
@@ -951,6 +962,7 @@ async function startMatch(opts = {}) {
   syncMeshes();
   state = 'match';
   camZoom = 0;
+  snapCam();
   $('#rivalName').textContent = rivalName;
   $('#rivalAva').src = faceImage(rivalCard.id, 48);
   $('#meScore').textContent = '0';
@@ -964,7 +976,8 @@ async function startMatch(opts = {}) {
   if (my !== runId) return;
   await introDrop();
   if (my !== runId) return;
-  match.turn = match.practice || match.level ? 'me' : await rps();
+  // 레벨 라이벌은 플레이어 선공, 보스판은 보스가 먼저 분다 (선공 이점 — GDD 시뮬레이션 확인)
+  match.turn = match.level ? (match.level.role === 'boss' ? 'ai' : 'me') : match.practice ? 'me' : await rps();
   if (my !== runId) return;
   await gameLoop(my);
 }
@@ -1212,7 +1225,7 @@ async function aiShot() {
   const shot = {
     dir: { x: dir.x, z: dir.z },
     lat: clamp(g() * 0.35 / feel.aiSkill, -1.2, 1.2),
-    h: clamp(top * clamp(0.68 + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
+    h: clamp(top * clamp(0.68 + 0.18 * clamp(((match.aiSkill || 1) - 1) / 1.2, 0, 1) + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
     power: clamp(sweetHiFor(table.liveDiscs().length) * (0.92 + g() * 0.14 / feel.aiSkill), 0.2, POWER_MAX),
   };
   puffer.mode = 'charge';
@@ -1264,7 +1277,7 @@ async function blow(rawShot, who) {
     profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile);
   }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);
-  breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, rawShot.power / sweetHiFor(liveCount())); breath.who = who;
+  breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, rawShot.power / sweetHiFor(liveCount())); breath.who = who; breath.ratio = shot.ratio;
   puffer.mode = 'blow';
   puffer.p = shot.power;
   hitStopUntil = performance.now() + 70; // 히트스톱(기대감)
@@ -1273,6 +1286,7 @@ async function blow(rawShot, who) {
   sfx.puff(Math.min(1.2, rawShot.power));
   navigator.vibrate?.(Math.round(20 + shot.power * 30));
   fx.wind(g.origin, g.aim, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
+  if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 }); // 너무 낮게: 바닥 먼지
   fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, g.aim.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
   shake = 0.18 + rawShot.power * 0.22;
   flash(0.55 * Math.min(1, rawShot.power));
@@ -1500,6 +1514,7 @@ async function startDaily() {
   syncMeshes();
   state = 'match';
   camZoom = 0;
+  snapCam();
   $('#rivalName').textContent = t('daily');
   $('#rivalAva').src = backImage();
   $('#meScore').textContent = '0';
@@ -1668,6 +1683,7 @@ async function startLevel(n) {
   syncMeshes();
   state = 'match';
   camZoom = 0;
+  snapCam();
   $('#meScore').textContent = '0';
   $('#rivalAva').src = spec.type === 'golden' ? faceImage('golden', 48) : backImage();
   updateLevelHud();

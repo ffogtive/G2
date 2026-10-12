@@ -45,14 +45,21 @@ function buildTable(spec, rng) {
   return t;
 }
 
+// 상대 AI 정책 (main.js aiShot 과 동일): 실력이 오르면 조준 높이도 맨 위 근처로 (고수는 위를 노린다)
+export function aiPolicy(skill) {
+  return { hMean: 0.68 + 0.18 * clamp((skill - 1) / 1.2, 0, 1), hSd: 0.17 / skill, latSd: 0.35 / skill, pMean: 0.92, pSd: 0.14 / skill };
+}
+
 export function playLevel(spec, rng, bot) {
   const t = buildTable(spec, rng);
   if (spec.type === 'rival') {
-    const ai = { hMean: 0.68, hSd: 0.17 / spec.aiSkill, latSd: 0.35 / spec.aiSkill, pMean: 0.92, pSd: 0.14 / spec.aiSkill };
+    const ai = aiPolicy(spec.aiSkill);
     let me = 0, them = 0, turn = 0;
+    const aiFirst = spec.role === 'boss' ? 1 : 0; // 보스판은 보스 선공 (main.js 와 동일)
     while (t.liveDiscs().length && turn < 18) {
-      const f = puff(t, rng, turn % 2 === 0 ? bot : ai);
-      if (turn % 2 === 0) me += f.length; else them += f.length;
+      const mine = (turn + aiFirst) % 2 === 0;
+      const f = puff(t, rng, mine ? bot : ai);
+      if (mine) me += f.length; else them += f.length;
       turn++;
       if (!t.liveDiscs().length) break;
       t.restack(); t.settle(240);

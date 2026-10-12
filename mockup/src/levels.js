@@ -89,6 +89,8 @@ export function levelSpec(n, kOverride) {
   else if (s.role === 'boss' && has.rival) type = 'rival';
   else if (s.role === 'precision' && has.golden) type = 'golden';
   else if (has.golden && (s.role === 'applied' || s.role === 'practice2') && rng() < 0.4) type = 'golden';
+  if (INTRO[n] === 'golden') type = 'golden'; // 새 요소를 소개하는 판은 반드시 그 요소가 나온다
+  if (INTRO[n] === 'rival') type = 'rival';
   // 더미 크기: L1~10 은 3→16장으로 커지며 '양에 따라 숨'을 익힌다. 휴식/보상판은 크게(싹쓸이 쾌감)
   let N = Math.round(clamp(6 + 13 * (1 - Math.exp(-n / 28)) + (rng() - 0.5) * 4, 3, 22));
   if (n <= 10) N = [3, 5, 4, 8, 7, 12, 10, 9, 14, 16][n - 1];
@@ -101,7 +103,11 @@ export function levelSpec(n, kOverride) {
   spec.k = +k.toFixed(3);
   if (type === 'flip') {
     spec.puffs = s.puffs || 3;
-    spec.target = Math.max(1, Math.min(N, Math.round(N * (0.2 + 0.75 * k))));
+    if (spec.puffs === 2 && k > 0.6) {
+      // 하드: 물리가 후해서(리서치 9장) 숨 2번으로는 40%까지 안 내려감 → 손잡이 상단은 '숨 1번'
+      spec.puffs = 1;
+      spec.target = Math.max(1, Math.min(N, Math.round(N * (0.25 + 0.6 * ((k - 0.6) / 0.4)))));
+    } else spec.target = Math.max(1, Math.min(N, Math.round(N * (0.2 + 0.75 * (spec.puffs === 2 ? k / 0.6 : k)))));
   } else if (type === 'golden') {
     spec.puffs = s.puffs || 3;
     spec.goldenDepth = +clamp(0.1 + 0.85 * k, 0.1, 0.95).toFixed(2); // 위에서부터 깊이 비율
