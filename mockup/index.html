@@ -203,6 +203,13 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .daily-score { font-family: var(--display); font-size: 4rem; color: var(--gold); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); line-height: 1.1; }
 #dailyCard h2 { margin: 0; font-family: var(--display); }
 #dailyShare { width: 100%; box-sizing: border-box; font-family: var(--body); font-size: 1rem; border: 3px solid var(--ink); border-radius: 12px; padding: 8px; resize: none; margin: 8px 0 12px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
+#breath { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.breath-fb { position: absolute; left: 50%; bottom: calc(max(8px, env(safe-area-inset-bottom)) + min(30vw, 170px) + 6px); transform: translateX(-50%); font-family: var(--display); font-size: 1.35rem; color: #fff; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); white-space: nowrap; pointer-events: none; }
+.breath-fb.ai { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 64px + min(22vw, 120px) + 4px); font-size: 1.05rem; }
+.breath-fb.fbPerfect { color: #9ff07a; }
+.breath-fb.fbTooStrong, .breath-fb.fbTooWeak { color: #ffb3b3; }
+.breath-fb.go { animation: fbIn 1.6s ease-out both; }
+@keyframes fbIn { 0% { transform: translateX(-50%) scale(0.6); opacity: 0; } 12% { transform: translateX(-50%) scale(1.12); opacity: 1; } 22% { transform: translateX(-50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-10px); } }
 #toast { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); background: rgba(42,26,18,0.85); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 1rem; max-width: 86vw; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .logo h1, .hint .hand { animation: none; } }
 </style>
@@ -221,6 +228,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 </script>
 <div id="app">
   <canvas id="c" aria-label="Ddakji table"></canvas>
+  <canvas id="breath" aria-hidden="true"></canvas>
   <div id="vignette"></div>
   <div id="flash"></div>
   <div id="fxl"></div>
@@ -257,6 +265,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
       <div class="score ai"><div style="text-align:right"><span class="who" id="rivalName">Rival</span><b id="aiScore">0</b></div><div class="ava"><img id="rivalAva" alt=""></div></div>
     </div>
     <div id="puffWrap"><canvas id="puffCanvas" width="340" height="340"></canvas></div>
+    <div id="breathFb" class="breath-fb" hidden></div>
     <div id="hint" class="hint" hidden><div class="hand"></div><span id="hintText"></span></div>
     <div id="banner" class="banner" hidden></div>
     <div id="big" class="big" hidden></div>

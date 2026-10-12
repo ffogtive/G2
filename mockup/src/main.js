@@ -22,17 +22,23 @@ const lerp = (a, b, k) => a + (b - a) * k;
 const ease = (k) => 1 - Math.pow(1 - k, 3);
 const easeInOut = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
 
-// ── 파워 구간(물리 튜닝과 맞춤) ─────────────────────────────
-const SWEET_LO = 0.74;
-const SWEET_HI = 0.95;
+// ── 파워 구간 ─────────────────────────────────────────────
+// 재윤님 피드백 1: 정답 숨 세기는 '쌓인 양'에 비례한다 — 많이 쌓이면 크게, 적으면 살짝.
+// 게이지 구간은 튜토리얼에서만 보여 주고 이후엔 감으로. 물리로 넘길 때는 이 양에 맞는 숨을 0.95 로 정규화.
 const POWER_MAX = 1.25;
+const PHYS_SWEET = 0.95;
+function sweetHiFor(n) { return clamp(0.42 + 0.53 * Math.sqrt(Math.max(1, n) / 20), 0.5, 1.12); }
+function sweetLoFor(n) { return sweetHiFor(n) * 0.78; }
+function liveCount() { return table ? table.liveDiscs().length : 20; }
+const GUIDE_PUFFS = 6; // 처음 6번 불 때까지만 초록/빨강 가이드
+function guideOn() { return feel.guide >= 0.5 || (profile.tutorialPuffs || 0) < GUIDE_PUFFS; }
 const MAX_TURNS = 18;
 
 // ── 상태 ─────────────────────────────────────────────────
 let profile = Store.load();
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1 };
-const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1] };
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0 };
+const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1] };
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
@@ -294,6 +300,9 @@ function layout() {
   camTarget.set(0, portrait ? 0.4 : 0.9, portrait ? -2.4 : -0.8);
   pileX = portrait ? 2.5 : 4.4;
   camera.updateProjectionMatrix();
+  const bc = $('#breath');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  bc.width = Math.round(w * dpr); bc.height = Math.round(h * dpr); bc._dpr = dpr;
 }
 
 // ── 조준 기즈모 ──────────────────────────────────────────
@@ -322,8 +331,10 @@ function buildAimGizmo() {
 }
 
 function powerColor(p) {
-  if (p > SWEET_HI + 0.05) return 0xff4d4d;
-  if (p >= SWEET_LO) return 0x6dff5a;
+  if (!guideOn()) return 0xffffff; // 가이드 끝나면 색으로 정답을 알려 주지 않는다
+  const n = liveCount();
+  if (p > sweetHiFor(n) * 1.05) return 0xff4d4d;
+  if (p >= sweetLoFor(n)) return 0x6dff5a;
   return 0xffe066;
 }
 
@@ -341,6 +352,11 @@ function shotGeometry(shot) {
 
 function showGizmo(shot, color = 0xffffff) {
   const g = shotGeometry(shot);
+  if (breath.mode !== 'blow') {
+    breath.aim = g.aim.clone();
+    breath.p = (shot.power || 0) / sweetHiFor(liveCount());
+    if (breath.mode !== 'charge') { breath.mode = 'charge'; breath.t = 0; }
+  }
   reticle.visible = layerRing.visible = aimLine.visible = true;
   reticle.position.copy(g.aim).addScaledVector(g.dir, -0.02);
   reticle.lookAt(g.aim.clone().addScaledVector(g.dir, -1));
@@ -350,6 +366,7 @@ function showGizmo(shot, color = 0xffffff) {
   layerRing.position.set(g.center.x, shot.h, g.center.z);
   layerRing.material.color.setHex(color);
   const from = g.origin.clone().lerp(g.aim, 0.15);
+  aimLine.visible = false; // 숨 줄기(2D 오버레이)로 대체
   aimLine.geometry.setFromPoints([from, g.aim]);
   aimLine.computeLineDistances();
   aimLine.material.color.setHex(color);
@@ -357,6 +374,66 @@ function showGizmo(shot, color = 0xffffff) {
 
 function hideGizmo() {
   reticle.visible = layerRing.visible = aimLine.visible = false;
+  if (breath.mode === 'charge') breath.mode = 'off';
+}
+
+// ── 숨 줄기 (재윤님 피드백 2: '입 → 바람 → 딱지' 인과를 눈으로) ─────────────
+// 당기는 동안: 입과 조준점 사이에 숨 줄기가 생기고 공기가 입으로 빨려 들어간다(들숨).
+// 놓으면: 줄기가 번쩍이며 공기가 조준점으로 쏟아진다(날숨). 이후 3D 에선 가장자리 밑으로 공기가 파고드는 입자.
+const breath = { mode: 'off', p: 0, t: 0, who: 'me', aim: null };
+function drawBreath(dt) {
+  const cv = $('#breath');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, dpr = cv._dpr || 1;
+  ctx.clearRect(0, 0, W, H);
+  if (breath.mode === 'off' || !breath.aim || state !== 'match') return;
+  breath.t += dt;
+  const r = $('#puffWrap').getBoundingClientRect();
+  const mx = (r.left + r.width * 0.5) * dpr, my = (r.top + r.height * 0.68) * dpr;
+  const v = breath.aim.clone().project(camera);
+  const ax = (v.x * 0.5 + 0.5) * W, ay = (-v.y * 0.5 + 0.5) * H;
+  const p = clamp(breath.p, 0, 1.3);
+  const dx = ax - mx, dy = ay - my, L = Math.hypot(dx, dy) || 1;
+  const nx = -dy / L, ny = dx / L;
+  const w0 = (4 + p * 8) * dpr, w1 = (12 + p * 34) * dpr;
+  let alpha;
+  if (breath.mode === 'charge') alpha = 0.08 + 0.2 * Math.min(1, p);
+  else {
+    const k = breath.t / 0.55;
+    if (k >= 1) { breath.mode = 'off'; return; }
+    alpha = 0.6 * (1 - k);
+  }
+  const grad = ctx.createLinearGradient(mx, my, ax, ay);
+  grad.addColorStop(0, `rgba(255,255,255,${alpha})`);
+  grad.addColorStop(1, `rgba(215,243,255,${alpha * 0.55})`);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(mx + nx * w0, my + ny * w0); ctx.lineTo(ax + nx * w1, ay + ny * w1);
+  ctx.lineTo(ax - nx * w1, ay - ny * w1); ctx.lineTo(mx - nx * w0, my - ny * w0);
+  ctx.closePath(); ctx.fill();
+  const blow = breath.mode === 'blow';
+  const N = blow ? 26 : 16;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < N; i++) {
+    const u = blow ? Math.min(1, breath.t * 3 + (i / N) * 0.55) : 1 - ((breath.t * (0.5 + p * 0.6) + i / N) % 1);
+    const off = Math.sin(i * 12.9898) * 0.85;
+    const wl = w0 + (w1 - w0) * u;
+    const x = mx + dx * u + nx * off * wl, y = my + dy * u + ny * off * wl;
+    const len = (blow ? 30 : 9) * dpr * (0.5 + p);
+    const sgn = blow ? 1 : -1;
+    ctx.strokeStyle = `rgba(255,255,255,${blow ? 0.95 * (1 - breath.t / 0.55) : 0.55})`;
+    ctx.lineWidth = (blow ? 3.2 : 2) * dpr;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - (dx / L) * len * sgn, y - (dy / L) * len * sgn); ctx.stroke();
+  }
+  if (blow && breath.t < 0.3) {
+    // 조준점에 '퍽' 방사선
+    ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - breath.t / 0.3)})`;
+    ctx.lineWidth = 3 * dpr;
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2, r0 = (10 + breath.t * 160) * dpr, r1 = r0 + 14 * dpr;
+      ctx.beginPath(); ctx.moveTo(ax + Math.cos(a) * r0, ay + Math.sin(a) * r0); ctx.lineTo(ax + Math.cos(a) * r1, ay + Math.sin(a) * r1); ctx.stroke();
+    }
+  }
 }
 
 // ── 퍼퍼(볼 빵빵 얼굴) ───────────────────────────────────
@@ -371,7 +448,7 @@ function drawPuffer() {
   ctx.translate(S / 2, S / 2 + S * 0.04);
   ctx.scale(S, S);
   const p = puffer.p;
-  const over = p > SWEET_HI + 0.05;
+  const over = p > sweetHiFor(liveCount()) * 1.12; // 숨이 넘치면 얼굴이 빨개짐 (몸의 신호 — 정답 구간은 숨김)
   const wob = over ? Math.sin(performance.now() * 0.05) * 0.012 : 0;
   ctx.translate(wob, 0);
   const blow = puffer.mode === 'blow';
@@ -414,7 +491,10 @@ function drawPuffer() {
     ctx.beginPath(); ctx.ellipse(0, 0.14, Math.max(0.012, r), 0.025, 0, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
-  // 파워 게이지 (아크)
+  // 파워 게이지 (아크) — 튜토리얼(가이드)일 때만. 구간은 '더미 양'에 따라 움직인다
+  if (!guideOn()) return;
+  const n = liveCount();
+  const SWEET_LO = sweetLoFor(n), SWEET_HI = sweetHiFor(n);
   const R = S * 0.46;
   ctx.save();
   ctx.translate(S / 2, S / 2);
@@ -505,7 +585,7 @@ function syncMeshes() {
   }
 }
 
-const simWatch = { revealed: new Set(), count: 0, lastClack: 0, vy: new Map(), resolve: null, simTime: 0, quiet: 0 };
+const simWatch = { revealed: new Set(), count: 0, lastClack: 0, vy: new Map(), resolve: null, simTime: 0, quiet: 0, glowed: new Set() };
 
 function frame(now) {
   requestAnimationFrame(frame);
@@ -527,6 +607,18 @@ function frame(now) {
       n++;
     }
     syncMeshes();
+    // 가장자리 밑으로 파고든 공기 → 위로 들어 올리는 입자 (왜 넘어가는지 보이게)
+    if (table.lastHits) {
+      for (const h of table.lastHits) {
+        const k = h.s * h.liftF;
+        if (k < 0.05 || Math.random() > 0.55) continue;
+        fx.emit({ at: h.e, n: 2, color: 0xe2f6ff, speed: 0.35, up: 1.6 + k * 3, life: 0.45, size: 0.15 + k * 0.12, gravity: -2.5, dir: { x: h.dir.x * 2.4, y: 0.4, z: h.dir.z * 2.4 } });
+        if (k > 0.18 && !simWatch.glowed.has(h.id)) {
+          simWatch.glowed.add(h.id);
+          fx.emit({ at: h.e, n: 1, color: 0xffffff, speed: 0, up: 0, life: 0.3, size: 0.55, gravity: 0 });
+        }
+      }
+    }
     watchSim();
   }
   // 트윈
@@ -554,6 +646,8 @@ function frame(now) {
   camera.lookAt(target);
   if (state === 'home') for (const m of homeMeshes) m.rotation.y += dt * 0.15;
   if (puffer.mode !== 'hidden') drawPuffer();
+  drawBreath(Math.min(0.05, (now - (frame._last || now)) / 1000));
+  frame._last = now;
   renderer.render(scene, camera);
 }
 
@@ -987,7 +1081,7 @@ function playerShot() {
       if (!aiming) {
         if (state === 'match' && ev.pointerType === 'mouse') {
           const s = pointerAim(ev);
-          if (s) showGizmo(s, 0xffffff);
+          if (s) { showGizmo(s, 0xffffff); breath.mode = 'off'; }
         }
         return;
       }
@@ -1035,7 +1129,7 @@ async function aiShot() {
     dir: { x: dir.x, z: dir.z },
     lat: clamp(g() * 0.35 / feel.aiSkill, -1.2, 1.2),
     h: clamp(top * clamp(0.68 + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
-    power: clamp(0.85 + g() * 0.14 / feel.aiSkill, 0.35, POWER_MAX),
+    power: clamp(sweetHiFor(table.liveDiscs().length) * (0.92 + g() * 0.14 / feel.aiSkill), 0.2, POWER_MAX),
   };
   puffer.mode = 'charge';
   puffer.who = 'ai';
@@ -1052,19 +1146,38 @@ async function aiShot() {
   return shot;
 }
 
-// 너무 세게 불면: 힘은 스윗스팟 근처에서 더 안 오르고, 숨이 차서 조준이 흔들린다 (게임 규칙으로 만든 '과유불급')
+// 숨 세기 해석: 더미 양에 맞는 숨(hi)을 물리의 0.95 로 정규화.
+// 너무 세게 불면 힘은 더 안 오르고, 숨이 차서 조준이 흔들린다 (게임 규칙으로 만든 '과유불급')
 function resolveShot(shot, rng) {
-  if (shot.power <= SWEET_HI) return shot;
-  const ex = shot.power - SWEET_HI;
+  const hi = sweetHiFor(liveCount());
+  const ratio = shot.power / hi;
+  if (shot.power <= hi) return { ...shot, power: PHYS_SWEET * ratio, ratio };
+  const ex = shot.power - hi;
   const g = () => { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
   const top = table.columnTop();
-  const k = feel.overShake;
-  return { ...shot, power: SWEET_HI + ex * 0.25, lat: clamp(shot.lat + g() * ex * 3.2 * k, -1.6, 1.6), h: clamp(shot.h + g() * ex * 2.4 * k, 0.03, top), over: true };
+  const k = feel.overShake * (0.95 / hi); // 적은 더미에서 과하게 불면 더 크게 흔들림
+  return { ...shot, power: PHYS_SWEET + ex * 0.25, lat: clamp(shot.lat + g() * ex * 3.2 * k, -1.6, 1.6), h: clamp(shot.h + g() * ex * 2.4 * k, 0.03, top), over: true, ratio };
+}
+
+// 불고 난 뒤 '숨 결과' 피드백 — 게이지 없이 감을 익히게 하는 결과 지식(knowledge of results)
+function breathFeedback(ratio, who) {
+  const key = ratio < 0.62 ? 'fbTooWeak' : ratio < 0.86 ? 'fbWeak' : ratio <= 1.0 ? 'fbPerfect' : ratio <= 1.15 ? 'fbStrong' : 'fbTooStrong';
+  const el = $('#breathFb');
+  el.textContent = (who === 'ai' ? t('rival') + ': ' : '') + t(key);
+  el.className = 'breath-fb ' + key + (who === 'ai' ? ' ai' : '');
+  el.hidden = false;
+  void el.offsetWidth;
+  el.classList.add('go');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.hidden = true; }, 1600);
 }
 
 async function blow(rawShot, who) {
   const shot = resolveShot(rawShot, match.rng);
   const g = shotGeometry(shot);
+  if (who === 'me') { profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile); }
+  setTimeout(() => breathFeedback(shot.ratio, who), 380);
+  breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, rawShot.power / sweetHiFor(liveCount())); breath.who = who;
   puffer.mode = 'blow';
   puffer.p = shot.power;
   hitStopUntil = performance.now() + 70; // 히트스톱(기대감)
@@ -1077,11 +1190,11 @@ async function blow(rawShot, who) {
   shake = 0.18 + rawShot.power * 0.22;
   flash(0.55 * Math.min(1, rawShot.power));
   shockwave(table.pileCenter(), rawShot.power);
-  if (shot.over) fx.text(g.aim.clone().add(new THREE.Vector3(0, 1.2, 0)), t('tooStrong'), 'warn');
   // 물리에 바람 적용
   table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power });
   simWatch.revealed = new Set(table.liveDiscs().filter((d) => table.faceUp(d) > 0.5).map((d) => d.id));
   simWatch.count = 0;
+  simWatch.glowed = new Set();
   simWatch.shooter = who;
   simWatch.simTime = 0;
   simWatch.quiet = 0;

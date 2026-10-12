@@ -32,7 +32,7 @@ export class Fx {
     this.streakMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8, depthWrite: false });
   }
 
-  emit({ at, n = 20, color = 0xffffff, speed = 3, up = 2, life = 0.8, size = 0.25, gravity = 6, spread = 1 }) {
+  emit({ at, n = 20, color = 0xffffff, speed = 3, up = 2, life = 0.8, size = 0.25, gravity = 6, spread = 1, dir = null }) {
     const c = new THREE.Color(color);
     for (let i = 0; i < n; i++) {
       if (this.parts.length >= this.max) this.parts.shift();
@@ -40,7 +40,7 @@ export class Fx {
       const s = speed * (0.4 + Math.random() * 0.6);
       this.parts.push({
         x: at.x + (Math.random() - 0.5) * 0.2 * spread, y: at.y, z: at.z + (Math.random() - 0.5) * 0.2 * spread,
-        vx: Math.cos(a) * s, vy: up * (0.5 + Math.random()), vz: Math.sin(a) * s,
+        vx: Math.cos(a) * s + (dir ? dir.x : 0), vy: up * (0.5 + Math.random()) + (dir ? dir.y : 0), vz: Math.sin(a) * s + (dir ? dir.z : 0),
         life, t: 0, r: c.r, g: c.g, b: c.b, size: size * (0.6 + Math.random() * 0.8), gravity,
       });
     }
@@ -95,7 +95,7 @@ export class Fx {
       p.vy -= p.gravity * dt;
       p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
       p.vx *= 0.98; p.vz *= 0.98;
-      if (p.y < 0.02) { p.y = 0.02; p.vy *= -0.3; }
+      if (p.y < 0.02 && p.gravity > 0) { p.y = 0.02; p.vy *= -0.3; }
     }
     for (const p of this.parts) {
       const k = 1 - p.t / p.life;

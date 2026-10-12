@@ -109,7 +109,8 @@ export class Table {
 
   // 딱지 더미 만들기. mode 'column' = 손으로 가지런히 쌓은 원기둥(기본, 원작 룰), 'heap' = 흩어진 무더기
   // 원기둥에서 "어느 높이·어느 쪽을 맞히느냐"가 조준 실력 요소가 된다.
-  addPile(cards, { mode = 'column', spread = 0.07, at = { x: 0, z: 0 } } = {}) {
+  // heavy: 무거운(테이프 감은) 딱지로 만들 인덱스 집합 — 밀도 ×3 (원작 '테이프 감기' 꼼수, 레벨 기믹)
+  addPile(cards, { mode = 'column', spread = 0.07, at = { x: 0, z: 0 }, heavy = new Set() } = {}) {
     const H = DISC_H;
     cards.forEach((cardId, i) => {
       const heap = mode === 'heap';
@@ -131,12 +132,12 @@ export class Table {
       );
       const col = this.world.createCollider(
         RAPIER.ColliderDesc.cylinder(H / 2, DISC_R)
-          .setDensity(this.T.density)
+          .setDensity(this.T.density * (heavy.has(i) ? 3 : 1))
           .setFriction(this.T.friction)
           .setRestitution(this.T.restitution),
         body,
       );
-      this.discs.push({ id: this.discs.length, body, collider: col, cardId, owner: null, removed: false });
+      this.discs.push({ id: this.discs.length, body, collider: col, cardId, owner: null, removed: false, heavy: heavy.has(i) });
     });
   }
 
@@ -275,7 +276,7 @@ export class Table {
         const ch = (pw - T.sweet) * T.tumble * k;
         b.applyTorqueImpulse({ x: gauss(this.rng) * ch, y: gauss(this.rng) * ch * 0.3, z: gauss(this.rng) * ch }, true);
       }
-      hits.push({ id: d.id, s, gap, liftF });
+      hits.push({ id: d.id, s, gap, liftF, e, dir: { x: P.d.x, y: P.d.y, z: P.d.z } });
     }
     P.t += T.dt;
     if (P.t >= T.puffDuration) this.puff = null;
@@ -283,7 +284,8 @@ export class Table {
   }
 
   step() {
-    if (this.puff) this.applyWind();
+    // lastHits: 이번 스텝에 바람이 '가장자리 밑으로 파고든' 딱지들 (렌더러가 공기 유입을 그리는 데 사용)
+    this.lastHits = this.puff ? this.applyWind() : null;
     this.world.step();
     this.time += this.T.dt;
     // 책상 밖으로 너무 멀리 날아간 딱지는 테이블 가장자리 근처로 클램프(게임 가독성)
