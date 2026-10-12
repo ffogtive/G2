@@ -1280,8 +1280,9 @@ async function blow(rawShot, who) {
   breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, rawShot.power / sweetHiFor(liveCount())); breath.who = who; breath.ratio = shot.ratio;
   puffer.mode = 'blow';
   puffer.p = shot.power;
-  hitStopUntil = performance.now() + 70; // 히트스톱(기대감)
-  await wait(70);
+  const hs = Math.round(60 + 60 * clamp(shot.ratio ?? 0.8, 0, 1)); // 히트스톱 60~120ms, 숨 세기에 비례 (2라운드 리서치)
+  hitStopUntil = performance.now() + hs;
+  await wait(hs);
   hideGizmo();
   sfx.puff(Math.min(1.2, rawShot.power));
   navigator.vibrate?.(Math.round(20 + shot.power * 30));
@@ -1720,7 +1721,8 @@ async function finishLevel(res) {
   tension(false);
   const spec = match.level;
   prog();
-  const stars = starsFor(spec, res);
+  // '가이드 항상 보기'를 켜면 별은 최대 2개 (진행은 막지 않고 최상위 보상만 잠금 — 마리오카트 보조 조향 방식)
+  const stars = Math.min(feel.guide >= 0.5 ? 2 : 3, starsFor(spec, res));
   const before = new Set(Object.keys(profile.inv).filter((k) => profile.inv[k] > 0));
   const rewards = [];
   if (res.win) {

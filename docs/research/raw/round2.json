@@ -1,0 +1,1367 @@
+[
+ {
+  "research": {
+   "lens": "수집욕이 가장 강한 장르·유형 (재윤님 피드백 3): 원형 딱지에 무엇을 담아야 돈을 내고 계속 모을 만큼 갖고 싶어지는가",
+   "summary": "최근 5년 동안 수집 시장에서 가장 큰 돈을 만든 것은 키캡·스니커즈 같은 '물건'이 아니었다. '이름과 얼굴과 성격이 있는 생물 캐릭터 패밀리'였다. Pop Mart는 2025년 매출 371억 위안(+184.7%)을 냈고 The Monsters가 38%를 차지했다. TCG Pocket은 첫해 12억 달러 이상, Squishmallows는 누적 4.85억 개 이상, 산리오 2025 인기투표에는 6,316만 표가 몰렸다. 같은 기간 글로벌 완구 중 수집품 매출은 +32% 늘어 전체의 약 19%가 되었다. 남녀노소를 모두 덮는 공통분모는 '실존 동물을 모티프로 한 둥근 얼굴 캐릭터'다. 근거는 산리오 2025 1~3위가 모두 강아지 캐릭터라는 점(종 정보는 기억 기반), Squishmallows, 5천만 다운로드를 넘긴 국산 고양이 수집 게임 Cats & Soup, 포켓몬의 동물→판타지 종 모델이다. 반면 Pop Mart 고객은 약 70%가 여성이고, 스포츠·키캡·스니커즈는 남성·성인 쪽으로 치우친다.\n\nPUFF!에 맞는 결론은 다음과 같다. 1순위는 동물 기반 오리지널 크리처 IP를 '종 × 의상 시리즈 × 마감' 3축으로 조합하고 시크릿 변형을 얹는 구조다. 2순위는 실존 견종·묘종 도감, 3순위는 세계 음식·장소 의인화다. 현재의 한국 음식 24종은 캐릭터가 아니라 '모자·의상(시리즈 테마)'으로 바꿔 살린다. 딱지는 그림면을 아래로 쌓기 때문에 뒤집히는 순간이 곧 블라인드박스 개봉이다. 이 랜덤 공개는 무료 실력 플레이 안에 두고, 돈은 확정형 상품(시즌 패스, 선택권, 꾸미기)에만 쓰게 한다. 그러면 한국 확률형 아이템 공개 의무화(2024.3.22)와 FTC의 HoYoverse 제재 같은 규제 리스크를 피하면서 수집 동기를 최대로 살릴 수 있다.",
+   "findings": [
+    {
+     "claim": "Pop Mart 2025 매출은 371.2억 위안(약 54억 달러, +184.7%)이다. The Monsters(라부부)가 141.6억 위안으로 38.1%를 차지했고, 해외 매출 162.7억 위안(+292%) 중 미주가 +748%로 가장 크게 늘었다. 그런데도 발표 후 주가는 20% 넘게 떨어졌다. 단일 IP 의존 우려 때문이다.",
+     "evidence": "China Daily가 연차보고서 수치를 보도했고, Jiemian은 조정 순이익 130.8억 위안(+284.5%)과 연말 기준 20개국 630개 매장을 전했다. Jing Daily는 '라부부 의존이 부담'이라고 짚었고, The Edge는 주가 22% 급락을 보도했다.",
+     "sources": [
+      "https://www.chinadaily.com.cn/a/202604/09/WS69d70204a310d6866eb42647.html",
+      "https://en.jiemian.com/article/14163617.html",
+      "https://jingdaily.com/intels/2026-03/25/pop-mart-posts-record-results-as-labubu-reliance-weighs",
+      "https://alfi.dev.theedgesingapore.com/news/china/pop-mart-shares-sink-22-doubts-firm-can-grow-past-labubu"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "라부부 블라인드박스의 시크릿 확률은 6종 시리즈에서 1/72(일반 각 1/6), 12종 시리즈에서 1/144이다. 시크릿 1종이 시리즈 전체의 개봉 동기를 끌고 간다.",
+     "evidence": "Big Into Energy 시리즈의 Walmart·Target 표기와 Gulf News 리뷰가 '일반 1/6, 시크릿 1/72'로 일치한다. One Piece 콜라보 12종의 '1/144'는 비공식 판매처 표기다. 1/720 같은 주장은 확인되지 않았다.",
+     "sources": [
+      "https://gulfnews.com/best-buys/labubu-blind-box-review-the-bag-charm-everyone-is-chasing-1.500637384",
+      "https://www.walmart.com/ip/17434252794",
+      "https://www.labubuco.it.com/?p=12544"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Pop Mart 고객은 약 70:30으로 여성이 많고 16~35세가 중심이다. 재구매율은 58%(2019)에서 49.4%(2024)로 내려왔고, 2024년 회원 매출 비중은 92.7%다. 강한 수집 IP도 신규 유입에 의존하며 피로가 쌓인다는 신호다.",
+     "evidence": "Inside Retail이 성비 70:30을, Moonfox가 2024 재무보고 기준 회원 4,608만 명·매출 비중 92.7%·재구매율 49.4%를 제시했다. 2019 투자설명서의 재구매율은 58%다. 2026년 1월 Citi 5개국 조사(n=1,501)에서는 응답자의 76%가 가입 1년 미만이었다.",
+     "sources": [
+      "https://insideretail.com.au/sectors/gifts/how-toy-giant-pop-mart-thinks-local-dominates-global-202206",
+      "https://moonfox.cn/insight/report/1765",
+      "https://www.itiger.com/news/1129244029",
+      "https://daxueconsulting.com/china-collectible-toys-market/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Pokémon TCG Pocket은 사실상 '카드 개봉과 수집'만으로 6주 만에 약 1.8억 달러, 첫해 12억 달러 이상을 벌었다. 일본은 다운로드의 약 10%에 그치지만 매출의 37%를 낸다. 일본은 수집에 가장 많이 지불하는 시장이다.",
+     "evidence": "Fortune이 Sensor Tower를 인용해 6주 6천만 다운로드·1.8억 달러를 보도했다. Toy-People은 Sensor Tower를 인용해 첫해 9천만+ 다운로드·12억 달러+와 일본 매출 비중 37%·다운로드 비중 약 10%(미국 다운로드 약 20%)를 전했다. Sensor Tower 블로그에 따르면 1억 다운로드를 돌파했다.",
+     "sources": [
+      "https://fortune.com/asia/2024/12/18/pokemon-hit-app-60-million-downloads-180-million-revenue-6-weeks",
+      "https://www.toy-people.com/en/?p=106937",
+      "https://sensortower.com/blog/pokemon-tcg-pocket-100-million-downloads"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "TCG Pocket의 희귀도는 다이아 1~4, 별 1~3, 크라운의 사다리 구조다. 크라운은 4번째 칸 약 0.04%, 5번째 칸 약 0.16%이고, '레어팩' 자체가 0.05% 확률로 나온다. 희귀 변형은 같은 포켓몬의 다른 아트·포일로 만든다.",
+     "evidence": "커뮤니티 가이드(GameWith, PokemonGOHub, GameRevolution)가 수치를 제시한다. 이머시브 확률은 출처마다 달라 정확도는 중간으로 본다.",
+     "sources": [
+      "https://pokemongohub.net/post/tcg-pocket/pokemon-tcg-pocket-pull-rates-explained/",
+      "https://gamewith.net/pokemon-tcg-pocket/48549",
+      "https://www.gamerevolution.com/guides/980242-do-pokemon-tcg-pocket-bent-packs-give-you-better-cards"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "TCG Pocket은 2025-01-28 교환 기능에 새 재화 '트레이드 토큰'을 도입했다가 '약탈적이고 노가다'라는 역풍을 맞았다. 결국 토큰을 폐지하고 기존 재화(shinedust)로 바꾸겠다고 발표했다.",
+     "evidence": "VGC와 Pocket Tactics가 보도했다. 개발사는 봇·다계정 방지 목적이었다고 해명했다.",
+     "sources": [
+      "https://www.videogameschronicle.com/news/pokemon-tcg-pocket-is-changing-its-most-controversial-feature/",
+      "https://www.pockettactics.com/pokemon-tcg-pocket/trade-update"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "산리오 캐릭터 대상 2025(총 6,316만 표, 4/10~5/25)은 1위 폼폼푸린(561만 표), 2위 시나모롤, 3위 포차코, 4위 쿠로미, 5위 헬로키티 순이다. 상위 3종이 모두 강아지 캐릭터다(폼폼푸린은 골든리트리버, 시나모롤과 포차코도 강아지라는 종 정보는 기억 기반).",
+     "evidence": "Oricon, Siliconera, Anime Atelier가 6/29 산리오 페스 발표를 보도했다. 순위·득표는 확인된 사실이고, 캐릭터별 종은 공식 프로필 기억이다.",
+     "sources": [
+      "https://us.oricon-group.com/news/5146/",
+      "https://www.anime-atelier.com/sanrio-character-ranking-2025-final-results/",
+      "https://softgrunge.substack.com/p/sanrio-character-ranking-results-2025"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "성인('키덜트')이 수집 시장을 끌고 있다. 2025년 글로벌 수집품 매출은 +32%로 완구 달러 매출의 약 19%가 되었다. 2025 상반기 미국에서는 성인 대상 완구 판매가 +18%로, 9~11세(+9%)와 12~17세(+6%)보다 크게 늘었다.",
+     "evidence": "Chain Store Age와 BNN Bloomberg가 Circana를 인용했다. Circana는 성인 상위 카테고리로 TCG, 빌딩세트, 액션피규어·수집품을 꼽았다.",
+     "sources": [
+      "https://chainstoreage.com/circana-global-toy-sales-increased-7-2025",
+      "https://www.bnnbloomberg.ca/business/economics/2025/08/23/adults-driving-surge-in-toy-sales-as-kidult-trend-grows/"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "동물·생물 모티프의 둥근 봉제 캐릭터 Squishmallows는 2022년 한 해 1억 개를 팔았다. 2024년 8월 기준 누적 4억 개(3,000종), 2025년 기준 4.85억 개 이상이다. 회사 측은 고객층이 18세 이상 중심이면서 '매우 넓다'고 설명한다.",
+     "evidence": "CNBC(2023), Wikipedia, Scholastic(2025)이 수치를 제시했다. Jazwares 임원 발언은 Scary Mommy에 인용됐다. 회사 발표 수치다.",
+     "sources": [
+      "https://www.cnbc.com/amp/2023/07/02/how-toy-sensation-squishmallows-joined-warren-buffetts-conglomerate.html",
+      "https://en.wikipedia.org/wiki/Squishmallows",
+      "https://storyworks2-aem-perf.scholastic.com/issues/2025-26/100125/squishmallows-by-the-numbers.html",
+      "https://www.scarymommy.com/shopping/adults-collecting-squishmallows"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "동물 수집 게임은 국경을 넘는다. 국산 고양이 수집·방치형 게임 Cats & Soup은 2023년 5천만 다운로드를 넘겼다(6개월 만에 4천만에서 5천만으로). Neko Atsume는 일본어판만으로 2015년 550만 다운로드를 기록했고 그중 최대 40%가 서구 사용자였다.",
+     "evidence": "PocketGamer와 Pocket Tactics가 5천만 다운로드를, PocketGamer가 Neko Atsume 수치를 보도했다.",
+     "sources": [
+      "https://www.pocketgamer.com/cats-soup/50m/",
+      "https://www.pockettactics.com/cats-and-soup/50-million-downloads",
+      "https://www.pocketgamer.com/articles/068137/r/"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "한국 포켓몬빵(2022 재출시, 띠부씰 159종)은 1주일에 150만 개, 43일 만에 1천만 개, 2022년 12월 누적 1억 개, 2023년 12월 누적 2억 개가 팔렸다. 30대 직장인의 향수 구매가 크게 보도됐다.",
+     "evidence": "Bizwatch, 이코노미스트, Daum(푸드360), 데일리안 보도.",
+     "sources": [
+      "https://news.bizwatch.co.kr/article/consumer/2022/04/08/0008",
+      "https://economist.co.kr/article/view/ecn202206300089",
+      "https://v.daum.net/v/ZnHjUlEQFV",
+      "https://www.dailian.co.kr/news/view/1088768/"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "스포츠 수집은 여전히 강하지만 라이선스에 묶여 있다. Panini 2026 월드컵 앨범은 역대 최다인 980종(2022년보다 +310)이다. 미국에서는 4월 말 출시 1주일 만에 팩이 품절됐고 수요가 2022년의 3~5배였다. 중남미·유럽의 전통이기도 하다.",
+     "evidence": "NPR(2026-06-05)이 Panini America 담당자 발언을 보도했다.",
+     "sources": [
+      "https://www.npr.org/2026/06/05/nx-s1-5844319/world-cup-2026-panini-stickers-album"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "음식 의인화 수집품(Shopkins)은 2014년 6월 출시 후 2016년 초까지 2.07억 개를 팔았고 2016년 소매 약 10억 달러로 정점을 찍었다. 이후 Moose Toys 이익은 정점 대비 3분의 1 넘게 줄었다. 음식 테마만으로는 2~3년 붐 뒤 피로가 오기 쉽다.",
+     "evidence": "CNBC(2016)와 Licensing International이 수치를 제시했다. 이익 감소는 AFR 헤드라인 발췌라 원인 분석은 불충분하다.",
+     "sources": [
+      "https://www.cnbc.com/2016/02/27/toys-go-small-reap-big-rewards.html",
+      "https://licensinginternational.org/news/inside-licensing-news-and-notes-nov-9-2017/",
+      "https://kidscreen.com/?p=80291"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Monopoly GO는 스티커 앨범을 핵심 메타로 삼아 2025년 누적 인앱 매출 60억 달러를 넘겼다(역대 최단 기록). 골드 스티커는 평소 교환할 수 없고, 'Golden Blitz' 이벤트 동안에만 지정된 2장을 교환할 수 있다. 이 장치가 이벤트 스파이크를 만든다.",
+     "evidence": "Hasbro 뉴스룸이 60억 달러 돌파를, Monopoly 팬덤 위키가 골드 스티커 규칙을 전한다. 'Sensor Tower가 매출 피크와 교환 이벤트의 일치를 언급했다'는 주장은 저품질 페이지에만 있어 제외했다.",
+     "sources": [
+      "https://newsroom.hasbro.com/node/36236",
+      "https://monopoly.fandom.com/wiki/Monopoly_Go",
+      "https://tech-insider.org/monopoly-go-sticker-economy-mobile-monetization/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "부여된 진척 효과: 같은 8회가 필요한 세차 쿠폰에서 '10칸 중 2칸 미리 찍힘' 카드의 9개월 완주율은 34%로, '8칸 빈 카드'의 19%보다 높았다.",
+     "evidence": "Nunes & Drèze(2006), Journal of Consumer Research 32(4). 300장으로 진행한 현장 실험이며 Wharton 해설과 다수 요약이 일치한다.",
+     "sources": [
+      "https://knowledge.wharton.upenn.edu/?p=5630",
+      "https://coglode.com/nuggets/endowed-progress-effect"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "베이비 스키마(둥근 머리, 큰 눈 같은 특징)가 귀여움과 접근 동기를 촉발한다. 아기 동물 사진을 본 뒤에는 정교한 손동작 과제 수행이 좋아지고 주의가 좁혀진다는 실험(Nittono et al., 2012)이 있다.",
+     "evidence": "IAFOR의 Nittono 해설과 Psychology Today 2차 요약이다. 원 논문의 통계는 직접 확인하지 못했다.",
+     "sources": [
+      "https://iafor.org/beyond-cuteness-an-emerging-field-of-the-psychology-of-kawaii/",
+      "https://www.psychologytoday.com/us/blog/your-online-secrets/202004/the-power-of-cute-things-to-make-you-feel-better"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "블라인드박스에서 '모른다'(지각된 불확실성)는 억제 요인이 아니라 호기심을 거쳐 충동 구매 의도를 높이는 촉진 요인으로 측정됐다. 구매의 주 동기는 기능보다 정서적 가치였다.",
+     "evidence": "인도네시아 Gen Z 200명 대상 연구(UPI IJDB), IJARBSS 2025 Pop Mart 연구, 태국 거주 중국 학생 396명 SOR 연구. 표본이 작고 지역이 한정돼 정확도는 중간으로 본다.",
+     "sources": [
+      "https://ejournal.upi.edu/index.php/IJDB/article/view/106279",
+      "https://hrmars.com/papers_submitted/26376/exploring-the-driving-role-of-ideal-self-image-congruence-in-pop-mart-blind-box-purchase-intention.pdf",
+      "https://rsujournals.rsu.ac.th/index.php/aisc/article/view/4076"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "규제 기준선 두 가지. 한국은 2024-03-22부터 게임산업법 시행령으로 확률형 아이템 정보 공개를 의무화했다(캡슐형, 강화형, 합성형, 컴플리트 가챠, 천장 포함). 미국 FTC는 2025년 1월 HoYoverse(원신)와 2,000만 달러에 합의했고, 16세 미만은 보호자 동의 없이 구매할 수 없게 했으며 확률과 가상화폐 환율 공개를 의무화했다.",
+     "evidence": "아주경제와 뉴스서울(문체부 발표), FTC 비즈니스 가이드 블로그, PocketGamer.biz. 넥슨의 116억 원 과징금은 게임법이 아니라 공정위의 전자상거래법 제재다. '직간접 유상 구매만 적용 대상'이라는 법적 정의는 기억 기반이라 별도 확인이 필요하다.",
+     "sources": [
+      "https://www.ajunews.com/view/20240102104711033",
+      "https://newsseoul.co.kr/news/view/1065597612947423",
+      "https://ftc.gov/business-guidance/blog/2025/01/level-tips-businesses-ftcs-settlement-genshin-impact-developer-hoyoverse",
+      "https://www.pocketgamer.biz/hoyoverse-agrees-to-20-million-settlement-with-ftc-over-loot-boxes"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "라부부의 차별점은 전통적 귀여움을 깨는 '징그러운 귀여움(kimo-kawaii)'과 이빨 드러낸 장난기다. 여기에 디스플레이용 아트토이 포지셔닝과 재생산하지 않는 희소성이 붙어 10~30대 성인층을 잡았다.",
+     "evidence": "Campaign Asia, Dogo News 등 2차 해설. 'Pop Mart는 스토리 없는 IP 전략'이라는 통념은 검색으로 확인되지 않았다.",
+     "sources": [
+      "https://campaignasia.com:443/article/labubu-the-art-toy-craze-and-why-grown-ups-cant-get-enough/499122",
+      "https://www.dogobooks.com/2025/9/18/the-labubu-craze-how-a-mischievous-toy-captured-hearts-around-the-world/page/2"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "한국 초등 저학년 시장에서는 '캐치! 티니핑' 랜덤박스가 어린이날 시즌에 단기 품절됐고, MD 매출이 전년의 약 3배가 됐다(2023, 회사 발표). 아이들의 수집 본능은 8~10세에 강해진다는 해설이 있다.",
+     "evidence": "아시아경제(2023)는 회사 발표 기준이다. 8~10세 주장은 Shopkins 관련 해외 해설이다. 2024~2025 수치는 찾지 못했다.",
+     "sources": [
+      "https://core.asiae.co.kr/article/2023051110443562778",
+      "https://www.cnbc.com/2016/02/27/toys-go-small-reap-big-rewards.html"
+     ],
+     "confidence": "low"
+    },
+    {
+     "claim": "키캡·기계식 키보드와 스니커즈는 '컬러웨이 한정 드롭' 문법이 강하지만, 소비층이 성인 남성 취미층에 치우치고 수집 가치가 실물의 촉감과 리셀가에 있다. 얼굴 없는 사물이라 원판 그림으로 옮기면 매력이 크게 줄어든다.",
+     "evidence": "이번 라운드에서는 키캡과 스니커즈 시장 규모나 성비를 검색으로 확인하지 못했다. 업계 통념과 기억에 기반한 판단이다.",
+     "sources": [],
+     "confidence": "low"
+    }
+   ],
+   "insights": [
+    {
+     "insight": "PUFF!는 이미 블라인드박스 게임이다. 그림면이 아래인 더미가 뒤집히는 순간이 곧 '개봉'이다.",
+     "why_it_matters": "Pop Mart가 파는 핵심 감정은 '모른다 → 열린다'이고, 연구에서도 불확실성이 호기심과 구매 의도를 높였다. PUFF!는 그 감정을 돈을 받지 않고 실력 플레이 한 번마다 공급할 수 있다. 랜덤 공개가 유료 구매가 아니므로 한국 확률형 아이템 고시와 FTC 리스크도 크게 줄어든다(적용 범위의 법적 확인은 필요).",
+     "design_implication": "랜덤 공개는 오직 '퍽으로 뒤집기'와 무료 '딱지판 떼기'에서만 일어나게 한다. 유료 상품은 확정형만 둔다. 딱지판이나 그 재화를 유료 프리미엄 재화로 살 수 있게 만드는 순간 '간접 유상 확률형'이 되므로 금지 규칙으로 고정한다. 딱지 공개 연출은 Pop Mart 개봉을 본뜬다. 0.3초 정적, 시크릿이면 실루엣 뒤에 무지개 테두리가 비친다."
+    },
+    {
+     "insight": "원판 = 얼굴(머리)이다. 둥근 딱지는 그 자체로 베이비 스키마의 '둥근 머리'다.",
+     "why_it_matters": "산리오 상위권과 Squishmallows 같은 히트 캐릭터는 몸 전체가 둥근 머리 하나에 가깝다. 원형 딱지는 이 문법에 형태적으로 딱 맞는다. 현재 목업처럼 원판 안에 작은 전신 캐릭터를 넣으면 작은 크기에서 판독성과 귀여움을 모두 잃는다(흰 몸통 5종 ΔE 문제와 같은 맥락).",
+     "design_implication": "아트 규칙은 '원판 지름 = 얼굴 지름'이다. 눈 중심은 세로 55~60% 지점에 두고(아래쪽, 큰 이마), 눈은 지름의 12~15% 크기, 볼 터치와 작은 입을 넣는다. 종을 구분하는 돌출부(귀, 뿔, 꼬리)는 원 밖으로 하나만 낸다. 테두리 링에는 희귀도를 표시한다(GDD 별 인쇄 유지). 더미 위에서 '퍽' 할 때 얼굴들이 볼을 부풀려 함께 반응하게 하면 입김의 인과 피드백(피드백 2)과도 이어진다."
+    },
+    {
+     "insight": "남녀노소에 통하는 최대공약수는 '실존 동물 모티프 + 판타지 비틀기'이고, 연령대는 '톤 레이어'로 나눈다.",
+     "why_it_matters": "Pop Mart는 약 70%가 여성이고, 산리오도 여성 쪽으로 치우친다. 스포츠, 키캡, 스니커즈는 남성 쪽이다. 포켓몬(동물을 판타지 종으로 만든 모델)과 Squishmallows('매우 넓은' 고객층), 고양이 수집 게임의 5천만 다운로드가 성별과 연령을 넘어선 사례다. 라부부는 '징그러운 귀여움'으로 10~30대 성인을 잡았다.",
+     "design_implication": "같은 종을 두 가지 톤으로 그린다. 기본판은 카와이로 아이와 여성층을 겨냥하고, 시크릿 '장난꾸러기' 판은 송곳니, 반쯤 감은 눈, 펑크 의상으로 10대·성인 남성과 라부부 팬층을 겨냥한다. 아이에게는 기본판이 친구처럼, 어른에게는 시크릿이 '갖고 싶은 희귀품'으로 보이게 하는 이중 구조다."
+    },
+    {
+     "insight": "1만 판을 버티려면 '디자인 수'가 아니라 '조합 축'이 필요하다.",
+     "why_it_matters": "Squishmallows는 3,000종, Panini는 980종 규모다. 1만 판에서 15판마다 새 칸 하나만 열어도 약 670칸이 필요하다. 1~3인 팀이 시즌마다 54종을 새로 그리는 것은 부채라는 지적이 이미 GDD에 있다.",
+     "design_implication": "앨범을 3축으로 구성한다. ① 종(실존 동물 기반 24~30종, 영구 반려 도감), ② 의상 시리즈(시즌마다 1개 테마, 9+1 디자인; 현재 한국 음식 24종은 '분식 모자', '떡 머리띠' 같은 의상 파츠로 재활용), ③ 마감(기본→코팅→홀로→금박, 중복으로 확정 승급). 30종 × 시즌 20회 × 마감 4단이면 2,400칸이 된다. 시즌당 신규 아트는 10장(9 + 시크릿 1)이면 된다."
+    },
+    {
+     "insight": "시크릿 1장이 시리즈 전체를 끌고 가지만, 꼬리가 너무 길면 이탈한다.",
+     "why_it_matters": "라부부의 시크릿은 1/72이고 TCG Pocket 크라운은 칸당 0.04~0.16%다. 쿠폰 수집 문제상 마지막 1장에 시도가 가장 많이 든다. 부여된 진척 효과(완주율 19%→34%)는 '이미 시작된 세트'가 완주를 끌어당긴다는 것을 보여 준다.",
+     "design_implication": "시리즈마다 시크릿 1종을 둔다. 앨범 칸은 '?' 실루엣으로 처음부터 보이게 한다. 무료 획득 1회당 출현 확률을 약 1.4%(≈1/72)로 공개하고, 천장으로 그 시리즈 딱지 60장을 획득하면 확정 지급한다. 실력 경로로는 주 1회 '시크릿 현상금 판'을 연다. 새 시리즈를 열 때마다 1장을 미리 붙여 준다(부여된 진척)."
+    },
+    {
+     "insight": "교환과 투표는 수집을 '소셜 이벤트'로 바꾸는 가장 싼 장치다. 단, 새 재화를 끼우면 역풍이 온다.",
+     "why_it_matters": "산리오 인기투표에는 46일 동안 6,316만 표가 몰렸다. Monopoly GO는 골드 스티커 교환을 이벤트 기간에만 허용해 스파이크를 만든다. 반면 TCG Pocket은 교환 전용 토큰을 도입했다가 철회했다.",
+     "design_implication": "(a) 연 1회 '딱지 총선거'를 연다. 판에서 이길 때마다 1표를 얻고, 1위 종은 다음 시즌 금박 한정판으로 나온다. 무료이며 Pop Mart식 단일 IP 의존을 '팬덤 순환'으로 분산한다. (b) 교환은 2단계에서 친구에게만 연다. 평소에는 ★1~3만 교환할 수 있고, ★4 이상은 '골든 퍽 주간'에만 교환된다. 교환 비용은 기존 재화(★ 저금)로만 받고 새 토큰은 만들지 않는다."
+    },
+    {
+     "insight": "지불은 일본이 가장 크고, 성장은 미국 성인 수집층에서, 향수는 한국 30대에서 온다.",
+     "why_it_matters": "TCG Pocket 매출의 37%가 일본에서 나왔다. 라부부 미주 매출은 +748%, 미국 성인 완구는 +18%다. 포켓몬빵은 2억 개가 팔렸고 30대 직장인이 주요 구매층이었다. 시장마다 수집을 부르는 '모티프'가 다르다.",
+     "design_implication": "종 라인업을 지역마다 바꾸지 않는다. 대신 의상 시리즈로 현지화한다(일본: 시바·삼색냥 + 와가시 의상, 멕시코: 치와와 + 타코·루차 의상, 한국: 진돗개 + 분식·문방구 의상, 미국: 골든리트리버 + 다이너 의상). 한국 첫 시즌의 '문방구 90년대' 의상은 30대 향수 마케팅(포켓몬빵 사례)과 직결된다."
+    }
+   ],
+   "recommendation": "## 결론: 원형 딱지에 담을 수집 테마 순위\n\n### 1위: 동물 기반 오리지널 크리처 IP ('퍼프 크리처', 가칭) × 의상 시리즈 × 시크릿 변형 [권장]\n**근거**\n- 수집 시장 상위는 모두 '얼굴 있는 생물 패밀리'다. 라부부(Pop Mart 매출의 38%), 포켓몬 TCG Pocket(첫해 12억 달러+), 산리오(1~3위가 모두 강아지), Squishmallows(4.85억 개+)가 그렇다.\n- 실존 동물 모티프를 쓰면 남녀노소와 지역을 넘어 즉시 인식된다. 오리지널 IP이므로 라이선스 비용이 없고 확장에도 한계가 없다.\n\n**세트 구조**\n\n| 축 | 내용 | 규모 |\n|---|---|---|\n| ① 종(영구 반려 도감) | 강아지 6(진돗개, 시바, 코기, 포메, 골든, 치와와), 고양이 4, 토끼, 햄스터, 카피바라, 수달, 펭귄, 오리, 판다, 레서판다, 아홀로틀, 개구리, 곰, 여우, 다람쥐, 해달 + 설화 4종(도깨비, 해태, 구미호, 용 = 전설 등급) | 24~30종. 온보딩에서 '내 반려동물 종'을 고르면 그 종이 첫 왕딱지가 된다 |\n| ② 의상 시리즈(시즌) | 시즌 1 = '90년대 문방구·분식'. 현재 음식 24종을 모자와 의상 파츠로 재활용한다. 이후 시즌은 월드투어 도시 | 시리즈당 **9 + 시크릿 1**(Monopoly GO 9장, 라부부 시크릿 문법) |\n| ③ 마감 | 기본 → 코팅 → 홀로 → 금박(중복으로 **확정** 승급, 물리값은 동일) | 디자인당 4단 |\n| ④ 시크릿 | 같은 종의 '장난꾸러기' 판(송곳니, 펑크 톤). 앨범에 '?' 실루엣으로 처음부터 보인다 | 무료 획득당 약 1/72 공개, **60장 천장**, 주 1회 시크릿 현상금 판 |\n| ⑤ 컬러웨이(키캡·스니커즈 문법 차용) | 시즌 한정 색 배합 드롭(예: '밤하늘', '벚꽃'). 시즌 후 절판하고 추억 상점에서 ★ 2배로 판다 | 시리즈당 1~2종 |\n\n- **1만 판 환산**: 30종 × 시즌 20회 × 마감 4단 = 2,400칸이다. 시즌당 신규 아트는 10장이면 된다. GDD §9.5의 '시즌당 54종 부채' 문제를 해결한다.\n- **아트 규칙**: 원판 지름을 곧 얼굴 지름으로 삼는다. 눈은 세로 55~60% 지점, 지름의 12~15% 크기로 그리고 원 밖 돌출부는 하나만 둔다. 흰 몸통 문제는 종마다 시그니처 색을 지정해 없앤다.\n- **위험**: 산리오나 포켓몬과 비슷하게 보일 위험이 있다(트레이드 드레스). 해법은 실루엣·색 차별 체크리스트, 출시 전 유사도 검토, 프롬프트에 타사 IP명 금지다. 단일 히어로 의존(Pop Mart 주가 -20%)은 연 1회 '딱지 총선거'로 히어로를 순환시켜 막는다. 오리지널 IP는 초기 인지도가 0이므로, 시즌 1에 한국 90년대 향수 의상으로 30대 공유 동기를 만든다.\n\n### 2위: 실존 견종·묘종 '반려 도감' 단독 채택\n- **근거**: 산리오 1~3위가 강아지 캐릭터이고, Cats & Soup은 5천만 다운로드, Neko Atsume는 서구 사용자 40%다. '내 강아지 찾기'라는 개인 동일시가 가장 강하다. 지역 품종으로 현지화하기도 쉽다.\n- **세트 구조**: 견종 그룹(AKC 7그룹식) 세트 9장, 털색 컬러웨이 변형, '믹스견' 시크릿.\n- **위험**: IP로 보호되지 않아 쉽게 복제된다. 실존 동물은 '시크릿 판타지'를 담기 어렵고, 품종 수(약 200) 이상으로 확장하기 어렵다. 일부 시장에서는 품종 서열화 논란도 있을 수 있다. → **1위의 '종 축'으로 흡수**하는 편이 낫다.\n\n### 3위: 세계 음식·장소 의인화 (현재 자산의 연장)\n- **근거**: 포켓몬빵(빵이라는 실물 접점, 2억 개)과 Shopkins(정점 소매 10억 달러)가 음식 모티프의 대중성을 보여 준다. 현재 한국 음식 24종 자산과 월드투어 시즌 구조에 바로 맞는다.\n- **세트 구조**: 도시별 9장(대표 음식 6 + 랜드마크 2 + 시크릿 1).\n- **위험**: Shopkins는 약 2년 붐 뒤 이익이 3분의 1 넘게 줄었다. 음식은 '먹는 것'이라 정서적 애착(동일시)이 동물보다 약하다. → **캐릭터가 아니라 '의상 테마'로 쓰는 것**이 최적이다.\n\n### 보류 또는 차용만\n- **스포츠(Panini 980종)·K-pop 포카·콜라보**: 수집욕은 최상위지만 라이선스가 필요하다. 콜라보는 DAU를 확보한 뒤 시즌 스파이크용으로 쓴다(라부부×원피스, Monopoly GO×스타워즈 방식).\n- **키캡·스니커즈**: 주제로는 기각한다(얼굴 없음, 성인 남성 쪽으로 치우침, 근거 낮음). **'컬러웨이 한정 드롭' 문법만 차용**한다.\n\n## 돈을 내고 계속 모으게 하는 방식 (규제 안전)\n1. 랜덤 공개는 무료로만 둔다(퍽 플레이, 딱지판). 유료 프리미엄 재화로 딱지판을 사는 경로를 금지 규칙으로 고정한다(간접 유상 확률형 회피, 법률 확인 필요).\n2. 유료 상품은 확정형만 판다. 시즌 앨범 패스(유료 트랙 = 지정 디자인과 금박 마감), '시리즈 선택권'(9종 중 1종 지정), 앨범 바인더·책상·액자 스킨, 시크릿 '실루엣 미리보기 액자'가 해당한다.\n3. 그래도 확률 요소를 팔게 된다면 확률과 천장을 공개하고 16세 미만 보호자 동의를 받는다(FTC HoYoverse 합의 기준). 재화 환율도 공개한다.\n4. 교환은 기존 재화로만 하고 새 토큰은 만들지 않는다(TCG Pocket 역풍). ★4 이상 교환은 이벤트 창(Golden Blitz식)에만 연다.\n\n## 다음 검증 (E-실험 제안)\n- **페이크도어 광고 CTR 테스트**: 같은 퍽 영상에 딱지 테마 3종(크리처 / 실존 견종 / 음식)을 바꿔 넣고 한국·미국·일본·멕시코에서 CTR과 '갖고 싶다' 설문을 잰다. 테마 확정 전 1~2주, 소액 예산이면 된다.\n- 시크릿 확률(1/72 vs 1/144)과 천장(40 vs 60장)에 따른 D7 앨범 진척률과 이탈을 A/B로 비교한다.",
+   "key_claims": [
+    "수집 매출 상위(라부부 38%=141.6억 위안, TCG Pocket 첫해 12억 달러+, Squishmallows 4.85억 개+, 산리오 투표 6,316만 표)는 모두 '얼굴과 성격이 있는 생물 캐릭터 패밀리'다. 키캡·스니커즈 같은 사물 수집은 원형 딱지 그림으로 옮기기 어렵고 소비층도 좁다.",
+    "남녀노소의 최대공약수는 '실존 동물 모티프 + 판타지 비틀기'다. 산리오 2025 1~3위가 모두 강아지 캐릭터이고(종 정보는 기억 기반), 고양이 수집 게임이 5천만 다운로드를 넘겼다. 반면 Pop Mart는 약 70%가 여성이다. 기본판은 카와이, 시크릿은 '장난꾸러기(라부부식 kimo-kawaii)'로 두 톤을 나눠 연령과 성별을 모두 덮는다.",
+    "PUFF!의 '그림면 아래 → 퍽으로 뒤집기'는 그 자체로 블라인드박스 개봉이다. 랜덤 공개를 무료 실력 플레이 안에만 두고 유료는 확정형(패스, 선택권, 꾸미기)으로 제한하면 한국 확률형 공개 의무(2024.3.22)와 FTC 제재(HoYoverse 2,000만 달러) 리스크를 피하면서 수집 동기를 최대화할 수 있다.",
+    "1만 판을 버티는 앨범은 '종(24~30) × 의상 시리즈(시즌당 9+시크릿 1) × 마감(4단 확정 승급)' 3축 조합으로 만든다. 그러면 약 2,400칸이 되고 시즌당 신규 아트는 10장이면 된다. 현재 한국 음식 24종은 캐릭터가 아니라 의상 테마로 재활용한다(Shopkins식 음식 단독 테마는 2~3년 피로 위험).",
+    "시크릿은 약 1/72(라부부 기준)로 공개하고 천장을 둔다. 앨범에 '?' 실루엣을 처음부터 보여 주고, 새 시리즈마다 1장을 미리 채워 준다(부여된 진척: 완주율 19%→34%). 교환은 새 토큰 없이 기존 재화로만 한다(TCG Pocket 역풍)."
+   ],
+   "risks": [
+    "오리지널 IP는 출시 시점 인지도가 0이다. 원조 딱지의 매력은 유명(해적판 포함) 캐릭터였다. 초기에는 '퍽' 동사와 향수 의상으로 끌고, 히어로 캐릭터가 생기기까지 시간이 걸린다.",
+    "산리오·포켓몬과 시각적으로 비슷하다는 트레이드 드레스 분쟁과 카피캣 심사 리스크가 있다. 특히 둥근 머리, 강아지, 파스텔 조합은 시나모롤·폼폼푸린과 겹치기 쉽다.",
+    "단일 히어로 의존 리스크가 있다. Pop Mart는 라부부 38% 의존 때문에 실적 발표 후 주가가 20% 넘게 빠졌고, 재구매율도 58%에서 49%로 내려왔다.",
+    "수집 피로가 온다. Shopkins는 2년 붐 후 꺾였고, Pogs는 1993~95년 붐 후 소멸했다. 시크릿과 컬러웨이를 남발하면 쿠폰 수집 꼬리가 길어져 '마지막 1장' 이탈이 커진다.",
+    "'무료 랜덤 + 유료 확정' 구조여도, 유료 재화가 딱지판 획득에 간접적으로 닿으면 한국법상 확률형 아이템으로 볼 수 있다. 적용 범위의 법률 검토가 필요하다.",
+    "실존 견종을 쓸 경우 품종 서열화(희귀 = 비싼 품종) 인상과 일부 국가의 문화적 민감성(특정 동물 금기)에 주의해야 한다.",
+    "아트 파이프라인 위험도 있다. 3축 조합이 '파츠 갈아끼우기'로 보이면 수집 가치가 떨어진다. 시리즈마다 표정과 포즈를 새로 그리는 최소 품질선이 필요하다."
+   ],
+   "open_questions": [
+    "4개 핵심 시장(한·미·일·멕시코)에서 테마별(크리처 / 실존 견종 / 음식) 수집 의향은 실제로 어떻게 다른가? 페이크도어 광고 CTR로 확인해야 한다.",
+    "한국 게임산업법상 '무료로만 얻는 랜덤 공개'와 '유료 패스 보상'의 경계는 어디인가? 유료 재화로 딱지판 충전 시간을 단축하는 것도 간접 유상인가?",
+    "시크릿 확률과 천장(1/72·60장 vs 1/144·40장)이 D7·D30 앨범 진척과 결제 전환에 주는 영향은 무엇인가?",
+    "교환 기능을 열 때 판돈 경제(제로섬 따먹기)와 어떻게 충돌하는가? 교환이 실질적 RMT(회색시장, Monopoly GO 사례)로 번질 위험은?",
+    "의상 시리즈를 판의 맵 테마와 묶을지(예: 1~200판 = 문방구 동네) 분리할지. 피드백 4의 1만 판 진행 구조와 연결하는 설계가 필요하다.",
+    "산리오식 연 1회 인기투표를 소규모 DAU에서 열어도 의미가 있는가? 최소 DAU 기준은?",
+    "키캡과 스니커즈의 시장 규모·성비, Jellycat 성인 비중, 2024~2025 티니핑 수치는 이번에 확인하지 못했다. 필요하면 추가 조사한다."
+   ]
+  },
+  "verify": {
+   "lens": "팩트체크: collect-desire(수집욕이 가장 강한 장르·유형). 검색 8회와 페치 1회(실패)로 핵심 수치 9개를 독립 검증했다.",
+   "verdicts": [
+    {
+     "claim": "Pop Mart 2025 매출 371.2억 위안(+184.7%), The Monsters 141.6억 위안으로 38.1%, 발표 후 주가 20%대 급락(단일 IP 의존 우려)",
+     "verdict": "confirmed",
+     "note": "Reuters 계열(StreetInsider), KrASIA, The Standard, SCMP가 수치를 모두 뒷받침한다. 매출 371.2억 위안(약 185%↑), Monsters 141.6억 위안(+365.7%), 비중 38.1%(전년 23.3%), 주가 하락폭 22.5%(HK$168.30). 다만 주가 급락에는 IP 의존 외에도 4분기 둔화, 컨센서스 하회, 배당성향 하향(35%→25%), 보수적인 2026 가이던스(+20% 이상)가 겹쳤다. 'IP 의존 우려 때문'이라는 단일 원인 서술은 약간 과장이다.",
+     "sources": [
+      "https://www.streetinsider.com/Reuters/Shares+of+Labubu+maker+Pop+Mart+plunge+after+reporting+annual+earnings/26212120.html",
+      "https://kr-asia.com/pop-mart-shares-fall-on-concerns-over-limited-ip-diversification",
+      "https://www.thestandard.com.hk/finance/article/327661/Shares-of-Labubu-maker-Pop-Mart-dive-over-20pc-after-posting-strong-earnings"
+     ]
+    },
+    {
+     "claim": "라부부 블라인드박스 시크릿 확률: 6종 시리즈 1/72(일반 각 1/6), 12종 시리즈 1/144",
+     "verdict": "weakened",
+     "note": "Big Into Energy의 1/72(일반 1/6)는 Target 리스팅, Bagaholicboy, 일본 판매처, Gulf News가 일치해 확인된다. 반면 1/144와 1/720은 저품질 페이지에만 있어 확인되지 않는다. 설계값 '시크릿 ≈1/72'는 근거로 써도 되지만 '12종=1/144'는 빼야 한다. 6개 한 세트에 일반 6종이 보장된다는 점(시크릿은 일반 1칸을 대체)도 설계에 참고할 가치가 있다.",
+     "sources": [
+      "https://bagaholicboy.com/2025/04/the-monsters-big-into-energy-labubu-v3",
+      "https://gulfnews.com/best-buys/labubu-blind-box-review-the-bag-charm-everyone-is-chasing-1.500637384",
+      "https://tech-insider.org/mystery-boxes/labubu-mystery-box/"
+     ]
+    },
+    {
+     "claim": "Pokémon TCG Pocket 첫해 12억 달러 이상, 일본은 다운로드 약 10%·매출 37%",
+     "verdict": "confirmed",
+     "note": "Sensor Tower 기준으로 누적 9천만+ 다운로드, 매출 12억 달러 이상, 매출 비중 일본 37%·미국 27%가 확인된다. AppMagic은 첫 12개월을 약 13억 달러로 추정한다. 측정 기관마다 수치가 다르니 출처를 함께 표기해야 한다. 초기(2024.12)에는 일본 비중이 41.5%였다. '다운로드 약 10%'는 재확인하지 못했다(Toy-People 단일 인용). 또 '사실상 카드 개봉과 수집만으로'라는 인과 서술은 포켓몬 IP 효과와 분리할 수 없다. PUFF!처럼 신규 IP라면 이 수치를 수집 장르의 기대치로 옮기면 안 된다.",
+     "sources": [
+      "https://www.toy-people.com/en/?p=106937",
+      "https://wnhub.io/news/analytics/item-49183",
+      "https://fortune.com/asia/2024/12/18/pokemon-hit-app-60-million-downloads-180-million-revenue-6-weeks"
+     ]
+    },
+    {
+     "claim": "산리오 캐릭터 대상 2025: 총 6,316만 표, 1위 폼폼푸린(561만 표), 2위 시나모롤, 3위 포차코",
+     "verdict": "confirmed",
+     "note": "산리오 EU 공식 발표, Siliconera, Time Out Tokyo가 순위를 확인해 준다. 폼폼푸린은 5,613,659표로 시나모롤의 5연패를 끊었다. 총 득표는 공식 63,166,696과 언론 63,160,696으로 미세하게 다르다. '상위 3종이 모두 강아지'는 일반 지식과도 맞는다(폼폼푸린=골든리트리버, 시나모롤·포차코=강아지). 다만 이 투표는 일본 중심이고 여성 쪽으로 치우친 팬덤이라 '남녀노소 최대공약수'의 근거로는 약하다.",
+     "sources": [
+      "https://www.sanrio.eu/pompompurin-wins-the-40th-sanrio-character-ranking/",
+      "https://www.siliconera.com/?p=1096136",
+      "https://www.timeout.com/tokyo/news/sanrio-has-announced-its-2025-character-ranking-results-070225"
+     ]
+    },
+    {
+     "claim": "2025 글로벌 수집품 매출 +32%, 완구 달러 매출의 약 19% — 성인(키덜트)이 견인",
+     "verdict": "weakened",
+     "note": "+32%와 약 19%는 Circana 발표로 확인된다. 다만 이것은 '글로벌'이 아니라 Circana가 추적하는 G12 시장 기준이다. 또 Circana가 성장 주도층으로 꼽은 것은 '성인'이 아니라 '12세 이상'으로, 10대가 포함된다. '성인이 끌고 있다'는 서술은 범위를 좁혀 표기해야 한다. 상반기 성인 +18% 수치는 별도 검증하지 않았다.",
+     "sources": [
+      "https://www.circana.com/post/global-toy-industry-rebounds-in-2025-as-sales-rise-7-fueled-by-pop-culture-collectibles-and-kidu",
+      "https://toyassociation.org/PressRoom2/News/2026-News/global-toy-industry-rebounds-in-2025-as-sales-rise-7-percent.aspx",
+      "https://chainstoreage.com/circana-global-toy-sales-increased-7-2025"
+     ]
+    },
+    {
+     "claim": "Squishmallows 2022년 1억 개, 2024.8 누적 4억 개(3,000종), 2025 누적 4.85억 개 이상",
+     "verdict": "weakened",
+     "note": "2022년 한 해 1억 개는 CNBC(2023)로 확인된다. 누적 4억 개와 4.85억 개는 이번 검색에서 확인되지 않았다. 찾은 것은 Jazwares 블로그의 '누적 1.25억 개 이상'(날짜 불명)과 Squishmallows가 Jazwares 매출의 40%라는 점뿐이다. Wikipedia 페치는 DNS 실패로 열지 못했다. 1억 개는 쓸 수 있지만 4.85억 개는 출처가 확인될 때까지 low로 내려야 한다.",
+     "sources": [
+      "https://www.cnbc.com/amp/2023/07/02/how-toy-sensation-squishmallows-joined-warren-buffetts-conglomerate.html",
+      "https://shop.jazwares.com/blogs/squishmallows/jazwares-debuts-new-squishmallows-licensees-at-licensing-expo"
+     ]
+    },
+    {
+     "claim": "Monopoly GO는 스티커 앨범을 핵심 메타로 2025년 누적 IAP 60억 달러 돌파(역대 최단)",
+     "verdict": "weakened",
+     "note": "60억 달러 돌파(Sensor Tower, 출시 1,275일, 역대 최단, App Store·Google Play IAP 기준)는 확인된다. 월 약 2억 달러이고 2026년 여름 80억 달러가 예상된다. 그러나 매출의 원인을 '스티커 앨범'으로 돌리는 인과는 검증되지 않는다. 모노폴리 IP, 주사위 에너지 과금, 소셜 레이드 등이 섞여 있다. 이 사례는 앨범 메타가 '함께 쓰인' 사례로만 인용해야 한다.",
+     "sources": [
+      "https://sensortower.com/blog/monopoly-go-app-revenue-milestone",
+      "https://www.scopely.com/en/news/sensor-tower-scopelys-monopoly-go-hit-6-billion-revenue-milestone-in-2025-in-record-time"
+     ]
+    },
+    {
+     "claim": "국산 고양이 수집 게임 Cats & Soup 2023년 5천만 다운로드(6개월 만에 4천만→5천만)",
+     "verdict": "confirmed",
+     "note": "네오위즈가 2023-10-16 발표했고 PocketGamer와 Pocket Tactics가 보도했다. 이후 6천만 다운로드를 넘었다(Gamespress). 개발사는 Hidea, 퍼블리셔는 네오위즈다. 다만 다운로드 수일 뿐 매출 지표가 아니다. '돈을 낼 만큼의 수집욕' 근거로는 약하다.",
+     "sources": [
+      "https://www.pocketgamer.com/cats-soup/50m/",
+      "https://www.pockettactics.com/cats-and-soup/50-million-downloads",
+      "https://gamespress.com/Cats-Soup-Magic-Recipe-Brings-Healing-and-Cozy-Charm-in-US-Launch"
+     ]
+    },
+    {
+     "claim": "규제 기준선: 한국 확률형 아이템 공개 의무화 2024-03-22, FTC–HoYoverse 2,000만 달러 합의(2025.1, 16세 미만 보호자 동의, 확률 공개)",
+     "verdict": "unverifiable",
+     "note": "검색 한도 때문에 독립 검색은 하지 않았다. 리포트의 출처 목록에 문체부·FTC 1차 자료가 있고, 기억과도 일치한다(2024.3.22 시행, FTC 2,000만 달러 합의). 그런데 결정에 가장 큰 영향을 주는 '무료 실력 플레이 안의 랜덤 공개는 적용 대상이 아니다'라는 법적 해석은 리포트 스스로 기억 기반이라고 밝혔다. 법률 검토 전까지 설계 전제로 고정하면 안 된다. 특히 딱지판이나 판돈 재화를 유료로 살 수 있으면 간접 유상 확률형으로 볼 여지가 있다.",
+     "sources": []
+    }
+   ],
+   "missed": [
+    "'동물 기반 둥근 얼굴 캐릭터가 남녀노소 최대공약수'라는 결론은 산리오(일본·여성 편중), Pop Mart(여성 70%), Cats & Soup(다운로드만)을 합친 추론이다. 성별·연령 교차로 수집 장르 선호를 직접 비교한 데이터는 없다. 결론을 high 근거처럼 쓰면 안 된다.",
+    "TCG Pocket, Monopoly GO, 포켓몬빵, 산리오는 모두 수십 년 된 메가 IP다. 신규 오리지널 IP가 수집 동기를 만들어 낸 모바일 사례(예: Cats & Soup의 매출, Pop Mart 오리지널 IP의 초기 곡선)를 근거로 써야 PUFF!에 옮길 수 있다. IP가 없는 신규작의 수집 전환율 근거가 빠져 있다.",
+    "Pop Mart 재구매율 하락(58%→49.4%)은 'IP 피로' 신호로 해석됐다. 그러나 2024~2025 해외 신규 고객이 폭증해 분모가 커진 효과일 수 있다. 인과 해석은 보류해야 한다.",
+    "키캡·스니커즈를 탈락시킨 판단은 리포트 스스로 low(검색 없음)라고 밝혔다. 재윤님이 직접 예로 든 선택지이므로 시장 규모와 성비 근거를 보강하지 않으면 '근거로 결정'이라는 요구를 충족하지 못한다.",
+    "1/72 시크릿 확률을 '무료 획득 1회당 확률'로 옮길 때의 차이를 검토하지 않았다. 라부부의 1/72는 개당 약 2만 원짜리 실물 구매 기준이다. PUFF!에서는 한 판에 여러 장이 뒤집히므로 판당 시크릿 기대 출현이 훨씬 높아진다. 판당 획득 장수를 반영해 재계산해야 한다.",
+    "Circana의 수집품 +32%에는 TCG(포켓몬 카드) 비중이 크다고 알려져 있다. '캐릭터 피규어' 수요와 '카드 수집' 수요를 분리하지 않았다(Circana 원문에서 세부 확인 필요)."
+   ]
+  }
+ },
+ {
+  "research": {
+   "lens": "캔디크러쉬 사가 / 로얄 매치 / 로얄 킹덤이 1만 판 이상을 지속시키는 법 (피드백 4)",
+   "summary": "결론부터 말씀드리면, 세 게임은 1만 판을 출시 때 만들어 두지 않았습니다. 출시 뒤 꾸준히 레벨을 공급하고, 같은 모양이 반복되는 톱니형 난이도로 판을 운영해서 1만 판을 넘겼습니다. 캔디크러쉬는 첫 출시 때 레벨 65가 마지막 판이었습니다. 지금은 약 1.7만 판(2025년 2월)이고 매주 수요일 30·45·60판씩 추가하며, 2012년 이후 평균으로는 하루 4판 이상입니다. 로얄 매치는 2주마다 100판을 추가합니다(2026년 패치노트). 이 공급 속도를 지탱하는 것은 '사람처럼 두는 봇'입니다. 킹(King)은 실제 플레이 데이터로 학습한 CNN 봇으로 출시 전 레벨 난이도를 예측합니다. 테스터가 1주일 걸리던 검증이 크게 줄었고, 사람이 최종 큐레이션합니다.\n\n난이도에는 정해진 패턴이 있습니다. 로얄 매치는 10판 주기로, x5 근처에 '어려움'(평균 약 1.6회 시도), x9에 '매우 어려움'(약 2.5회 시도)이 오고, 그 직후 쉬운 판이나 보너스 판으로 숨을 돌리게 합니다. 첫 '어려움'은 레벨 39까지 미룹니다. 새 장애물은 '복잡도 계단(complexity staircase)'처럼 단계적으로 도입합니다.\n\n숨은 심리 장치는 네 가지가 확인됩니다.\n- **아깝게 진 순간(near-miss):** 학술 연구에서 가장 강한 '계속하고 싶은 충동'을 만든다고 나왔고, 이 순간에 '+5수'를 판매합니다.\n- **연승:** 로얄 매치 10연승 슈퍼 프로펠러, Lava Quest 7연승 100인 이벤트처럼 잃을 수 있는 버프를 줍니다.\n- **어려운 판 미리 표시:** 맵에 표시해서 부스터 사용을 유도합니다.\n- **장기 리텐션 우선:** 킹은 레벨 65를 어렵게 만들면 단기 결제는 늘지만 이탈도 늘어난다는 A/B 결과를 근거로 장기 리텐션을 우선합니다.\n\n캐릭터가 세지는 성장은 없습니다. 대신 다섯 가지가 '성장'을 대신합니다: 잃지 않는 메타 진척(성 꾸미기·왕국 지역 해금), 새 장애물이라는 신선함, 3층 이벤트 캘린더(일일 연승 / 주간 경쟁 / 약 2개월 앨범), 팀, 잃을 수 있는 임시 힘(연승·부스터).\n\n로얄 킹덤은 소프트런칭 때의 의사 PvP 습격 구조를 버렸습니다. 대신 PvE 악당 '다크킹'과 10판당 2판의 왕국 전투 레벨을 넣었고, 첫해 3.011억 달러로 로얄 매치 첫해(2.964억 달러)를 넘었습니다.\n\nPUFF!에는 이렇게 옮기면 됩니다.\n- **레벨 단위:** 1레벨 = 컴퓨터와 한 판.\n- **곡선과 챕터:** 10판 톱니 블록, 50판 = 동네 1곳, 마지막 판은 골목대장 보스.\n- **장애물 도입:** 딱지 종류·바닥재·바람을 장애물 계단으로 들입니다.\n- **공급:** 출시 1,000판, 이후 2주마다 100판, 물리 시뮬 봇으로 큐레이션합니다.\n- **난이도 보정:** 플레이어 쪽 물리는 절대 보정하지 않습니다(피드백 1의 '감'을 지키기 위해). 보정은 AI 상대와 더미 구성에서만 합니다.",
+   "findings": [
+    {
+     "claim": "캔디크러쉬 사가 레벨 수는 약 1.7만 판(2025년 2월, 안드로이드/iOS/아마존/페이스북)이고, 매주 수요일 30·45·60판씩 추가된다. 2024년 자료는 15,000+, 2025년 7월 자료는 16,000+로 출처마다 차이가 있다.",
+     "evidence": "PocketGamer(2025년 2월): 약 17,000판, 매주 수요일 30/45/60판 추가. Cubix(2025년 7월): 16,000+. AP 보도(2025): 'AI 없이 18,000+ 레벨을 재조정하기는 극히 어렵다'.",
+     "sources": [
+      "https://www.pocketgamer.com/candy-crush-saga/how-many-levels-are-there",
+      "https://www.pocketgamer.com/articles/085479/how-many-levels-are-there-in-candy-crush-saga/",
+      "https://www.cubix.co/blog/how-many-levels-are-in-candy-crush-saga/",
+      "https://techxplore.com/news/2025-05-ai-candy-players-difficult-puzzles.html"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "캔디크러쉬 소다 사가는 2025년 한 해에만 2,355판을 추가했고(연 약 45판/주), 커뮤니티 위키 기준 약 19,915판(2026년 4월 스냅샷)이다.",
+     "evidence": "Factually 팩트체크(2026년 4월): 위키 19,915판. PocketGamer(2025년 11월): 18,000판 이상, 2025년에 2,355판 추가.",
+     "sources": [
+      "https://factually.co/fact-checks/electronics-tech/how-many-levels-in-candy-crush-soda-2c8b14"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "로얄 매치는 2026년 업데이트마다 '100 NEW LEVELS'를 내걸며, 2주 주기로 레벨을 추가한다.",
+     "evidence": "APKMirror에 실린 로얄 매치 패치노트(빌드 30519~35222, 마지막은 2026년 4월 1일): '100 NEW LEVELS', 2주마다 신규 레벨. 개발사 홍보 문구를 옮긴 3자 미러라는 한계가 있다.",
+     "sources": [
+      "https://www.apkmirror.com/apk/dream-games-ltd-2/royal-match/",
+      "https://www.apkmirror.com/?p=13161784"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "캔디크러쉬는 처음부터 1만 판이 아니었다. 출시 당시 레벨 65가 '마지막 판'이었고 너무 어려워 전환율 1위이자 이탈 1위 레벨이 됐다. 이후 A/B 테스트에서 어렵게 하면 단기 결제는 늘지만 장기적으로 이탈이 늘었고, 킹은 장기 리텐션 쪽을 택했다.",
+     "evidence": "GDC 발표(Jan Wedekind, Xavier Guardiola, mobilegamer.biz 보도): 레벨 65는 원래 최종 레벨이었고 출시 후 첫 A/B 대상이었다. 난이도↑ = 단기 전환↑ + 장기 이탈↑. Guardiola는 '지금 덜 팔고 오래 남는 플레이어'를 택하고, 긴 A/B와 진행 전체에 미치는 파급을 보라고 권했다. 2016 GDC(Jeremy Kang, PocketGamer.biz)도 같은 맥락으로, 레벨은 종이에서 시작하고 감각과 데이터를 결합한다.",
+     "sources": [
+      "https://mobilegamer.biz/how-king-defines-a-good-candy-crush-saga-level-and-why-it-constantly-prunes-the-bad-ones/",
+      "https://www.pocketgamer.biz/king-on-finding-the-fun-in-candy-crush/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "킹은 '사람이 둘 법한 수'를 모방하는 CNN 봇(지도학습/모방학습)으로 신규 레벨의 난이도를 출시 전에 예측한다. MCTS보다 평균 난이도와의 상관이 높고 계산 비용은 일부에 불과하다. 이전에는 테스터가 같은 레벨을 20번씩 해 보고서를 쓰는 데 약 1주가 걸렸다.",
+     "evidence": "Gudmundsson 외(2018), 'Human-Like Playtesting with Deep Learning': 캔디크러쉬와 소다 대상, 순차 콘텐츠 게임에 일반화 가능. ComputerWeekly와 AI Business의 킹 AI 책임자 인터뷰: 봇은 이기는 게 목표가 아니라 사람처럼 두는 것이 목표이고, 문제 레벨은 봇이 기준에 맞춰 자동 수정안을 내고 디자이너가 검토한다. '7일→1분 미만'은 2차 요약 수치라 신뢰도가 낮다.",
+     "sources": [
+      "https://www.Gwern.net/doc/reinforcement-learning/imitation-learning/2018-gudmundsson.pdf",
+      "https://www.computerweekly.com/news/252456896/How-TensorFlow-makes-Candy-Crush-virtual-players",
+      "https://aibusiness.com/ml/gaming-gets-smarter-insights-from-kings-head-of-ai",
+      "https://mobilegamer.biz/how-king-balances-human-and-ai-powered-design-in-candy-crush-saga/"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "킹은 모든 레벨을 출시 전에 봇으로 돌려 셔플 빈도·난이도 같은 지표를 뽑는다. 디자이너는 그 결과가 의도한 경험인지 판단해 다듬는다. 봇은 이상치 탐지와 통과율 예측에는 강하지만 '손맛'은 놓치므로, 사람 테스트와 라이브 데이터가 여전히 중심이다. 오래된 레벨도 교체하거나 순서를 옮긴다.",
+     "evidence": "mobilegamer.biz의 Sahar Asadi(King AI Labs) 인터뷰. PocketGamer.biz에 인용된 킹 디자이너 발언. 킹 커뮤니티 레벨 디자이너 답변('오래된 레벨을 교체·이동하기도 한다', 비공식).",
+     "sources": [
+      "https://mobilegamer.biz/how-king-balances-human-and-ai-powered-design-in-candy-crush-saga/",
+      "https://community.king.com/en/candy-crush-saga/discussion/330461/who-makes-the-levels"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "캔디크러쉬는 장애물(블로커)을 '복잡도 계단(complexity staircase)'으로 도입한다. 초반엔 단순한 블로커, 베테랑에겐 어려운 조합을 준다. 설계 철학도 '공간을 막고 수를 잡아먹는' 제약형에서, 목표·특수 캔디·판 배치와 상호작용해 '의미 있는 선택'을 주는 쪽으로 바뀌었다.",
+     "evidence": "PocketGamer.biz 'Crush & Tell' 시리즈, 캔디크러쉬 시니어 PM John Davies 인터뷰(검색 스니펫으로 도입부만 확인).",
+     "sources": [
+      "https://www.pocketgamer.biz/crafting-candy-crushs-difficulty-blockers-level-design-ai-and-the-complexity-staircase/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "로얄 매치 초반 100판의 톱니 곡선: '어려움'은 39·45·49·55·65·75·85·95(평균 약 1.6회 시도), '매우 어려움'은 59·69·79·89·99(최대 약 2.5회, 예: Lv99 = 2.45회/27수)다. 첫 어려운 판을 Lv39까지 미루고, 스테이지마다 '새 기믹 학습 판 몇 개 → 어려움 스파이크 → 때로 매우 어려움 정점' 다음에 즉시 승리하는 보너스 판으로 숨을 돌린다. 이동 수는 1~20판 30~38수에서 61~100판 23~27수로 줄어든다.",
+     "evidence": "Gamigion의 'Royal Match level design insights' 분석(원문 일부 깨짐, 한 분석가의 데이터 해석). Medium 분석(Ekin Melis Sezer)도 '초반은 빠르고 쉽고 첫 어려운 판은 Lv39'라고 해 일치한다. 원문 페이지는 직접 열람하지 못해 검색 요약에 의존했다.",
+     "sources": [
+      "https://www.gamigion.com/royal-match-level-design-insights/",
+      "https://medium.com/@ekinmelissezer/game-analysis-for-royal-match-and-toon-blast-9c4bff8ef48b"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "near-miss(아깝게 실패)는 일반 실패보다 각성(심박·주관적 각성)이 높다. 모든 결과 중 가장 좌절스럽다고 평가되면서도, 계속하고 싶은 충동은 가장 강하다. 캔디크러쉬는 1~2수 차이 실패를 명시적으로 알려준다.",
+     "evidence": "Larche, Musielak, Dixon, Journal of Gambling Studies 33(2), 2017(온라인 2016). 캔디크러쉬 애호가 60명이 30분 플레이하는 동안 심박·피부전도·자기보고를 측정했다. 저자들은 슬롯머신 near-miss와 유사하다고 보고, 의도보다 오래 플레이하게 만드는 요인일 수 있다고 지적했다.",
+     "sources": [
+      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5445157/",
+      "https://link.springer.com/article/10.1007/s10899-016-9633-7"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "로얄 매치의 연승 장치: 10연승 시 모든 프로펠러 위력이 2배가 되는 '슈퍼 프로펠러'를 테스트했고, 유지하려면 연승을 이어가야 한다(Homescapes의 레벨 전 부스터를 연승형으로 변환). Naavik은 어려운 레벨이 클리어 레벨의 약 30~40%뿐이라 나머지 판은 수익화가 안 된다는 점을 연승 장치의 배경으로 본다.",
+     "evidence": "Naavik 'Royal Match: finding success through iteration'. 승리 후 코인 사용 옵션 A/B는 홀드아웃 코호트와 함께 지금도 유지 중이라고 함.",
+     "sources": [
+      "https://naavik.co/digest/royal-match-finding-success-through-iteration/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Lava Quest: 100명이 함께 들어가 24시간 안에 7판 연속 승리를 노리는 이벤트다. 한 번이라도 지면 탈락하고, 생존자가 프리미엄 화폐 10,000을 나눈다(빨리 끝낼수록 몫이 큼). King's Cup은 50명이 경쟁하는 2일 토너먼트로 Lv25부터 참여할 수 있다. Sky Race는 주말 3일 레이스, Royal Pass는 Lv37 해금(팬 사이트)이다.",
+     "evidence": "This Week in LiveOps #3(Lava Quest), Gamigion(Lava Quest 보상은 연장 1회 비용을 겨우 덮는 수준, Sky Race 3일), Oldcynic 가이드(King's Cup). 모두 2차 자료이고 수치는 시점마다 바뀔 수 있다.",
+     "sources": [
+      "https://thisweekinliveops.substack.com/p/this-week-in-liveops-royal-matchs",
+      "https://oldcynic.com/royal-match-kings-cup-guide-tips",
+      "https://www.gamigion.com/?p=11453"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "로얄 매치 이벤트는 세 층으로 겹친다. 단기는 Lava Quest 같은 연승 이벤트와 스프린트 토너먼트(비교군 평균 월 약 9.4회), 중기는 Team Battle·Weekly Contest·Archery Arena·Champion Clash 같은 주간 경쟁, 장기는 약 2개월짜리 앨범형 이벤트다. 로얄 매치의 표준 토너먼트 포맷은 6종으로 비교군 평균 2.5종보다 많고, 주말 매출 스파이크는 유저 증가가 아니라 이벤트가 만든다.",
+     "evidence": "Sensor Tower 2026 Live Ops 플레이북(Playliner 데이터: 12개 게임에서 표준 토너먼트 인스턴스 약 5,500건 추적), CampaignPost 재게재. 원문은 직접 열지 못해 검색 요약에 의존했다.",
+     "sources": [
+      "https://sensortower.com/blog/what-royal-matchs-calendar-teaches-about-live-ops-in-2026",
+      "https://www.campaignpost.net/article/what-royal-match-s-calendar-teaches-about-live-ops-in-2026"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "로얄 매치의 D30 리텐션은 16.5%로 상위 매치3 중 1위였다(App Annie 2021년 3분기). 상위 5개 게임 모두 인게임 이벤트와 '예고된 콘텐츠'를 가지고 있었다.",
+     "evidence": "PocketGamer.biz의 App Annie 보고서 인용.",
+     "sources": [
+      "https://www.pocketgamer.biz/news/77656/dream-games-royal-match-leads-match-3-d30-retention-at-165/"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "로얄 킹덤은 소프트런칭 때 다른 플레이어를 치는 의사 PvP(코인마스터식) 루프를 썼다. 정식 버전에서는 이를 PvE 악당 '다크킹'으로 바꾸고, 10판마다 PvE 왕국 전투 레벨 2판(매치·부스터로 보드 위 성·하수인을 타격)과 빌더 기반 지역(district) 해금 메타를 넣었다.",
+     "evidence": "Naavik('PvP·코인마스터식 루프에서 로얄 매치에 가까운 쪽으로 회귀'), Deconstructor of Fun 2023·2024 분석, 스토어 설명('다크킹의 성과 하수인을 파괴', '지역 해금'), esports.net 비교 기사.",
+     "sources": [
+      "https://naavik.co/digest/royal-kingdom-and-expanding-the-royal-universe/",
+      "https://www.deconstructoroffun.com/blog/2024/07/01/royal-kingdom-will-it-outgrow-its-big-brothers-influence",
+      "https://apps.apple.com/US/app/id1606549505",
+      "https://www.esports.net/news/mobile-games/royal-match-vs-royal-kingdom/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "로얄 킹덤은 첫해 3.011억 달러(구글플레이+앱스토어)로 로얄 매치 첫해 2.964억 달러를 약 2% 앞섰고, 소프트런칭 포함 누적은 3.252억 달러다. 로얄 매치는 2024년 14억 달러(전년 대비 +56%)였고, 두 게임 사이 잠식은 없었다. 로얄 킹덤 누적 7.5억 달러 돌파(2026년 7월)는 단일 출처다.",
+     "evidence": "PocketGamer.biz(AppMagic 추정, 총 결제액 기준), Business of Apps, Outlook Respawn(단일 출처, 교차검증 안 됨).",
+     "sources": [
+      "https://www.pocketgamer.biz/royal-kingdom-surpasses-300m-in-first-year-beating-royal-match",
+      "https://businessofapps.com/?p=88662",
+      "https://respawn.outlookindia.com/gaming/gaming-news/royal-kingdom-hits-750m-milestone-dream-games-mobile-hit-soars"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "동적 난이도 조절(DDA)의 근거: EA가 여러 게임에 배포한 DDA(레벨 진행을 확률 그래프로 모델링)는 참여도를 최대 9% 올렸고 수익화에는 중립이었다. 캔디크러쉬와 비슷한 F2P 퍼즐 게임의 30만 명·12주 현장 실험에서는, 이탈 위험군에게 더 쉬운 퍼즐을 주니 참여와 장기 매출이 올랐다.",
+     "evidence": "Xue 외, WWW 2017 Companion pp.465-471. Columbia Business School 연구 브리프(Ascarza, Netzer, Runge): 효과 크기 원문 미확인.",
+     "sources": [
+      "https://archives.iw3c2.org/www2017/proceedings/companion/p465.pdf",
+      "https://business.columbia.edu/research-brief/digital-future/easier-games-more-revenue"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "DDA·난이도 조작에는 논란이 따른다. UX 다크패턴 카탈로그(Deceptive Patterns)는 캔디크러쉬가 결제를 유도하려 '불가능한 레벨'을 낸다는 주장을 싣고 있지만, 스스로 '독립 검증되지 않았다'고 명시한다. 킹이 DDA를 쓰는지 공식 확인하거나 부인한 자료는 찾지 못했다.",
+     "evidence": "deceptive.design 항목(Gray 외 인용). 공식 자료는 미발견.",
+     "sources": [
+      "https://deceptive.design/articles/candy-crush-saga-impossible-levels"
+     ],
+     "confidence": "low"
+    },
+    {
+     "claim": "로얄 매치는 맵에서 '어려움/매우 어려움' 레벨을 미리 표시하고(불꽃 아이콘), 플레이어는 그 판에 부스터를 아껴 쓴다. 실패 후 승리가 가까우면 코인으로 '+5수'를 산다. 부스터를 써도 이동 수는 줄지 않는다.",
+     "evidence": "플레이어 포럼과 공략 사이트(저품질 2차 자료). 연장 가격, 하트 회복 시간(30분), 하트 5개 등은 검색으로 확인하지 못했고 업계 상식 수준의 기억이다.",
+     "sources": [
+      "https://grandavehousing.calpoly.edu/news/royal-match-a-guide-to",
+      "https://www.esports.net/news/mobile-games/royal-match-tips-and-tricks/",
+      "https://medium.com/@ekinmelissezer/game-analysis-for-royal-match-and-toon-blast-9c4bff8ef48b"
+     ],
+     "confidence": "low"
+    }
+   ],
+   "insights": [
+    {
+     "insight": "1만 판은 출시 시점의 과제가 아니라 '공급 속도가 상위 플레이어 진도보다 빠르면 되는' 운영 문제다. 캔디는 레벨 65에서 시작해 연평균 약 1,300~1,500판, 소다는 2025년 2,355판, 로얄 매치는 2주 100판(연 약 2,600판)을 공급한다.",
+     "why_it_matters": "재윤님이 말한 '최소 1만 판'을 출시 전 제작 목표로 잡으면 개발이 막힌다. 업계 1위들은 출시 수백~수천 판에 주 50판 안팎을 꾸준히 더하는 구조다.",
+     "design_implication": "PUFF!는 출시 때 1,000판(약 20개 동네), 이후 2주마다 100판을 목표로 한다. 이 속도면 출시 후 약 3.5년에 1만 판이 된다. 레벨 제작 인원보다 '레벨 생성기 + 봇 검증 + 큐레이션' 파이프라인에 먼저 투자한다."
+    },
+    {
+     "insight": "숨은 심리의 핵심은 곡선의 '모양'이다. 평균 난이도는 거의 평탄하고, 10판 주기의 톱니(일반 → x5 어려움 → x9 매우 어려움 → 보너스·안도 판)와 '미리 표시된 어려운 판'이 긴장과 이완을 반복시킨다. 첫 어려운 판은 Lv39까지 미룬다.",
+     "why_it_matters": "레벨이 오를수록 단순 비례로 어려워지면 이탈한다(킹 레벨 65 사례). 재윤님이 말한 '올라가도 적절히 유지해 주는 장치'의 실체가 이것이다.",
+     "design_implication": "10판 블록마다 목표 평균 시도 수를 고정한다: x1 보너스 약 1.0회, x2~x4 약 1.1~1.3회, x5 어려움 약 1.6회, x6~x8 약 1.2회, x9~x0 매우 어려움/보스 약 2.5회. 레벨 번호가 커져도 이 표는 거의 바꾸지 않고, 장애물 조합 수로 깊이를 만든다."
+    },
+    {
+     "insight": "PUFF!는 매치3와 달리 '감(손맛)'이 실력의 본체다(피드백 1). 그래서 DDA를 플레이어 물리에 걸면 학습한 감각이 배신당한다. 난이도 보정은 상대(AI)와 판 구성에서만 해야 한다.",
+     "why_it_matters": "게이지를 숨기면 '같은 세기면 같은 결과'라는 일관성이 유일한 학습 신호가 된다. 몰래 바꾸면 '조작 게임'이라는 불신과 이탈로 이어진다. 반대로 AI 상대 컨디션 보정은 '컴퓨터와 하는 게임'이라는 전제와 자연스럽게 맞는다.",
+     "design_implication": "세기 → 뒤집힘의 물리 관계는 전 레벨·전 유저 동일하게 고정한다(결정적 시드). 같은 레벨 3연속 실패 시 AI 명중률을 단계적으로 낮추고(예: -5%p씩, 최대 -15%p), 이탈 위험군에게는 다음 블록의 x5를 한 단계 쉬운 버전으로 배정한다. 근거는 Columbia 30만 명 실험, EA +9%."
+    },
+    {
+     "insight": "피드백 1에서 숨기는 초록/빨강 적정 구간은 버릴 정보가 아니라 매치3의 '부스터'에 해당하는 가장 자연스러운 상품이다.",
+     "why_it_matters": "매치3의 돈 쓰는 순간은 어려운 판 직전 부스터와 실패 직후 +5수다. PUFF!에는 아직 그 순간에 팔 물건이 정의되지 않았다.",
+     "design_implication": "'눈썰미' 부스터: 1퍽 동안 적정 구간 게이지를 다시 보여준다. 튜토리얼(Lv1~10)에서는 항상 보이고, Lv11부터 숨기며 어려운 판 시작 화면에서 사용을 권한다. 실패 직후에는 '+1퍽 더(한 번 더 불기)'를 판다."
+    },
+    {
+     "insight": "near-miss는 '계속 충동'이 가장 강한 순간이다. 물리 딱지 게임은 매치3보다 near-miss가 자연스럽고 극적이다(가장자리에서 흔들리다 멈춘 딱지).",
+     "why_it_matters": "실패 화면이 곧 핵심 매출 지점이자 재도전 동기다. 다만 같은 연구가 도박 저널에 실렸으므로, 아이 유저가 있는 PUFF!는 조작된 near-miss를 만들면 안 된다.",
+     "design_implication": "실패 시 실제 결과만 '1장 차이!'로 보여주고, 가장 아깝게 버틴 딱지를 0.8초 슬로모로 리플레이한 뒤 '+1퍽' 제안을 띄운다. 결과를 꾸며내는 연출은 금지하고 내부 규정으로 명문화한다."
+    },
+    {
+     "insight": "캐릭터 스탯 성장 없이 1만 판을 끌고 가는 축은 다섯 가지다. ① 잃지 않는 메타 진척(성 꾸미기, 왕국 지역), ② 신선함(새 장애물과 새 테마 구역), ③ 사회적 경쟁·협력(팀, 50인 토너먼트, 100인 연승 레이스), ④ 잃을 수 있는 임시 힘(연승 버프, 부스터 재고), ⑤ 시즌 수집(약 2개월 앨범).",
+     "why_it_matters": "영구 파워 성장을 넣으면 레벨 난이도 설계가 무너진다(누가 얼마나 세졌는지 알 수 없음). 캔디와 로얄이 성장을 안 넣은 이유이기도 하다.",
+     "design_implication": "PUFF!에는 영구 '입김 스탯'을 넣지 않는다. 대신 동네 재건(잃지 않음), 연승 버프 '왕볼'(잃음), 딱지 앨범 시즌(수집, 피드백 3과 연결), 골목대장 보스, 반 대항전을 둔다. 덧붙여 게이지를 숨긴 PUFF!는 '내 실력 성장'이 매치3보다 실재하므로 '명인 기록'(퍼펙트 퍽 비율, 최장 연승)으로 보여준다."
+    },
+    {
+     "insight": "로얄 킹덤의 교훈: 대중 캐주얼에서 '다른 사람을 치는' PvP 루프보다 고정 악당과의 PvE 전투가 이겼다. 그리고 전투는 매 판이 아니라 10판 중 2판에만 둔다.",
+     "why_it_matters": "재윤님의 '기본 전제는 컴퓨터와 하는 것'과 정확히 같은 방향이고, 근거 있는 선택이 된다.",
+     "design_implication": "반복 등장하는 악역 '딱지왕'(예: 골목대장 패거리)을 둔다. 각 동네(50판)의 10판 블록마다 x9~x0의 2판을 '패거리 대결' 보스전으로, 50번째 판은 동네 골목대장전으로 한다. PvP는 별도 모드로 분리한다."
+    }
+   ],
+   "recommendation": "## PUFF! 레벨 1~10,000 구조 v0.1 (근거 기반 제안)\n\n### 0. 레벨 단위 정의\n- **1레벨 = 컴퓨터(동네 아이) 1명과 한 판, 60~120초.** 판돈은 레벨이 정해 준다. 자유 판돈 5/10/20은 '오늘의 더미'와 PvP 모드로 분리한다.\n- **목표 4종을 순환한다** (매치3의 목표 다양화에 해당하며, 비율은 제안값):\n  - ① 상대보다 많이 따기: 약 60%\n  - ② 금딱지·보스딱지 같은 목표 딱지 뒤집기: 약 20%\n  - ③ 퍽 수 제한('3퍽 안에 8장'): 약 15%\n  - ④ 보스전: 약 5%\n\n### 1. 톱니 곡선: 10판 블록 (로얄 매치 실측 패턴을 이식)\n| 블록 위치 | 역할 | 맵 표시 | 목표 평균 시도(봇 예측) |\n|---|---|---|---|\n| x1 | 보너스·안도 판(거의 확정 승리, 보상 연출) | 선물 | 약 1.0 |\n| x2~x4 | 새 장애물 학습 또는 일반 | - | 1.1~1.3 |\n| x5 | 어려움 | 빨간 불꽃 | 약 1.6 |\n| x6~x8 | 일반 | - | 약 1.2 |\n| x9~x0 | 매우 어려움 / 패거리 보스 | 보라 해골 | 약 2.5 |\n\n- 첫 '어려움'은 Lv35~40 전에는 두지 않는다(로얄 매치 Lv39). 첫 '매우 어려움'은 약 Lv59.\n- 레벨 번호가 커져도 이 표는 거의 고정한다. 깊이는 장애물 조합으로 만든다(단순 비례 상승 금지, 킹 레벨 65 교훈).\n\n### 2. 챕터 = 동네 50판 + 메타\n- **동네 구성:** 동네 1곳 = 10판 블록 5개. 50번째 판은 그 동네 골목대장전이다(로얄 킹덤 다크킹식 PvE).\n- **메타:** 클리어 1판마다 '구슬' 1개를 준다. 할머니 문방구와 동네 복원 과제는 과제당 1~3구슬, 동네당 과제 약 20개로 잡는다. 잃지 않는 진척이다.\n- **규모:** 200동네 = 1만 판. 동네 테마(골목 → 시장 → 학교 앞 → 바닷가 → 눈 오는 산동네…)가 시각적 신선함을 담당한다.\n\n### 3. 장애물 도입 주기 ('복잡도 계단')\n- **Lv1~100:** 10~15판마다 1개(약 8개). 예: 장판·모래·얼음 바닥, 두꺼운 딱지, 젖은(무거운) 딱지, 테이프로 묶인 2장, 금딱지 목표, 선풍기 바람, 계단형 더미, 접힌 딱지.\n- **Lv100~1,000:** 30~50판마다 1개(약 20개 추가).\n- **Lv1,000 이후:** 100~200판마다 1개, 나머지는 기존 조합 재조합. 1만 판까지 장애물 총 40~60종이면 충분하다고 보는데, 캔디 블로커 수를 기억으로 추정한 값이라 확인이 필요하다.\n- **새 장애물 성격:** 판을 막는 '제약형'보다 '어디를 불지 선택하게 하는 형'을 우선한다(킹의 설계 전환).\n\n### 4. 제작 파이프라인\n- **공급:** 출시 1,000판, 라이브는 2주마다 100판(로얄 매치와 같은 속도)으로 출시 후 약 3.5년에 1만 판.\n- **생성:** 더미 장수, 딱지 구성, 바닥, 바람, AI 성격, 목표를 파라미터로 절차 생성한다.\n- **봇 검증:** Rapier 헤드리스로 레벨당 1,000~5,000회 시뮬레이션한다. '사람 같은 손' 모델(퍼센타일별 조준·세기 오차 분포를 실제 로그에서 학습, 킹의 모방학습 봇 원리)로 예측 시도 수를 뽑고, 1번 표에서 벗어나면 자동으로 표시한다. 마지막은 디자이너가 큐레이션한다.\n- **라이브 교정:** 출시 후 실측 통과율이 예측과 크게 다른 레벨은 교체하거나 순서를 옮긴다(킹 방식). A/B 판정 지표는 단기 전환이 아니라 D30·D90 리텐션으로 한다.\n\n### 5. 실패·구매 순간\n- **레벨 시작 전:** 어려움·매우 어려움 판 진입 화면에서 '눈썰미'(1퍽 동안 숨긴 적정 구간 게이지 표시) 같은 부스터를 권한다.\n- **실패 직후:** 실제 결과로만 '1장 차이!'를 보여주고, 가장 아깝게 버틴 딱지를 슬로모로 리플레이한 뒤 '+1퍽 더'를 코인으로 판다. 연장할수록 가격이 오르는 구조는 업계 관행으로 알고 있으나 미검증이다.\n- **연승 버프(잃을 수 있는 임시 힘):** 3연승 '왕볼'(바람 반경 +), 7연승 '태풍볼'. 지면 사라진다(로얄 매치 10연승 슈퍼 프로펠러). 연승 때문에 매 판이 수익화 기회가 된다(어려운 판은 30~40%뿐이라는 Naavik 분석).\n- **하트:** 5개, 30분당 1개, 승리 시에는 차감하지 않고, 팀원끼리 하트를 선물한다. 업계 표준으로 알고 있으나 수치는 미검증이다.\n\n### 6. 이벤트 캘린더 (로얄 매치 3층 구조)\n- **매일:** '골목 릴레이' — 100명이 24시간 안에 7연승, 생존자가 상금을 나눈다(Lava Quest).\n- **주중:** 반 대항전(팀 배틀).\n- **주말:** 2일 50인 토너먼트(King's Cup)와 3일 레이스(Sky Race).\n- **약 2개월:** 딱지 앨범 시즌(피드백 3의 수집과 직결).\n- **월간:** 딱지 패스.\n- **기능 단계 해금(제안):** Lv10 앨범, Lv20 팀, Lv25 토너먼트(King's Cup Lv25), Lv37 패스(Royal Pass Lv37). 초반 판마다 '새것'이 열리게 한다.\n\n### 7. 난이도 보정 원칙 (감을 지키는 DDA)\n- **절대 금지:** 플레이어의 세기 → 뒤집힘 물리를 보정하지 않는다. 결정적 시드로 동일하게 유지하고, 게이지를 숨긴 '감'의 공정성이 PUFF!의 정체성이다.\n- **허용:** ① 같은 판 3연속 실패 시 AI 명중률을 단계적으로 낮춘다(연출은 '상대가 지쳤다'). ② 이탈 위험 예측 유저에게 다음 블록의 어려운 판을 한 단계 쉬운 버전으로 준다(Columbia 30만 명 실험, EA DDA +9%).\n- **문서화:** 위 정책을 운영 원칙으로 문서화한다. 아이와 부모 유저가 있으므로, 가짜 near-miss·불가능 레벨·과금자 차별 난이도는 금지 조항으로 둔다.\n\n### 8. '1만 판까지 계속할 이유' 체크리스트 (영구 성장 없이)\n잃지 않는 동네 재건 / 새 장애물·새 동네 / 딱지 시즌 수집 / 반 대항전·토너먼트 / 연승 임시 버프 / **내 실력의 실제 성장**('명인 기록': 퍼펙트 퍽 비율, 최장 연승, 동네별 3별).",
+   "key_claims": [
+    "1만 판은 출시 조건이 아니라 공급 속도 문제다. 캔디는 레벨 65에서 시작해 현재 약 1.7만 판이고(매주 30~60판), 로얄 매치는 2주마다 100판을 추가한다. PUFF!는 출시 1,000판에 2주 100판이면 약 3.5년에 1만 판에 이른다.",
+    "숨은 심리의 핵심은 10판 주기 톱니 곡선이다. 로얄 매치는 x5에 '어려움'(약 1.6회 시도), x9에 '매우 어려움'(약 2.5회)을 두고 직후에 보너스·안도 판을 넣으며, 첫 어려운 판은 Lv39까지 미룬다. 레벨이 올라도 평균 난이도는 단순 비례로 올리지 않는다(킹 레벨 65: 어렵게 하면 단기 결제↑, 이탈↑).",
+    "공급을 가능하게 한 것은 '사람처럼 두는 봇'이다. 킹은 플레이 데이터로 학습한 모방 CNN으로 출시 전 난이도를 예측하고 사람이 큐레이션한다. PUFF!는 물리 시뮬레이션이라 이 방식이 더 쉽게 들어맞는다.",
+    "near-miss는 학술적으로 '계속 충동'이 가장 강한 순간이고(Larche 외 2017), 캔디와 로얄은 이 순간에 +5수를 판다. 연승 버프(10연승 슈퍼 프로펠러, 7연승 Lava Quest)는 모든 판을 수익화 기회로 만든다.",
+    "캐릭터 성장 대신 잃지 않는 메타 진척, 새 장애물, 3층 이벤트(일일 연승 / 주간 경쟁 / 약 2개월 앨범), 팀, 잃을 수 있는 임시 힘이 1만 판을 끈다. 로얄 킹덤은 PvP 습격을 PvE 다크킹(10판 중 2판 전투)으로 바꿔 첫해 3.011억 달러로 로얄 매치를 넘었다.",
+    "PUFF!는 '감'이 실력의 본체이므로 DDA는 플레이어 물리가 아니라 AI 상대와 더미 구성에만 걸어야 한다. 이탈 위험군에게 쉬운 판을 주는 방식은 장기 매출을 높인다는 실험 근거가 있다(Columbia 30만 명, EA +9%)."
+   ],
+   "risks": [
+    "물리 결정성: 브라우저와 기기마다 부동소수 차이로 Rapier 결과가 달라지면, '감'의 공정성과 봇 난이도 예측이 모두 흔들린다. Rapier의 크로스플랫폼 결정성 옵션 검증이 선행돼야 한다(미검증).",
+    "물리 게임은 매치3보다 결과 분산이 클 수 있다. 게이지를 숨기면 초반 이탈이 커질 수 있어, Lv1~40의 거의 확정 승리 구간과 튜토리얼 게이지 노출을 엄격히 지켜야 한다.",
+    "near-miss·연승 상실·판돈 구조는 도박 연구(Journal of Gambling Studies)와 같은 틀로 비판받을 수 있다. 아이 유저와 한국 확률형 아이템 규제(확률 공개 의무, 기억 기반)를 고려하면 연출 조작과 과도한 연장 판매는 평판·규제 리스크다.",
+    "숨은 DDA는 들키면 '조작 게임' 낙인이 찍힌다(캔디 '불가능 레벨' 의혹 사례). 보정은 AI 쪽으로만, 원칙을 공개 가능한 수준으로 유지해야 한다.",
+    "2주 100판 공급은 생성기, 봇, 큐레이터 2~4명 체계가 없으면 유지가 어렵다. 공급이 끊기면 상위 유저가 '레벨 끝' 벽에 부딪혀 이탈한다.",
+    "로얄 매치 톱니 수치(어려움 위치, 1.6회/2.5회)는 한 분석가(Gamigion)의 초반 100판 데이터라, 후반 레벨에도 그대로 적용된다는 보장은 없다.",
+    "레벨 모드 판돈(딱지 거래)과 PvE 레벨 진행이 섞이면 '레벨에서 지면 딱지를 잃는가?'가 혼란스러워진다. 수집욕(피드백 3)과 충돌할 수 있어 레벨 모드에서는 수집 딱지를 잃지 않게 설계해야 한다."
+   ],
+   "open_questions": [
+    "PUFF!의 '1레벨'을 AI와 한 판(여러 턴)으로 할지, 한 번 불기 퍼즐(1~3퍽)로 할지. 판 길이가 하루 플레이 판 수와 1만 판 소진 기간(예: 하루 10판이면 약 3년)을 결정한다.",
+    "로얄 매치 한 구역(area)당 레벨·별·과제 수, 하트 회복 시간, +5수 가격과 상승 구조는 이번 검색으로 확인하지 못했다(직접 플레이 계측 필요).",
+    "킹과 드림게임즈의 목표 통과율 수치와 레벨 디자이너 규모는 공개 자료를 찾지 못했다.",
+    "로얄 매치와 캔디가 개인화 DDA를 실제로 쓰는지 공식 확인 자료가 없다.",
+    "상위 1% 유저의 주간 클리어 판 수(공급 속도 산정의 기준)는 매치3에서도 공개되지 않았다. PUFF!는 소프트런칭에서 측정해야 한다.",
+    "'눈썰미'(적정 구간 공개)를 부스터로 팔 때, 숨긴 게이지의 '감' 학습을 해치지 않는 노출 시간과 빈도는 플레이테스트로 정해야 한다.",
+    "Rapier 헤드리스 시뮬레이션으로 레벨당 1,000~5,000회를 돌릴 때의 비용과 '사람 같은 손' 오차 모델의 초기 파라미터(소프트런칭 전에는 사내 테스트 데이터밖에 없음)."
+   ]
+  },
+  "verify": {
+   "lens": "saga-levels 팩트체크: 캔디크러쉬, 로얄 매치, 로얄 킹덤의 1만 판 지속 구조",
+   "verdicts": [
+    {
+     "claim": "캔디크러쉬는 출시 당시 레벨 65가 '마지막 판'이었고, 어렵게 만들면 단기 결제는 늘지만 장기 이탈도 늘어난다는 A/B 결과에 따라 킹이 장기 리텐션을 택했다",
+     "verdict": "weakened",
+     "note": "인과(A/B 결과: 난이도를 올리면 단기 전환은 늘고 장기 이탈도 늘며, 쉬운 버전이 플레이어를 더 오래 남김. Guardiola가 장기 리텐션을 택함)와 'Lv65가 매출·전환·이탈 모두 1위'는 확인됐다(GDC 'Sugary Statistics', Wedekind·Guardiola). 그러나 '출시 당시' 마지막 판이라는 표현은 부정확하다. 디자이너 Tobias Nyblom에 따르면 Lv65는 '두 번째 업데이트의 마지막 레벨'로 정해졌고, 플레이어 반응이 좋아 어려운 상태로 유지됐다. 따라서 '처음엔 65판에서 시작했다'는 서사는 '초기 콘텐츠 경계가 수십 판 규모였다' 정도로 고쳐 써야 한다. A/B의 구체적 수치는 공개 자료에서 확인하지 못했다.",
+     "sources": [
+      "https://mobilegamer.biz/how-king-defines-a-good-candy-crush-saga-level-and-why-it-constantly-prunes-the-bad-ones/",
+      "https://www.gdcvault.com/play/1034392/Sugary-Statistics-What-We-Have",
+      "https://schedule.gdconf.com/session/sugary-statistics-what-we-have-learned-about-candy-crush-content-after-10-years-and-over-15000-levels/900207"
+     ]
+    },
+    {
+     "claim": "로얄 매치는 2주마다 100판을 추가한다",
+     "verdict": "weakened",
+     "note": "APKMirror에 실린 여러 빌드의 패치노트에 '100 new levels'와 '2주마다 신규 레벨'이 반복된다. 다만 빌드마다 문구가 동일한 보일러플레이트 템플릿이라, 매 업데이트가 정확히 100판인지 또는 정확히 2주 간격인지를 실측한 자료는 아니다. 개발사 공식 발표도 찾지 못했다. 그러므로 '연 약 2,600판'과 'PUFF! 약 3.5년에 1만 판' 계산은 상한 추정치로 다뤄야 한다(산술 자체는 맞음: 26×100 = 2,600, 9,000÷2,600 ≈ 3.5).",
+     "sources": [
+      "https://www.apkmirror.com/apk/dream-games-ltd-2/royal-match/royal-match-19619-release/",
+      "https://www.apkmirror.com/?p=11938225"
+     ]
+    },
+    {
+     "claim": "캔디크러쉬는 약 1.7만 판(2025년 2월)이며 2012년 이후 평균 하루 4판 이상을 추가했다",
+     "verdict": "weakened",
+     "note": "GDC 세션 제목('10년, 15,000+ 레벨')과 AP의 18,000+ 보도로 규모는 확인된다. 그러나 '하루 4판 이상'은 과장이다. 2012년 4월(페이스북 출시)부터 2025년 2월까지 약 4,670일 동안 17,000판이면 하루 약 3.6판이다. 하루 4판을 넘으려면 18,000판 기준에 늦은 시점을 써야 한다. 리서치의 다른 부분에 쓴 '연 약 1,300~1,500판'은 이 계산과 맞는다. 매주 수요일 30/45/60판 추가는 PocketGamer 단일 2차 출처라 이번에 독립 확인하지 못했다.",
+     "sources": [
+      "https://schedule.gdconf.com/session/sugary-statistics-what-we-have-learned-about-candy-crush-content-after-10-years-and-over-15000-levels/900207",
+      "https://techxplore.com/news/2025-05-ai-candy-players-difficult-puzzles.html"
+     ]
+    },
+    {
+     "claim": "로얄 매치 난이도 톱니: 10판 주기로 x5 근처에 '어려움', x9에 '매우 어려움', 첫 '어려움'은 Lv39",
+     "verdict": "weakened",
+     "note": "Gamigion(2025년 7월) 분석과 일치한다. 어려움은 39·45·49·55·65·75·85·95, 매우 어려움은 59·69·79·89·99, 이동 수는 30~38수에서 23~27수로 준다. 그러나 출처는 한 분석가의 해석 하나이고, 초반 100판에 한정된다. 어려움 간격도 4~10으로 들쭉날쭉해 엄격한 'x5 규칙'이 아니다. 'x9 매우 어려움'은 59~99 구간에서만 성립한다. 개발사(Dream Games) 공식 확인은 없다. 패턴의 '모양'은 참고할 만하지만, 'x5 = 1.6회, x9 = 2.5회 고정표'를 업계 표준인 것처럼 제시하면 과잉 일반화다.",
+     "sources": [
+      "https://www.gamigion.com/royal-match-level-design-insights/",
+      "https://medium.com/@ekinmelissezer/game-analysis-for-royal-match-and-toon-blast-9c4bff8ef48b"
+     ]
+    },
+    {
+     "claim": "near-miss가 계속하려는 충동을 가장 강하게 만든다(Larche·Musielak·Dixon, Journal of Gambling Studies 33(2), 2017)",
+     "verdict": "confirmed",
+     "note": "애호가 60명이 30분 플레이했다. near-miss는 일반 패배보다 심박과 주관적 각성이 높았고, 가장 좌절스러운 결과이면서 계속하려는 충동은 가장 강했다. 서지 정보는 33(2):599–615, 온라인 2016년 7월이다. 이 연구는 상관/관찰이며 '+5수 판매가 매출을 올린다'는 인과까지 보여주지는 않는다. 리서치의 '조작된 near-miss 금지' 제안은 이 연구의 도박 맥락과 맞는다.",
+     "sources": [
+      "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5445157/",
+      "https://link.springer.com/article/10.1007/s10899-016-9633-7"
+     ]
+    },
+    {
+     "claim": "로얄 킹덤 첫해 3.011억 달러 > 로얄 매치 첫해 2.964억 달러, 누적 7.5억 달러 돌파(2026년 7월)는 단일 출처",
+     "verdict": "confirmed",
+     "note": "AppMagic 추정치(구글플레이와 앱스토어 총 결제액)로 3.011억 대 2.964억, 약 2% 차이가 확인된다. 단 로얄 킹덤은 19개월 소프트런칭과 기존 브랜드의 이점이 있었으니, 'PvE로 바꿔서 이겼다'는 인과로 읽으면 안 된다. 그리고 리서치가 '단일 출처'라고 한 누적 7.5억 달러는 PocketGamer.biz도 보도했다(2026년 7월 7.661억 달러, 2026년 상반기가 전체의 42%). 이 caveat는 고쳐야 한다.",
+     "sources": [
+      "https://www.pocketgamer.biz/royal-kingdom-surpasses-300m-in-first-year-beating-royal-match",
+      "https://www.pocketgamer.biz/royal-kingdom-surpasses-750m-with-42-of-all-revenue-made-in-h1-2026/"
+     ]
+    },
+    {
+     "claim": "로얄 킹덤은 소프트런칭의 의사 PvP 습격을 버리고 PvE 다크킹과 10판당 2판의 왕국 전투 레벨을 넣었다",
+     "verdict": "unverifiable",
+     "note": "Deconstructor of Fun과 Naavik 원문을 열지 못했다(DNS 실패). PvP에서 PvE 다크킹으로의 전환은 리서치가 인용한 여러 2차 출처의 서술에 의존한다. '10판당 2판'이라는 구체 비율은 이번에 독립 확인하지 못했다. 이 비율을 PUFF!의 'x9~x0 보스전'에 그대로 옮기는 근거로 쓰기 전에 원문 확인이 필요하다.",
+     "sources": [
+      "https://www.deconstructoroffun.com/blog/2024/07/01/royal-kingdom-will-it-outgrow-its-big-brothers-influence",
+      "https://naavik.co/digest/royal-kingdom-and-expanding-the-royal-universe/"
+     ]
+    },
+    {
+     "claim": "DDA 근거: EA DDA는 참여도를 최대 9% 올리고 수익화에는 중립(Xue 외, WWW 2017)",
+     "verdict": "confirmed",
+     "note": "초록 원문은 'up to 9% improvement in player engagement with a neutral impact on monetization'이다. 9%는 여러 EA 게임 중 상한값이지 평균이 아니다. 방식도 플레이어 물리나 실력 보정이 아니라 레벨 시드와 전이확률 조정이다. 그래서 PUFF!의 '플레이어 물리는 고정, AI와 더미 구성만 보정' 원칙과 잘 맞는다.",
+     "sources": [
+      "https://archives.iw3c2.org/www2017/proceedings/companion/p465.pdf"
+     ]
+    },
+    {
+     "claim": "Columbia 30만 명·12주 현장 실험: 이탈 위험군에게 쉬운 퍼즐을 주니 참여와 장기 매출이 상승",
+     "verdict": "unverifiable",
+     "note": "Columbia 브리프 페이지가 열리지 않았고(DNS 실패), 검색에서도 해당 연구(Ascarza·Netzer·Runge)를 찾지 못했다. 대신 Scientific Reports 2020의 캔디크러쉬 약 1,200만 명 관찰연구가 '초반의 어려운 경험이 대량 이탈로 이어진다'고 보고한다. 이것은 방향만 같고 실험 근거는 아니다. 리서치가 이 연구를 confidence high의 핵심 근거로 쓴 것은 과하다. 효과 크기도 리서치 스스로 원문 미확인이라고 적었다.",
+     "sources": [
+      "https://business.columbia.edu/research-brief/digital-future/easier-games-more-revenue"
+     ]
+    },
+    {
+     "claim": "로얄 매치 D30 리텐션 16.5%로 매치3 1위(App Annie 2021년 3분기), 상위 5개 게임 모두 이벤트와 예고 콘텐츠 보유",
+     "verdict": "confirmed",
+     "note": "확인됐다. 2위는 해리포터 퍼즐 앤 스펠 16.2%다. 다만 대상이 '다운로드 상위 10개 매치3 중 D30 상위 5개'라는 좁은 표본이고 2021년 수치다. 이벤트와 예고 콘텐츠는 상관관계로 관찰된 것이지 인과로 검증된 것이 아니다.",
+     "sources": [
+      "https://www.pocketgamer.biz/news/77656/dream-games-royal-match-leads-match-3-d30-retention-at-165/"
+     ]
+    }
+   ],
+   "missed": [
+    "캔디크러쉬 레벨 65는 '출시 시점'이 아니라 '두 번째 업데이트의 마지막 레벨'이었다(Nyblom). '65판에서 시작해 1만 판으로' 서사는 고쳐야 한다.",
+    "로얄 매치 '2주 100판'은 패치노트 보일러플레이트라 실측 공급량이 아니다. PUFF! 공급 계획(1만 판까지 약 3.5년)은 상한 시나리오로 보고, 더 보수적인 시나리오(예: 연 1,300판인 캔디 속도 → 1만 판까지 약 7년)를 함께 제시해야 한다.",
+    "로얄 킹덤이 로얄 매치를 앞선 2%는 19개월 소프트런칭과 브랜드 효과 같은 교란 요인이 커서 'PvE가 PvP를 이겼다'는 근거가 되지 못한다. 재윤님의 '컴퓨터와 하는 게임' 전제를 지지하는 근거로는 약하다.",
+    "Columbia 실험은 확인 불가다. DDA 근거는 EA 9%(상한값) 하나로 축소해서 써야 한다.",
+    "로얄 매치의 톱니 난이도 표는 초반 100판, 분석가 1인의 데이터다. 1만 판까지 같은 주기가 유지된다는 근거는 없다.",
+    "리서치는 '플레이어 물리 무보정'을 원칙으로 세웠지만, 매치3의 DDA는 보드 시드(판 구성)를 조정하는 방식이다. 이는 PUFF!의 '더미 구성 보정'과 같은 계열이므로, 더미 배치·딱지 무게 보정이 플레이어에게 감지 가능한지(감 학습을 해치는지)를 별도로 검증해야 한다."
+   ]
+  }
+ },
+ {
+  "research": {
+   "lens": "보이지 않는 바람·입김의 인과를 직관적으로 보이게 하는 법 + 게이지를 숨기고 '감'으로 하는 법 (재윤님 2차 피드백 1·2)",
+   "summary": "**가설 (미검증)**: '왜 넘어갔지?'가 안 읽히는 이유는 바람이 약해 보여서가 아닙니다. 인과 사슬 '입 → 공기 덩어리 → 가장자리 밑으로 파고듦 → 들림 → 뒤집힘'에서 가운데 두 고리가 화면에 없고, 입이 월드 밖 UI 스티커에 붙어 있어서입니다. 그래서 ① 입을 월드 안으로 옮기고(낮은 카메라, 엎드려 부는 자세) ② 접촉 순간을 임팩트 프레임과 슬로모로 보여 주고 ③ 게이지는 한 번에 끄지 말고 단계적으로 바래게 하면서, 정답 색 대신 '절대 눈금'(볼 단계, 음계)과 '지난 숨 고스트'만 남기면 감으로 배울 수 있습니다. 판가름은 게이지가 사라진 뒤(16~40번째 퍽) 더미 장수와 놓은 파워의 상관 ρ≥0.5, 그리고 5초 클립을 보고 '왜 넘어갔나'를 맞히는 비율로 합니다.\n\n리서치 결과입니다. 보이지 않는 힘은 그 힘이 '움직이는 것'으로 읽힙니다. Ghost of Tsushima는 바람을 천·풀·입자 반응으로 보여 줘서 미니맵 HUD를 대체했고, Flower는 꽃잎이 바람을 대신 보여 줍니다. 충전량은 HUD가 아니라 대상 위의 단계 신호로 읽힙니다(마리오카트 드리프트 불꽃 파랑→주황→분홍). 직전 샷의 흔적은 텍스트 없는 결과 지식(KR)이 됩니다(앵그리버드 점선 궤적). 운동학습 연구의 guidance hypothesis는 피드백을 매번 주면 의존이 생겨서, 끊는 순간 수행이 떨어진다고 봅니다(근거는 혼재). 좋은 시도 뒤에 주는 피드백과 학습자가 직접 고른 피드백, 그리고 다양한 조건에서의 연습(가변 연습)이 전이에 유리하다고 보고됩니다.\n\n목업 코드를 확인하니 피드백 1·2의 1차 대응이 이미 들어가 있습니다: 처음 6퍽만 가이드, 더미 양에 따라 움직이는 sweet 구간(sqrt 곡선), 입→조준점 2D 숨 줄기, 과호흡 때 얼굴 붉어짐, 숨 결과 텍스트 5단계. 남은 구멍은 네 가지입니다:\n- 6퍽에서 게이지가 갑자기 끊긴다\n- 1장과 20장의 sweet 차이가 390pt 폰 기준 드래그 약 50~70px(손가락 한 개 폭)에 불과해 '양에 따라 조절'이 몸으로 잘 안 느껴질 수 있다\n- 접촉(공기가 밑으로 파고듦) 연출이 없다\n- 입이 화면 하단 HUD에 있어 3D 더미와 스케일·공간이 끊긴다",
+   "findings": [
+    {
+     "claim": "Ghost of Tsushima는 바람을 천·풀·입자에 대한 반응으로 시각화해 미니맵식 내비게이션 HUD를 대체했습니다. 다만 눈 지형처럼 대비가 낮은 곳에서는 바람 이펙트가 잘 안 보인다는 접근성 비판이 있습니다.",
+     "evidence": "GDC 2021 공식 소개에 따르면 Sucker Punch의 Bill Rockenbeck 포스트모템은 바람 구동 모션을 천·풀·입자 상호작용으로 GPU에서 시뮬레이션한 내용을 다룹니다. 리뷰들은 이 장치가 미니맵 같은 HUD를 없애고 그 자리를 대신했다고 평가합니다. Can I Play That 접근성 리뷰는 초반에는 유용했지만 북쪽 설원에서는 대비가 낮아 따라가기 어려웠다고 지적합니다.",
+     "sources": [
+      "https://gdconf.com/news/see-how-ghost-tsushima’s-guiding-wind-came-life-gdc-2021",
+      "https://caniplaythat.com/2020/07/29/ghost-of-tsushima-accessibility-review/",
+      "https://www.trustedreviews.com/news/gaming/new-ghost-of-tsushima-gameplay-footage-reveals-exciting-change-to-open-world-design-4032097"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "Flower는 플레이어가 곧 바람인 게임이고, 바람 자체가 아니라 바람이 실어 나르는 꽃잎으로 힘을 보여 줍니다. 첫 프로토타입(Processing)부터 '바람에 실려 떠다니는 꽃잎'이었습니다.",
+     "evidence": "GDC Europe의 Kellee Santiago 강연 기사에 첫 프로토타입이 바람에 실린 꽃잎이었다고 나옵니다. 다른 자료들은 버튼을 누르면 바람이 빨라지고 꽃잎 무리가 따라붙는 구조라고 설명합니다. 팀이 '보이지 않는 힘을 보이게 하려고' 꽃잎을 골랐다는 설계 의도는 원문으로 확인하지 못했습니다.",
+     "sources": [
+      "https://www.gamedeveloper.com/game-platforms/gdc-europe-thatgamecompany-s-santiago-on-i-flower-i-s-emotional-search",
+      "https://giantbomb.com/wiki/Games/Flower"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Kirby의 들이마시기는 입 앞에 생기는 소용돌이(vortex)가 핵심 시각 단서이고, 이 소용돌이가 주변 물체를 입 쪽으로 끌어당기는 방식으로 표현됩니다. PUFF!의 '당기기 = 들숨' 연출에 그대로 쓸 수 있는 문법입니다.",
+     "evidence": "WiKirby는 시리즈 전반에서 커비가 입을 크게 벌려 공기를 빨아들이면 소용돌이가 생기고 근처 적이나 물체가 끌려온다고 설명합니다. SmashWiki도 앞쪽에 바람 소용돌이를 만든다고 적고 있습니다. 가독성을 분석한 자료는 찾지 못했습니다.",
+     "sources": [
+      "https://wikirby.com/wiki/Inhale",
+      "https://www.ssbwiki.com/Inhale_(Kirby)"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "'볼이 빵빵한 얼굴 + 입에서 뻗는 줄기'는 15세기 인쇄본 프톨레마이오스 지도 이래 바람을 의인화한 관습(windheads)입니다. 언어 없이 '바람의 근원'을 전달하는 오래된 기호입니다.",
+     "evidence": "미네소타대 Bell 도서관 자료에 따르면 15세기 Geographia 인쇄본에는 12개의 windhead가 바람의 성격을 나타내는 얼굴로 그려졌습니다. Seutter의 1760년 해도는 4대 바람을 큰 얼굴로 그리고 나침반을 향해 바람을 불게 했습니다. '볼 부풀림'만을 명시한 출처는 찾지 못했습니다.",
+     "sources": [
+      "https://apps.lib.umn.edu/bell/map/PORTO/CHAR/wind.html",
+      "https://collections.leventhalmap.org/search/commonwealth:q524n4059"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "마리오카트는 충전 단계를 HUD 게이지가 아니라 카트 바퀴의 불꽃 색 단계(MK8DX 기준 파랑→주황→분홍)로 보여 줍니다. 대상 위에 붙은 절대 단계 신호의 대표 선례입니다.",
+     "evidence": "Nintendo 공식 MK8DX 초보 가이드는 1단계 파란 미니터보 불꽃, 2단계 주황 슈퍼, 3단계 분홍 울트라를 설명하고, 스마트 스티어링을 켜면 3단계를 쓸 수 없다고 적고 있습니다. Mario Kart Tour도 같은 진행을 쓰고, Mario Kart World의 차지 점프는 파랑→노랑→무지개입니다.",
+     "sources": [
+      "https://www.nintendo.com/jp/ichikara/aabpa/index_en.html",
+      "https://www.mariowiki.com/Mini-Turbo",
+      "https://www.mariowiki.com/Charge_jump"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "앵그리버드는 쏜 새가 지나간 점선 흔적을 남기고, 플레이어는 이 흔적으로 다음 샷을 보정합니다. 직전 샷의 공간 흔적이 텍스트 없는 결과 지식(KR) 역할을 합니다.",
+     "evidence": "Mac Observer의 3스타 가이드는 새를 쏘면 지나간 경로가 점선으로 남고, 이를 보고 다음 샷을 더 높게 또는 낮게 고치라고 설명합니다. 같은 힘이면 경로를 그대로 따라간다고도 합니다. Angry Birds Journey는 당기는 동안 예측 점선을 보여 준다고 합니다(Common Sense Media). 1차 리포트 팩트체크에서도 원작은 전체 예측선 대신 직전 궤적을 남긴다는 점이 확인됐습니다.",
+     "sources": [
+      "https://www.macobserver.com/macos/angry-birds-all-purpose-guide-part-1/",
+      "https://www.commonsensemedia.org/app-reviews/angry-birds-journey",
+      "/home/user/G2/docs/research/01-research-report.md"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "8 Ball Pool에는 일부 등급에 조준 가이드라인 없이 치는 커스텀 규칙이 있고, 큐 업그레이드는 가이드 길이를 늘려 줍니다. 가이드의 유무와 길이가 난이도·등급·보상 축으로 쓰입니다.",
+     "evidence": "Wikipedia 8 Ball Pool 문서에 일부 등급이 커스텀 규칙을 가지며 그중 하나가 가이드라인 없는 모드라고 나옵니다. iMore 초보 가이드는 초반에 살 수 있는 큐가 조준 가이드를 늘려 준다고 설명합니다. 어떤 테이블이 해당하는지는 확인하지 못했습니다.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/8_Ball_Pool",
+      "https://www.imore.com/8-ball-pool-6-tips-and-hints-beginners"
+     ],
+     "confidence": "low"
+    },
+    {
+     "claim": "Golf Clash 플레이어들은 바람을 '링 개수'라는 정량 단위로 바꿔 익히고, 커뮤니티가 클럽별 바람→링 환산표를 만들어 공유합니다. 숨은 계산을 사람이 몸으로 익히려 할 때 '셀 수 있는 눈금'이 생기면 숙련이 콘텐츠가 됩니다.",
+     "evidence": "가이드 사이트들은 화면 좌상단의 풍속과 방향을 보고 링 방식으로 조준점을 옮긴다고 설명합니다. 예를 들어 Sniper로 오른쪽 5mph면 퍼펙트 샷이 다섯 번째 링 바깥에 떨어지고, Golden Shot 이벤트에서는 Golden Driver가 바람 1.0당 0.75링입니다. 공식 문서는 찾지 못했습니다.",
+     "sources": [
+      "https://west-games.com/golf-clash-how-to-use-the-rings/",
+      "https://west-games.com/golden-shot-golf-clash/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Guidance hypothesis(Salmoni, Schmidt & Walter 1984; Schmidt 외 1989)는 피드백을 매번 주면 학습자가 외부 정보에 의존하게 되고, 그 피드백을 없애면 수행이 떨어지며, 과잉 수정으로 변동이 커진다고 봅니다. 빈도를 줄이면 습득 중에는 손해지만 학습(유지)에는 이득이라는 '역전 효과'가 보고됐습니다. 다만 재현에 실패한 연구도 있습니다.",
+     "evidence": "Frontiers 리뷰들의 요약: 너무 많은 피드백은 운동 학습에 해롭고 학습자가 고유 감각 대신 외부 피드백에 기댄다. 격회 피드백은 무피드백 시행에서 고유 감각을 쓰게 한다. 1984년 논문은 기존 KR 연구에 KR을 제거한 전이 검사가 없었다는 점을 지적했다. 리뷰들은 역전 효과를 확인하지 못한 연구도 다수라고 적고 있습니다.",
+     "sources": [
+      "https://www.frontiersin.org/articles/10.3389/fnins.2016.00251/full",
+      "https://www.frontiersin.org/articles/10.3389/fpsyg.2010.00190/pdf",
+      "https://orbilu.uni.lu/bitstream/10993/4589/1/Publikation_Marschall_Bund_Wiemeyer_2007_EJournal%20Bewegung%20und%20Training.PDF"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "학습자가 피드백 시점을 스스로 고르면 주로 '잘 된 시도' 뒤에 요청합니다. 좋은 시도 뒤의 피드백이 학습을 돕는다는 보고가 있습니다(Chiviacowsky & Wulf 2002, 2007). 시도 후에 요청을 결정하게 하면 전이가 더 좋았다는 재현 연구도 있습니다(Carter 외 2014). 농구 연구 하나는 상충하는 결과를 냈습니다.",
+     "evidence": "Frontiers 2012 리뷰: 자기 통제 집단은 잘 됐다고 느낀 시도 뒤에 주로 피드백을 요청했고, 이 결과는 재현됐습니다. 2007년 논문 제목이 'Feedback after good trials enhances learning'입니다. Carter 2014는 시도 후 결정 조건에서 전이가 우수했다고 보고합니다. 2012 농구 연구는 좋은 시도 선호를 발견하지 못했습니다.",
+     "sources": [
+      "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2012.00458/full",
+      "https://raw.github.com/cartermaclab/carterlab-papers/main/2014_carter-etal_self-controlled-feedback-is-effective-if-it-is-based-on-the-learners-performance-a-replication-and-extension-of-chiviacow.pdf"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "스키마 이론의 가변 연습: 8~12세 아동 64명 콩주머니 던지기 연구(Kerr & Booth 1978)에서, 시험 거리와 다른 두 거리(예: 2·4피트)로 연습한 집단이 시험 거리(3피트)만 연습한 집단보다 전이가 좋았다고 2차 문헌이 인용합니다. 매개변수(힘)를 여러 조건에서 연습해야 '조건 → 힘' 규칙이 생긴다는 근거입니다.",
+     "evidence": "Perceptual and Motor Skills 46권 395~401쪽. 12주 체육 프로그램, 특정 연습 집단과 가변 연습 집단을 비교했습니다. 2차 문헌은 가변 조건 학습자가 전이 과제에서 더 낫다고 요약합니다. 원문의 효과 크기는 확인하지 못했습니다.",
+     "sources": [
+      "https://journals.sagepub.com/doi/10.1177/003151257804600201",
+      "https://learnlab.org/research/wiki/index.php/Variable_Learning_I",
+      "https://coachsci.sdsu.edu/csa/vol31/kerr.htm"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Riot의 LoL VFX 스타일 가이드 원칙은 두 가지입니다. ① 게임플레이 명료성이 1순위이고 잡음은 최소화한다. ② 시각적 임팩트는 게임플레이 임팩트를 대변한다(무거운 스킬은 더 크게). 투사체는 시전, 투사체, 적중 세 요소로 읽힌다는 실무 분해도 있습니다.",
+     "evidence": "Riot Nexus 2017 VFX 스타일 가이드에 4대 목표가 있습니다: 게임플레이의 시각적 명료성, 시각 잡음 최소화, 그리고 visual impact should represent gameplay impact. realtimevfx의 LoL 미사일 해부 글은 시전 이펙트, 투사체, 적중 이펙트의 3요소를 설명합니다.",
+     "sources": [
+      "https://nexus.leagueoflegends.com/en-us/2017/10/dev-leagues-vfx-style-guide/",
+      "https://realtimevfx.com/t/anatomy-of-a-league-of-legends-missile-part-2-what-are-we-communicating-with-our-vfx/13062"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "충전형 사운드의 업계 관례는 두 가지입니다. 버튼을 누르고 있는 동안 낮은 음에서 점점 높아지고, 놓았을 때의 소리는 충전 시간에 따라 단계별로 고릅니다. 시각 지표 없이 충전음만으로도 플레이어가 타이밍을 익혔다는 학생 프로젝트 보고가 있습니다.",
+     "evidence": "CRI ADX 튜토리얼(2019, 2025): 충전음은 낮게 시작해 누르는 동안 높아지고, 발사음은 충전 지속 시간에 따라 다르며, 최대 충전 시 별도 값을 씁니다. Uppsala 게임디자인 리뷰: 충전 중임을 알리는 유일한 지표가 사운드였다.",
+     "sources": [
+      "https://blog.criware.com/index.php/2025/08/06/charging-weapon-sounds/",
+      "https://blog.criware.com/index.php/2019/12/17/charging-up-your-weapons-in-unity-using-adx2/",
+      "https://babel.speldesign.uu.se/?p=809915"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Peggle의 Extreme Fever는 마지막 주황 핀에 다가갈 때만 공에 줌을 걸고 슬로모로 늦추는 조건부 연출입니다. 화려한 파친코식보다 단순한 플레이스홀더에 플레이어 반응이 좋아 그 방향으로 다듬었고, 소리도 에어캐논과 짧은 천사 합창 같은 '공기' 질감으로 바꿨습니다.",
+     "evidence": "PC Gamer 'The Making of Peggle'과 Wikipedia: 처음에는 'Extreme Fever' 문구와 환희의 송가를 쓴 플레이스홀더였는데 반응이 좋아 유지했고, 마지막 핀 직전 공 줌을 추가했으며, 사운드를 airy한 소리로 바꿨습니다. 리뷰들은 드럼롤, 줌, 슬로모가 결정적 순간에 걸린다고 묘사합니다.",
+     "sources": [
+      "https://pcgamer.com/the-making-of-peggle/2",
+      "https://www.gamesradar.com/peggle-10/",
+      "https://en.wikipedia.org/wiki/Peggle"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "Dead Space의 다이제틱 UI(등뼈에 붙은 체력 막대)는 몰입감으로 칭찬받았습니다. 반면 캐릭터나 물체에 붙인 UI는 시선이 벗어나면 놓치기 쉬워서, 대부분의 게임이 비다이제틱 보조 UI를 함께 둔다는 비판이 있습니다.",
+     "evidence": "hudsandguis는 HUD 대신 등뼈의 체력 막대와 RIG를 소개하고, 80.lv는 수트의 골지 디자인이 다이제틱 체력 막대를 가능하게 했다고 설명합니다. Giant Bomb 블로그는 손이나 총에 UI를 붙인 게임은 거의 다 다른 곳에 비다이제틱 보조 UI가 있다고 지적합니다. 리드 디자이너 Ignacio의 GDC 2013 발언은 2차 인용입니다.",
+     "sources": [
+      "https://www.hudsandguis.com/2012/08/22/dead-space-2-diegetic-interface-design",
+      "https://cdn.80.lv/articles/the-technological-reason-behind-the-ribbed-suit-design-in-dead-space",
+      "https://giantbomb.com/users/3929/articles/markers-ii-where-are-all-the-dead-space-uis"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Mario Party DS 'Big Blowout'은 숨의 양이 곧 결과의 양인 매핑입니다(마이크에 세게 불수록 촛불이 한 번에 더 많이 꺼짐). 반면 DS 불기 조작은 공공장소에서 민망하다는 비판을 받았습니다.",
+     "evidence": "Super Mario Wiki: 더 많은 공기를 불수록 한 번에 더 많은 불꽃이 꺼진다. Engadget 2007: Stephen Totilo가 공공장소에서 민망하다고 했고, Diddy Kong Racing DS가 최악으로 꼽혔다.",
+     "sources": [
+      "https://www.mariowiki.com/Big_Blowout",
+      "https://www.engadget.com/2007-04-11-blowing-on-the-ds-sucks-or-the-huff-and-puff-games.html"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "iOS의 모든 브라우저(WebKit)는 Web Vibration API를 지원하지 않습니다. Safari 17.4의 switch 체크박스로 햅틱을 내는 우회법이 있지만 언제 막힐지 모르고, 한 출처는 iOS 26.5에서 막혔다고 주장합니다. 웹 목업에서 진동은 Android 전용 보조 단서로만 써야 합니다.",
+     "evidence": "bugnet과 azukiazusa: iOS에서 navigator.vibrate는 동작하지 않고 false를 반환한다. 우회법은 input type=checkbox switch를 label.click()으로 토글하는 방식이다. rapidtoolset 테스터는 iOS 17.4~26.4에서 동작하고 26.5에서 패치됐다고 하는데, 출처가 하나뿐입니다.",
+     "sources": [
+      "https://bugnet.io/blog/fix-web-game-vibrate-api-not-available-ios-safari",
+      "https://azukiazusa.dev/en/blog/ios-safari-web-haptics",
+      "https://rapidtoolset.com/en/tool/ios-haptics-tester"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "동전 위로 불면 동전이 뜨는 현상을 흔히 베르누이로 설명하지만, 그 설명이 결함 있다는 2020년 물리 논문이 있습니다. 동전을 정면으로 불면 뜨지 않고 미끄러지기만 한다는 시연 보고도 있습니다. PUFF!는 '윗면 저압'이 아니라 목업 바람 모델과 같은 '가장자리 밑으로 파고드는 공기'를 보여 주는 편이 정직하고 직관적입니다.",
+     "evidence": "Science in School은 베르누이로 설명합니다. arXiv 2010.13755 'When the quarter jumps into a cup (and when it does not)'는 베르누이 기반 설명이 결함 있다고 시연합니다. 1차 리포트의 바람 모델은 '가장자리 아래 틈 비례 양력 + 테두리 지점 임펄스'이고, CLAUDE.md는 이를 '바람 쪽 가장자리를 들어 올리는 임펄스'로 정리하고 있습니다. 브라질 bafo도 손으로 공기를 밀어 넣는 방식입니다.",
+     "sources": [
+      "https://scienceinschool.org/content/fantastic-feats-magic-money",
+      "https://export.arxiv.org/abs/2010.13755",
+      "/home/user/G2/docs/research/01-research-report.md",
+      "/home/user/G2/CLAUDE.md"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Paper Toss는 방 안의 선풍기라는 눈에 보이는 바람의 근원을 두고, 매 샷마다 풍향과 풍속을 바꿔 보정을 요구합니다. 바람에 물리적 출처를 주는 캐주얼 모바일 선례입니다.",
+     "evidence": "AppSpy 리뷰: 샷마다 바람의 세기와 방향이 바뀌어 궤적을 보정해야 한다. Paper Toss 2.0은 방에서 부는 선풍기의 방향과 세기를 고려하게 한다. World Tour는 실외 바람으로 바꿨다.",
+     "sources": [
+      "https://www.appspy.com/review/3224/paper-toss-world-tour",
+      "https://www.cultofmac.com/?p=45642"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "(목업 코드 실측) 현재 목업은 다음까지 구현돼 있습니다:\n- 처음 6퍽만 초록/빨강 가이드(GUIDE_PUFFS=6)\n- 더미 양에 따른 sweet 구간 sweetHiFor(n)=0.42+0.53·sqrt(n/20)(0.5~1.12로 제한), 하한=0.78·hi\n- 입(화면 하단 HUD 얼굴)에서 조준점까지의 2D 숨 줄기와 조준점 방사선\n- hi×1.12를 넘으면 얼굴이 붉어짐\n- 놓은 뒤 숨 결과 텍스트 5단계\n문제는 sweet 범위가 좁다는 점입니다. 390pt 폰에서 1장은 드래그 69~88px, 10장은 102~130px, 20장은 121~156px로, 1장과 20장의 차이가 손가락 한 폭(약 50~70px)뿐이고 인접 장수의 구간이 크게 겹칩니다.",
+     "evidence": "main.js 25~33줄(sweetHiFor, GUIDE_PUFFS), 333~339줄(powerColor는 가이드 종료 후 흰색), 384~438줄(drawBreath 2D 오버레이), 441~518줄(drawPuffer 붉은 얼굴, 가이드 아크), 1149~1172줄(resolveShot, breathFeedback). 드래그 px는 power×짧은 변 390×0.42로 계산했습니다(node 계산).",
+     "sources": [
+      "/home/user/G2/mockup/src/main.js",
+      "/home/user/G2/mockup/index.html"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "(기억 기반) 동작 중에 계속 주는 동시 피드백은 동작 후에 주는 사후(terminal) 피드백보다 의존을 더 강하게 만들어, 피드백을 없앤 뒤 수행 저하가 크다는 것이 운동학습의 일반적 보고입니다(예: Schmidt & Wulf 1997). 실시간 게이지는 가장 의존적인 형태입니다.",
+     "evidence": "이번 검색으로 원문을 확인하지 못했습니다. guidance hypothesis 리뷰들의 맥락과 일치하지만 수치 근거는 없습니다.",
+     "sources": [],
+     "confidence": "low"
+    }
+   ],
+   "insights": [
+    {
+     "insight": "바람은 바람 자체로는 안 읽히고, '바람이 움직이는 것'으로 읽힙니다(Tsushima 풀·천, Flower 꽃잎, Paper Toss 선풍기, 커비 소용돌이에 끌려오는 물체).",
+     "why_it_matters": "지금 목업의 2D 숨 줄기와 방사선은 '바람이 있다'는 표시일 뿐이라 세기와 결과를 설명하지 못합니다. 주변이 반응하지 않으면 플레이어는 게이지 숫자로만 해석합니다.",
+     "design_implication": "숨 덩어리 경로에 반응하는 '바람 계측기' 소품을 둡니다:\n- 테이블 흙먼지와 과자 부스러기\n- 낱장 딱지\n- 상대 캐릭터의 앞머리와 옷깃\n- 더미 맨 위 장의 테두리 파르르\n세기는 '상대 머리카락이 얼마나 날렸나'로 읽히게 합니다. 슬로모에서 머리가 젖혀지며 '헉' 하는 장면이 곧 세기 표시입니다."
+    },
+    {
+     "insight": "인과 사슬에서 빠진 고리는 '접촉'입니다. 공기가 가장자리 밑으로 파고들어 틈이 벌어지는 순간이 화면에 없습니다.",
+     "why_it_matters": "재윤님의 '왜 넘어가지?'는 이 고리가 없어서 생깁니다. 1차 물리 모델 자체가 '가장자리 아래 틈 비례 양력'이라 이 연출은 거짓말이 아니라 진짜 원인을 보여 주는 것입니다.",
+     "design_implication": "접촉 순간 임팩트 프레임(히트스톱 60~120ms, 파워 비례)을 겁니다. 숨 덩어리는 옆면에 눌려 납작해지고, 3~5줄의 쐐기 줄무늬가 겨눈 층 테두리 밑으로 말려 들어갑니다. 테두리 들림은 3배로 과장하고 틈 사이에 역광 흰 선을 0.2초 그립니다. 이어서 들림 구간만 슬로모로 보여 줍니다."
+    },
+    {
+     "insight": "입이 월드 밖 HUD 스티커(화면 하단 얼굴)에 있으면 크기와 공간이 3D 더미와 끊겨서 인과가 약해집니다. 낮은 측면 카메라(엎드려 부는 실제 자세)는 세 문제를 한 번에 풉니다.",
+     "why_it_matters": "낮은 측면 시점은 ① 더미 높이 = 필요한 숨의 양이 가장 잘 보이고(피드백 1) ② 가장자리 밑 틈이 보이고(피드백 2) ③ 숏폼 시청자도 '애가 엎드려 분다'를 즉시 이해합니다.",
+     "design_implication": "조준 카메라를 테이블 높이 근처 숄더뷰로 바꿉니다. 화면 좌하단 전경에 내 캐릭터 얼굴(볼)을 3D로 두고, 더미는 중경, 상대는 더미 뒤에 둡니다. 드래그는 머리를 뒤로 젖히는 새총 주머니가 되고, 놓으면 머리가 튀어나오며 입이 O자가 됩니다. 폰 마이크가 하단에 있으니 마이크 모드에서 '화면 아래 = 내 입'이 물리적으로도 맞습니다."
+    },
+    {
+     "insight": "게이지는 '끄기'가 아니라 '바래기'로 은퇴시켜야 합니다. 순서는 실시간 게이지 → 놓은 뒤 스냅샷 → 크게 틀렸을 때만 → 없음이고, '좋은 숨' 칭찬은 끝까지 남깁니다.",
+     "why_it_matters": "guidance hypothesis에 따르면 실시간 게이지에 의존한 채로 6퍽에서 갑자기 끊으면 수행이 떨어져 헛바람과 좌절이 늘어납니다. 좋은 시도 뒤의 피드백과 학습자가 직접 고르는 피드백은 학습에 유리하다는 보고가 있습니다(근거는 혼재).",
+     "design_implication": "은퇴 스케줄: 1~3퍽은 실시간 게이지, 4~8퍽은 게이지 테두리만 두고 놓은 직후 0.6초 스냅샷(내 숨 위치와 초록 구간), 9~15퍽은 게이지 없이 '딱 좋은 숨!'은 매번, 오차가 ±25%를 넘을 때만 교정 문구, 16퍽부터는 결과와 고스트만 남깁니다. 큰 오차가 3연속이면 스냅샷을 1회 자동으로 다시 보여 주고, 얼굴을 길게 누르면 '지난 숨'을 볼 수 있게 합니다."
+    },
+    {
+     "insight": "'감'은 정답 색(상대 눈금)이 아니라, 절대 눈금과 여러 더미 크기에서의 가변 연습으로 생깁니다.",
+     "why_it_matters": "게이지 색이 '이 더미에 대한 정답'을 알려 주면 양→세기 매핑을 배울 필요가 없습니다. 반대로 아무 눈금도 없으면 1장과 20장의 차이(지금 약 50~70px)를 몸이 구분하지 못합니다. 스키마 이론은 매개변수를 여러 조건에서 연습할 때 규칙이 생긴다고 봅니다.",
+     "design_implication": "볼에 절대 파워 3단계 반짝이(흰 김 → 하늘색 → 금색, 정답과 무관한 고정 문턱)를 붙이고, 들숨 음을 절대 피치 계단(예: 8단 장음계, Android에서는 단계마다 진동 틱)으로 만듭니다. 플레이어는 '20장이면 금색 직전, 3장이면 흰 김'을 스스로 익힙니다. 첫 매치 자체가 10→6→3→1장으로 줄어드는 가변 연습이 됩니다."
+    },
+    {
+     "insight": "직전 숨의 흔적이 가장 값싸고 강한 결과 지식입니다(앵그리버드 점선 궤적).",
+     "why_it_matters": "텍스트 없이, 그리고 '정답'을 보여 주지 않고도 '지난번 14장에서 이만큼 → 이번엔 9장이니 조금 작게'라는 보정을 가능하게 합니다. GDD의 '정답은 보여 주지 않는다' 원칙과도 맞습니다.",
+     "design_implication": "다음 내 턴까지 지난 숨의 고스트를 남깁니다: 점선 경로, 접촉점, 숨 덩어리 크기 링, 그때의 장수 숫자 작은 태그, 결과(뒤집힌 장수). 새로 불면 사라집니다. PvP에서는 내 고스트만 보여 줍니다."
+    },
+    {
+     "insight": "실패 원인마다 시각 서명이 달라야 리플레이가 글 없이 원인을 설명합니다.",
+     "why_it_matters": "지금은 실패하면 '숨이 모자랐어…' 같은 텍스트에 기대고 있어서, 무음 숏폼과 글로벌 사용자에게 약합니다. 원인이 화면에 보이면 '내 실수'로 납득하고 다시 시도합니다(공정성).",
+     "design_implication": "서명 다섯 가지:\n- 부족: 덩어리가 더미 앞에서 가늘어지며 위로 말려 흩어지고, 테두리만 파르르\n- 과다: 덩어리가 지그재그로 흔들리며 빗나가고, 얼굴이 콜록\n- 너무 낮음: 바닥을 때려 먼지가 폭발하고 더미가 통째로 밀림\n- 너무 높음: 꼭대기 위로 스쳐 지나가고 맨 위 장만 펄럭\n- 성공: 쐐기와 틈 역광\n소리도 서명마다 다르게 냅니다(피식~, 콜록, 둔탁한 퍽, 휘익, 포옥+탁)."
+    },
+    {
+     "insight": "연출 크기는 게임 영향을 대변해야 하고(Riot), 슬로모 같은 '가르치는 연출'도 게이지처럼 바래게 해야 템포가 삽니다(Peggle은 결정적 순간에만 씀).",
+     "why_it_matters": "샷 예산은 6~8초입니다(GDD). 매번 긴 슬로모를 걸면 템포가 죽고, 이펙트 스킨이 크기나 모양을 바꾸면 세기를 읽을 수 없습니다.",
+     "design_implication": "숨 덩어리 크기와 줄무늬 굵기는 파워에 비례시키고, 스킨이 바꾸지 못하게 합니다. 수익화하는 '입김 이펙트'는 덩어리가 실어 나르는 입자(벚꽃, 비눗방울, 별)만 바꿉니다. 가르치는 슬로모는 첫 5퍽에 0.25배속 700ms 클로즈업, 이후에는 0.5배속 300ms를 쓰고, 대박이나 막판 1~3장일 때만 Peggle식으로 늘립니다."
+    }
+   ],
+   "recommendation": "## 0. 가설 (미검증)\n'왜 넘어가지?'가 안 읽히는 이유는 **입이 월드 밖에 있고, 접촉(공기가 밑으로 파고듦)이 화면에 없어서**입니다. 게이지를 갑자기 끄면 감이 생기는 게 아니라 의존이 깨질 뿐입니다. 해결책은 **입은 월드 안으로, 접촉은 임팩트 프레임으로, 게이지는 바래게, 남길 단서는 절대 눈금과 지난 숨 고스트**입니다.\n판가름 지표 두 가지:\n- 16~40번째 퍽에서 더미 장수와 놓은 파워의 상관 ρ≥0.5\n- 무음 5초 클립을 보고 '왜 넘어갔나'를 맞히는 비율 ≥70%\n\n## 1. 목업 현황 (main.js 확인)\n- 이미 있는 것:\n  - 6퍽 가이드(GUIDE_PUFFS)\n  - 더미 양에 따른 sweet 구간 sweetHiFor(n)=0.42+0.53·√(n/20)\n  - 2D 숨 줄기(drawBreath)\n  - 과호흡 시 붉은 얼굴\n  - 숨 결과 텍스트 5단계\n- 남은 구멍:\n  - ① 6퍽에서 가이드가 갑자기 끊김\n  - ② 1장과 20장의 sweet 차이가 약 50~70px(390pt 폰). 몸으로 '양에 따라 조절'을 느끼기에 너무 좁음. 제안: 1장 상한 ≈0.45, 20장 상한 0.95로 범위를 넓혀 A/B\n  - ③ 접촉과 틈 연출 없음\n  - ④ 입이 하단 HUD에 있음\n\n## 2. 불기 가독성 레시피 (단계별로 보여 줄 것)\n| 단계 | 시간 | 시각 | 소리·촉감 | 가르치는 것 |\n|---|---|---|---|---|\n| 0 읽기 | 턴 시작 0.5초 | 낮은 측면 카메라로 더미 높이 전체를 보여 줌. 지난 숨 고스트(점선, 접촉점, 덩어리 링, 그때 장수 태그) | – | 양 → 필요한 숨 |\n| 1 조준(누르기) | 자유 | 옆면 가장자리에 조준 링. 겨눈 층 테두리 하이라이트, 그 밑 틈에 얇은 그림자 | '톡' | 공기가 들어갈 자리 |\n| 2 들숨(당기기) | 0.3~1.5초 | 머리가 손가락을 따라 뒤로 젖혀짐(새총). 볼 1.0→1.35. 커비식 흡입선과 먼지가 입 쪽으로 빨려 듦. **절대 3단 반짝이**(흰 김/하늘/금, 문턱 예: 파워 0.55/0.75/0.95) | **절대 피치 계단**(8단 장음계). 단계마다 틱(Android만 진동, iOS 웹은 불가) | 숨 크기의 절대 눈금 |\n| 3 과호흡 예고 | hi×1.2 초과 시(튜토리얼 뒤) | 얼굴 붉어짐, 볼 떨림, 눈물 찔끔, 조준 링 미세 흔들림. 'TOO HARD' 글자는 제거 | '끙' | 규칙(과파워 = 흔들림)의 공정한 예고 |\n| 4 퍽(놓기) | 0~50ms | 입 O자, 볼 1프레임 squash(0.85), 머리 앞으로 오버슈트 1.08 후 150ms에 정착. '퍽!' 타이포는 입 앞에 | 퍽 3겹 | 원인의 시작점 |\n| 5 비행 | 120~180ms 실속 | 반투명 도넛형 숨 덩어리(크기 ∝ 파워) + 뒤쪽 줄무늬(굵기 ∝ 파워) + **테이블 위 덩어리 그림자**(깊이 단서) + 경로 아래 먼지 | '휙' | 바람이 실제로 날아감 |\n| 6 접촉 | 히트스톱 60~120ms(파워 비례) | 덩어리가 옆면에서 납작해짐. 3~5줄 **쐐기가 테두리 밑으로 말려 들어감**. 테두리 들림 ×3 과장 + 틈 역광 흰 선 0.2초 | '포옥' | **핵심 인과** |\n| 7 들림 슬로모 | 0.3배속 400~700ms → 200ms에 걸쳐 1배속 복귀 | 들린 덩어리 밑에 소용돌이 2호, 뒤집힘 | 펄럭 + 오음계 '탁' | 몇 층이 왜 같이 넘어갔나 |\n| 8 여운 | 1배속 | 남은 바람이 더미 뒤로 빠져 상대 앞머리를 날리고, 상대가 '헉' | 우수수 | 세기(상대 반응이 계측기) |\n| 9 흔적 | 다음 내 턴까지 | 지난 숨 고스트 | – | 결과 지식 |\n\n슬로모도 게이지처럼 바래게 합니다. 첫 5퍽은 0.25배속 700ms 클로즈업, 이후 0.5배속 300ms, 대박이나 막판 1~3장만 Peggle식으로 확장합니다(드럼롤 + 줌).\n\n## 3. 바람 VFX 구성 원칙\n- 레이어 7개:\n  1. 들숨 흡입선\n  2. 숨 덩어리(도넛형, 30~40% 알파, 가능하면 굴절)\n  3. 줄무늬(약하면 가늘게, 세면 굵게)\n  4. 덩어리 그림자\n  5. 경로 반응 소품(먼지, 부스러기, 낱장 딱지)\n  6. 접촉 쐐기와 틈 역광\n  7. 여운(상대 머리카락, 뒤쪽 소품)\n- **크기와 모양은 파워만 대변합니다.** 스킨은 덩어리가 실어 나르는 입자만 바꿉니다(가독성 보존 + 입김 이펙트 수익화 슬롯).\n- 테이블 스킨마다(운동장 흙, 교실, 문방구) 줄무늬 대비를 검사합니다. 흰 줄무늬에 1px 잉크 외곽선을 넣습니다(Tsushima 설원 대비 문제의 교훈).\n- 설명은 베르누이(윗면 저압)가 아니라 '밑으로 파고드는 공기'로 합니다. 목업 물리와 일치합니다.\n\n## 4. 실패 서명표 (리플레이가 글 없이 원인을 말하게)\n| 원인 | 시각 | 소리 |\n|---|---|---|\n| 숨 부족 | 더미 앞에서 줄무늬가 가늘어지며 위로 말려 흩어짐. 테두리만 파르르 | 피식~ |\n| 과호흡(규칙) | 덩어리가 지그재그로 흔들려 빗나감. 얼굴이 콜록 | 콜록 |\n| 너무 낮게 | 바닥을 때려 먼지 폭발. 더미가 통째로 밀림 | 둔탁한 퍽 |\n| 너무 높게 | 꼭대기 위로 스쳐 지나감. 맨 위 장만 펄럭 | 휘익 |\n| 성공 | 쐐기와 틈 역광 | 포옥 + 탁 |\n\n## 5. 게이지 은퇴 스케줄 + 감 학습 설계\n| 퍽 # | 표시 |\n|---|---|\n| 1~3 | 실시간 게이지(초록/빨강). **장수가 바뀔 때마다 초록 구간이 '슥' 미끄러지는 애니메이션**으로 '더미가 줄면 초록도 준다'를 보여 줌 |\n| 4~8 | 게이지 테두리만, 구간은 숨김. 놓은 직후 0.6초 스냅샷(내 숨 바늘과 초록 구간) = 사후 결과 지식 |\n| 9~15 | 게이지 없음. '딱 좋은 숨!'은 매번. 교정 문구는 오차 ±25%를 넘을 때만 |\n| 16+ | 텍스트 없음. 결과, 고스트, 실패 서명만. 좋은 숨에는 '칭' 소리만 |\n| 상시 | 얼굴 길게 누르기 = 지난 숨 스냅샷(자기 통제 피드백). 큰 오차 3연속이면 스냅샷 1회 자동 재등장. 접근성 옵션 '가이드 항상 보기'(PvE) |\n\n**튜토리얼(무텍스트 '불기 학교', 첫 매치 = 골목 10장)**\n- T1(10장): 고스트 손가락이 맨 위 가장자리를 누르고 초록까지 당김. 0.25배속 클로즈업으로 쐐기를 보여 줌\n- T2(약 6장): 초록이 왼쪽으로 미끄러짐. 지난 볼 실루엣과 이번 초록 볼을 겹쳐 보여 줌\n- T3(2~3장): 초록이 아주 작음. 일부러 크게 불게 해서 흔들림을 1회 체험시킴\n- 상대 턴: Lv1~2 라이벌이 거의 정답 크기로 볼을 부풀려 시연. 관전 = 무료 모델링\n- 그 뒤 위 은퇴 스케줄을 적용합니다. 매치 안에서 더미가 10→1장으로 줄어드는 것 자체가 가변 연습입니다.\n- 8 Ball Pool처럼 상위 테이블(대회)에는 '가이드 없음'을 명시 규칙으로 걸어 숙련을 과시하게 합니다.\n\n## 6. 입을 화면에 연결\n- 조준 카메라를 테이블 높이 숄더뷰로 바꿉니다. 내 얼굴 3D를 좌하단 전경, 더미를 중경, 상대를 더미 뒤에 둡니다. 엎드려 부는 실제 자세입니다.\n- 드래그 = 머리 젖히기(새총 주머니), 놓기 = 머리를 앞으로 튀기며 숨 발사. 상대 턴에는 반대편에서 덩어리가 날아와 더미 먼 쪽이 들립니다.\n- 마이크 모드: 폰 마이크가 하단에 있으니 '화면 아래 = 내 입'이 물리적으로 맞습니다. 실시간 숨 세기 = 덩어리 크기, 볼은 부는 동안 줄어듭니다. 공공장소 민망함(DS 선례)이 있으니 선택형으로 유지합니다.\n\n## 7. 실험 제안\n- **E-G1 게이지 은퇴**: A 6퍽에서 차단(현재) / B 위 스케줄로 바래기 / C 상시 표시. 지표는 16~40퍽 파워비 오차 |p/hi−0.89|, ρ(장수, 파워), 퍽당 장수, 2판째 진입률. 목표는 B 오차 ≤ A이고 C의 1.2배 이내.\n- **E-G2 카메라**: 현재 시점 + HUD 얼굴 vs 낮은 숄더뷰 + 월드 얼굴. 지표는 무음 5초 클립 원인 맞히기, 첫 판 완주율.\n- **E-G3 절대 눈금**: 볼 3단 반짝이와 음계를 켰을 때와 껐을 때의 ρ와 학습 속도.\n- **E-G4 sweet 범위**: 현재 sqrt(1장 0.54) vs 확장(1장 0.45). 지표는 ρ와 막판 성공률.",
+   "key_claims": [
+    "인과가 안 읽히는 핵심은 '접촉' 고리의 부재입니다. 공기가 겨눈 층 가장자리 밑으로 파고들어 틈이 벌어지는 순간을 임팩트 프레임(히트스톱 60~120ms) + 쐐기 줄무늬 + 틈 역광 + 들림 구간 슬로모로 보여 줘야 합니다. 목업 물리가 실제로 '가장자리 밑 틈 비례 양력'이라 정직한 연출입니다.",
+    "입을 HUD 스티커에서 월드 안으로 옮기는 게 좋습니다. 테이블 높이 숄더뷰(엎드려 부는 자세)는 더미 높이(피드백 1), 가장자리 밑 틈(피드백 2), 숏폼 가독성을 동시에 해결합니다. 드래그 = 머리를 젖히는 새총, 폰 하단 마이크 = 화면 하단 입으로 정렬됩니다.",
+    "게이지는 6퍽에서 끊지 말고 바래게 해야 합니다. 순서는 실시간 → 놓은 뒤 0.6초 스냅샷 → 큰 오차만 교정 → 없음이고, '딱 좋은 숨' 칭찬은 유지하며, 얼굴 길게 누르기로 직접 고르는 피드백을 둡니다. guidance hypothesis와 Chiviacowsky & Wulf 근거이며 증거는 혼재입니다.",
+    "감은 정답 색이 아니라 절대 눈금과 가변 연습으로 생깁니다. 볼 3단 반짝이(마리오카트 드리프트 불꽃식)와 절대 피치 계단, 그리고 지난 숨 고스트(앵그리버드 점선)를 남기면 '장수 → 숨 크기'를 플레이어가 스스로 익힙니다. 다만 현재 1장과 20장의 드래그 차이가 약 50~70px로 좁아 범위 확장 A/B가 필요합니다.",
+    "실패 원인마다 다른 시각·소리 서명(부족은 앞에서 흩어짐, 과다는 지그재그+콜록, 낮음은 먼지 폭발, 높음은 위로 스침)을 주면 텍스트 없이도 원인이 설명되고, 결과를 '내 실수'로 납득하게 됩니다(공정성)."
+   ],
+   "risks": [
+    "게이지를 숨기면 초반 헛바람과 좌절이 늘어 글로벌 캐주얼 이탈이 커질 수 있습니다. 바래기 스케줄, 큰 오차 3연속 시 재스캐폴드, Lv1~2 약한 라이벌로 완충하되 E-G1로 확인해야 합니다.",
+    "guidance hypothesis와 '좋은 시도 피드백' 연구는 재현 실패 사례가 있는 혼재 근거입니다. 숫자(1~3/4~8/9~15퍽 경계)는 이론에서 나온 것이 아니라 제안값입니다.",
+    "VFX 레이어가 많아지면 더미를 가립니다(Riot의 잡음 최소화 원칙). 덩어리는 반투명이어야 하고, 테이블 스킨별로 대비를 검사해야 합니다(Tsushima 설원 사례).",
+    "가르치는 슬로모와 비행 120~180ms가 샷 예산 6~8초를 잡아먹을 수 있습니다. 첫 5퍽 이후에는 줄여야 합니다.",
+    "낮은 숄더뷰에서는 작은 폰에서 얼굴이 더미나 조준 영역을 가리거나 높이 조준 정밀도가 떨어질 수 있습니다. 레이아웃 실측이 필요합니다.",
+    "절대 3단 반짝이나 음계 문턱을 더미 구간과 정확히 맞추면 '숨은 게이지'로 변해 감의 깊이가 얕아질 수 있습니다. 문턱을 장수 구간 사이에 걸쳐 두고, 단계 안에서의 미세 조절은 남겨야 합니다.",
+    "iOS 웹은 진동이 불가합니다(switch 우회법은 패치 가능성). 촉각 단서를 핵심 설계에 넣으면 iOS에서 단서가 사라집니다. 소리와 볼이 주 단서여야 합니다."
+   ],
+   "open_questions": [
+    "sweet 곡선의 범위와 모양: 현재 sqrt(1장 상한 0.54, 20장 0.95)는 1장과 20장 차이가 손가락 한 폭뿐입니다. 사람이 '양에 따라 다르게 분다'를 느끼려면 어느 정도 차이가 필요한가요? (E-G4)",
+    "접근성 '가이드 항상 보기'를 랭크 PvP에서도 허용할까요? 공정성(게이지 이점)과 접근성(8세, 60대)이 충돌합니다.",
+    "16퍽 이후 '딱 좋은 숨' 칭찬 텍스트까지 없애도 되나요, 아니면 소리만 남기나요? 좋은 시도 피드백 근거로는 남기는 편이 유리할 수 있습니다.",
+    "들숨 음을 절대 피치로 할지, 더미 대비 상대 피치로 할지 정해야 합니다. 상대 피치는 귀로 듣는 게이지가 되어 감 학습을 막을 수 있습니다.",
+    "낮은 숄더뷰에서 상대 턴(먼 쪽에서 불어 옴)의 가독성과, 상대 얼굴이 더미 뒤에 가려지는 문제는 어떻게 하나요?",
+    "마이크 모드에서 실제 숨 세기(절대)와 더미별 sweet(상대)를 어떻게 정규화하면 '진짜 폐활량 감'이 유지되나요? (GDD E12와 연동)"
+   ]
+  },
+  "verify": {
+   "lens": "wind-readability 팩트체크 (게이지를 숨기고 감으로 하기 + 바람과 입김의 인과 가시화)",
+   "verdicts": [
+    {
+     "claim": "(목업 실측) 처음 6퍽만 초록/빨강 가이드를 보여 준다. sweet 상한은 0.42+0.53·sqrt(n/20)이고 0.5~1.12로 제한되며, 하한은 0.78·hi다. 390pt 폰 기준 드래그 범위는 1장 69~88px, 10장 102~130px, 20장 121~156px이고, 1장과 20장의 차이는 손가락 한 폭(약 50~70px)뿐이다.",
+     "verdict": "confirmed",
+     "note": "node로 다시 계산해 보니 수치가 정확히 일치했습니다(1장 69/88, 10장 102/130, 20장 121/156). 1장과 20장의 차이는 하한 기준 52px, 상한 기준 68px입니다. 다만 위치 정보에 두 가지 오류가 있습니다. ① sweetHiFor와 sweetLoFor는 main.js 25~33줄이 아니라 rules.js 11~16줄에 있고, main.js는 이를 import만 합니다. GUIDE_PUFFS는 main.js 32줄, 얼굴이 붉어지는 판정(×1.12)은 469줄입니다. ② guideOn()은 6퍽 조건 말고도 튜닝값 feel.guide≥0.5일 때 가이드를 계속 켭니다. 또 드래그 px는 튜닝 슬라이더 pull(0.25~0.7, 기본 0.42)에 비례합니다. 그래서 '손가락 한 폭' 문제는 pull 값만 바꿔도 크게 달라지는 튜닝 문제이지, 구조적 결함이라고 단정할 수는 없습니다.",
+     "sources": [
+      "/home/user/G2/mockup/src/rules.js",
+      "/home/user/G2/mockup/src/main.js"
+     ]
+    },
+    {
+     "claim": "마리오카트 8 디럭스는 충전 단계를 HUD가 아니라 바퀴의 불꽃 색(파랑→주황→분홍)으로 보여 준다. 스마트 스티어링을 켜면 3단계를 쓸 수 없다.",
+     "verdict": "confirmed",
+     "note": "Nintendo 공식 초보 가이드와 MarioWiki에서 3단계 울트라 미니터보가 스마트 스티어링을 끈 상태에서만 가능하다는 점을 확인했습니다. 3단계 색은 출처마다 다릅니다. Nintendo 가이드와 리뷰는 분홍, Fandom 위키는 보라라고 적고 영국 영어판 표기가 분홍이라고 합니다. 그래도 '보조 기능을 켜면 상위 단계가 잠긴다'는 점은 PUFF!의 '가이드를 켜면 최고 보상을 제한한다'는 설계 근거로 쓸 수 있습니다.",
+     "sources": [
+      "https://www.nintendo.com/jp/ichikara/aabpa/index_en.html",
+      "https://www.mariowiki.com/Mario_Kart_8_Deluxe",
+      "https://nintendo.fandom.com/wiki/Mario_Kart_8_Deluxe"
+     ]
+    },
+    {
+     "claim": "Guidance hypothesis와 '동시 피드백이 더 강한 의존을 만든다'(Schmidt & Wulf 1997, 기억 기반 low). 실시간 게이지는 가장 의존적인 형태이므로 단계적으로 바래게 해야 한다.",
+     "verdict": "weakened",
+     "note": "Schmidt & Wulf (1997), 'Continuous Concurrent Feedback Degrades Skill Learning', Human Factors 39(4):509-525, DOI 10.1518/001872097778667979가 실재하므로 이 부분은 low에서 med로 올려도 됩니다(초록과 원문은 확인하지 못함). 그러나 반대 증거를 반드시 함께 적어야 합니다. Wulf, Shea & Matschiner (1998)는 복잡한 과제에서 피드백을 100% 준 쪽이 50%보다 학습에 유리했다고 보고했고, 2025년 리뷰도 동시 피드백의 효과는 과제 복잡도와 숙련도에 따라 달라진다고 정리합니다. PUFF!의 숨 세기는 1차원 단순 매개변수 과제라서 guidance hypothesis가 들어맞는 쪽에 가깝다고 보는 것이 합리적입니다. 다만 이 연구들의 피험자는 성인 실험실 과제여서, 캐주얼 게임 리텐션에 그대로 옮기는 것은 외삽입니다. '바래기 일정'의 구체 수치(16~40번째 퍽, ρ≥0.5)에는 근거가 없으니 플레이테스트로 정할 값으로 명시해야 합니다.",
+     "sources": [
+      "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1638827/full",
+      "https://revistas.usp.br/rbefe/article/view/147552"
+     ]
+    },
+    {
+     "claim": "Chiviacowsky & Wulf 2002와 2007(좋은 시도 뒤 피드백), 그리고 그 재현 연구인 Carter 외 2014(시도 후에 결정하면 전이가 더 좋음).",
+     "verdict": "weakened",
+     "note": "2002년 연구(자기 통제 학습자는 주로 '잘 됐다'고 느낀 시도 뒤에 피드백을 요청함)와 2007년 연구 제목('Feedback after good trials enhances learning')은 확인했습니다. 그런데 Carter 2014가 재현한 원 연구는 2002년이 아니라 Chiviacowsky & Wulf (2005)입니다(시도 전 결정 vs 시도 후 결정). Carter의 결과도 '유지는 같았고 전이만 우수했다'입니다. 인용 연도와 효과 범위(전이 한정)를 고쳐야 합니다. 설계 함의인 '놓은 뒤에 플레이어가 고스트나 스냅샷을 볼지 고른다'는 그대로 유효합니다.",
+     "sources": [
+      "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2012.00458/full",
+      "https://raw.github.com/cartermaclab/carterlab-papers/main/2014_carter-etal_self-controlled-feedback-is-effective-if-it-is-based-on-the-learners-performance-a-replication-and-extension-of-chiviacow.pdf"
+     ]
+    },
+    {
+     "claim": "Kerr & Booth 1978: 8~12세 아동 64명. 2·4피트에서 연습한 가변 연습 집단이 3피트만 연습한 집단보다 3피트 시험에서 더 좋았다.",
+     "verdict": "weakened",
+     "note": "결론(가변 연습 집단이 사후 검사에서 유의하게 우수)과 64명, 12주는 맞습니다. 그러나 피험자는 '8~12세'가 아니라 8세와 12세 두 연령 집단입니다. 2·4피트 연습에 3피트 시험은 8세 집단에만 해당하고, 12세는 3·5피트에서 연습하고 4피트로 시험했다는 2차 요약이 있습니다(원문 미확인). 과제는 시각 피드백 없이 던지고 매 시행 KR을 주는 방식이었습니다. 이는 PUFF!의 '게이지 없이 결과만 보여 주기' 조건과 오히려 잘 맞으니 함께 적어 두면 좋습니다.",
+     "sources": [
+      "https://journals.sagepub.com/doi/10.1177/003151257804600201",
+      "https://coachsci.sdsu.edu/csa/vol31/kerr.htm"
+     ]
+    },
+    {
+     "claim": "Peggle의 Extreme Fever는 처음에 플레이스홀더였는데 반응이 좋아 유지됐고, 마지막 핀 직전에 공 줌과 슬로모를 추가했으며, 소리를 에어캐논과 짧은 천사 합창 같은 airy한 소리로 바꿨다.",
+     "verdict": "confirmed",
+     "note": "Wikipedia와 PC Gamer 요약에서 플레이스홀더('Extreme Fever' 문구와 환희의 송가), 플레이어 반응 때문에 유지된 점, 마지막 주황 핀 근처의 줌, airy한 사운드(air cannon, brief angelic chorus)를 모두 확인했습니다. PC Gamer 원문은 DNS 오류로 직접 열지 못해 검색 요약으로 확인했습니다.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Peggle",
+      "https://pcgamer.com/the-making-of-peggle/2"
+     ]
+    },
+    {
+     "claim": "동전 위로 불어 동전이 뜨는 현상의 베르누이 설명은 결함이 있다(arXiv 2010.13755). 정면으로 불면 미끄러지기만 한다. 그러니 PUFF!는 '가장자리 밑으로 파고드는 공기'를 보여 주는 편이 정직하다.",
+     "verdict": "weakened",
+     "note": "논문(Dutra, Suárez, Monteiro, Marti, 2020. 저널판 The Physics Teacher 60(2):87, 2022)은 실재합니다. 다만 이 논문은 '속도가 빠르면 압력이 낮다'는 오개념을 반박하는 2쪽짜리 교육용 시연이고, 동전이 컵으로 뛰어드는 경우와 그렇지 않은 경우를 보여 줍니다. 임계 풍속도 v_cr=√(2mg/ρA)(미국 동전 약 12~15m/s)라는 동압 균형으로 계산합니다. '정면으로 불면 미끄러지기만 한다'는 시연 보고는 이번 검색에서 확인하지 못했습니다. 즉 이 논문은 '가장자리 밑 공기 쐐기'가 진짜 원인이라는 직접 근거가 아닙니다. 그래도 연출 결정 자체는 목업 물리 모델(가장자리 틈 비례 양력)과 일치하니, '물리적으로 정직하다'가 아니라 '우리 모델과 일치한다'로 근거를 낮춰 적어야 합니다. 참고로 딱지 한 장의 질량과 면적으로 v_cr을 계산하면 숨 세기 튜닝의 앵커로 쓸 수 있습니다.",
+     "sources": [
+      "https://export.arxiv.org/abs/2010.13755",
+      "https://arxiv.org/pdf/2010.13755"
+     ]
+    },
+    {
+     "claim": "iOS의 모든 브라우저는 navigator.vibrate를 지원하지 않는다. Safari 17.4 switch 체크박스 햅틱 우회법은 iOS 26.5에서 막혔다는 주장이 있다(출처 1개).",
+     "verdict": "confirmed",
+     "note": "navigator.vibrate가 iPhone에서 무시된다는 점은 여러 출처가 일치합니다. 26.5 패치는 rapidtoolset 외에 ios-haptics README도 같은 주장을 하고, user activation 없이 동작하는 문제를 지적한 WebKit 버그 285120이 RESOLVED FIXED 상태라 출처가 2개 이상으로 늘었습니다. 다만 Apple 공식 릴리스 노트는 없습니다. 우회법 도입 버전은 출처에 따라 Safari 17.4 또는 iOS 18.0으로 갈립니다. 결론('진동은 Android 전용 보조 단서')은 유지합니다.",
+     "sources": [
+      "https://unpkg.com/ios-haptics@3.1.1/README.md",
+      "https://bugs.webkit.org/show_bug.cgi?id=285120",
+      "https://rapidtoolset.com/en/tool/ios-haptics-tester"
+     ]
+    },
+    {
+     "claim": "Ghost of Tsushima는 바람을 천, 풀, 입자 반응으로 시각화해 미니맵 HUD를 대체했고, 대비가 낮은 설원에서는 잘 안 보인다는 접근성 비판이 있다.",
+     "verdict": "unverifiable",
+     "note": "검색 한도 때문에 독립 검증을 하지 못했습니다. 널리 알려진 사실이고 GDC 2021 강연도 실재하는 것으로 알지만, 이번 회차에서는 원문 대조를 하지 않았습니다. 설계 결정(주변 소품이 바람에 반응)에 미치는 영향은 작습니다.",
+     "sources": []
+    },
+    {
+     "claim": "낮은 측면 카메라, 입을 월드 안으로 옮기기, 접촉 순간 히트스톱 60~120ms가 '왜 넘어갔지?'를 해결한다는 가설(summary)과, 검증 지표(16~40번째 퍽 상관 ρ≥0.5, 5초 클립 '왜 넘어갔나' 정답률).",
+     "verdict": "unverifiable",
+     "note": "리서치 본문도 '가설(미검증)'이라고 밝히고 있습니다. 60~120ms, ρ≥0.5, 16~40퍽 같은 수치에는 외부 출처가 없습니다. 근거가 있는 것으로 오인되지 않도록 '플레이테스트로 정할 초기값'이라고 표기해야 합니다. 제가 확인한 선례(Peggle의 조건부 줌과 슬로모, 마리오카트의 대상 부착 단계 신호)는 방향성만 뒷받침합니다.",
+     "sources": []
+    }
+   ],
+   "missed": [
+    "Wulf, Shea & Matschiner (1998) 반대 증거가 빠졌습니다. 복잡한 과제에서는 피드백 100%가 50%보다 학습에 유리했다고 보고합니다. guidance hypothesis가 과제 복잡도와 숙련도에 따라 달라진다는 단서가 리포트에 필요합니다.",
+    "Kerr & Booth의 피험자가 '시각 피드백 없이 던지고 매 시행 KR'을 받았다는 점이 빠졌습니다. 이는 게이지 없이 결과(뒤집힌 장수)만 보여 주는 PUFF! 조건과 직접 대응하므로 근거로 쓸 수 있습니다.",
+    "마리오카트 8 디럭스의 '보조 기능(스마트 스티어링)을 켜면 최상위 단계가 잠긴다'는 선례를 설계로 연결하지 않았습니다. 가이드를 계속 켜 두는 플레이어(feel.guide)에게는 '완벽한 숨' 보너스나 별 3개를 막는 식으로 바로 쓸 수 있습니다.",
+    "목업의 guideOn()은 feel.guide≥0.5이면 6퍽 이후에도 가이드를 켭니다. 또 드래그 폭이 pull 튜닝(0.25~0.7)에 비례하므로, sweet 차이가 50~70px라는 문제는 pull을 올리거나 sqrt 곡선을 선형에 가깝게 바꾸는 식으로 즉시 실험할 수 있는 튜닝 변수입니다. 리포트는 이를 구조적 결함처럼 서술했습니다.",
+    "arXiv 논문의 임계 풍속 식 v_cr=√(2mg/ρA)를 딱지의 질량과 면적에 넣으면 '사람이 실제로 불어서 넘길 수 있는 세기'를 근거로 숨 스케일을 정할 수 있는데, 활용하지 않았습니다.",
+    "Chiviacowsky & Wulf 2005(시도 전 결정 vs 시도 후 결정)와 2002의 구분이 빠졌습니다. 고친 내용은 이렇습니다: Carter 2014는 2005의 재현이고, 효과는 전이에만 있었으며 유지는 같았습니다."
+   ]
+  }
+ },
+ {
+  "research": {
+   "lens": "딱지 게임에서 1만 판을 채울 레벨 콘텐츠와 생산 방법 (피드백 4 적용)",
+   "summary": "**가설**: 1만 판은 난이도를 계속 올려서 만드는 게 아닙니다. 약 40개의 레벨 요소를 한 판에 최대 3개까지 조합하고, 재시도마다 시드를 다시 뽑아 만듭니다. 생산은 물리 봇이 통과율·실력차·아까운 실패율을 재서 톱니형 곡선의 정해진 칸에 판을 꽂는 파이프라인으로 합니다. 판가름 기준은 봇 예측 통과율과 실제 유저 통과율의 상관입니다(목표 r≥0.7). (미검증)\n\n확인된 사실:\n- 캔디크러쉬는 주당 45판(2024)을 내서 18,700판 이상(2025)이 됐습니다.\n- 로열 매치는 2주마다 100판을 내서 12,400판 이상(2025년 11월)이 됐습니다.\n- 즉 1만 판은 '출시 물량'이 아니라 '런웨이'입니다. 출시 때 약 1,000판을 넣고 2주에 100판씩 추가하면 약 3.5년 뒤 1만 판에 닿습니다.\n- 버티는 힘은 비례 상승이 아니라 세 가지에서 나옵니다.\n  - 새로움의 박자: Cut the Rope는 25판마다 새 메커닉, 캔디는 15판 에피소드마다 새 블로커를 냅니다.\n  - 공개된 톱니형 난이도: 로열 매치는 x5에 하드, x9에 슈퍼하드를 둡니다(제3자 분석). 로열 킹덤은 10판마다 더 어려운 다크킹 판 2개를 둡니다.\n  - 메타: 재건이 있습니다.\n- King의 레벨 65 A/B: 어렵게 하면 단기 결제는 늘지만 이탈이 늘었고, 쉽게 하면 장기 잔존이 늘었습니다.\n- 생산 쪽 근거:\n  - King은 사람처럼 두는 봇(CNN 모방학습)으로 레벨별 성공률을 예측합니다.\n  - AI로 오래된 레벨도 다시 튜닝합니다.\n  - 학계의 Angry Birds 생성기(Stephenson & Renz)와 Cut the Rope 생성기(Ropossum)는 물리 시뮬레이션으로 안정성과 풀이 가능성을 검증합니다.\n  - PUFF!는 렌더러와 무관한 Rapier 시뮬레이션(sim.js·rules.js)이 이미 있습니다. 블로우 한 번 판정에 120~166ms(내부 실측)라 봇 검증 비용이 매우 쌉니다.\n- 재시도 처리: Peggle은 시도마다 주황 페그 위치를 랜덤으로 바꾸고, Angry Birds 2는 재시작하면 배치가 달라집니다. 딱지도 배치는 고정하고 쌓는 순서와 금딱지 깊이만 다시 뽑아, 공략 암기를 막고 '감' 학습을 유지합니다.\n\n이 문서가 내는 구체 산출물:\n- 딱지 레벨 축 약 44개 카탈로그(실물 딱지 문화와 연결, 각 항목에 구현 파라미터)\n- 10판 블록 톱니 템플릿과 레벨 1~100 설계\n- 챕터·재건 메타\n- 1만 판 생성 규칙 8개\n- 봇 파이프라인과 비용\n- 목업에 바로 넣을 20판 세트",
+   "findings": [
+    {
+     "claim": "성숙한 사가 게임의 레벨 생산 속도는 주당 약 45~50판이고, 1만 판은 수년에 걸쳐 쌓인 결과다. 캔디크러쉬는 주당 45판(2024)으로 17,000판 이상(2024)에서 18,700판 이상(2025)이 됐다. 로열 매치는 2주마다 100판씩 넣어 12,400판 이상(2025년 11월)이 됐다.",
+     "evidence": "Guardian Australia(2024-08-02)는 King 디자이너들이 주당 45판을 내고 총 17,000판 이상이라고 보도했다. AP(2025-05)는 18,700판 이상이라고 했다. Wikipedia의 Royal Match 항목은 2025년 11월 기준 12,400판 이상, 2주마다 추가된다고 적었다. APK 릴리스 노트(2025년 초 26455·26531 빌드)에는 '업데이트당 100판, 2주마다'가 명시돼 있다. PocketGamer는 수요일마다 30/45/60판이 추가된다고 했다(2025, 17,000판).",
+     "sources": [
+      "https://www.nbcnewyork.com/news/national-international/candy-crush-ai-puzzles/6259551/",
+      "https://wtop.com/national/2025/05/how-candy-crush-uses-ai-to-keep-players-coming-back-to-its-puzzles/",
+      "https://en.wikipedia.org/wiki/Royal_Match",
+      "https://apkmirror.com/apk/dream-games-ltd-2/royal-match/royal-match-26531-release",
+      "https://www.pocketgamer.com/candy-crush-saga/how-many-levels-are-there"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "King은 사람처럼 두는 봇으로 레벨 난이도(성공률)를 예측한다. 이 방식이 MCTS보다 실제 평균 난이도와의 상관이 높고 계산량도 훨씬 적다. 실무에서는 신규 레벨 1,000판 이상에 1년 넘게 썼다.",
+     "evidence": "Gudmundsson et al. 2018(IEEE CIG) 초록에 따르면, Candy Crush Saga와 Soda의 플레이어 데이터로 CNN을 지도학습해 '가장 사람다운 수'를 예측한다. 그 결과 '평균 레벨 난이도와의 상관이 증가했고 계산 시간은 일부'라고 한다. 2차 블로그는 'CCS 신규 1,000판 이상에 1년 넘게 사용, 예측 정확도가 안정적'이라고 요약했다. 후속 King 논문(GAT·BERT 비교)은 CNN이 보드 크기나 새 메커닉이 바뀌면 일반화에 약하다고 지적했다.",
+     "sources": [
+      "https://www.academia.edu/40020341/Human_Like_Playtesting_with_Deep_Learning",
+      "https://koaning.io/posts/playtesting",
+      "https://thegradientpub.substack.com/p/update-78-accelerating-candy-crush"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "King은 AI를 '보이지 않는 조수'로 쓴다. 쓰는 곳은 세 가지다: ① 디자이너가 만든 판을 플레이어 행동 모델로 돌려 너무 어렵거나 쉬운지 확인, ② 디자이너가 문제 판을 지적하면 정해진 기준으로 봇이 수정 후보를 내고 디자이너가 고름, ③ 수년 된 옛 레벨 재튜닝. 창작은 디자이너가 주도하고, 생성형·절차적으로 최종 보드를 만든다는 증거는 없다.",
+     "evidence": "AP(2025-05) 보도에서 Todd Green(Candy Crush 프랜차이즈 GM)은 'AI는 디자인 루프의 보이지 않는 조수'라고 했고, '1,000판을 한꺼번에 손으로 하는 건 매우 어렵다'고 했다. King AI Labs의 Sahar Asadi는 '봇은 이기려 하지 않고 사람이 고를 법한 수를 고른다'고 했다. 출시 전 플레이테스트가 제한적이라 '첫 접촉에서 재미있어야' 한다는 언급도 있다.",
+     "sources": [
+      "https://wtop.com/national/2025/05/how-candy-crush-uses-ai-to-keep-players-coming-back-to-its-puzzles/",
+      "https://www.nbcnewyork.com/news/national-international/candy-crush-ai-puzzles/6259551/",
+      "https://wnhub.io/news/Generative_AI/item-43934"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "'숨은 심리' 관리의 1차 근거는 King의 레벨 65 사례다. 레벨 65는 지나치게 어려워 결제 전환율과 매출이 1위였지만 이탈도 1위였다. A/B 결과, 어렵게 하면 단기 결제가 늘고 쉽게 하면 장기 잔존이 늘었다. King은 난이도와 재미를 분리해서 측정한다.",
+     "evidence": "GDC 발표를 정리한 mobilegamer.biz 기사(King의 central insights 책임자와 데이터사이언스 시니어 디렉터)에 따르면, 원래 마지막 판이던 레벨 65가 너무 어려워 '역대 최다 매출'과 '최다 이탈'을 동시에 기록했다. 장기 A/B에서는 쉽게 만든 쪽이 더 오래 잔존했다. 데이터사이언스 디렉터는 '쉬운 판은 전환이 줄지만 이탈을 막고, 그 유저가 쌓여 나중에 결제할 수 있다'고 했다. 기사는 '수백만 명이 10,000번째 레벨을 넘었고 대부분 한 푼도 안 냈다'고도 전한다. 재미 지표(포기까지 시간과 통과까지 시간)는 검색 요약에만 나오고 원문 문구는 확인하지 못했다.",
+     "sources": [
+      "https://mobilegamer.biz/how-king-defines-a-good-candy-crush-saga-level-and-why-it-constantly-prunes-the-bad-ones/"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "로열 매치는 난이도를 비례로 올리지 않고 '공개된 톱니'로 만든다. 제3자 분석으로는 하드가 39·45·49·55·65·75·85·95, 슈퍼하드가 59·69·79·89·99판에 있다. 새 메커닉은 학습판 2~3개 뒤에 하드로 이어지는 구조이고, 이동 수는 L1~20의 30~38에서 L61~100의 23~27로 준다.",
+     "evidence": "Gamigion 분석 기사에 나온 수치다. 다만 원문 일부가 깨져 있어 분석가 한 명의 독해로 취급해야 한다. 별도로 mobilegamer.biz의 애널리스트 인용('아슬아슬한 실패 상태로 데려가는 데 믿기 어려울 만큼 능숙하다')이 있는데, 이는 공식 설계 규칙이 아니라 논평이다.",
+     "sources": [
+      "https://www.gamigion.com/royal-match-level-design-insights/",
+      "https://mobilegamer.biz/as-royal-match-blazes-past-1bn-can-dream-games-repeat-the-trick-with-royal-kingdom/"
+     ],
+     "confidence": "low"
+    },
+    {
+     "claim": "로열 킹덤은 10판마다 '킹덤 판'(다크킹 공격 PvE) 2개를 넣는다. 이 판들은 일반 하드보다 더 어렵고, '이동 수 소진' 화면을 띄워 결제로 이어지는 주 장치다. 메타는 레벨 클리어로 얻은 포션으로 구역을 복원하는 방식이다. 처음엔 유사 PvP였는데 '다크킹'이라는 악당으로 바꿨다.",
+     "evidence": "Naavik과 Deconstructor of Fun 분석이다. '10판마다 킹덤 판 2개'가 매치와 부스터로 보드 위 장애물을 공격하는 퍼즐 RPG식이고, 하드 판보다 어렵다고 한다. 원래 버전은 다른 플레이어를 공격·복수하는 유사 PvP였는데 다크킹으로 대체됐다. Dream Games 공식 소개에는 '레벨을 깨 포션을 모아 King Richard 왕국의 구역을 연다'고 돼 있다. Udonis에 따르면 2024-11-21 글로벌 출시 후 2024년 12월에 1,100판을 넘었다.",
+     "sources": [
+      "https://naavik.co/digest/royal-kingdom-and-expanding-the-royal-universe/",
+      "https://www.deconstructoroffun.com/blog/2024/07/01/royal-kingdom-will-it-outgrow-its-big-brothers-influence",
+      "https://dreamgames.com/games/royal-kingdom",
+      "https://www.blog.udonis.co/mobile-marketing/mobile-games/royal-kingdom"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "새로움의 박자는 고정 단위로 준다. Cut the Rope는 박스당 25판이고, 대체로 박스마다 새 메커닉을 낸다. 예를 들어 Fabric Box(2-1)에서 에어쿠션과 거미가 처음 나온다. 캔디크러쉬는 에피소드가 보통 15판이고, 새 블로커가 에피소드 첫 판에 자주(항상은 아님) 데뷔한다.",
+     "evidence": "Cut the Rope 팬 위키는 박스당 25판·판당 별 3개이고 '경험칙상' 박스마다 새 메커닉이 나온다고 적었다. Critical Play 분석은 '새 박스가 아니면 새 시스템이 안 나온다는 걸 플레이어가 알고, 25판 동안 익힐 시간을 준다'고 했다. 캔디 팬 위키에 따르면 Crater Cove는 106~120판이고 Candy Bomb이 106판에 데뷔한다. Syrupy Sea의 민트 블로커는 606판, 텔레포터는 112판(중간), 첫 에피소드는 전부 튜토리얼이다.",
+     "sources": [
+      "https://cuttherope.fandom.com/wiki/Fabric_Box",
+      "https://mechanicsofmagic.com/2023/05/18/critical-play-cut-the-rope/",
+      "https://candycrush.fandom.com/wiki/Liquorice_Lock"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "같은 레벨을 다시 해도 매번 다르게 만들어 암기를 막는다. Peggle은 레벨을 할 때마다 주황 페그 위치를 랜덤으로 고른다(목적: 반복 다양성과 최적샷 암기 방지). Angry Birds 2는 재시작하면 구조물이 (부분적으로) 재배치되고, 한 스테이지가 방 2~4개로 이어지며, 새는 카드 패로 뽑는다.",
+     "evidence": "Peggle 특허 US 8,128,476에 '플레이할 때마다 주황 페그 위치를 무작위로 선택해 반복 플레이에 다양성을 주고 최적샷 암기를 어렵게 한다'고 돼 있다. 대안으로 '고정 배치에서 어느 페그가 주황·초록·보라인지만 무작위'도 있다. Peggle 2는 주황 25개·공 10개이고 마스터 능력은 초록 페그로 발동한다. AB2는 GSMArena 2015 리뷰('재시작하면 재배치')와 TapTap('부분 랜덤')이 서로 엇갈린다. 카드 패 3장은 Game Developer 자료다.",
+     "sources": [
+      "https://www.patentarcade.com/video-game-patent/US8128476/electronic-game-such-as-a-computer-game-involving-removing-pegs",
+      "https://en.wikipedia.org/wiki/Peggle_2",
+      "https://www.gsmarena.com/angry_birds_2_review-blog-13352.php",
+      "https://www.taptap.io/post/10564367",
+      "https://gamedeveloper.com/business/angry-birds-2-the-good-the-bad-and-the-angry-"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "Angry Birds 레벨은 테마 → 새 종류 → 재료·배치 순으로 정한다. 재료는 나무(약함), 유리·얼음(깨짐), 돌(강함)이고, 재료와 공략 수단(새)의 상성으로 판이 달라진다. 한 판은 디자이너 한 명이 만든다.",
+     "evidence": "PocketGamer의 'making of an Angry Birds level' 인터뷰에 따르면, 테마를 먼저 정하고 새 몇 종을 고르며 블록 종류와 배치는 그 새에 맞춘다. 예로 '돌이 많은 판을 빨간 새 중심으로 만들지 않는다'고 했고, 레벨 디자인은 늘 한 명이 한다. AB2는 나무·돌·얼음을 쓴다.",
+     "sources": [
+      "https://www.pocketgamer.com/angry-birds/exclusive-the-making-of-an-angry-birds-level/",
+      "https://github.com/lucasnfe/science-birds"
+     ],
+     "confidence": "med"
+    },
+    {
+     "claim": "물리 퍼즐의 절차 생성에는 '생성 → 시뮬레이션으로 안정성 검사 → 에이전트로 풀이 가능성과 난이도 추정'이라는 확립된 방법이 있다. 물리 엔진이 부정확해서 이론상 안정한 구조도 시뮬레이션에서 무너질 수 있으므로, 시뮬레이션 검증이 필수다.",
+     "evidence": "Stephenson & Renz(CIG 2016)는 사전 정의 하위구조 없이 2D 물체로 안정 구조를 생성하고, 시뮬레이션으로 안정성을 검사했다. 2017 후속작은 새 종류 결정, 지형 변주, 에이전트 성능으로 난이도 추정, 안정성·풀이 가능성 검증, 재료 선택까지 다룬다. Ropossum(AIIDE 2013)은 Cut the Rope용으로, 물리엔진 + 진화 생성 + 플레이 가능성 에이전트를 묶었고 디자이너가 부분 설계를 넣는 공동 저작 도구다. 2025 AIIDE(Calgary)는 생성 레벨의 구조 틈을 찾아 수리하는 연구다.",
+     "sources": [
+      "https://users.cecs.anu.edu.au/~jrenz/papers/stephenson-renz-cig16.pdf",
+      "https://researchportalplus.anu.edu.au/en/publications/generating-varied-stable-and-solvable-levels-for-angry-birds-styl/",
+      "https://webdocs.cs.ualberta.ca/~santanad/papers/2016/pereiraTFL16.pdf",
+      "https://ojs.aaai.org/index.php/AIIDE/article/view/12611",
+      "https://pure.itu.dk/da/publications/evolving-playable-content-for-cut-the-rope-through-a-simulation-b/",
+      "https://cspages.ucalgary.ca/~richard.zhao1/publications/2025aiide-stabilizing_angry_birds_levels.pdf"
+     ],
+     "confidence": "high"
+    },
+    {
+     "claim": "레벨 통과율 목표치에 업계 공통 표준은 없다. 스튜디오마다 다르고, A/B로 맞추라는 것이 실무 조언이다. 판당 시도 수는 대략 1/p(p = 시도당 통과 확률)로 모델링한다.",
+     "evidence": "devtodev는 스튜디오마다 쉬운 판과 어려운 판의 목표 범위가 다르다고 했다(요약문이 30~40% / 80~85% 또는 50~60% / 90~95%로 나오는데, 통과율인지 실패율인지 모호하다). 추적 지표로 '통과까지 시도 수'와 '실패 시 부족했던 이동 수'를 권한다. Candy 데이터셋 분석은 시도마다 통과 확률이 p인 독립 시행으로 모델링한다.",
+     "sources": [
+      "https://devtodev.com/education/articles/en/381/game-level-progression",
+      "https://www.datacamp.com/datalab/w/49a969c0-b80b-4804-9471-09ae68ccc6e7/edit",
+      "https://arxiv.org/pdf/2107.03305"
+     ],
+     "confidence": "low"
+    },
+    {
+     "claim": "숨은 조작은 평판 리스크다. 캔디크러쉬가 결제를 유도하려고 '불가능한 판'을 내고, 결제하지 않으면 서서히 쉬워진다는 비검증 고발이 퍼져 있다.",
+     "evidence": "Deceptive Patterns 항목에 이 고발이 실려 있지만, 항목 스스로 '독립 검증되지 않았다'고 적었다. GDD §10.3도 숨은 DDA를 이미 기각했다.",
+     "sources": [
+      "https://www.deceptive.design/articles/candy-crush-saga-impossible-levels"
+     ],
+     "confidence": "low"
+    },
+    {
+     "claim": "PUFF! 자체 물리는 봇 검증을 싸게 만든다. 블로우 한 번을 끝까지 판정하는 데 120ms(compat)~166ms(deterministic, 단일 스레드)가 든다. 한 번에 뒤집히는 장수는 더미 크기와 무관하게 6~7장에서 포화된다. 조준 높이에 따라 결과 분포가 다르다: 맨 위 = 안정적 4~10장, 가운데 = 대박 아니면 꽝 0~16장, 아래 = 헛방.",
+     "evidence": "내부 실측 자료다: 리서치 리포트 §9(Node 22, Xeon 2.1GHz), GDD §7.4(첫 샷 평균 10장 5.6 / 20장 6.7 / 40장 5.9), CLAUDE.md의 조준 높이별 분포. 그 밖의 코드 확인 사항: sim.js에 이미 addPile(mode 'column'|'heap', at 위치, heavy = 밀도×3)과 jet 'shield' 계수(0.35)가 있다. rules.js의 sweetHiFor(n)은 남은 장수에 비례해 정답 숨을 정한다.",
+     "sources": [
+      "/home/user/G2/docs/research/01-research-report.md",
+      "/home/user/G2/docs/design/GDD.md",
+      "/home/user/G2/mockup/src/sim.js",
+      "/home/user/G2/mockup/src/rules.js"
+     ],
+     "confidence": "high"
+    }
+   ],
+   "insights": [
+    {
+     "insight": "'최소 1만 판'은 출시 물량이 아니라 런웨이 목표다. 2주에 100판(로열 매치 속도)이면 1만 판까지 약 3.5년이 걸린다.",
+     "why_it_matters": "출시 전에 1만 판을 만들려 하면 품질과 일정이 무너진다. 실제로 필요한 건 상위 유저가 콘텐츠를 다 소진하지 않을 만큼 앞서가는 공급 속도다.",
+     "design_implication": "물량 목표: 소프트런칭 300판 → 글로벌 1,000판(로열 킹덤은 출시 한 달 만에 1,100판 이상) → 2주마다 100판 추가. 파이프라인은 출시 전에 완성해 둔다. 런웨이 지표 = (상위 5% 유저 현재 레벨) ÷ (최신 레벨)을 0.8 미만으로 유지한다."
+    },
+    {
+     "insight": "1만 판을 버티게 하는 것은 난이도 상승이 아니다. 새로움의 박자(15~25판마다 새 요소)와 공개된 톱니(하드 다음엔 휴식), 그리고 메타가 버티게 한다.",
+     "why_it_matters": "재윤님이 관찰한 '맵이 올라갈수록 난이도가 높아지는 건 아니다'는 King 레벨 65 A/B(쉬운 쪽이 장기 잔존 우세)와 로열 매치의 x5/x9 톱니 패턴으로 뒷받침된다.",
+     "design_implication": "난이도 기준선은 L1~300에서만 완만하게 올리고, L300 이후에는 고정한다. 톱니 진폭만 유지하고 새로움은 요소 조합과 챕터 테마로 공급한다. HARD와 SUPER HARD 표식은 공개한다."
+    },
+    {
+     "insight": "매치3와 달리 딱지는 진짜 물리 실력(숨 세기 감, 높이 조준, 좌우 조준, 연속 불기 계획)이 오른다. '캐릭터는 안 세지는데 내가 세지는' 성장이 가능하다.",
+     "why_it_matters": "캔디와 로열에는 캐릭터 성장이 없고 지도 위치와 메타가 그 자리를 대신한다. PUFF!는 여기에 손기술 숙련 사다리를 더할 수 있다. 이것이 1만 판을 계속할 추가 동기가 된다.",
+     "design_implication": "챕터마다 새 실력 한 면을 시험한다: 세기 감(골목) → 높이·금딱지(문방구) → 좌우 각도·장애물(교실) → 바람 보정(운동장) → 라이벌 읽기(대회) → 지역 변주(월드투어). 별 3개 기준은 '같은 판을 더 정밀하게'로 잡아 숙련 목표를 준다."
+    },
+    {
+     "insight": "물리 게임 레벨의 적은 '운'이다. 가운데 조준이 0~16장(대박 아니면 꽝)이라 목표 장수를 잘못 잡으면 실력과 무관한 판이 된다.",
+     "why_it_matters": "운이 지배하는 판은 '불공정' 체감을 주고 리뷰를 망친다. 매치3에는 없는, 물리 퍼즐 고유의 리스크다.",
+     "design_implication": "봇 게이트로 실력차(고수 봇 통과율 − 초보 봇 통과율) ≥ 0.30을 요구한다. 예외는 '대박 휴식판'만 둔다. 같은 입력을 시드만 바꿔 반복했을 때 결과 분산이 큰 판은 목표를 '안정 수율 × K' 이내로 낮춘다."
+    },
+    {
+     "insight": "재시도 때 stackSeed를 다시 뽑는다(Peggle 주황 페그, AB2 재배치 방식). 배치·소품·목표는 고정하고, 쌓는 순서와 금딱지 깊이만 밴드 안에서 바꾼다.",
+     "why_it_matters": "공략 암기와 공략 영상 의존을 막고, 매번 쌓인 양을 보고 다시 판단하게 만든다. 피드백 1의 '감' 훈련과 같은 방향이다. 봇 통과율도 단일 시드가 아니라 분포로 재게 되어 측정이 오히려 정확해진다.",
+     "design_implication": "레벨 JSON을 '블루프린트(고정) + 재추첨 범위(밴드)'로 나눈다. 오늘의 더미와 도전장만 고정 시드를 쓴다."
+    },
+    {
+     "insight": "모든 판을 '컴퓨터와 하는 판'으로 짜려면, 짧은 솔로 퍼즐도 '라이벌이 낸 도전'으로 감싸면 된다. 로열 킹덤이 유사 PvP를 다크킹 PvE로 바꾼 것과 같은 방향이다.",
+     "why_it_matters": "결투(1분 안팎)만으로 1만 판을 채우면 세션이 길고 변주 폭이 좁다. 솔로 퍼즐(20~30초)은 생산과 검증이 싸고 변주가 넓다.",
+     "design_implication": "판 구성은 '도전판'(라이벌이 차린 더미를 K번에 공략) 60%, '결투판'(번갈아 불기) 40%로 한다. 10판 블록의 x4는 일반 결투, x9는 보스 결투로 둔다. 레벨 모드 판은 하우스 판으로 해서 내 딱지를 잃지 않게 한다. 이렇게 하면 코어 루프에 내기 요소가 없어 등급 문제(GDD §7.2)에서도 안전해진다."
+    },
+    {
+     "insight": "피드백 1에서 숨긴 게이지(초록·빨강 구간)를 '보이는 도움'으로 재활용할 수 있다.",
+     "why_it_matters": "GDD는 숨은 DDA를 기각했다. 게이지를 숨기면 초반 실패가 늘어나므로, 숨은 조작 없이 실패를 완충할 장치가 필요하다.",
+     "design_implication": "3연패 시 '숨 안경'(1회 게이지 색 표시)을 무료로 준다. 레벨 전 부스터로도 둔다(결투와 랭크에서는 금지). '+2 숨'(이동 수 추가에 해당)은 판매 여부를 재윤님이 결정할 항목으로 남긴다."
+    }
+   ],
+   "recommendation": "## 🧭 가설\n**가설**: 1만 판은 '난이도 계단'이 아니라 **요소 약 40개 × 한 판 최대 3개 조합 × 재시도마다 다시 뽑는 시드**로 만듭니다. **물리 봇이 통과율·실력차·아까운 실패율을 재서 10판 톱니 템플릿에 꽂는** 파이프라인으로 생산합니다 → 판가름 기준은 ① 봇 예측 통과율과 실제 유저 통과율의 상관(r≥0.7), ② 생성 후보 중 '실력차' 게이트를 통과하는 비율(≥30%)입니다. (미검증)\n\n---\n\n## 1. 레퍼런스에서 그대로 가져올 것\n\n| 게임 | 확인된 장치 | PUFF! 적용 |\n|---|---|---|\n| 캔디크러쉬 | 주당 45판, 18,700판 이상. 사람처럼 두는 봇으로 성공률 예측. AI로 옛 레벨 재튜닝. 레벨 65 A/B(쉬운 쪽이 장기 잔존 우세) | 봇 예측 → 사람 큐레이션 → 출시 후 텔레메트리로 재튜닝. 기준선은 일정 지점부터 고정 |\n| 로열 매치 | 2주에 100판. HARD x5, SUPER HARD x9(제3자 분석) | 10판 블록 톱니. 표식 공개 |\n| 로열 킹덤 | 10판마다 더 어려운 다크킹 판 2개. 포션으로 구역 복원 | x4 일반 결투 + x9 보스 결투. 별 대신 '벽돌'로 동네 재건 |\n| Cut the Rope | 25판 박스마다 새 메커닉 | 신규 요소는 25판에 하나꼴(L1~1000) |\n| Peggle / AB2 | 시도마다 주황 페그 위치 랜덤, 재시작 시 재배치 | 재시도마다 stackSeed를 다시 뽑음(배치는 고정) |\n| Angry Birds | 재료(나무·유리·돌)와 공략 수단의 상성 | 딱지 물성과 숨 세기·높이의 상성 |\n| Stephenson & Renz / Ropossum | 생성 → 시뮬레이션 안정성 검사 → 에이전트 풀이 가능성·난이도 | sim.js + rules.js를 공유하는 levelbot |\n\n## 2. 딱지 레벨 축 카탈로그 (실물 딱지 문화와 연결, 약 44개)\n> 원칙(GDD §10.1 유지): **플레이어 소유 딱지의 물리값은 전부 같다.** 물성 변주는 레벨이 깔아 주는 하우스 딱지와 책상·환경에만 둔다.\n\n| 축 | 항목 → 구현 (sim.js 기준) | 시험하는 실력 |\n|---|---|---|\n| **A. 더미 형태 (8)** | 원기둥 n=3~24(`addPile column`), 2~4탑(`at` 여러 개), 계단(층마다 x를 0.25씩 밀기), 기운 탑, 엇갈린 탑(틈이 생겨 쉬움), 흩어진 무더기(`heap`), 책 위 더미(높은 단), 필통에 기댄 더미 | 쌓인 양을 보고 정하는 숨 세기(피드백 1), 탑 선택, 바람 방향 |\n| **B. 하우스 딱지 물성 (7)** | 테이프(밀도×3, 이미 있음, 2점), 얼음(마찰 0.05, 장외 위험), 코팅(마찰 0.3, 미끄러짐), 휜 딱지(가장자리 틈 → minLift 상향, 쉬움), 왕딱지(R 1.4, 3점, 아래 딱지를 가림), 미니(R 0.6, 잘 날아감), 붙은 쌍(고정 조인트, 같이 뒤집혀야 1점) | 센 숨과 살살 숨의 구분, 과파워 벌칙 |\n| **C. 특수 딱지 (6)** | 금딱지(목표), 폭죽(뒤집히면 방사 임펄스로 연쇄), 무지개(색 와일드), 똥딱지(뒤집으면 −1), 스티커 봉인(첫 뒤집기는 봉인 해제만), 구름(밀도×0.4) | 높이 조준(금딱지 깊이), 피하기 |\n| **D. 책상 소품 (8)** | 지우개(바람 가림 = 기존 `shield` 레이캐스트), 필통(벽), 자(경사로), 연필(굴림대), 컵(골인 시 +2), 책(단), 동전(맨 위를 누름), 딱풀(착지하면 고정). 모두 고정 콜라이더 | 좌우 각도, 경로 읽기 |\n| **E. 환경 (8)** | 책상 크기(TABLE_R 9→5, 장외), 바닥(나무 0.9 / 리놀륨 0.5 / 모래 1.2+감쇠 / 얼음 0.05), 선풍기 측풍(리본으로 보이게), 창문 돌풍(턴마다 깃발), 기운 책상, 버스 흔들림(주기 진동, 타이밍), **다시 쌓기 OFF**(흩어진 채로 다음 블로우), 비(젖으면 무거움) | 바람 보정, 연속 불기 계획 |\n| **F. 목표 (8)** | N장 in K번, 금딱지, 결투(라이벌보다 많이), 색 모으기, 싹쓸이, **정확히 N장**(살살, 피드백 1), 피하기(똥딱지 0), 골인(컵에 N장) | |\n| **G. 라이벌 성격 = 버릇** | GDD Lv1~5(콩이·민수·지우·철수·딱지왕)에 챕터 라이벌을 더한다: 쌍둥이(약한 숨 2번), 문방구 할머니(정밀한 살살), 체육선생님(선풍기를 켬), 전학생(지역 스타일). 실력은 고정·공개(★) | 상대 읽기 |\n\n## 3. 10판 블록 톱니 템플릿\n목표 통과율은 학습자 봇 기준 가설이며, 출시 후 텔레메트리로 보정합니다.\n\n| 칸 | 역할 | 목표 통과율 | 표식 |\n|---|---|---|---|\n| x1 | 신규 요소 소개(유령 손가락 시범) | ≥90% | NEW |\n| x2 | 연습 | 80~85% | |\n| x3 | 연습 + 기존 요소 1개 | 70~80% | |\n| x4 | **라이벌 결투**(일반) | 승률 55~65% | VS |\n| x5 | **HARD** | 35~45% | HARD |\n| x6 | **대박 휴식판**(싹쓸이 쾌감, 운 허용) | ≥90% | |\n| x7 | 응용 | 60~70% | |\n| x8 | 정밀(정확히 N장 / 금딱지 깊숙이) | 55~65% | |\n| x9 | **보스 결투 또는 SUPER HARD** | 20~30% | 👑 |\n| x0 | 보상판(상자 + 쉬운 판) | ≥90% | 🎁 |\n\n- L1~30은 진폭을 작게 하고 HARD 표식을 쓰지 않습니다. **첫 HARD는 L35, 첫 SUPER HARD는 L59**로 둡니다(로열 매치 39/59 패턴 차용, 가설).\n- 기준선은 L300까지만 완만하게 올리고 이후에는 고정합니다(King 레벨 65 교훈).\n- 3연패 시 '숨 안경'(게이지 1회 표시)을 무료로 줍니다. 숨은 DDA는 쓰지 않습니다.\n\n## 4. 레벨 1~100 (10판 단위로 새로 나오는 것)\n\n| 구간 | 챕터 | 새로 나오는 것 | 대표 목표 | 보스·라이벌 | 비고 |\n|---|---|---|---|---|---|\n| 1~10 | 골목① | 원기둥 3→16장(양에 따라 숨이 달라짐) | N장 in 3번, L7 '정확히 2장' | L4 콩이, L9 콩이 | **게이지 색은 L1~3만** 보이고 이후 숨김. L10에서 첫 딱지판 개봉 |\n| 11~20 | 골목② | 금딱지(위 → 가운데 → 아래 깊이) | 금딱지 뒤집기 | L14 콩이, L19 민수 | 높이 조준을 배움 |\n| 21~30 | 골목③ | 테이프 딱지(센 숨) + 휜 딱지(보너스) | 테이프 2장 | L24·L29 민수 | 같은 판 안에서 센 숨과 살살 숨을 대비 |\n| 31~40 | 골목④ | 2~3탑(탑 선택) | 탑 2개 싹쓸이 | L39 지우 | **첫 HARD L35** |\n| 41~50 | 골목⑤ | 다시 쌓기 OFF + 흩어진 무더기 | 3번 연속 계획 | **L49 철수(챕터 보스)** | L50 골목 재건 완료 |\n| 51~60 | 문방구① | 지우개(바람 가림), 필통 벽 | 가려진 금딱지 | L54 지우 | **첫 SUPER HARD L59** |\n| 61~70 | 문방구② | 작은 책상(장외) + 코팅 딱지 | N장, 장외 0 | L69 쌍둥이 | 과파워 벌칙을 체감시켜 감 조절 강화 |\n| 71~80 | 문방구③ | 폭죽 딱지(연쇄) | 색 모으기 | L79 철수 | 대박 연출 강화 |\n| 81~90 | 문방구④ | 선풍기 측풍(리본) | N장 in K번 | L89 체육선생님 | 바람 보정(좌우) |\n| 91~100 | 문방구⑤ | 계단·기운 탑 + 컵 골인 | 골인 3장 | **L99 문방구 할머니** | L100 문방구 재건 1단계 + 챕터 세트 완성 |\n\n## 5. 맵과 메타\n| 챕터 | 레벨 | 대표 요소 | 재건 대상 |\n|---|---|---|---|\n| 골목 | 1~50 | 형태, 금딱지, 테이프 | 골목 가로등·평상 |\n| 문방구 앞 | 51~150 | 소품, 장외, 폭죽, 선풍기 | 할머니 문방구(GDD §10.5와 연결) |\n| 학교 교실 | 151~300 | 책·자·연필, 여러 탑, 정밀 목표 | 교실 |\n| 운동장 | 301~450 | 모래, 돌풍, 비 | 운동장 |\n| 동네 대회 | 451~600 | 토너먼트형 결투 연속(브래킷) | 대회 트로피 책상 |\n| 월드투어 | 600~ | 도시마다 150~250판(GDD §13.5 순서: 멕시코시티 점수 딱지 → 리우 SLAP 해금 → LA milk caps 오마주·선풍기 → 오사카 기운 탁자 …) | 도시 거리 |\n\n- 레벨을 깨면 '벽돌'을 받고, 벽돌로 구역을 재건합니다(로열 킹덤의 포션 방식).\n- **챕터 세트(9장)는 그 챕터 레벨에서만 드롭**됩니다. 수집욕(피드백 3)이 진행을 끌어당기게 하는 장치입니다.\n- 1만 판을 계속할 이유는 다섯 겹입니다: 지도 위 위치, 재건, 챕터 세트, 손기술 숙련(별 3개), 이벤트.\n\n## 6. 1만 판 생성 규칙\n1. **단위**: 10판 블록 2개 = 에피소드(20판). 에피소드마다 헤드라인 요소 1개를 둡니다. 헤드라인은 L1~1000에서는 신규, 이후에는 재조합 또는 티어2 변형(예: 얼음+선풍기)입니다.\n2. **한 판에 활성 요소는 3개 이하**(형태 1 + 물성·특수 ≤1 + 소품·환경 ≤1)이고, 목표는 1개입니다.\n3. **신규 공급**: L1~1000에서 약 40요소를 소진합니다(25판에 1개). 이후에는 2주 업데이트(100판)마다 신규 요소 1개를 넣습니다.\n4. **조합 여유**: 헤드라인 40 × 짝 C(39,2)=741이면 약 2.9만 조합입니다. 호환 필터로 30%만 남아도 약 9천 개이고, 여기에 파라미터와 시드 변주가 붙어 1만 판에 충분합니다. **중복 판정**: 최근 200판과의 특징 벡터 거리가 임계치 아래면 버립니다.\n5. **기준선**: L300 이후로는 고정하고 톱니 진폭만 유지합니다.\n6. **재시도 시드 재추첨**: 배치·소품·목표는 고정하고, stackSeed(쌓는 순서, 금딱지 깊이 밴드)만 다시 뽑습니다.\n7. **결투판**: 라이벌 실력은 ★5 상한에 고정하고, 난이도는 환경과 목표로 변주합니다.\n8. **표식 공개**: NEW·HARD·SUPER HARD·👑을 보여줍니다. 숨은 조작은 하지 않습니다.\n\n레벨 JSON 예시:\n```json\n{\"id\":137,\"chapter\":\"classroom\",\"blueprint\":\"twin_towers_eraser\",\n \"piles\":[{\"shape\":\"column\",\"n\":12,\"at\":[-1.4,0]},{\"shape\":\"steps\",\"n\":8,\"at\":[1.6,0]}],\n \"house\":[{\"type\":\"gold\",\"depthBand\":[0.3,0.6]},{\"type\":\"tape\",\"count\":2}],\n \"props\":[{\"type\":\"eraser\",\"at\":[0.2,1.1],\"rot\":30}],\n \"env\":{\"floor\":\"desk\",\"tableR\":7,\"fan\":null,\"restack\":true},\n \"goal\":{\"type\":\"flipN\",\"n\":11,\"blows\":3},\"stars\":[11,13,16],\n \"reroll\":[\"stackOrder\",\"goldDepth\"],\n \"bot\":{\"p\":{\"novice\":0.31,\"learner\":0.52,\"expert\":0.86},\"skillGap\":0.55,\"nearMiss\":0.47,\"oob\":0.08}}\n```\n\n## 7. 생산 파이프라인과 비용\n1. **블루프린트**(템플릿 문법, 약 60종) → 2. **시드 샘플링** → 3. **안정성 검사**: settle 600스텝 동안 블로우 전에 무너짐이나 떨림이 0이어야 합니다(Stephenson & Renz 방식).\n4. **풀이 가능성**: 고수 봇 통과율 ≥0.6.\n5. **페르소나 봇 3종 × 300회**. 페르소나는 GDD 라이벌 정책을 재사용합니다: 초보 = 콩이 정책 + 게이지 숨김 노이즈, 학습자 = 민수, 고수 = 지우. 측정 지표는 다음과 같습니다.\n   - 통과율 p와 판당 시도 수 APS=1/p\n   - **실력차**(고수 − 초보) ≥0.30\n   - **아까운 실패**(실패 중 목표에 2장 이내로 모자란 비율) ≥40%\n   - 장외율 ≤15%, 판 길이 ≤45초\n   - 300회면 통과율 95% 신뢰구간이 약 ±6%p입니다.\n6. **슬롯 배치**: 템플릿 목표 통과율에 가장 가까운 후보를 고릅니다.\n7. **사람 큐레이션**: 사람이 만드는 비율은 L1~100 100%, L101~1000 30%, L1000 이후 10~15%(소개판·HARD·보스만)입니다. 채움 판은 봇 리포트와 3초 리플레이로 검수합니다.\n8. **출시 후**: 실제 통과율, 포기까지 시간, 이탈을 보고 이상치를 재튜닝합니다(King 방식). 실제 유저 데이터가 쌓이면 '기록 대전'의 조준 분포로 페르소나를 재적합합니다.\n\n**비용(추정)**:\n- 블로우 한 번 판정에 0.12~0.17초가 듭니다(내부 실측).\n- 솔로판 후보 1개는 3×300×3블로우 ≈ 7.5 CPU분, 결투판은 약 30 CPU분입니다.\n- 1만 판 × 후보 3개 ≈ 7,000 CPU시간이고, 클라우드 스팟으로 수십~수백 달러 수준입니다(가격은 미검증).\n- **병목은 컴퓨트가 아니라 큐레이션**입니다. 2주에 100판 = 앵커 10~15판(판당 1~2시간) + 검수 85판(판당 5~10분)이면 **디자이너 약 1명**이 감당합니다(미검증).\n\n**도구**: `tools/levelgen.mjs`(블루프린트 → JSON), `tools/levelbot.mjs`(rules.js와 sim.js 공유, rules.js 주석에 이미 예고돼 있음), `levels/*.json`, 봇 리포트 HTML.\n\n## 8. 목업에 바로 넣을 최소 세트 (20판)\n| # | 내용 | 필요한 코드 |\n|---|---|---|\n| 1~3 | 원기둥 5/8/12장, 3번에 3/5/7장. **게이지 색 보임** | 목표 판정기 |\n| 4 | 결투 콩이(10장) | 기존 그대로 |\n| 5 | 16장, 2번에 8장(게이지 숨김 시작) | |\n| 6 | 대박판: 24장, 3번에 6장 | |\n| 7 | 3장 더미, 정확히 2장(살살) | exact 목표 |\n| 8 | 금딱지 위쪽 | 금딱지 플래그 + 연출 |\n| 9 | 금딱지 가운데 | |\n| 10 | 보스 결투 민수 + 상자 | |\n| 11 | 테이프 2장 포함, 테이프 2장 뒤집기 | heavy(이미 있음) |\n| 12 | 2탑(6+6), 3번에 8장 | 여러 `at` + 탑 선택 조준 |\n| 13 | 흩어진 무더기 10장 | heap(이미 있음) |\n| 14 | 다시 쌓기 OFF, 20장 3번에 12장 | restack 토글 |\n| 15 | HARD: 테이프 + 금딱지 바닥 근처 | |\n| 16 | 휴식: 24장 대박 | |\n| 17 | 작은 책상 R=5(장외) | TABLE_R를 레벨별로 |\n| 18 | 지우개 가림 | 고정 콜라이더 + shield |\n| 19 | 선풍기 측풍(리본) | 스텝마다 측방향 힘 |\n| 20 | 보스 결투 철수(선풍기 테이블) | |\n\n필요한 코드는 레벨 JSON 로더, 목표 판정 4종(flipN/K, gold, exact, duel), 레벨별 TABLE_R·바닥 마찰, 소품 콜라이더, 선풍기, 재시도 시드 재추첨, 별 3개 판정입니다. 1~2일 분량으로 추정합니다. 이 20판을 levelbot으로 돌려 **봇 통과율과 재윤님의 체감 순위를 비교**하는 것이 첫 검증입니다.\n\n## 9. 재윤님 결정 필요\n1. '모든 판 = 컴퓨터'를 '도전판(라이벌이 낸 문제, 솔로) 60 + 결투판 40'으로 해석해도 되는지.\n2. 레벨 모드는 하우스 판(내 딱지를 잃지 않음)으로 하고, 따먹기는 별도 테이블 모드로 분리할지.\n3. '+2 숨'(이동 수 추가에 해당)을 판매할지. GDD는 코스메틱만 팔기로 돼 있습니다.\n4. HARD·SUPER HARD 표식을 공개할지.",
+   "key_claims": [
+    "1만 판은 출시 물량이 아니라 런웨이다. 캔디는 주당 45판(18,700판 이상), 로열 매치는 2주에 100판(12,400판 이상, 2025년 11월)으로 수년에 걸쳐 쌓았다. 그래서 PUFF!는 글로벌 출시 때 1,000판, 이후 2주에 100판을 공급하는 파이프라인을 출시 전에 완성해야 한다.",
+    "난이도는 비례로 올리지 않는다. 공개된 톱니(로열 매치 x5 HARD, x9 SUPER HARD; 로열 킹덤은 10판마다 더 어려운 보스판 2개)에 L300 이후 기준선을 고정한다. King 레벨 65 A/B에서 어렵게 하면 단기 결제가 늘었지만, 쉽게 한 쪽이 장기 잔존에서 우세했다.",
+    "새로움의 박자가 1만 판을 지탱한다(Cut the Rope 25판 박스, 캔디 15판 에피소드). 딱지 요소 약 40개를 한 판 최대 3개로 조합하면 약 9천 개 이상의 유효 조합이 나와 1만 판을 채울 수 있다. 신규 요소는 L1~1000에서 25판에 1개, 이후 2주 업데이트마다 1개를 넣는다.",
+    "생산은 King식 봇 예측과 학계 물리 퍼즐 생성(Stephenson & Renz, Ropossum)을 합친다: 시드 생성 → 시뮬레이션 안정성 검사 → 페르소나 봇 3종 × 300회로 통과율·실력차·아까운 실패율 측정 → 톱니 칸에 배치. PUFF!는 블로우 판정이 0.12~0.17초라 1만 판 검증 컴퓨트가 수천 CPU시간 수준이고, 병목은 사람 큐레이션(디자이너 약 1명)이다.",
+    "물리 레벨의 고유 리스크는 운이다. 실력차(고수 봇 통과율 − 초보 봇 통과율) ≥0.30 게이트와 재시도마다 시드 재추첨(Peggle·AB2 방식)으로 공정성과 '감' 학습을 지킨다. 레벨 모드는 하우스 판으로 운영해 내기 요소를 없앤다(등급 안전)."
+   ],
+   "risks": [
+    "물리의 운이 커서 생성 레벨 상당수가 실력차 게이트에서 탈락할 수 있다(가운데 조준 결과가 0~16장). 그러면 생성 수율이 떨어지고, 목표 장수를 보수적으로 잡게 되어 판들이 비슷비슷해질 수 있다.",
+    "봇 페르소나가 실제 사람과 다를 수 있다. 특히 게이지를 숨긴 뒤의 숨 세기 오차는 출시 전 데이터가 없어 초기 통과율 예측이 크게 어긋날 수 있다. King도 CNN이 새 메커닉에서 일반화에 약하다고 보고했다.",
+    "생성 레벨은 1,000판을 넘기면 반복감이 생길 수 있다. 캔디와 로열은 최종 보드를 사람이 만들고 AI는 보조만 한다. 소개판·보스 같은 앵커를 사람이 만드는 비율을 너무 낮추면 품질이 떨어진다.",
+    "크로스플랫폼 결정론 문제가 있다. Rapier 기본 빌드에는 enhanced-determinism이 없어 서버 봇 결과와 클라이언트 결과가 미세하게 다를 수 있다(뒤집힌 장수는 같았다는 내부 실측은 있음). 얼음·코팅처럼 마찰이 낮은 원판은 떨림과 불안정 튜닝이 더 필요하다.",
+    "결투판(60~100초)과 솔로판(20~30초)의 템포 차이로 세션 길이가 들쭉날쭉해질 수 있다. 보스 결투가 몰린 구간은 피로가 커진다.",
+    "'+2 숨' 판매는 로열 킹덤식 '이동 수 소진' 결제 모델과 같다. GDD의 코스메틱 전용 원칙과 충돌하고, 근거 없이도 '불가능한 판으로 결제 유도'라는 의심(Deceptive Patterns의 캔디 사례)을 살 수 있다.",
+    "로열 매치의 하드·슈퍼하드 간격 수치는 원문이 깨진 제3자 분석 하나뿐이다(low). 템플릿 수치는 가설로 두고 텔레메트리로 보정해야 한다."
+   ],
+   "open_questions": [
+    "'최소 1만 판'은 출시 시점 목표인가, 장기 런웨이 목표인가? (본 제안: 글로벌 출시 1,000판, 이후 2주에 100판)",
+    "'기본 전제는 컴퓨터와'를 결투판만으로 할지, '라이벌이 낸 도전(솔로 퍼즐)'까지 포함할지? (제안: 도전 60 / 결투 40)",
+    "레벨 모드 판돈을 하우스 판(잃지 않음)으로 확정하고, 원안 따먹기는 별도 골목 테이블 모드로 분리해도 되는가?",
+    "레벨 모드의 '+2 숨', '숨 안경' 같은 부스터를 팔지, 무료 보상으로만 줄지?",
+    "HARD·SUPER HARD 표식을 공개할지? (공개하면 실패에 대한 납득도가 오르지만 긴장감은 줄 수 있음)",
+    "솔로 퍼즐에서 '다시 쌓기 OFF'(흩어진 채로 연속 불기)를 기본으로 할지, 원작대로 매 턴 다시 쌓을지?",
+    "월드투어 첫 도시는 GDD 순서(멕시코시티)대로 갈지, 재윤님 예시(도쿄 멘코)를 앞당길지?",
+    "봇 페르소나를 출시 전에 무엇으로 보정할지? (사내 플레이테스트 10~20명의 조준·파워 로그로 초보·학습자 노이즈를 적합하는 안)"
+   ]
+  },
+  "verify": {
+   "lens": "level-content 팩트체크: 1만 판 런웨이, 생산 속도, 숨은 심리(레벨 65), 로열 킹덤 톱니, King 봇",
+   "verdicts": [
+    {
+     "claim": "캔디크러쉬는 주당 45판(2024)으로 17,000판 이상(2024)이 됐다",
+     "verdict": "confirmed",
+     "note": "Guardian Australia(2024-08-02)의 '주당 45판, 17,000판 이상' 보도를 확인했다. 다만 이 기사는 도서관 프록시로만 열렸다. 2024년 7월 기준 17,045판이라는 집계도 있다. PocketGamer는 수요일마다 30/45/60판이 추가된다고 해서, 45는 고정값이 아니라 평균적인 묶음 단위다. Cubix(2025-07)는 '16,000판 이상'으로 적어 다른 수치와 어긋난다. 18,700판(AP 2025-05)은 이번에 따로 재확인하지 못했다.",
+     "sources": [
+      "https://www.pocketgamer.com/candy-crush-saga/how-many-levels-are-there",
+      "https://www.esports.net/news/mobile-games/how-many-levels-in-candy-crush/",
+      "https://www.cubix.co/blog/how-many-levels-are-in-candy-crush-saga/"
+     ]
+    },
+    {
+     "claim": "로열 매치는 2주마다 100판씩 넣어 12,400판 이상(2025년 11월)이 됐다. 출시 때 약 1,000판을 넣고 2주에 100판씩 추가하면 약 3.5년 뒤 1만 판에 닿는다",
+     "verdict": "confirmed",
+     "note": "Wikipedia(2025년 11월 12,400판 이상)와 APKMirror 릴리스 노트('업데이트당 100판, 2주마다')가 일치한다. 같은 Wikipedia의 이전 판에는 2024년 3월 약 8,000판으로 나온다. 20개월 동안 약 4,400판, 즉 2주에 약 100판이라 독립 산술로도 맞는다. 3.5년 계산(9,000 ÷ 100 × 2주 = 180주)도 맞다. 단서가 두 개 있다. 두 출처 모두 개발사 공식 자료가 아니다(Wikipedia 스냅샷과 제3자 APK 미러). 또 로열 매치는 2021년 출시 후 약 3년 만에 8,000판이었으므로, 실제로 1만 판까지는 약 3.5~4년이 걸렸다고 보는 게 정확하다.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Royal_Match",
+      "https://apkmirror.com/apk/dream-games-ltd-2/royal-match/royal-match-26531-release/royal-match-26531-android-apk-download"
+     ]
+    },
+    {
+     "claim": "King 레벨 65: 원래 마지막 판이었고 너무 어려워 매출 1위·이탈 1위였다. A/B에서 어렵게 하면 단기 결제가 늘고 쉽게 하면 장기 잔존이 늘었다",
+     "verdict": "confirmed",
+     "note": "mobilegamer.biz의 GDC 보도 요약으로 확인했다. 연사는 데이터사이언스 시니어 디렉터 Xavier Guardiola이고, 핵심 내용은 '전환율 최고, 역대 최다 매출, 최다 이탈, 어렵게 하면 단기 전환 증가, 쉽게 하면 장기 잔존 증가'다. TechTarget은 이탈자 대부분이 65판에서 멈췄고 완화 후 퍼널이 고르게 분포했다고 보강한다. 원문 페이지는 DNS 오류로 직접 열지 못했다. 그래서 두 가지는 미확인이다. (a) 전후 이탈·매출 수치는 어느 출처에도 없다. (b) '수백만 명이 10,000번째 레벨을 넘었고 대부분 무과금'이라는 인용, 그리고 '재미 지표(포기까지 시간·통과까지 시간)'는 원문 문구를 확인하지 못했다. 이 둘은 low로 낮춰야 한다. 또 이 사례는 레벨 1개를 대상으로 한 실험이다. 'L300 이후 기준선 고정' 같은 전 구간 설계 규칙의 근거로 쓰는 건 외삽이다.",
+     "sources": [
+      "https://mobilegamer.biz/how-king-defines-a-good-candy-crush-saga-level-and-why-it-constantly-prunes-the-bad-ones/",
+      "https://www.techtarget.com/searchbusinessanalytics/feature/Customer-analysis-a-winning-play-for-Candy-Crush-Saga-maker"
+     ]
+    },
+    {
+     "claim": "로열 킹덤은 10판마다 '킹덤 판'(다크킹 PvE) 2개를 넣고, 이 판들은 하드보다 더 어렵다. 원래 유사 PvP였던 것을 다크킹으로 바꿨다",
+     "verdict": "weakened",
+     "note": "확인된 것은 세 가지다. 소프트런치 1차 버전(2023)은 다른 플레이어를 공격하는 PvP식이었다(Coin Master와 비슷하다는 평). 이후 Attack Level이 Kingdom Level로 바뀌었고, 같은 주기인 '10판마다'로 다크킹(NPC)을 공격한다. 반면 '10판마다 2개'라는 개수와 '일반 하드보다 더 어렵다'는 난이도 비교는 검색 결과에서 확인하지 못했다. Naavik과 Deconstructor of Fun 원문은 DNS 오류로 열리지 않았다. 따라서 'x4 일반 결투 + x9 보스 결투' 설계의 근거는 '10판 주기의 특수판'까지만 확인된 셈이다.",
+     "sources": [
+      "https://naavik.co/digest/royal-kingdom-and-expanding-the-royal-universe/",
+      "https://medium.com/@chrisjameswallace/a-second-swing-at-a-royal-match-sequel-will-this-one-work-4b386eed2580",
+      "https://www.balderton.com/news/congratulating-dream-games-on-the-launch-of-their-second-game-royal-kingdom/"
+     ]
+    },
+    {
+     "claim": "(인사이트) 로열 킹덤은 출시 한 달 만에 1,100판 이상이었으므로 글로벌 출시 목표는 1,000판이다",
+     "verdict": "weakened",
+     "note": "'2024년 12월에 1,100판 이상'은 Udonis 단일 출처이고 비공식이다. 더 중요한 반증이 있다. 로열 킹덤은 2024-11-21 글로벌 출시 전에 약 18~19개월 소프트런치를 했다. 그 사이 2024-04-22에 전 유저 진행도를 초기화하고 메타를 재구성했다. 즉 1,100판은 '출시 한 달 만에 만든 물량'이 아니라 1년 반 넘는 소프트런치 동안 쌓은 재고다. PUFF!의 '소프트런칭 300판 → 글로벌 1,000판' 목표는 소프트런치 기간이 길다는 전제를 함께 적어야 한다. 출시 후 업데이트 속도는 2025년 10월에도 업데이트당 100판으로 확인된다(PocketGamer.biz).",
+     "sources": [
+      "https://www.blog.udonis.co/mobile-marketing/mobile-games/royal-kingdom",
+      "https://www.pocketgamer.biz/dream-games-launches-royal-kingdom-worldwide-as-royal-match-nears-4-billion/",
+      "https://www.balderton.com/news/congratulating-dream-games-on-the-launch-of-their-second-game-royal-kingdom/"
+     ]
+    },
+    {
+     "claim": "King은 사람처럼 두는 CNN 봇으로 레벨 성공률을 예측하고, MCTS보다 상관이 높고 계산량이 적다. 신규 레벨 1,000판 이상에 1년 넘게 사용했다",
+     "verdict": "confirmed",
+     "note": "Gudmundsson et al. 2018 초록 문구를 확인했다. Candy Crush Saga와 Soda의 데이터로 CNN을 지도학습했고, MCTS 대비 평균 레벨 난이도와의 상관이 증가했으며 계산 시간은 일부만 든다. 다만 '일부'의 구체 배수는 확인하지 못했다. '1,000판 이상·1년 이상'은 2차 블로그(koaning) 요약이라 med로 보는 게 적절하다. Academia.edu 요약의 '반복 시간 7일→1분 미만'도 2차 요약이다. 이 방식은 대량의 실제 플레이 로그로 학습한다는 점도 짚어야 한다. 출시 전 PUFF!에는 학습 데이터가 없으므로 King 방식을 그대로 적용할 수 없고, 휴리스틱 물리 봇으로 시작해야 한다. 그래서 '봇-유저 통과율 상관 r≥0.7' 목표의 근거는 King 사례가 아니라 가설이다.",
+     "sources": [
+      "https://www.Gwern.net/doc/reinforcement-learning/imitation-learning/2018-gudmundsson.pdf",
+      "https://www.academia.edu/40020341/Human_Like_Playtesting_with_Deep_Learning",
+      "https://koaning.io/posts/playtesting"
+     ]
+    },
+    {
+     "claim": "King은 AI를 '보이지 않는 조수'로 쓴다. 디자이너가 만든 판을 플레이어 행동 모델로 돌려 난이도를 확인한다",
+     "verdict": "confirmed",
+     "note": "Guardian(2024-08) 요약에도 'AI 도구가 사람 디자이너의 레벨을 플레이어 행동 모델로 테스트해 실제 유저가 보기 전에 난이도를 판단한다'고 나온다. 리포트의 ①(난이도 확인)과 일치한다. ②(봇이 수정 후보 제안)와 ③(옛 레벨 재튜닝)은 이번 검색으로 따로 확인하지 못했다.",
+     "sources": [
+      "https://www.pocketgamer.com/candy-crush-saga/how-many-levels-are-there"
+     ]
+    }
+   ],
+   "missed": [
+    "로열 킹덤은 글로벌 출시 전 약 18~19개월 소프트런치를 했고, 2024-04-22에 진행도를 초기화했다. 따라서 '출시 한 달 만에 1,100판'을 출시 물량의 벤치마크로 쓰면 오도된다. PUFF! 일정표에는 긴 소프트런치 기간을 명시해야 한다.",
+    "King의 CNN 봇은 수백만 건의 실제 플레이 로그로 학습한 모방학습 모델이다. 출시 전 PUFF!는 데이터가 없으므로, 휴리스틱·파라미터 봇에서 시작해 소프트런치 텔레메트리로 보정하는 단계가 필요하다. r≥0.7 목표에는 업계 근거가 없고 가설이다.",
+    "레벨 65 사례는 레벨 1개를 대상으로 한 A/B다. 'L300 이후 난이도 기준선 고정'은 이 사례에서 끌어낸 외삽이므로, 근거로 쓰지 말고 가설로 표시해야 한다.",
+    "'10판마다 킹덤 판 2개'와 '하드보다 어렵다'는 원문(Naavik·DoF)에 접근하지 못해 확인하지 못했다. 확인된 것은 '10판 주기'까지다.",
+    "캔디크러쉬의 주간 추가 수는 30/45/60으로 변동한다. '주당 45판'은 평균적인 묶음 단위로 표현하는 게 정확하다.",
+    "이번 검색 한도 안에서 검증하지 못한 항목이 있다: Peggle 특허(US 8,128,476)의 '주황 페그 랜덤' 문구, 로열 매치의 x5/x9 톱니(이미 low), devtodev 통과율 수치. 이들은 현 신뢰도를 그대로 두되 결정 근거로 승격하지 말 것을 권한다."
+   ]
+  }
+ }
+]
