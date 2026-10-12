@@ -566,7 +566,7 @@ function watchSim() {
 
 // ── 화면 전환 ───────────────────────────────────────────
 function show(id) {
-  for (const s of ['#home', '#hud', '#result', '#album', '#boot']) $(s).hidden = s !== id;
+  for (const s of ['#home', '#hud', '#result', '#album', '#boot', '#sheet']) $(s).hidden = s !== id;
 }
 
 function refreshTexts() {
@@ -575,6 +575,7 @@ function refreshTexts() {
   $('#micBtn').textContent = micEnabled ? t('micOn') : t('micOff');
   $('#invCount').textContent = Store.total(profile);
   $('#albumProg').textContent = `${Store.ownedKinds(profile)}/${CARDS.length}`;
+  $('#sheetBtn').classList.toggle('ready', sheetReady());
   $('#sndBtn').setAttribute('aria-pressed', String(!sfx.muted));
   $('#sndBtn').classList.toggle('off', sfx.muted);
   const max = Store.maxStake(profile);
@@ -593,7 +594,69 @@ function clearMatchMeshes() {
   for (const who of ['me', 'ai']) { for (const m of piles[who]) scene.remove(m); piles[who] = []; }
 }
 
+// 무료 딱지판: 마분지 판에서 동그라미를 톡톡 떼어내는 개봉 의식 (TCG Pocket 팩 개봉을 한국 문방구 '판딱지'로 — 리서치)
+// 목업에선 쿨다운 2분(기획: 12시간, 최대 2장 적립)
+const SHEET_COOLDOWN = 2 * 60 * 1000;
+function sheetReady() { return Date.now() - (profile.lastSheet || 0) >= SHEET_COOLDOWN; }
+function openSheet() {
+  if (!sheetReady()) { toast(t('sheetWait')); return; }
+  sfx.unlock(); sfx.pop();
+  const rng = mulberry32((Date.now() ^ 0x9e3779b9) >>> 0);
+  const ids = Array.from({ length: 6 }, (_, i) => rollCard(rng, i === 5 ? 'rare' : null)); // 마지막 칸은 레어 이상 확정
+  const before = new Set(Object.keys(profile.inv).filter((k) => profile.inv[k] > 0));
+  const grid = $('#sheetGrid');
+  grid.innerHTML = '';
+  let opened = 0;
+  ids.forEach((id, i) => {
+    const c = CARD_BY_ID[id];
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pop';
+    b.setAttribute('aria-label', 'ddakji ' + (i + 1));
+    b.innerHTML = `<span class="f back"><img alt="" src="${backImage()}"></span><span class="f face r-${c.rarity}"><img alt="${cardName(c)}" src="${faceImage(id, 80)}"></span>`;
+    if (c.rarity !== 'common') b.classList.add('glow');
+    b.onclick = () => {
+      if (b.classList.contains('open')) return;
+      b.classList.add('open');
+      sfx.clack(1);
+      setTimeout(() => {
+        sfx.flip(opened);
+        if (c.rarity !== 'common') sfx.big();
+        if (!before.has(id)) { const em = document.createElement('em'); em.textContent = t('newCard'); b.appendChild(em); }
+      }, 180);
+      opened++;
+      profile.inv[id] = (profile.inv[id] || 0) + 1;
+      if (opened === ids.length) {
+        profile.lastSheet = Date.now();
+        Store.save(profile);
+        $('#sheetDone').hidden = false;
+      }
+    };
+    grid.appendChild(b);
+  });
+  $('#sheetDone').hidden = true;
+  show('#sheet');
+}
+
+let backUrl = null;
+function backImage() {
+  if (backUrl) return backUrl;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 160;
+  drawBack(cv.getContext('2d'), 160);
+  backUrl = cv.toDataURL('image/png');
+  return backUrl;
+}
+
 function goHome() {
+  // 파산 방지: 딱지가 바닥나면 문방구 할머니가 기본 딱지 10장 (리서치: 빈털터리 방지)
+  if (Store.maxStake(profile) < 5) {
+    const rng = mulberry32((Date.now() & 0xffff) + 11);
+    const commons = CARDS.filter((c) => c.rarity === 'common');
+    for (let i = 0; i < 10; i++) { const id = commons[Math.floor(rng() * commons.length)].id; profile.inv[id] = (profile.inv[id] || 0) + 1; }
+    Store.save(profile);
+    setTimeout(() => toast(t('grandma')), 600);
+  }
   state = 'home';
   puffer.mode = 'hidden';
   hideGizmo();
@@ -681,6 +744,7 @@ async function startMatch() {
   show('#hud');
   await vsSplash();
   await introDrop();
+  match.turn = await rps();
   await gameLoop();
 }
 
@@ -711,6 +775,37 @@ async function introDrop() {
     await wait(Math.max(30, 110 - i * 3));
   }
   await wait(300);
+}
+
+// 선공 정하기: 가위바위보 (세계 공통 + 한국 놀이 문화 그대로, 공정성 장치 — 리서치)
+const HANDS = ['rock', 'scissors', 'paper'];
+const HAND_ICON = { rock: '✊', scissors: '✌️', paper: '✋' };
+async function rps() {
+  const el = $('#rps');
+  for (let round = 0; round < 3; round++) {
+    el.hidden = false;
+    $('#rpsTitle').textContent = t('rps');
+    $('#rpsAi').textContent = '❔';
+    $('#rpsRes').textContent = '';
+    el.querySelectorAll('button').forEach((b) => { b.disabled = false; b.classList.remove('pick'); });
+    const mine = await new Promise((res) => el.querySelectorAll('button').forEach((b) => { b.onclick = () => { sfx.unlock(); sfx.pop(); res(b.dataset.h); }; }));
+    el.querySelectorAll('button').forEach((b) => { b.disabled = true; b.classList.toggle('pick', b.dataset.h === mine); });
+    const ai = HANDS[Math.floor(match.rng() * 3)];
+    await wait(250);
+    $('#rpsAi').textContent = HAND_ICON[ai];
+    sfx.clack(1);
+    const win = (mine === 'rock' && ai === 'scissors') || (mine === 'scissors' && ai === 'paper') || (mine === 'paper' && ai === 'rock');
+    if (mine !== ai) {
+      $('#rpsRes').textContent = win ? t('rpsWin') : t('rpsLose');
+      await wait(900);
+      el.hidden = true;
+      return win ? 'me' : 'ai';
+    }
+    $('#rpsRes').textContent = t('rpsDraw');
+    await wait(800);
+  }
+  el.hidden = true;
+  return match.rng() < 0.5 ? 'me' : 'ai';
 }
 
 async function gameLoop() {
@@ -1093,6 +1188,7 @@ async function endMatch() {
   $('#resTitle').textContent = t(res);
   $('#resTitle').className = 'res-title ' + res;
   $('#resScore').innerHTML = `<b>${meWon}</b> <span>:</span> <b>${aiWon}</b>`;
+  $('#resBest').textContent = `${t('bestPuff')} ${match.best}`;
   $('#resNet').innerHTML = match.mode === 'fun' ? t('funNote') : `${t('net')} <b class="${net >= 0 ? 'pos' : 'neg'}">${net >= 0 ? '+' : ''}${net}</b>`;
   const grid = $('#resCards');
   grid.innerHTML = '';
@@ -1132,6 +1228,8 @@ function openAlbum() {
 function wireUI() {
   $('#playBtn').addEventListener('click', () => { sfx.unlock(); sfx.pop(); startMatch(); });
   $('#albumBtn').addEventListener('click', openAlbum);
+  $('#sheetBtn').addEventListener('click', openSheet);
+  $('#sheetDone').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#albumBack').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#againBtn').addEventListener('click', () => { sfx.pop(); clearMatchMeshes(); startMatch(); });
   $('#homeBtn').addEventListener('click', () => { sfx.pop(); goHome(); });

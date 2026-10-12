@@ -21,6 +21,7 @@
   color-scheme: light;
 }
 html, body { height: 100%; }
+[hidden] { display: none !important; }
 body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: none; }
 :lang(ko) .disp, :lang(ko) .btn, :lang(ko) .banner, :lang(ko) .big { font-family: var(--display-ko); }
 #app { position: fixed; inset: 0; }
@@ -172,6 +173,29 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .vsmode { font-family: var(--display); font-size: 0.95rem; opacity: 0.75; }
 .modal { position: absolute; inset: 0; background: rgba(20, 10, 5, 0.45); }
 .modal .ask { font-size: 1.25rem; margin: 0 0 14px; }
+.rps { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(20,10,5,0.35); }
+.rps .card { display: grid; gap: 10px; justify-items: center; background: linear-gradient(#fff6e0, #ffe2a8); border: 4px solid var(--ink); border-radius: 26px; padding: 16px 20px; box-shadow: 0 8px 0 var(--ink); max-width: 90vw; }
+.rps p { margin: 0; font-size: 1.3rem; text-align: center; }
+.rps .hands { display: flex; gap: 10px; }
+.rps .hands button { font-size: 2.6rem; width: 1.8em; height: 1.8em; border-radius: 18px; border: 3px solid var(--ink); background: #fff; box-shadow: 0 4px 0 var(--ink); cursor: pointer; }
+.rps .hands button.pick { background: linear-gradient(#fff07a, var(--gold)); transform: translateY(-3px); }
+.rps .hands button:disabled:not(.pick) { opacity: 0.4; }
+.rps .vsline { display: flex; align-items: center; gap: 10px; font-size: 1.4rem; }
+.rps .ai-hand { font-size: 2.6rem; }
+.rps .res { font-size: 1.6rem; color: var(--red); min-height: 1.3em; }
+.sheet-panel h2 { margin: 0 0 10px; font-size: 1.8rem; }
+.sheet { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px; border: 3px dashed #a07a4a; border-radius: 16px; background: repeating-linear-gradient(45deg, #e8cf9c, #e8cf9c 8px, #e2c58e 8px, #e2c58e 16px); margin-bottom: 12px; }
+.pop { position: relative; aspect-ratio: 1; border: 0; padding: 0; background: none; cursor: pointer; perspective: 600px; }
+.pop .f { position: absolute; inset: 0; backface-visibility: hidden; transition: transform 0.45s cubic-bezier(.2,1.4,.4,1); border-radius: 50%; }
+.pop .f img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 3px 0 var(--ink)); }
+.pop .face { transform: rotateY(180deg) scale(0.6); }
+.pop.open .back { transform: rotateY(-180deg) translateY(-12px); }
+.pop.open .face { transform: rotateY(0) scale(1); }
+.pop.glow .back { animation: leak 1.2s ease-in-out infinite; }
+@keyframes leak { 50% { filter: drop-shadow(0 0 10px #fff3a0) drop-shadow(0 0 4px #ffcf33); } }
+.pop em { position: absolute; left: 50%; top: -6px; transform: translateX(-50%) rotate(-6deg); font-style: normal; font-family: var(--display); font-size: 0.8rem; background: var(--red); color: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 0 5px; z-index: 2; }
+#sheetBtn.ready { animation: wiggle 1.6s ease-in-out infinite; }
+@keyframes wiggle { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-4deg); } 90% { transform: rotate(4deg); } 95% { transform: rotate(-2deg); } }
 #toast { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); background: rgba(42,26,18,0.85); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 1rem; max-width: 86vw; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .logo h1, .hint .hand { animation: none; } }
 </style>
@@ -198,6 +222,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
       <div class="bet"><span class="lbl" data-t="stake">POT</span><div id="chips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
       <button id="playBtn" class="btn xl" type="button" data-t="play">PLAY</button>
       <div class="row">
+        <button id="sheetBtn" class="btn gold" type="button" data-t="sheet">FREE SHEET</button>
         <button id="albumBtn" class="btn blue" type="button"><span data-t="collection">ALBUM</span> <small id="albumProg">0/24</small></button>
         <button id="micBtn" class="btn ghost" type="button">Mic: OFF</button>
       </div>
@@ -214,6 +239,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <div id="hint" class="hint" hidden><div class="hand"></div><span id="hintText"></span></div>
     <div id="banner" class="banner" hidden></div>
     <div id="big" class="big" hidden></div>
+    <div id="rps" class="rps" hidden><div class="card"><p id="rpsTitle" class="disp"></p><div class="hands"><button type="button" data-h="rock" aria-label="rock">✊</button><button type="button" data-h="scissors" aria-label="scissors">✌️</button><button type="button" data-h="paper" aria-label="paper">✋</button></div><div class="vsline"><span class="disp">VS</span><span id="rpsAi" class="ai-hand">❔</span></div><p id="rpsRes" class="disp res"></p></div></div>
     <div id="vs" hidden><div class="card"><div class="vsrow"><span id="vsMe"></span><span class="vsx">VS</span><span id="vsAi"></span></div><div id="vsBait"></div><div id="vsMode" class="vsmode"></div></div></div>
     <button id="quitBtn" class="btn ghost" type="button" data-t="home">HOME</button>
   </section>
@@ -223,8 +249,17 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
       <h2 id="resTitle" class="res-title">WIN</h2>
       <div id="resScore"></div>
       <div id="resNet"></div>
+      <div id="resBest" class="note"></div>
       <div id="resCards"></div>
       <div class="row"><button id="againBtn" class="btn" type="button" data-t="again">REMATCH</button><button id="homeBtn" class="btn blue" type="button" data-t="home">HOME</button></div>
+    </div>
+  </section>
+
+  <section id="sheet" class="screen" hidden>
+    <div class="panel sheet-panel">
+      <h2 class="disp" data-t="sheetTitle">Pop them out!</h2>
+      <div id="sheetGrid" class="sheet"></div>
+      <button id="sheetDone" class="btn" type="button" data-t="sheetDone" hidden>COLLECT</button>
     </div>
   </section>
 
