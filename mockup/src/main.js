@@ -29,6 +29,10 @@ const MAX_TURNS = 18;
 
 // ── 상태 ─────────────────────────────────────────────────
 let profile = Store.load();
+// 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1 };
+const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1] };
+const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
 const sfx = new Sfx();
@@ -482,7 +486,7 @@ function frame(now) {
   lastT = now;
   if (now < hitStopUntil) dt = 0;
   // 슬로모
-  const targetScale = now < slowUntil ? 0.3 : 1;
+  const targetScale = now < slowUntil ? feel.slow : 1;
   timeScale = lerp(timeScale, targetScale, targetScale < timeScale ? 0.5 : 0.08);
   $('#vignette').style.opacity = String(clamp((1 - timeScale) * 1.3, 0, 0.85));
 
@@ -721,7 +725,7 @@ async function startMatch() {
   const rivalName = t('rivals')[Math.floor(rng() * 5)];
   const rivalCard = CARDS[Math.floor(rng() * CARDS.length)];
   match = { seed, rng, myStake, aiStake, pot, rivalName, rivalCard, mode, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
-  table = new Table(seed);
+  table = new Table(seed, { lift: 519.59 * feel.wind });
   table.addPile(pot.map((p) => p.id));
   table.discs.forEach((d, i) => { d.from = pot[i].from; });
   table.settle();
@@ -940,7 +944,7 @@ function playerShot() {
       if (micEnabled && mic.ready) return;
       const dy = ev.clientY - aiming.sy;
       const dx = ev.clientX - aiming.sx;
-      aiming.power = clamp(dy / (minDim * 0.42), 0, POWER_MAX);
+      aiming.power = clamp(dy / (minDim * feel.pull), 0, POWER_MAX);
       aiming.lat = clamp(aiming.lat0 - dx / (minDim * 0.5), -1.35, 1.35);
       puffer.p = aiming.power;
       inhale?.set(aiming.power);
@@ -978,9 +982,9 @@ async function aiShot() {
   const dir = toCam.clone(); // 상대는 맞은편에서 내 쪽으로 분다
   const shot = {
     dir: { x: dir.x, z: dir.z },
-    lat: clamp(g() * 0.35, -1.2, 1.2),
-    h: clamp(top * clamp(0.68 + g() * 0.17, 0.05, 1), 0.03, top),
-    power: clamp(0.85 + g() * 0.14, 0.35, POWER_MAX),
+    lat: clamp(g() * 0.35 / feel.aiSkill, -1.2, 1.2),
+    h: clamp(top * clamp(0.68 + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
+    power: clamp(0.85 + g() * 0.14 / feel.aiSkill, 0.35, POWER_MAX),
   };
   puffer.mode = 'charge';
   puffer.who = 'ai';
@@ -1003,7 +1007,8 @@ function resolveShot(shot, rng) {
   const ex = shot.power - SWEET_HI;
   const g = () => { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
   const top = table.columnTop();
-  return { ...shot, power: SWEET_HI + ex * 0.25, lat: clamp(shot.lat + g() * ex * 3.2, -1.6, 1.6), h: clamp(shot.h + g() * ex * 2.4, 0.03, top), over: true };
+  const k = feel.overShake;
+  return { ...shot, power: SWEET_HI + ex * 0.25, lat: clamp(shot.lat + g() * ex * 3.2 * k, -1.6, 1.6), h: clamp(shot.h + g() * ex * 2.4 * k, 0.03, top), over: true };
 }
 
 async function blow(rawShot, who) {
@@ -1207,6 +1212,32 @@ async function endMatch() {
   show('#result');
 }
 
+// ── 손맛 튜닝 패널 ─────────────────────────────────────
+function openTune() {
+  sfx.unlock(); sfx.pop();
+  const box = $('#tuneRows');
+  box.innerHTML = '';
+  for (const k of Object.keys(TUNE_DEFAULTS)) {
+    const [mn, mx, st] = TUNE_RANGE[k];
+    const row = document.createElement('label');
+    row.className = 'trow';
+    row.innerHTML = `<span>${t('tune_' + k)}</span><input id="tune-${k}" type="range" min="${mn}" max="${mx}" step="${st}" value="${feel[k]}"><b>${(+feel[k]).toFixed(2)}</b>`;
+    const inp = row.querySelector('input');
+    inp.addEventListener('input', () => { feel[k] = +inp.value; row.querySelector('b').textContent = (+inp.value).toFixed(2); });
+    box.appendChild(row);
+  }
+  $('#tune').hidden = false;
+}
+function closeTune(reset) {
+  if (reset) Object.assign(feel, TUNE_DEFAULTS);
+  profile.settings.feel = { ...feel };
+  Store.save(profile);
+  if (reset) openTune(); else $('#tune').hidden = true;
+}
+function tuneSummary() {
+  return Object.entries(feel).map(([k, v]) => `${k}=${(+v).toFixed(2)}`).join(' ');
+}
+
 // ── 앨범 ───────────────────────────────────────────────
 function openAlbum() {
   sfx.unlock(); sfx.pop();
@@ -1229,6 +1260,9 @@ function wireUI() {
   $('#playBtn').addEventListener('click', () => { sfx.unlock(); sfx.pop(); startMatch(); });
   $('#albumBtn').addEventListener('click', openAlbum);
   $('#sheetBtn').addEventListener('click', openSheet);
+  $('#tuneBtn').addEventListener('click', openTune);
+  $('#tuneClose').addEventListener('click', () => { sfx.pop(); closeTune(false); toast(tuneSummary()); });
+  $('#tuneReset').addEventListener('click', () => { sfx.pop(); closeTune(true); });
   $('#sheetDone').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#albumBack').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#againBtn').addEventListener('click', () => { sfx.pop(); clearMatchMeshes(); startMatch(); });
