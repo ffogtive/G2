@@ -227,7 +227,9 @@ function classroomBackdrop() {
 function buildScene() {
   const canvas = $('#c');
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  // 품질 프리셋: 터치(폰) 기기는 픽셀 배율·그림자 해상도를 낮춰 발열/프레임 저하를 줄인다
+  const mobile = window.matchMedia?.('(pointer: coarse)').matches;
+  renderer.setPixelRatio(Math.min(mobile ? 1.75 : 2, window.devicePixelRatio || 1));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   // Neutral 톤매핑(r162+): ACES 보다 채도를 지켜 클래시/로얄킹덤식 쨍한 색에 가깝다 (아트 리서치)
@@ -246,7 +248,7 @@ function buildScene() {
   const sun = new THREE.DirectionalLight(0xffe6c0, 2.4);
   sun.position.set(5, 11, 6);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.mapSize.set(window.matchMedia?.('(pointer: coarse)').matches ? 1024 : 2048, window.matchMedia?.('(pointer: coarse)').matches ? 1024 : 2048);
   const sc = sun.shadow.camera;
   sc.left = -9; sc.right = 9; sc.top = 9; sc.bottom = -9; sc.near = 1; sc.far = 40;
   sun.shadow.bias = -0.0004;
