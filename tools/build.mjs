@@ -22,7 +22,7 @@ async function build() {
   const art = await esbuild.build({ entryPoints: [entry], bundle: true, format: 'esm', minify: true, write: false, target: 'es2020', external: ['three', '@dimforge/rapier3d-compat'], legalComments: 'none' });
   const importmap = {
     imports: {
-      three: 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js',
+      three: 'https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js',
       '@dimforge/rapier3d-compat': 'https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.12.0/rapier.es.js',
     },
   };
