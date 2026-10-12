@@ -1571,6 +1571,221 @@
   ]
  },
  {
+  "lens": "아트 디렉션: Clash of Clans / Royal Kingdom / Angry Birds 톤앤매너 분석과 저예산 구현 경로 (three.js 목업, AI 3D/2D 생성, 무료 폰트, 홀로 딱지)",
+  "summary": "조사 환경에 큰 제약이 있었다. WebSearch는 첫 호출부터 세션 공유 한도(200회)가 이미 소진돼 3번 시도가 모두 막혔고, WebFetch도 github.com, raw.githubusercontent.com, fonts.googleapis.com만 열렸다(위키백과, supercell.com, namu.wiki, tripo3d.ai, threejs.org 등은 DNS 실패). 그래서 Supercell, Dream Games, Angry Birds 스타일에 관한 주장은 모두 기억에 의존했고 low로 표시했다. 대신 출처로 검증할 수 있는 영역은 깊게 팠다: 폰트 라이선스와 용량(직접 렌더링해 비교), three.js 소스(r160 셰이더 포함), AI 3D 도구 라이선스, 홀로 CSS 기법. 이미 있는 목업(/home/user/G2/mockup)도 수치로 감사했다.\n핵심 결론은 다섯 가지다. (1) 아트의 1순위는 디테일이 아니라 '뒤집혔나/누구 것인가'가 한눈에 보이는 것이다. 지금 목업은 일반 딱지 앞면 링과 뒷면 마분지의 대비가 1.19:1밖에 안 된다. (2) 흰 글자에 진한 외곽선을 두르는 Supercell식 처리는 장식이 아니라 필수다. 흰 글자를 채도 높은 버튼 위에 올리면 대비가 1.5~1.9:1에 그친다. (3) 무료 폰트로는 Lilita One(영문)과 Black Han Sans(한글) 조합이 가장 Supercell에 가깝다. (4) three.js에서 홀로/코팅 광택을 살리려면 환경맵이 꼭 있어야 하고, 채도를 지키려면 r162+의 NeutralToneMapping이 맞다. (5) Hunyuan3D는 라이선스상 한국에서 쓸 수 없다. Tripo API와 MIT 공개 모델(TripoSG, TripoSR, TRELLIS)을 쓰면 된다.",
+  "findings": [
+   {
+    "claim": "게임 팔레트의 채도 높은 버튼색 위에 흰 글자를 올리면 WCAG 대비가 기준에 크게 못 미친다. 흰 글자와 진한 잉크색 사이 대비는 16.7:1이다. 따라서 Supercell식 '흰 채움 + 진한 외곽선 + 딱딱한 드롭섀도'는 장식이 아니라 가독성을 위한 필수 장치다.",
+    "evidence": "WCAG 상대휘도 공식으로 직접 계산했다. 흰색 대비는 #5AD43B(초록 CTA) 1.92:1, #FFCF33(골드) 1.48:1, #7CC7FF(하늘) 1.83:1, #3A8FE0 3.4:1, #FF4D5E 3.24:1이다. 흰색 대 잉크 #2A1A12는 16.73:1이다. 색은 목업 index.html의 CSS 토큰(--go, --gold, --sky, --red, --ink)에서 가져왔다.",
+    "sources": [
+     "/home/user/G2/mockup/index.html (CSS 토큰 8~20행)",
+     "WCAG 2.x contrast ratio 공식(로컬 계산)"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "무료 폰트 중 Supercell 톤에 가장 가까운 조합은 Lilita One(영문 디스플레이)과 Black Han Sans(한글 디스플레이)다. Jua와 Do Hyeon은 획이 얇아 본문용으로만 쓰는 게 맞다. Titan One은 숫자와 보상 표시에, Luckiest Guy는 만화풍 대문자 연출에 어울린다. Bagel Fat One은 한·영을 모두 지원하지만 영문 글자꼴이 특이하다.",
+    "evidence": "Google Fonts METADATA에서 확인한 내용이다. Lilita One(Juan Montoreano, OFL, latin과 latin-ext만 지원), Black Han Sans(Zess Type, OFL, korean과 latin), Jua와 Do Hyeon(Woowahan Brothers, OFL, korean과 latin), Titan One(Rodrigo Fuenzalida, OFL), Luckiest Guy(Astigmatic, Apache 2.0, latin만), Bagel Fat One(Kyungwon Kim·JAMO, OFL, korean과 latin, 2023-05-18 추가), Dongle(OFL, korean, latin, vietnamese). 'FLIP! 퍽! 딱지 x10'을 흰 채움, 6px 잉크 외곽선, 오프셋 섀도로 직접 렌더링해 비교했다. Lilita One과 Black Han Sans는 굵기가 맞았고, Jua와 Do Hyeon은 눈에 띄게 얇았다. Lilita One은 키릴·그리스·CJK를 지원하지 않는다.",
+    "sources": [
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/lilitaone/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/blackhansans/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/dohyeon/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/titanone/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/apache/luckiestguy/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/bagelfatone/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/dongle/METADATA.pb",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/fonts_sample.png"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "한글 폰트는 전체 TTF가 0.9~2.1MB로 영문 폰트(28~73KB)보다 30~70배 무겁다. 다만 Google Fonts CSS2 API는 최신 브라우저에 unicode-range로 잘게 쪼갠 woff2를 주기 때문에 실제로 내려받는 양은 적다.",
+    "evidence": "content-length 실측값은 BagelFatOne 1,585,984B, BlackHanSans 998,424B, Jua 2,119,352B, DoHyeon 879,764B, LilitaOne 28,092B, TitanOne 55,712B, LuckiestGuy 73,320B였다. Chrome UA로 css2?family=Bagel+Fat+One을 요청하니 @font-face 블록 92개가 왔고 모두 woff2 슬라이스였다. UA를 지정하지 않으면 단일 TTF가 왔다.",
+    "sources": [
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/Jua-Regular.ttf",
+     "https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "three.js의 툰과 외곽선 도구는 성격이 다르다. MeshToonMaterial은 gradientMap에 NearestFilter와 NoColorSpace가 필수다. OutlineEffect는 inverted hull 방식(BackSide에 법선 방향으로 밀어냄, 기본 두께 0.003, 검정, 재질별 userData.outlineParameters, WebGLRenderer 전용)이다. OutlinePass는 화면 공간 마스크에서 엣지를 검출한 뒤 블러하는 방식이다(edgeStrength 3, edgeThickness 1, hiddenEdgeColor 별도 지정 가능, pulsePeriod>0이면 깜빡임). MeshMatcapMaterial은 조명을 무시하는 베이크 룩이라 그림자를 받지 못한다.",
+    "evidence": "three.js dev 브랜치 소스의 JSDoc과 코드를 직접 확인했다. OutlinePass 기본값은 visibleEdgeColor 흰색, hiddenEdgeColor (0.1,0.04,0.02), downSampleRatio 2다. OutlineEffect는 캐시된 외곽선 재질을 60프레임 뒤 정리한다.",
+    "sources": [
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshToonMaterial.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/effects/OutlineEffect.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/postprocessing/OutlinePass.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshMatcapMaterial.js"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "기본 CylinderGeometry 딱지에 inverted hull 외곽선(OutlineEffect)을 씌우면 테두리 모서리에 틈이 생긴다. 윗면과 아랫면이 옆면과 정점을 공유하지 않고 법선이 (0,±1,0)으로 따로 잡혀 있기 때문이다.",
+    "evidence": "로컬 three r160의 CylinderGeometry.js에서 generateCap이 정점을 새로 만들고 normals.push(0, sign, 0)을 쓴다(157, 182, 216행). 옆면 법선은 방사 방향이다(102행). inverted hull은 정점을 법선 방향으로 밀어내므로 모서리에서 윗면과 옆면이 서로 다른 방향으로 갈라진다. 이 부분은 소스를 근거로 한 추론이고 렌더링으로 확인하지는 않았다.",
+    "sources": [
+     "/home/user/G2/node_modules/three/src/geometries/CylinderGeometry.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/effects/OutlineEffect.js"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "MeshPhysicalMaterial의 iridescence(홀로)와 clearcoat는 반사광 프레넬 항만 바꾼다. HemisphereLight는 그림자를 만들 수 없고 셰이더에서 확산 조도(irradiance)에만 기여한다. 그래서 scene.environment가 없는 현재 목업에서는 epic·legendary 딱지의 iridescence 0.9가 태양광 하이라이트 한 점에서만 보일 가능성이 크다.",
+    "evidence": "MeshPhysicalMaterial JSDoc에 따르면 iridescence 기본값은 0, iridescenceIOR 1.3(범위 1.0~2.333), iridescenceThicknessRange는 [100,400]이다. 'higher performance cost, per pixel'이라고 명시돼 있다. 로컬 r160 lights_fragment_begin 187행에서 hemisphere light가 irradiance에만 더해지고, lights_physical_pars_fragment 166행에서 F = mix(F, iridescenceFresnel, iridescence)로 반사광에만 섞인다. HemisphereLight JSDoc에는 'cannot be used to cast shadows'라고 적혀 있다. 목업 main.js 108행이 iridescence 0.9와 clearcoat 0.6을 쓰는데 environment, PMREM, RoomEnvironment 코드는 없다. 실제 화면 확인은 하지 않은 추론이다.",
+    "sources": [
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshPhysicalMaterial.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/lights/HemisphereLight.js",
+     "/home/user/G2/node_modules/three/src/renderers/shaders/ShaderChunk/lights_fragment_begin.glsl.js",
+     "/home/user/G2/mockup/src/main.js"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "목업의 three 버전(0.160.0)으로는 채도를 지키는 톤매핑과 권장 AO를 쓸 수 없다. NeutralToneMapping(Khronos PBR Neutral)은 r162에서 추가됐고, N8AO는 r161 이상을 권장한다.",
+    "evidence": "r162 릴리스 노트에 'Add support for Khronos Neutral Tone Mapping'이 있고, 현재 constants.js에 NeutralToneMapping=7이 있다. 로컬 r160에는 AgX(6)까지만 있다. Khronos는 PBR Neutral에 대해 'there are no hue shifts'와 특정 조건에서 'the base color will be exactly reproduced'를 명시한다. N8AO는 CC0, WebGL2 필수, halfRes에서 2~4배 빠르고, pmndrs/postprocessing용 N8AOPostPass를 제공하며 three r161 이상을 권장한다. pmndrs/postprocessing은 Zlib 라이선스이고 EffectPass가 여러 효과를 자동으로 합친다. r160에도 GTAOPass, UnrealBloomPass, OutlinePass는 있다.",
+    "sources": [
+     "https://github.com/mrdoob/three.js/releases/tag/r162",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/constants.js",
+     "https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral",
+     "https://github.com/N8python/n8ao",
+     "https://github.com/pmndrs/postprocessing",
+     "/home/user/G2/package.json"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Tencent Hunyuan3D 2.0과 2.1 커뮤니티 라이선스는 EU, 영국, 한국을 적용 지역에서 뺀다. 한국 개발자는 Hunyuan3D를 합법적으로 쓸 수 없다.",
+    "evidence": "2.0 라이선스(2025-01-21) 머리말에 'DOES NOT APPLY IN THE EUROPEAN UNION, UNITED KINGDOM AND SOUTH KOREA'라고 적혀 있다. 1.l조는 Territory를 정의하면서 'excluding the territory of the European Union, United Kingdom and South Korea'라고 한다. 2.1도 같은 조항이다. MAU가 100만을 넘으면 별도 허가가 필요하고, 출력물로 다른 AI 모델을 개선하는 것도 금지된다.",
+    "sources": [
+     "https://raw.githubusercontent.com/Tencent/Hunyuan3D-2/main/LICENSE",
+     "https://raw.githubusercontent.com/Tencent-Hunyuan/Hunyuan3D-2.1/main/LICENSE"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "합법적인 저예산 3D 생성 경로는 두 갈래다. 하나는 Tripo API로, 파라미터로 스타일, 폴리곤 수, 쿼드를 제어할 수 있다. 다른 하나는 MIT 라이선스 공개 모델(TripoSG, TripoSR, TRELLIS)을 로컬 GPU에서 돌리는 것이다.",
+    "evidence": "Tripo SDK API.md에 따르면 texture와 pbr의 기본값은 True이고, texture_quality는 standard 또는 detailed, face_limit, quad, smart_low_poly를 지원한다. style에는 'object:clay', 'person:person2cartoon' 등이 있고, stylize는 lego, voxel, voronoi, minecraft다. convert는 GLTF, USDZ, FBX, OBJ, STL, 3MF를 지원하며 face_limit 기본값은 10000이다. 기본 model_version은 v2.5-20250123이고 리깅·리타깃도 된다. TripoSG는 MIT, 1.5B 파라미터, 8GB VRAM 이상, GLB를 출력하지만 텍스처는 언급이 없다. TripoSR은 MIT, 약 6GB VRAM이며 기본은 버텍스 컬러이고 --bake-texture 옵션이 있다. TRELLIS는 MIT, 16GB 이상, GLB와 PLY를 출력하며 이미지 조건 입력을 권장한다.",
+    "sources": [
+     "https://raw.githubusercontent.com/VAST-AI-Research/tripo-python-sdk/master/docs/API.md",
+     "https://github.com/VAST-AI-Research/tripo-python-sdk",
+     "https://github.com/VAST-AI-Research/TripoSG",
+     "https://github.com/VAST-AI-Research/TripoSR",
+     "https://github.com/microsoft/TRELLIS"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "웹 홀로/포일 표현의 대표 레퍼런스인 pokemon-cards-css는 GPL-3.0이라 코드를 그대로 가져오면 안 된다. 기법은 문서화돼 있어 다시 구현할 수 있다: 포인터를 따라가는 CSS 변수, 무지개 repeating gradient, 블렌드 모드 레이어링. 희귀도별 포일 패턴도 23종 스타일로 이미 나뉘어 있다.",
+    "evidence": "regular-holo.css에서 확인한 구성은 이렇다. --pointer-x/y와 --background-x/y로 위치를 잡고, .card__shine에 110deg repeating-linear-gradient(보라→파랑→초록→노랑→빨강)와 90deg 스캔라인을 깔며 mix-blend-mode:color-dodge와 background-blend-mode:overlay를 쓴다. :before는 hard-light, :after는 luminosity, glare는 overlay이고 radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y))로 빛을 따라가게 한다. 필터 예시는 brightness(1.1) contrast(1.1) saturate(1.2)다. 파일 목록에는 regular-holo, reverse-holo, cosmos-holo, rainbow-holo, secret-rare, radiant-holo, amazing-rare, shiny-rare 등 23개가 있다. 라이선스는 GPL-3.0이다.",
+    "sources": [
+     "https://github.com/simeydotme/pokemon-cards-css",
+     "https://raw.githubusercontent.com/simeydotme/pokemon-cards-css/main/public/css/cards/regular-holo.css",
+     "https://github.com/simeydotme/pokemon-cards-css/tree/main/public/css/cards"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "현재 목업 캐릭터 24종 중 몸통이 거의 흰색인 캐릭터가 5종(dubu, durumi, mandu, gumiho, tokki)이라 작은 크기에서는 서로 구별되지 않는다. 일반 등급 앞면 링(#F4F1E8)과 뒷면 마분지(#F1DCAE)의 대비도 1.19:1뿐이라, 테두리만 보이는 각도에서는 뒤집혔는지 판별하기 어렵다.",
+    "evidence": "art.js의 body 색을 CIE Lab ΔE76로 계산했다. dubu와 durumi 1.5, mandu와 gumiho 2.6, dubu와 gumiho 5.3, mandu와 dubu 5.5, tokki와 durumi 5.5로 모두 ΔE<10이고, hotteok와 bungeo도 6.3이다. 앞면 링과 뒷면의 WCAG 대비는 #F4F1E8과 #F1DCAE가 1.19, #CFC6B0과 #D7B77A가 1.13이다. L*로는 앞면 링 95.1, 뒷면 중심 88.4로 차이가 6.7에 불과하다. 뒷면의 빨간 별과 파란 링이 일부를 보완한다.",
+    "sources": [
+     "/home/user/G2/mockup/src/art.js (15~38행 CARDS, 423~455행 drawBack)"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Supercell(Clash of Clans 2012, Clash Royale 2016) 아트의 원칙은 다음과 같다. 과장된 비율(큰 머리와 손), 두툼하고 둥근 형태, 따뜻한 키 라이트와 차가운 그림자, 높은 채도. 3/4 탑다운 시점의 폰 화면에서도 실루엣이 읽히도록 만들고, 팀 색은 아군 파랑과 적 빨강으로 구분한다. UI는 굵고 둥근 디스플레이 폰트에 외곽선과 섀도를 두르고, 버튼은 광택 띠와 아래쪽 두께감(립)을 준다. 색에는 의미가 있다(초록=진행, 노랑·주황=주요/구매, 빨강=취소, 파랑=정보).",
+    "evidence": "외부 소스를 열지 못해 기억에만 의존한 내용이다. GDC 발표와 아트팀 인터뷰 원문으로 확인하지 못했다. Brawl Stars UI가 Lilita One과 비슷한 폰트를 쓴다는 점, Clash of Clans가 3D로 만든 뒤 2D 스프라이트로 미리 렌더링했다는 점도 기억에 기반한 주장이다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "Dream Games(Royal Match 2021, Royal Kingdom)의 톤은 밝고 하이키인 3D 렌더 룩이다. 사탕처럼 광택 있는 재질을 쓰고, 보상 연출은 아이템이 카운터로 날아가 박히고 상자가 터지고 숫자가 올라가는 단계형 '주시(juicy)' 시퀀스다. King Robert 같은 마스코트가 감정의 축 역할을 한다.",
+    "evidence": "기억에 의존했다. 매출과 출시일 수치는 출처를 확인하지 못해 적지 않았다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "Angry Birds 캐릭터(2009, 디자이너 Jaakko Iisalo)는 원, 삼각형, 달걀 같은 기본 도형 몸통에 굵은 눈썹으로 감정을 표현하고, 색·크기·특징 하나로 각 캐릭터를 구별한다. 원형 딱지 안에 넣기에 가장 잘 맞는 캐릭터 문법이다.",
+    "evidence": "기억에 의존했다. 위키백과(en.wikipedia.org)는 DNS 실패로 확인하지 못했다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "한국의 동그란 딱지(동딱지, 알딱지)에는 캐릭터와 함께 별, 숫자 같은 등급 표시가 인쇄돼 있었고, 반짝이(홀로그램) 변종이 희귀품으로 통했다. 해외에서는 오징어게임(2021)의 사각 종이접기 딱지가 더 알려져 있다. 반면 미국의 POG(1990년대)와 일본의 멘코가 원형 수집 딱지와 직접 대응하는 놀이다.",
+    "evidence": "기억에 의존했다. namu.wiki와 네이버는 접근이 차단됐다.",
+    "sources": [],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "이 게임 아트의 1순위 KPI는 '뒤집힘 판독성'이다. 앞면인지 뒷면인지, 누구 것이 됐는지가 0.2초 안에 보여야 한다.",
+    "why_it_matters": "쾌감은 퍽 하고 부는 순간에 '몇 장이 넘어갔는지'를 즉시 세는 데서 나온다. Supercell의 실루엣·색 판독성 원칙을 이 게임에 옮기면, 캐릭터 디테일보다 앞뒷면 두 상태의 대비가 더 중요하다. 현재 목업은 일반 등급 앞면 링과 뒷면의 대비가 1.19:1이라 이 KPI를 만족하지 못한다.",
+    "design_implication": "뒷면은 모든 딱지에 공통으로 쓰고 진한 마분지색(#A8743F 근처, L*≈54)에 굵은 빨간 별(#E23B2E)과 잉크 링을 넣는다. 앞면은 흰 링(#FFFFFF, L*≈100)에 희귀도 색 띠를 두른다. 이렇게 하면 L* 차이가 40 이상 난다. 넘어간 딱지는 착지 순간 내 색(파랑 #3A8FE0)으로 테두리가 빛나고 내 쪽 트레이로 날아간다. 상대 것은 빨강 #FF4D5E로 처리한다. 판독성은 폰 화면에서 딱지 지름 48px로 테스트한다."
+   },
+   {
+    "insight": "원형 딱지에는 Angry Birds 문법이 정답이다. 원형 몸통이 원판을 70~80% 채우고, 실루엣을 깨는 돌출부 하나와 굵은 눈썹 표정, 캐릭터마다 고유한 몸통 색을 갖게 한다.",
+    "why_it_matters": "캐릭터는 원 안에 인쇄되므로 원형 몸통이어야 면적을 가장 크게 쓸 수 있다. 더미 위에서 딱지 하나는 수십 px에 불과해 색과 돌출부만 읽힌다. 수집욕은 '저게 뭔지 알아보는 것'에서 시작한다.",
+    "design_implication": "규칙은 세 가지다. (1) 같은 희귀도 안에서 몸통 색은 서로 ΔE 20 이상 떨어뜨린다. (2) 돌출부(귀, 뿔, 볏, 꼬리) 형태가 겹치지 않게 한다. (3) 눈썹은 잉크색이고 두께는 원판 지름의 4% 이상으로 한다. 흰 몸통 캐릭터 5종(dubu, durumi, mandu, gumiho, tokki)은 배경을 채도 높은 색으로 칠하거나(예: 두부는 #8FD3FF, 구미호는 #FF7A59) 몸통 색 자체를 옮긴다. 외곽선은 원판 지름의 4~6% 굵기로 잉크 #2A1A12를 쓴다. 명암은 3톤(밝음, 기본, 그림자)이고 그림자는 회색이 아니라 따뜻한 보라·갈색 쪽으로 기울인다."
+   },
+   {
+    "insight": "물성을 과장하자. 실제 딱지는 1mm 남짓 종이지만, 게임에서는 포커칩처럼 두툼하고 모서리가 둥근 원판이어야 Supercell의 '두툼하고 둥근' 톤이 나오고 뒤집히는 동작도 읽힌다.",
+    "why_it_matters": "얇은 원판은 회전할 때 옆에서 보면 선으로 사라져 뒤집힘이 덜 보인다. 기본 CylinderGeometry는 모서리가 각져서 inverted hull 외곽선에 틈이 생긴다(소스로 확인).",
+    "design_implication": "두께는 지름의 6~8%로 잡는다. LatheGeometry나 bevel을 준 ExtrudeGeometry로 둥근 모서리 프로파일을 만들면 법선이 연결돼 외곽선이 깨지지 않는다. 옆면에는 희귀도 색 줄무늬를 넣는다(일반 회청 #DDE6EE, 레어 #2F7FD6, 에픽 #8A3AD6, 전설 #FFB800+포일). 그러면 3/4 시점에서 판돈 더미 안에 전설이 몇 장 있는지 옆면만 보고 알 수 있어 긴장감이 생긴다."
+   },
+   {
+    "insight": "three.js로 저예산 'Royal/Clash 룩'을 내는 렌더 레시피가 있다. 툰 셰이딩이 아니라, 채도를 지키는 톤매핑, 따뜻한 3점 조명, 환경 반사, 접촉 AO, 선택적 외곽선과 블룸의 조합이다.",
+    "why_it_matters": "ACES는 채도 높은 원색의 색상과 채도를 틀어버리는 반면 Khronos Neutral은 'no hue shifts'를 표방한다(ACES에 대한 부분은 기억에 기반). 환경맵이 없으면 iridescence와 clearcoat가 거의 보이지 않는다(소스로 확인). 딱지 더미는 접촉 그림자가 있어야 '쌓여 있다'고 읽힌다.",
+    "design_implication": "three를 0.160에서 r162 이상으로 올린다. 구체적으로: renderer.toneMapping=NeutralToneMapping, exposure 1.0~1.1. HemisphereLight는 하늘 #FFF3DC, 땅 #7A5434. 키 DirectionalLight는 #FFE6C0에 PCFSoft 그림자. 림 라이트는 #9FD8FF. scene.environment는 PMREM(RoomEnvironment)으로 깔고, 종이에는 envMapIntensity 약 0.3, 포일에는 약 1.0을 준다. AO는 N8AO halfRes를 쓰거나 r160을 유지하면 GTAOPass, 저사양 기기에서는 딱지 아래 블롭 그림자 텍스처로 대체한다. 블룸은 전설 딱지와 VFX에만 선택적으로 건다. 조준 대상은 OutlinePass로 표시한다(pulsePeriod 약 1.2, visibleEdgeColor 흰색). 딱지 앞면은 MeshToon이 아니라 Standard(인쇄 카드 질감, roughness 약 0.55)로 하고, 툰은 3D 캐릭터나 소품을 넣을 때만 쓴다. MeshPhysical은 레어 이상에만 써서 픽셀 비용을 줄인다."
+   },
+   {
+    "insight": "홀로 딱지는 희귀도마다 '포일 패턴'을 다르게 하고, 그 반짝임이 뒤집히는 순간에 처음 드러나게 설계하면 수집욕과 공개의 쾌감이 겹친다.",
+    "why_it_matters": "레퍼런스(pokemon-cards-css)는 희귀도별로 23종 포일 스타일을 둘 만큼 '포일의 종류'가 수집 가치의 언어로 쓰이고 있음을 보여준다. 뒷면이 공통이라 뒤집기 전에는 정체를 모르므로, 뒤집힘 순간이 곧 공개 순간이다.",
+    "design_implication": "등급별 패턴: 레어는 리버스 홀로(배경만 포일, 캐릭터는 무광. iridescenceMap의 R 채널로 마스크), 에픽은 코스모스·글리터(반짝이 노이즈 텍스처에 iridescenceThicknessMap), 전설은 전면 레인보우에 애니메이션 시닝 스윕과 금색 옆면, 그리고 착지 순간 0.1초 hit-stop과 블룸 펄스. 컬렉션 화면(DOM)에서는 CSS 홀로를 직접 다시 구현한다(GPL이라 복사 금지). 포인터나 자이로 기울기에 반응하는 radial glare와 color-dodge 무지개 레이어를 쓴다. 포일은 앞면 링과 배경에만 두어 캐릭터 판독성을 해치지 않게 한다."
+   },
+   {
+    "insight": "UI 규칙은 'Supercell 텍스트 문법과 Royal식 보상 연출'로 고정하면 목업 단계부터 톤이 일관된다.",
+    "why_it_matters": "흰 글자를 채도 높은 배경에 올리면 대비가 1.5~1.9:1에 그쳐(계산) 외곽선 없이는 읽히지 않는다. 버튼 색에 의미를 일관되게 부여하면 설명 없이도 조작할 수 있다는 목표에 바로 기여한다.",
+    "design_implication": "폰트는 디스플레이에 Lilita One과 Black Han Sans, 본문에 Jua, 큰 숫자에 Titan One을 쓰고 Google Fonts CSS2 API로 슬라이스 로딩한다. 모든 디스플레이 텍스트는 흰 채움에 -webkit-text-stroke 2~4px 잉크(paint-order: stroke fill), text-shadow 0 3~8px 0 잉크로 처리한다. 버튼은 3px 잉크 테두리, radius 14~24px, 위쪽 40%에 밝은 광택 띠, 아래에 4~6px 진한 립(box-shadow 0 5px 0)을 두고, 누르면 translateY(4px)하고 립을 없앤다. 색의 의미: 초록 #5AD43B/#2F9A1A는 진행과 PUFF, 골드 #FFCF33/#E08A00은 보상과 구매, 파랑 #3A8FE0/#2457B0은 나와 정보, 빨강 #FF4D5E/#B8213A는 상대와 취소. 패널은 크림 #FFF3D6에 잉크 3px 테두리. 획득 수치는 1.3배에서 1.0배로 튀는 오버슈트와 함께 카운트업하고, 따낸 딱지는 아이콘이 상단 카운터로 날아가 박히게 한다."
+   },
+   {
+    "insight": "AI 에셋 파이프라인은 '2D 먼저, 3D는 소품만'이 맞다. 딱지 앞면은 인쇄물이라 2D 일러스트 품질과 일관성이 전부다.",
+    "why_it_matters": "AI 3D(Tripo 등)는 토폴로지와 일관성이 약하고, 딱지 자체는 원판이라 3D 생성이 필요 없다. 3D가 필요한 곳은 테이블, 손이나 입 마스코트, 로비 소품 정도다. Hunyuan3D는 한국에서 라이선스가 적용되지 않는다.",
+    "design_implication": "2D는 이미지 생성 모델에 고정된 스타일 프롬프트(예: 'chunky round mascot, thick dark brown outline, 3-tone cel shading, warm light, centered in circle, flat background')와 레퍼런스 시트를 함께 넣어 초안을 뽑는다. 최종본은 벡터로 다시 그리거나 직접 보정해 선 굵기와 팔레트를 통일한다. 3D는 Tripo API(style 'object:clay' 또는 'person:person2cartoon', smart_low_poly, face_limit 5k~10k, GLTF 변환)를 쓰거나, 로컬 GPU가 있으면 TripoSG(8GB, MIT)나 TRELLIS(16GB, MIT)를 쓴다. 출시용 에셋 프롬프트에는 Clash, Supercell, Angry Birds 같은 상표나 캐릭터 이름을 넣지 않는다. 참고로 이 세션에는 이미지 생성과 image→GLB(generate_3d) MCP 도구가 연결돼 있어 다음 루프에서 바로 시도해 볼 수 있다(크레딧 소모)."
+   },
+   {
+    "insight": "글로벌 진입을 위한 시각 전략: 형태는 전 세계가 아는 'POG형 원형 수집 디스크'로 가고, 한국은 장벽이 아니라 양념으로 쓴다.",
+    "why_it_matters": "해외에서는 '딱지'라고 하면 오징어게임의 사각 종이접기를 떠올리기 쉽다(기억 기반). 원형 수집 딱지는 POG나 멘코와 겹치므로, 형태는 익숙하게 하고 문화적 디테일로 차별화하는 편이 진입 장벽이 낮다.",
+    "design_implication": "로고와 아이콘은 둥근 디스크와 'POOF!' 같은 의성어(영문)를 중심에 둔다. 한국 요소는 단청 문양을 옆면 패턴으로, 한글 도장을 뒷면 로고로, 음식과 민속 캐릭터(만두, 호랑이, 도깨비)를 수집 테마로 녹인다. 첫 화면에는 한글 텍스트에 의존하는 정보가 없어야 한다."
+   }
+  ],
+  "key_claims": [
+   "아트의 최우선 기준은 '뒤집힘과 소유 판독성'이다. 앞면과 뒷면 사이 L* 차이를 40 이상 두고 소유자 색 글로우를 넣어야 한다. 현재 목업은 일반 앞면 링과 뒷면 대비가 1.19:1로 기준에 못 미친다.",
+   "Supercell식 흰 글자, 진한 외곽선, 하드 섀도는 장식이 아니라 필수다. 게임 팔레트(초록, 골드, 하늘색) 위의 흰 글자 대비는 1.5~1.9:1에 그친다.",
+   "무료로 쓸 수 있는 Supercell풍 최적 조합은 Lilita One(OFL, 영문)과 Black Han Sans(OFL, 한글)다. 한글 폰트는 TTF가 1~2MB이므로 Google Fonts CSS2 API의 unicode-range 슬라이스(Bagel Fat One 기준 92조각)로 불러야 한다.",
+   "three.js에서 홀로 딱지(iridescence, clearcoat)가 보이려면 환경맵이 필수다. 채도를 지키려면 three를 r162 이상으로 올려 NeutralToneMapping을 쓴다(현재 목업은 r160에 환경맵 없음).",
+   "Hunyuan3D 2.0과 2.1은 라이선스상 한국에서 쓸 수 없다. 3D 생성은 Tripo API(clay 스타일, smart_low_poly, face_limit)나 MIT 모델(TripoSG, TripoSR, TRELLIS)로 하고, 딱지 앞면은 2D 생성 후 사람이 보정하는 방식으로 한다.",
+   "원형 딱지 캐릭터는 Angry Birds 문법(원형 몸통, 굵은 눈썹, 돌출부 하나, 캐릭터마다 고유한 색)을 따라야 한다. 현재 목업 24종 중 흰 몸통 5종은 ΔE<10이라 구별되지 않는다."
+  ],
+  "risks": [
+   "조사 범위의 한계: WebSearch 한도가 이미 소진됐고 비 GitHub 도메인은 DNS 실패나 403으로 막혔다. 그래서 Supercell, Dream Games, Angry Birds의 스타일 원칙, 연도, 매출, 딱지 문화사는 모두 기억에 기반한 low 신뢰도다. 다음 루프에서 GDC Vault, 아트팀 인터뷰, 나무위키로 검증해야 한다.",
+   "스타일 모방 리스크: 화풍 자체는 보호 대상이 아니라고 알고 있지만(기억), Supercell 고유 UI(전용 폰트, 특정 버튼·아이콘 형태)를 그대로 따라 하면 트레이드 드레스나 앱스토어 copycat 심사에 걸릴 수 있다. 원칙만 가져오고 형태는 독자적으로 만들어야 한다.",
+   "AI 생성 에셋의 권리 리스크: 사람의 창작 기여가 없는 순수 AI 출력은 저작권 보호를 못 받을 수 있다(미국 저작권청 입장, 기억 기반). 일관성 문제도 있으므로 사람이 다시 그리거나 보정하는 단계가 필요하다. Hunyuan3D는 한국에서 라이선스가 적용되지 않는다(확인됨).",
+   "성능 리스크: 딱지 100~200장에 MeshPhysical, 2048 PCFSoft 그림자, 후처리 여러 개를 얹으면 저사양 모바일에서 프레임이 떨어진다. InstancedMesh, 레어 이상만 Physical 사용, AO halfRes나 블롭 그림자 대체, 기기 등급별 품질 프리셋이 필요하다.",
+   "포일과 블룸을 과하게 쓰면 캐릭터와 뒤집힘 판독성이 오히려 떨어진다. 포일은 링과 배경에만 마스크로 제한해야 한다.",
+   "CylinderGeometry에 inverted hull 외곽선을 쓰면 모서리에 틈이 생긴다. 둥근 bevel 프로파일로 지오메트리를 바꾸지 않으면 외곽선이 지저분해진다.",
+   "한글 웹폰트 용량(전체 TTF 0.9~2.1MB) 때문에 오프라인 단일 파일 빌드에서는 로딩이 크게 늘어난다. 서브셋 처리가 필요하다."
+  ],
+  "open_questions": [
+   "판정 규칙: 더미를 뒷면이 위로 오게 쌓고 앞면으로 뒤집히면 이기는가, 그 반대인가? 어느 면이 '보상 면'인지에 따라 화려하게 만들 면이 정해진다.",
+   "카메라: 탑다운인가 3/4 시점인가? 3/4라면 옆면 희귀도 줄무늬가 핵심 정보가 되고, 탑다운이라면 앞면과 뒷면 대비가 전부다.",
+   "캐릭터 IP: 한국 음식과 민속을 바탕으로 한 오리지널(현재 목업 방향)로 갈 것인가, 계절이나 콜라보 테마를 열어둘 것인가? 글로벌 첫인상용 대표 마스코트(Angry Birds의 Red 같은 존재)는 누구인가?",
+   "딱지 앞면 일러스트를 2D 페인팅(인쇄물 느낌)으로 할 것인가, 3D 렌더를 2D로 찍어낸 Royal Match 하이키 렌더 룩으로 할 것인가?",
+   "최저 지원 기기는 무엇인가(저사양 안드로이드 포함 여부)? 이에 따라 후처리(AO, 블룸, 외곽선) 예산과 품질 프리셋이 정해진다.",
+   "입으로 부는 제스처의 시각 피드백(바람 줄기, 입김 파티클, 마이크 입력 게이지)을 어떤 아트 언어로 표현할 것인가? 이 렌즈 범위 밖이라 별도 조사가 필요하다.",
+   "검증 필요: Supercell UI 폰트의 실제 정체(전용 서체인지, Brawl Stars가 Lilita One 계열인지), Royal Kingdom의 정확한 출시 시점과 아트 파이프라인(실시간 3D인지 프리렌더인지)."
+  ]
+ },
+ {
   "lens": "시장 & 타겟 & 바이럴 (첫 출시 채널 / 타겟 우선순위 / 바이럴 구조 / 수익화 적합성)",
   "summary": "[중요] 이번 세션에서는 웹 검증을 하지 못했다. WebSearch는 이 턴의 공용 한도(200회, 다른 에이전트와 공유)가 이미 소진돼 한 번도 실행되지 않았고, WebFetch는 모든 도메인에서 DNS 오류(ENOTFOUND)로 실패했다. 그래서 아래 주장은 전부 기억에 기반하며 confidence=low이고, 출처 URL은 검증 대상 후보일 뿐이다. 수치는 반드시 후속 검증이 필요하다.\n핵심 결론 1: 사용자의 '5/10/20/50/100장 내기'는 8 Ball Pool·Golf Clash가 쓰는 '같은 판돈을 걸고 이긴 사람이 다 가져가는 입장료 테이블' 구조와 같다. 이 구조는 전연령 1v1 PvP에서 오래 성공해 왔으므로, 판돈을 그대로 진행 단계(테이블 티어)로 설계하는 것이 정답에 가깝다.\n핵심 결론 2: 동그란 캐릭터 종이 딱지는 한국만의 것이 아니다. Pogs(미국), Tazos(중남미·이베리아), Menko(일본), 尪仔標(대만), teks(필리핀)로 이어지는 90년대 세계 공통 경험이다. 해외 진입은 한국 문화를 '설명'하기보다 '각자의 어린 시절 + 한국식 후~ 불기 변주'로 풀어야 한다.\n핵심 결론 3: 마이크 불기는 리액션 영상 바이럴에는 최강이다. 하지만 권한 요청, 공공장소, 포털 iframe 제약 때문에 기본 입력이 될 수는 없다. 터치를 기본으로 하고 마이크는 의식·파티·녹화용 보너스 모드로 둔다.\n첫 출시 제안: 앱스토어보다 먼저 웹 인스턴트(CrazyGames/Poki + 자체 URL을 카톡으로 보내는 1v1 도전장)로 낸다. 초기 바이럴 타겟은 한국 30~45세 향수층과 그 자녀(가족 플레이)이고, 물량 확보 타겟은 글로벌 10~24세 숏폼·웹포털 사용자다.",
   "findings": [
@@ -1812,218 +2027,263 @@
   ]
  },
  {
-  "lens": "아트 디렉션: Clash of Clans / Royal Kingdom / Angry Birds 톤앤매너 분석과 저예산 구현 경로 (three.js 목업, AI 3D/2D 생성, 무료 폰트, 홀로 딱지)",
-  "summary": "조사 환경에 큰 제약이 있었다. WebSearch는 첫 호출부터 세션 공유 한도(200회)가 이미 소진돼 3번 시도가 모두 막혔고, WebFetch도 github.com, raw.githubusercontent.com, fonts.googleapis.com만 열렸다(위키백과, supercell.com, namu.wiki, tripo3d.ai, threejs.org 등은 DNS 실패). 그래서 Supercell, Dream Games, Angry Birds 스타일에 관한 주장은 모두 기억에 의존했고 low로 표시했다. 대신 출처로 검증할 수 있는 영역은 깊게 팠다: 폰트 라이선스와 용량(직접 렌더링해 비교), three.js 소스(r160 셰이더 포함), AI 3D 도구 라이선스, 홀로 CSS 기법. 이미 있는 목업(/home/user/G2/mockup)도 수치로 감사했다.\n핵심 결론은 다섯 가지다. (1) 아트의 1순위는 디테일이 아니라 '뒤집혔나/누구 것인가'가 한눈에 보이는 것이다. 지금 목업은 일반 딱지 앞면 링과 뒷면 마분지의 대비가 1.19:1밖에 안 된다. (2) 흰 글자에 진한 외곽선을 두르는 Supercell식 처리는 장식이 아니라 필수다. 흰 글자를 채도 높은 버튼 위에 올리면 대비가 1.5~1.9:1에 그친다. (3) 무료 폰트로는 Lilita One(영문)과 Black Han Sans(한글) 조합이 가장 Supercell에 가깝다. (4) three.js에서 홀로/코팅 광택을 살리려면 환경맵이 꼭 있어야 하고, 채도를 지키려면 r162+의 NeutralToneMapping이 맞다. (5) Hunyuan3D는 라이선스상 한국에서 쓸 수 없다. Tripo API와 MIT 공개 모델(TripoSG, TripoSR, TRELLIS)을 쓰면 된다.",
+  "lens": "물리 & 기술 구현: 바람으로 얇은 원판(딱지)을 뒤집는 현상을 웹(three.js와 물리엔진)에서 그럴듯하고 재밌게 시뮬레이션하는 법",
+  "summary": "이번 조사의 근거는 대부분 직접 돌린 실험입니다. 웹검색 한도는 다른 에이전트와 공유돼 이미 소진됐고, WebFetch는 GitHub과 raw.githubusercontent만 연결됐습니다. 그래서 1차 문서(Rapier, Jolt, Box2D, cannon-es 문서와 npm 패키지)를 확인하고, Node 22에서 Rapier 0.21, cannon-es 0.20, Jolt 1.1로 얇은 원판 쌓기, 바람 모델, 결정론을 직접 실험했습니다.\n결론 1: 엔진은 Rapier입니다. 20장 더미가 1초 안에 잠들고 한 스텝에 0.05~0.2ms면 됩니다. cannon-es는 20장도 무너지고 30~70배 느립니다. Jolt는 기본 설정에서 원판끼리 크게 파고듭니다.\n결론 2: 실제 크기(두께 1mm)로는 엔진 허용 오차(slop) 때문에 쌓기가 무너집니다. 원판 반지름 1, 두께 0.08 정도로 '두툼하게' 키워야 하고, 이건 CoC나 앵그리버드식 두툼한 아트와도 맞습니다. 물리로 쌓는 딱지는 20~30장까지가 한계입니다.\n결론 3: 유체 시뮬레이션은 필요 없습니다. '원뿔 제트 + 가림(occlusion) + 가장자리 아래 공기 유입도 + 테두리 지점 임펄스'라는 단순한 모델만으로 '공기가 파고든 층 위가 덩어리째 뒤집히는' 현상과 '역U자 파워 곡선'이 저절로 생깁니다. 조준 높이와 파워 두 축으로 실력 차이가 나는 구조가 바로 나옵니다.\n결론 4: 뒤집힌 더미는 계속 미세하게 떨려서 잠들지 않습니다. 판정 타이머와 '고정(freeze)' 처리가 꼭 필요합니다. PvP는 턴제라서 입력만 보내고 서버가 deterministic 빌드로 다시 시뮬레이션하는 구조가 맞습니다.",
   "findings": [
    {
-    "claim": "게임 팔레트의 채도 높은 버튼색 위에 흰 글자를 올리면 WCAG 대비가 기준에 크게 못 미친다. 흰 글자와 진한 잉크색 사이 대비는 16.7:1이다. 따라서 Supercell식 '흰 채움 + 진한 외곽선 + 딱딱한 드롭섀도'는 장식이 아니라 가독성을 위한 필수 장치다.",
-    "evidence": "WCAG 상대휘도 공식으로 직접 계산했다. 흰색 대비는 #5AD43B(초록 CTA) 1.92:1, #FFCF33(골드) 1.48:1, #7CC7FF(하늘) 1.83:1, #3A8FE0 3.4:1, #FF4D5E 3.24:1이다. 흰색 대 잉크 #2A1A12는 16.73:1이다. 색은 목업 index.html의 CSS 토큰(--go, --gold, --sky, --red, --ink)에서 가져왔다.",
+    "claim": "얇은 원판 20장 쌓기 안정성과 속도 모두 Rapier(@dimforge/rapier3d-compat 0.21.0)가 세 엔진 중 확실히 가장 좋았다.",
+    "evidence": "자체 실험(Node 22, Xeon 2.1GHz). 원판 반지름 R=1, 두께 0.08(두께/지름 4%), 무작위 오프셋, 60Hz, solver 4회 조건. Rapier: 20장 0.98~1.5초 만에 전부 잠듦(sleep), 한 스텝 0.05~0.18ms, 꼭대기 처짐 약 1.65장 두께(8%), 기울어진 원판 0장. cannon-es(10회 반복): 20장 중 16장이 기울어지며 무너짐, 한 스텝 5ms(30~70배 느림), 잠들지 않음. Jolt(CylinderShape, 기본 설정): 기울어짐은 없지만 20장 처짐이 7~9장 두께(35~45%)에 이를 만큼 서로 파고듦. 바닥 원판 중심 y=0.009(정상 0.04).",
     "sources": [
-     "/home/user/G2/mockup/index.html (CSS 토큰 8~20행)",
-     "WCAG 2.x contrast ratio 공식(로컬 계산)"
-    ],
-    "confidence": "high"
-   },
-   {
-    "claim": "무료 폰트 중 Supercell 톤에 가장 가까운 조합은 Lilita One(영문 디스플레이)과 Black Han Sans(한글 디스플레이)다. Jua와 Do Hyeon은 획이 얇아 본문용으로만 쓰는 게 맞다. Titan One은 숫자와 보상 표시에, Luckiest Guy는 만화풍 대문자 연출에 어울린다. Bagel Fat One은 한·영을 모두 지원하지만 영문 글자꼴이 특이하다.",
-    "evidence": "Google Fonts METADATA에서 확인한 내용이다. Lilita One(Juan Montoreano, OFL, latin과 latin-ext만 지원), Black Han Sans(Zess Type, OFL, korean과 latin), Jua와 Do Hyeon(Woowahan Brothers, OFL, korean과 latin), Titan One(Rodrigo Fuenzalida, OFL), Luckiest Guy(Astigmatic, Apache 2.0, latin만), Bagel Fat One(Kyungwon Kim·JAMO, OFL, korean과 latin, 2023-05-18 추가), Dongle(OFL, korean, latin, vietnamese). 'FLIP! 퍽! 딱지 x10'을 흰 채움, 6px 잉크 외곽선, 오프셋 섀도로 직접 렌더링해 비교했다. Lilita One과 Black Han Sans는 굵기가 맞았고, Jua와 Do Hyeon은 눈에 띄게 얇았다. Lilita One은 키릴·그리스·CJK를 지원하지 않는다.",
-    "sources": [
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/lilitaone/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/blackhansans/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/dohyeon/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/titanone/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/apache/luckiestguy/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/bagelfatone/METADATA.pb",
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/dongle/METADATA.pb",
-     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/fonts_sample.png"
-    ],
-    "confidence": "high"
-   },
-   {
-    "claim": "한글 폰트는 전체 TTF가 0.9~2.1MB로 영문 폰트(28~73KB)보다 30~70배 무겁다. 다만 Google Fonts CSS2 API는 최신 브라우저에 unicode-range로 잘게 쪼갠 woff2를 주기 때문에 실제로 내려받는 양은 적다.",
-    "evidence": "content-length 실측값은 BagelFatOne 1,585,984B, BlackHanSans 998,424B, Jua 2,119,352B, DoHyeon 879,764B, LilitaOne 28,092B, TitanOne 55,712B, LuckiestGuy 73,320B였다. Chrome UA로 css2?family=Bagel+Fat+One을 요청하니 @font-face 블록 92개가 왔고 모두 woff2 슬라이스였다. UA를 지정하지 않으면 단일 TTF가 왔다.",
-    "sources": [
-     "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/Jua-Regular.ttf",
-     "https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap"
-    ],
-    "confidence": "high"
-   },
-   {
-    "claim": "three.js의 툰과 외곽선 도구는 성격이 다르다. MeshToonMaterial은 gradientMap에 NearestFilter와 NoColorSpace가 필수다. OutlineEffect는 inverted hull 방식(BackSide에 법선 방향으로 밀어냄, 기본 두께 0.003, 검정, 재질별 userData.outlineParameters, WebGLRenderer 전용)이다. OutlinePass는 화면 공간 마스크에서 엣지를 검출한 뒤 블러하는 방식이다(edgeStrength 3, edgeThickness 1, hiddenEdgeColor 별도 지정 가능, pulsePeriod>0이면 깜빡임). MeshMatcapMaterial은 조명을 무시하는 베이크 룩이라 그림자를 받지 못한다.",
-    "evidence": "three.js dev 브랜치 소스의 JSDoc과 코드를 직접 확인했다. OutlinePass 기본값은 visibleEdgeColor 흰색, hiddenEdgeColor (0.1,0.04,0.02), downSampleRatio 2다. OutlineEffect는 캐시된 외곽선 재질을 60프레임 뒤 정리한다.",
-    "sources": [
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshToonMaterial.js",
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/effects/OutlineEffect.js",
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/postprocessing/OutlinePass.js",
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshMatcapMaterial.js"
-    ],
-    "confidence": "high"
-   },
-   {
-    "claim": "기본 CylinderGeometry 딱지에 inverted hull 외곽선(OutlineEffect)을 씌우면 테두리 모서리에 틈이 생긴다. 윗면과 아랫면이 옆면과 정점을 공유하지 않고 법선이 (0,±1,0)으로 따로 잡혀 있기 때문이다.",
-    "evidence": "로컬 three r160의 CylinderGeometry.js에서 generateCap이 정점을 새로 만들고 normals.push(0, sign, 0)을 쓴다(157, 182, 216행). 옆면 법선은 방사 방향이다(102행). inverted hull은 정점을 법선 방향으로 밀어내므로 모서리에서 윗면과 옆면이 서로 다른 방향으로 갈라진다. 이 부분은 소스를 근거로 한 추론이고 렌더링으로 확인하지는 않았다.",
-    "sources": [
-     "/home/user/G2/node_modules/three/src/geometries/CylinderGeometry.js",
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/effects/OutlineEffect.js"
+     "https://www.npmjs.com/package/@dimforge/rapier3d-compat",
+     "https://www.npmjs.com/package/cannon-es",
+     "https://www.npmjs.com/package/jolt-physics",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_rapier.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_cannon.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_jolt.mjs"
     ],
     "confidence": "med"
    },
    {
-    "claim": "MeshPhysicalMaterial의 iridescence(홀로)와 clearcoat는 반사광 프레넬 항만 바꾼다. HemisphereLight는 그림자를 만들 수 없고 셰이더에서 확산 조도(irradiance)에만 기여한다. 그래서 scene.environment가 없는 현재 목업에서는 epic·legendary 딱지의 iridescence 0.9가 태양광 하이라이트 한 점에서만 보일 가능성이 크다.",
-    "evidence": "MeshPhysicalMaterial JSDoc에 따르면 iridescence 기본값은 0, iridescenceIOR 1.3(범위 1.0~2.333), iridescenceThicknessRange는 [100,400]이다. 'higher performance cost, per pixel'이라고 명시돼 있다. 로컬 r160 lights_fragment_begin 187행에서 hemisphere light가 irradiance에만 더해지고, lights_physical_pars_fragment 166행에서 F = mix(F, iridescenceFresnel, iridescence)로 반사광에만 섞인다. HemisphereLight JSDoc에는 'cannot be used to cast shadows'라고 적혀 있다. 목업 main.js 108행이 iridescence 0.9와 clearcoat 0.6을 쓰는데 environment, PMREM, RoomEnvironment 코드는 없다. 실제 화면 확인은 하지 않은 추론이다.",
+    "claim": "Jolt 공식 문서는 실린더를 '가장 불안정한 형상'이라고 경고하고, 내 빠른 튜닝(penetration slop 축소, position step 증가)으로는 오히려 더 나빠졌다. 전문가 튜닝이면 나아질 여지는 있다.",
+    "evidence": "Jolt Architecture.md에 'cylinders are the least stable of all shapes, so use another shape if possible'이라고 적혀 있다. 기본값은 PenetrationSlop 0.02, SpeculativeContactDistance 0.02, Baumgarte 0.2, velocity step 10, position step 2. slop 0.002, posIt 6으로 바꾸자 20장 처짐이 11장 두께로 커졌다. 24각형 convex hull로 바꿔도 처짐 9.3장 두께였다. 이 결과는 내 설정 탓일 수도 있다.",
     "sources": [
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshPhysicalMaterial.js",
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/lights/HemisphereLight.js",
-     "/home/user/G2/node_modules/three/src/renderers/shaders/ShaderChunk/lights_fragment_begin.glsl.js",
-     "/home/user/G2/mockup/src/main.js"
+     "https://github.com/jrouwe/JoltPhysics/blob/master/Docs/Architecture.md",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_jolt.mjs"
     ],
     "confidence": "med"
    },
    {
-    "claim": "목업의 three 버전(0.160.0)으로는 채도를 지키는 톤매핑과 권장 AO를 쓸 수 없다. NeutralToneMapping(Khronos PBR Neutral)은 r162에서 추가됐고, N8AO는 r161 이상을 권장한다.",
-    "evidence": "r162 릴리스 노트에 'Add support for Khronos Neutral Tone Mapping'이 있고, 현재 constants.js에 NeutralToneMapping=7이 있다. 로컬 r160에는 AgX(6)까지만 있다. Khronos는 PBR Neutral에 대해 'there are no hue shifts'와 특정 조건에서 'the base color will be exactly reproduced'를 명시한다. N8AO는 CC0, WebGL2 필수, halfRes에서 2~4배 빠르고, pmndrs/postprocessing용 N8AOPostPass를 제공하며 three r161 이상을 권장한다. pmndrs/postprocessing은 Zlib 라이선스이고 EffectPass가 여러 효과를 자동으로 합친다. r160에도 GTAOPass, UnrealBloomPass, OutlinePass는 있다.",
+    "claim": "cannon-es는 2022-08-12의 0.20.0 이후 npm 배포가 없어 사실상 유지보수가 멈췄고, 원판 30장 이상 쌓기에서 붕괴한다.",
+    "evidence": "npm view cannon-es time 결과 마지막 배포는 0.20.0(2022-08-12)이다. GitHub README에는 CCD와 결정론 언급이 없다. 실험: 30장은 21장이 기울어지고 처짐 18장 두께, 60장은 51장이 기울어짐. solver를 20회로 올리면 20장은 버티지만 잠들지 않는다.",
     "sources": [
-     "https://github.com/mrdoob/three.js/releases/tag/r162",
-     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/constants.js",
-     "https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral",
-     "https://github.com/N8python/n8ao",
-     "https://github.com/pmndrs/postprocessing",
-     "/home/user/G2/package.json"
+     "https://www.npmjs.com/package/cannon-es",
+     "https://github.com/pmndrs/cannon-es",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_cannon.mjs"
     ],
     "confidence": "high"
    },
    {
-    "claim": "Tencent Hunyuan3D 2.0과 2.1 커뮤니티 라이선스는 EU, 영국, 한국을 적용 지역에서 뺀다. 한국 개발자는 Hunyuan3D를 합법적으로 쓸 수 없다.",
-    "evidence": "2.0 라이선스(2025-01-21) 머리말에 'DOES NOT APPLY IN THE EUROPEAN UNION, UNITED KINGDOM AND SOUTH KOREA'라고 적혀 있다. 1.l조는 Territory를 정의하면서 'excluding the territory of the European Union, United Kingdom and South Korea'라고 한다. 2.1도 같은 조항이다. MAU가 100만을 넘으면 별도 허가가 필요하고, 출력물로 다른 AI 모델을 개선하는 것도 금지된다.",
+    "claim": "실제 크기(지름 5cm, 두께 1mm, 미터 단위)로 만들면 엔진 허용 오차가 두께보다 커서 쌓기가 무너진다. 원판을 R=1 단위, 두께 0.06~0.1 정도로 키워 시뮬레이션해야 한다.",
+    "evidence": "Rapier 문서상 normalized_allowed_linear_error(geometric slop)는 0.005, prediction distance는 0.02이고, 둘 다 lengthUnit에 비례한다. Box2D 문서도 '움직이는 형상은 0.1~10m가 적정, 1cm보다 크게 유지하라'고 권한다. 실험: 미터 단위 두께 1mm 원판 20장은 접촉 관통이 두께의 72%이고 쌓인 높이가 기대치의 18%에 그침. lengthUnit이나 allowedLinearError만 바꿔서는 해결되지 않음. 반면 R=1, 두께 0.08이면 관통이 거의 없음.",
     "sources": [
-     "https://raw.githubusercontent.com/Tencent/Hunyuan3D-2/main/LICENSE",
-     "https://raw.githubusercontent.com/Tencent-Hunyuan/Hunyuan3D-2.1/main/LICENSE"
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/integration_parameters.mdx",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/overview.md",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/questions.md",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack2.mjs"
     ],
     "confidence": "high"
    },
    {
-    "claim": "합법적인 저예산 3D 생성 경로는 두 갈래다. 하나는 Tripo API로, 파라미터로 스타일, 폴리곤 수, 쿼드를 제어할 수 있다. 다른 하나는 MIT 라이선스 공개 모델(TripoSG, TripoSR, TRELLIS)을 로컬 GPU에서 돌리는 것이다.",
-    "evidence": "Tripo SDK API.md에 따르면 texture와 pbr의 기본값은 True이고, texture_quality는 standard 또는 detailed, face_limit, quad, smart_low_poly를 지원한다. style에는 'object:clay', 'person:person2cartoon' 등이 있고, stylize는 lego, voxel, voronoi, minecraft다. convert는 GLTF, USDZ, FBX, OBJ, STL, 3MF를 지원하며 face_limit 기본값은 10000이다. 기본 model_version은 v2.5-20250123이고 리깅·리타깃도 된다. TripoSG는 MIT, 1.5B 파라미터, 8GB VRAM 이상, GLB를 출력하지만 텍스처는 언급이 없다. TripoSR은 MIT, 약 6GB VRAM이며 기본은 버텍스 컬러이고 --bake-texture 옵션이 있다. TRELLIS는 MIT, 16GB 이상, GLB와 PLY를 출력하며 이미지 조건 입력을 권장한다.",
+    "claim": "동적 원판을 한 기둥에 30장 넘게 쌓으면 Rapier에서도 계속 압축되고 진동한다. 50장, 100장 판돈을 한 기둥으로 물리 시뮬레이션하는 것은 비현실적이다.",
+    "evidence": "실험(R=1, 두께 0.08, 기본 solver): 처짐이 10장 0.42, 20장 1.66, 30장 3.71, 60장 약 15장 두께로 늘고, 60장은 끝내 잠들지 않음. 100장은 53장이 기울어지며 무너짐. solver를 16~32회로 올리거나 서브스텝 4배, PGS 4회를 줘도 60장 처짐은 약 15장으로 그대로. 대신 아래 88장을 Fixed로 두고 위 12장만 동적으로 두면 처짐 0.59장, 1.43초 만에 잠듦.",
     "sources": [
-     "https://raw.githubusercontent.com/VAST-AI-Research/tripo-python-sdk/master/docs/API.md",
-     "https://github.com/VAST-AI-Research/tripo-python-sdk",
-     "https://github.com/VAST-AI-Research/TripoSG",
-     "https://github.com/VAST-AI-Research/TripoSR",
-     "https://github.com/microsoft/TRELLIS"
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack3.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack4.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Rapier는 접촉을 부드러운 스프링처럼 처리한다(고유진동수, natural frequency). 그래서 처짐은 대략 '하중 × g ÷ 고유진동수²'에 비례하고, 60Hz 스텝에서 고유진동수를 120Hz 이상으로 올리면 불안정해지거나 폭발한다.",
+    "evidence": "Rapier 문서: contact softness는 고유진동수(Hz)와 감쇠비로 정의되고, 단단할수록 떨림(jitter)이 생길 수 있음. 실험: contact_natural_frequency를 60으로 올리면 20장 처짐이 1.66에서 0.42장 두께로 약 4배 감소(진동수²에 비례). 120에서는 60장 기둥이 무너지고, 300에서는 꼭대기가 위로 튀어 폭발. 두께가 0.08이든 0.16이든 접촉 하나당 관통 절대량은 약 0.007로 비슷.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/integration_parameters.mdx",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack3.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack4.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "간단한 바람 모델(원뿔 제트, 테두리 샘플링, 레이캐스트 가림, 가장자리 아래 틈 비례 양력, applyImpulseAtPoint)만으로 '공기가 파고든 층 위쪽이 덩어리째 뒤집히는' 현상이 저절로 생긴다. 조준 높이가 몇 장이 뒤집힐지를 정한다.",
+    "evidence": "20장 더미(꼭대기 높이 약 1.55)에 파워 S=0.5로 분 결과를 아래→위 문자열로 기록함. 조준 높이 0.2는 0장(바닥층은 눌려서 안 뜸). 0.6은 거의 20장 전부. 1.0은 17~18장. 1.5는 위쪽 8~13장만 'FFFF' 블록으로 뒤집힘. 원판이 한 장씩 따로 노는 게 아니라 '분리 지점 위 블록'이 통째로 회전함.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/wind.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/probe.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/skillmap.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "같은 모델에서 파워와 결과는 역U자 곡선을 그린다(약하면 0장, 적당하면 최대, 너무 세면 테이블 밖으로 날아감). 입력이 조금 달라져도 결과가 크게 흔들리지 않아 실력으로 조절할 수 있다.",
+    "evidence": "조준 높이 1.2, 하향 10도, gain 3, 시드 8개 평균. S=0.30은 0장. 0.40은 12.0±1.6. 0.55는 16.0±0.9(최대). 0.65는 13.0, 날아감 4.5. 0.80은 3.0, 날아감 15.5. 0.90은 0.4, 날아감 18.3. 같은 시드에서 S를 0.50에서 0.51로 바꾸면 결과가 대부분 같음(16,16 / 13,13 / 16,16). 더 순한 설정(gain 2, cLift 0.6, 조준 1.45, K=8)은 S=0.4~1.0에서 0.8, 3.8, 9.0, 9.5, 11.0, 8.3(+날아감 5), 4.3(+10.8)으로 완만해짐.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/curve.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/tune.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "뒤집혀 착지한 더미(약 15도 기울어진 원판 덩어리)는 solver 반복 횟수, CCD, 형상, 마찰, 서브스텝을 바꿔도 10초 넘게 0.1~0.8 속도로 떨리고 미끄러지며 잠들지 않는다. 판정 타이머와 고정 처리가 필수다.",
+    "evidence": "블로우 후 10초 동안 테이블 위 원판 14~20장이 계속 깨어 있고 최대 속도 0.1~0.8. 비교한 설정: iters 8, PGS 4, 마찰 0.8, 서브스텝 2, 감쇠 2~4, roundCylinder, 20각형 hull, contact skin, CCD, soft-CCD. 모두 해결 못 함. 블로우 1.5초 후부터 '속도 0.5 미만이고 각속도 1.5 미만인 상태가 0.25초 지속되면 Fixed로 전환'하는 규칙을 쓰면 5회 중 4회가 2.3~3.45초에 확정, 1회는 6.35초 → 4초 강제 상한이 필요. 판정 애매(|upY|<0.5)한 원판은 시행당 0~1장.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/settle3.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/settle4.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/freeze.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Rapier CCD는 원판끼리 관통하는 문제를 막아주지 않는다. 비행 중 관통을 줄이는 데는 서브스텝이 효과적이다.",
+    "evidence": "Rapier CCD 문서: 'Two CCD-enabled objects can still tunnel through each other'. 실험: 모든 원판에 CCD를 켜도 결과 해시가 끄고 돌린 것과 완전히 같음(효과 0). 반면 서브스텝 4배(240Hz)로 돌리면 비행 중 최대 관통이 두께의 84%에서 49%로 줄어듦.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/rigid_body_ccd.mdx",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/pen.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "플랫폼이 달라도 결과를 같게(cross-platform 결정론) 하려면 @dimforge/rapier3d-deterministic(-compat) 패키지를 써야 한다. 웹사이트의 결정론 문서는 'JS는 기본으로 결정론적'이라고 적혀 있지만 0.15.0 이후 내용과 맞지 않는 옛 문서다.",
+    "evidence": "npm 0.21.0 README: 기본 rapier3d는 'does not guarantee cross-platform determinism (but it is still locally deterministic)', -deterministic 빌드만 이를 보장. rapier.js CHANGELOG 0.15.0(2025-03-06): 'rapier2d/3d no longer enable enhanced-determinism', -deterministic(-compat) 추가. 반면 website determinism.mdx는 JS/WASM이 'fully cross-platform deterministic by default'라고 적혀 있음(구버전 내용).",
+    "sources": [
+     "https://www.npmjs.com/package/@dimforge/rapier3d-deterministic-compat",
+     "https://raw.githubusercontent.com/dimforge/rapier.js/master/CHANGELOG.md",
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/determinism.mdx"
     ],
     "confidence": "high"
    },
    {
-    "claim": "웹 홀로/포일 표현의 대표 레퍼런스인 pokemon-cards-css는 GPL-3.0이라 코드를 그대로 가져오면 안 된다. 기법은 문서화돼 있어 다시 구현할 수 있다: 포인터를 따라가는 CSS 변수, 무지개 repeating gradient, 블렌드 모드 레이어링. 희귀도별 포일 패턴도 23종 스타일로 이미 나뉘어 있다.",
-    "evidence": "regular-holo.css에서 확인한 구성은 이렇다. --pointer-x/y와 --background-x/y로 위치를 잡고, .card__shine에 110deg repeating-linear-gradient(보라→파랑→초록→노랑→빨강)와 90deg 스캔라인을 깔며 mix-blend-mode:color-dodge와 background-blend-mode:overlay를 쓴다. :before는 hard-light, :after는 luminosity, glare는 overlay이고 radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y))로 빛을 따라가게 한다. 필터 예시는 brightness(1.1) contrast(1.1) saturate(1.2)다. 파일 목록에는 regular-holo, reverse-holo, cosmos-holo, rainbow-holo, secret-rare, radiant-holo, amazing-rare, shiny-rare 등 23개가 있다. 라이선스는 GPL-3.0이다.",
+    "claim": "같은 빌드에 같은 입력이면 결과가 비트 단위로 같다. 하지만 compat 빌드와 deterministic 빌드는 서로 결과가 달라 섞어 쓸 수 없고, deterministic 빌드는 20~39% 느리다.",
+    "evidence": "실험: 같은 입력을 6번 돌려 takeSnapshot 해시가 모두 같음(빌드마다 각각). compat(4f9c84c4)와 deterministic-compat(1deba9c4)은 해시가 다르지만 뒤집힌 장수는 같음. 블로우 하나를 끝까지 판정하는 CPU 시간은 compat 120ms, deterministic 166ms(Xeon 2.1GHz 단일 스레드, 시뮬레이션 약 3.1초).",
     "sources": [
-     "https://github.com/simeydotme/pokemon-cards-css",
-     "https://raw.githubusercontent.com/simeydotme/pokemon-cards-css/main/public/css/cards/regular-holo.css",
-     "https://github.com/simeydotme/pokemon-cards-css/tree/main/public/css/cards"
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/det.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/cost.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "결정론에는 엔진 밖의 게임 코드도 영향을 준다. Rapier 문서는 JS의 Math.sin/cos 결과가 플랫폼마다 다를 수 있다고 경고하고, Box2D도 결정론을 위해 sin/cos/atan2를 직접 구현했다. 바람 모델의 cos/exp/tan도 같은 위험이 있다.",
+    "evidence": "Rapier determinism.mdx(JS 항목): Math.sin, Math.cos 같은 초월함수를 초기값에 쓰면 플랫폼마다 다를 수 있음. 일정한 timestep 순서와 생성·삽입 순서도 같아야 함. Box2D simulation.md: 'custom atan2, cosine, and sine implementations', 그리고 'Box2D determinism does not mean your application will be deterministic'.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/determinism.mdx",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/simulation.md",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/release_notes_v310.md"
     ],
     "confidence": "high"
    },
    {
-    "claim": "현재 목업 캐릭터 24종 중 몸통이 거의 흰색인 캐릭터가 5종(dubu, durumi, mandu, gumiho, tokki)이라 작은 크기에서는 서로 구별되지 않는다. 일반 등급 앞면 링(#F4F1E8)과 뒷면 마분지(#F1DCAE)의 대비도 1.19:1뿐이라, 테두리만 보이는 각도에서는 뒤집혔는지 판별하기 어렵다.",
-    "evidence": "art.js의 body 색을 CIE Lab ΔE76로 계산했다. dubu와 durumi 1.5, mandu와 gumiho 2.6, dubu와 gumiho 5.3, mandu와 dubu 5.5, tokki와 durumi 5.5로 모두 ΔE<10이고, hotteok와 bungeo도 6.3이다. 앞면 링과 뒷면의 WCAG 대비는 #F4F1E8과 #F1DCAE가 1.19, #CFC6B0과 #D7B77A가 1.13이다. L*로는 앞면 링 95.1, 뒷면 중심 88.4로 차이가 6.7에 불과하다. 뒷면의 빨간 별과 파란 링이 일부를 보완한다.",
+    "claim": "Rapier 스냅샷으로 되감기와 리플레이를 할 수 있다. 저장했다가 복원해서 이어 돌리면 원래 실행과 해시가 같고, 20장 기준 스냅샷 크기는 약 58KB다.",
+    "evidence": "Rapier serialization 문서: world.takeSnapshot()은 Uint8Array를 반환하고 World.restoreSnapshot(snapshot)으로 복원. 실험: 블로우 5스텝째에 저장, 복원 후 200스텝을 더 돌리니 원래 실행과 해시가 같음(5e9ee23d). 스냅샷 58,374바이트. 참고로 Jolt SaveState는 엔진이 바꾸는 상태만 저장하고, 바디를 추가하거나 제거하면 RestoreState가 깨진다는 제약이 문서에 있음.",
     "sources": [
-     "/home/user/G2/mockup/src/art.js (15~38행 CARDS, 423~455행 drawBack)"
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/serialization.mdx",
+     "https://github.com/jrouwe/JoltPhysics/blob/master/Docs/Architecture.md",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/snap.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "번들 크기(실측): rapier3d-compat는 dist/rapier.mjs 4.34MB, gzip 1.65MB(WASM을 base64로 내장). deterministic-compat도 4.37MB, gzip 1.66MB. cannon-es는 346KB, gzip 75KB. jolt wasm-compat은 3.22MB, gzip 0.91MB.",
+    "evidence": "npm 0.21.0, 0.20.0, 1.1.0을 설치해 gzip -9로 측정. 별도 .wasm 파일 크기는 rapier 3.08MB(gzip 1.17MB), jolt 2.02MB(gzip 0.74MB). 목업은 jsDelivr ESM으로 compat 하나만 불러오면 됨(https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/dist/rapier.mjs, 쓰기 전 RAPIER.init() 호출 필요).",
+    "sources": [
+     "https://www.npmjs.com/package/@dimforge/rapier3d-compat",
+     "https://www.npmjs.com/package/cannon-es",
+     "https://www.npmjs.com/package/jolt-physics"
     ],
     "confidence": "high"
    },
    {
-    "claim": "Supercell(Clash of Clans 2012, Clash Royale 2016) 아트의 원칙은 다음과 같다. 과장된 비율(큰 머리와 손), 두툼하고 둥근 형태, 따뜻한 키 라이트와 차가운 그림자, 높은 채도. 3/4 탑다운 시점의 폰 화면에서도 실루엣이 읽히도록 만들고, 팀 색은 아군 파랑과 적 빨강으로 구분한다. UI는 굵고 둥근 디스플레이 폰트에 외곽선과 섀도를 두르고, 버튼은 광택 띠와 아래쪽 두께감(립)을 준다. 색에는 의미가 있다(초록=진행, 노랑·주황=주요/구매, 빨강=취소, 파랑=정보).",
-    "evidence": "외부 소스를 열지 못해 기억에만 의존한 내용이다. GDC 발표와 아트팀 인터뷰 원문으로 확인하지 못했다. Brawl Stars UI가 Lilita One과 비슷한 폰트를 쓴다는 점, Clash of Clans가 3D로 만든 뒤 2D 스프라이트로 미리 렌더링했다는 점도 기억에 기반한 주장이다.",
+    "claim": "Rapier JS는 API가 자주 바뀐다. 0.19.0에서 PGS 관련 메서드가 제거됐고, rapier.js 저장소는 2026-07-12에 보관(archived) 처리되어 dimforge/rapier/typescript로 합쳐졌다. 0.21.0은 2026-09-25 배포다. 옛 튜토리얼 코드는 그대로 돌지 않을 수 있다.",
+    "evidence": "CHANGELOG 0.19.0(2025-09-05): switchToStandardPgsSolver, numAdditionalFrictionIterations 등 제거. 0.13.0: contactSkin, softCcdPrediction 추가. 0.12.0: numSolverIterations 도입. GitHub의 rapier.js 페이지에 'archived Jul 12, 2026, merged into the main Rapier repository'. npm time: 0.20.0은 2026-08-08, 0.21.0은 2026-09-25.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier.js/master/CHANGELOG.md",
+     "https://github.com/dimforge/rapier.js",
+     "https://www.npmjs.com/package/@dimforge/rapier3d-compat"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "바람 계산 비용의 대부분은 레이캐스트다. 테두리 샘플 16개면 스텝당 240개로 1.7~4.4ms, 8개로 줄이면 104개로 약 1.5ms이고 결과는 거의 같다(16장 대 15장).",
+    "evidence": "wind.mjs 계측(Node, Xeon). 블로우는 15스텝(0.25초)만 지속되므로 이 동안만 비용이 든다. 모바일에서는 몇 배 느릴 것으로 보지만 직접 재지는 못했다.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/det.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "실제 물리로 보면 종이 딱지 한 장은 아래로 공기만 들어가면 약 3~5m/s 바람에도 뜬다. 진짜 어려움은 바람의 세기가 아니라 '어느 층의 틈으로 공기를 밀어넣느냐'이고, 위에 k장이 얹혀 있으면 필요한 풍속은 대략 √k배로 커진다.",
+    "evidence": "직접 유도한 계산이다(가정값: 지름 5cm, 두께 0.9mm, 판지 밀도 0.8g/cm³ → 약 1.4g, 공기 밀도 1.2). 동압 ½ρv²가 무게/면적(약 7Pa)을 넘어야 하므로 면 전체에 받으면 약 3.4m/s, 절반 면적으로 토크를 걸면 약 4.9m/s. 동전을 불어 컵에 넣는 트릭(위쪽 흐름으로 생기는 베르누이 압력 강하와 앞 가장자리로 들어가는 공기)과 원형 제트의 거리 감쇠(약 1/x)는 기억에 의존한 내용이다. 이번 세션에서 1차 출처로 확인하지 못했다.",
     "sources": [],
     "confidence": "low"
    },
    {
-    "claim": "Dream Games(Royal Match 2021, Royal Kingdom)의 톤은 밝고 하이키인 3D 렌더 룩이다. 사탕처럼 광택 있는 재질을 쓰고, 보상 연출은 아이템이 카운터로 날아가 박히고 상자가 터지고 숫자가 올라가는 단계형 '주시(juicy)' 시퀀스다. King Robert 같은 마스코트가 감정의 축 역할을 한다.",
-    "evidence": "기억에 의존했다. 매출과 출시일 수치는 출처를 확인하지 못해 적지 않았다.",
-    "sources": [],
-    "confidence": "low"
-   },
-   {
-    "claim": "Angry Birds 캐릭터(2009, 디자이너 Jaakko Iisalo)는 원, 삼각형, 달걀 같은 기본 도형 몸통에 굵은 눈썹으로 감정을 표현하고, 색·크기·특징 하나로 각 캐릭터를 구별한다. 원형 딱지 안에 넣기에 가장 잘 맞는 캐릭터 문법이다.",
-    "evidence": "기억에 의존했다. 위키백과(en.wikipedia.org)는 DNS 실패로 확인하지 못했다.",
-    "sources": [],
-    "confidence": "low"
-   },
-   {
-    "claim": "한국의 동그란 딱지(동딱지, 알딱지)에는 캐릭터와 함께 별, 숫자 같은 등급 표시가 인쇄돼 있었고, 반짝이(홀로그램) 변종이 희귀품으로 통했다. 해외에서는 오징어게임(2021)의 사각 종이접기 딱지가 더 알려져 있다. 반면 미국의 POG(1990년대)와 일본의 멘코가 원형 수집 딱지와 직접 대응하는 놀이다.",
-    "evidence": "기억에 의존했다. namu.wiki와 네이버는 접근이 차단됐다.",
-    "sources": [],
+    "claim": "앵그리버드는 Box2D 기반으로 널리 알려져 있고, '결과가 한눈에 읽히는 과장된 물리'(묵직한 블록, 크게 연출하는 붕괴, 카메라 추적)로 재미를 만든 대표 사례다.",
+    "evidence": "기억에 의존했다. Box2D 1차 문서(questions.md, overview.md)에는 특정 게임 이름이 없고 'used in many games'라고만 되어 있다. 튜닝 방식(구조물을 잠든 상태로 시작하는지 등)은 이번 세션에서 확인하지 못했다.",
+    "sources": [
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/questions.md"
+    ],
     "confidence": "low"
    }
   ],
   "insights": [
    {
-    "insight": "이 게임 아트의 1순위 KPI는 '뒤집힘 판독성'이다. 앞면인지 뒷면인지, 누구 것이 됐는지가 0.2초 안에 보여야 한다.",
-    "why_it_matters": "쾌감은 퍽 하고 부는 순간에 '몇 장이 넘어갔는지'를 즉시 세는 데서 나온다. Supercell의 실루엣·색 판독성 원칙을 이 게임에 옮기면, 캐릭터 디테일보다 앞뒷면 두 상태의 대비가 더 중요하다. 현재 목업은 일반 등급 앞면 링과 뒷면의 대비가 1.19:1이라 이 KPI를 만족하지 못한다.",
-    "design_implication": "뒷면은 모든 딱지에 공통으로 쓰고 진한 마분지색(#A8743F 근처, L*≈54)에 굵은 빨간 별(#E23B2E)과 잉크 링을 넣는다. 앞면은 흰 링(#FFFFFF, L*≈100)에 희귀도 색 띠를 두른다. 이렇게 하면 L* 차이가 40 이상 난다. 넘어간 딱지는 착지 순간 내 색(파랑 #3A8FE0)으로 테두리가 빛나고 내 쪽 트레이로 날아간다. 상대 것은 빨강 #FF4D5E로 처리한다. 판독성은 폰 화면에서 딱지 지름 48px로 테스트한다."
+    "insight": "'원기둥 중 어디를 치느냐'는 시뮬레이션에서 '공기가 파고드는 층(분리 지점)을 고르는 것'으로 그대로 재현된다. 분리 지점 위의 블록이 한 번에 뒤집힌다.",
+    "why_it_matters": "사용자가 말한 실력 요소(어디를, 얼마나 세게)가 따로 만든 규칙이 아니라 물리에서 저절로 나온다. 설명하지 않아도 '높이 치면 적게 그러나 안전하게, 낮게 치면 많이 그러나 센 힘과 위험이 필요'를 몸으로 배운다.",
+    "design_implication": "첫 번째 조작 축은 '더미 옆면에 조준 높이 찍기'로 한다. 드래그 시작점이 더미 옆면 높이가 되게 하고, 공기가 들어갈 층을 형광 띠로 미리 보여준다. 결과 연출은 '블록 단위로 넘어가는 순간'을 보여주는 데 맞춘다. 덩어리가 들려 회전할 때 0.2~0.4초 슬로모션과 '퍽' 사운드를 넣고, 넘어간 장수를 카운트업한다. 낮게 쳐서 전부 뒤집는 전략이 지배 전략이 되지 않도록 아래층일수록 공기가 덜 들어가게(공기 유입도 하한을 낮추거나 바닥 마찰을 높게) 조정한다."
    },
    {
-    "insight": "원형 딱지에는 Angry Birds 문법이 정답이다. 원형 몸통이 원판을 70~80% 채우고, 실루엣을 깨는 돌출부 하나와 굵은 눈썹 표정, 캐릭터마다 고유한 몸통 색을 갖게 한다.",
-    "why_it_matters": "캐릭터는 원 안에 인쇄되므로 원형 몸통이어야 면적을 가장 크게 쓸 수 있다. 더미 위에서 딱지 하나는 수십 px에 불과해 색과 돌출부만 읽힌다. 수집욕은 '저게 뭔지 알아보는 것'에서 시작한다.",
-    "design_implication": "규칙은 세 가지다. (1) 같은 희귀도 안에서 몸통 색은 서로 ΔE 20 이상 떨어뜨린다. (2) 돌출부(귀, 뿔, 볏, 꼬리) 형태가 겹치지 않게 한다. (3) 눈썹은 잉크색이고 두께는 원판 지름의 4% 이상으로 한다. 흰 몸통 캐릭터 5종(dubu, durumi, mandu, gumiho, tokki)은 배경을 채도 높은 색으로 칠하거나(예: 두부는 #8FD3FF, 구미호는 #FF7A59) 몸통 색 자체를 옮긴다. 외곽선은 원판 지름의 4~6% 굵기로 잉크 #2A1A12를 쓴다. 명암은 3톤(밝음, 기본, 그림자)이고 그림자는 회색이 아니라 따뜻한 보라·갈색 쪽으로 기울인다."
+    "insight": "파워와 결과가 역U자 곡선을 그린다. 약하면 0장, 적당하면 최대, 너무 세면 날아가 버린다.",
+    "why_it_matters": "'퍽'의 쾌감은 적당히 세게 쳤을 때 극대화되고, 과하게 쳤을 때의 손실이 욕심과 긴장을 만든다. 이런 퍼펙트 존 구조는 남녀노소 누구나 바로 이해한다.",
+    "design_implication": "파워 입력은 짧고 강한 '퍽'(어택이 짧은 버스트)을 S(t) 시간 곡선으로 바꾼다. 스와이프 속도나 마이크 입력의 최고점을 S로, 지속시간을 T(0.15~0.3초)로 쓴다. 날아간 딱지에 대한 규칙(누구에게도 안 감, 더미로 복귀, 상대에게 감 중 택일)과 360도로 두 번 뒤집혀 앞면으로 착지한 경우의 규칙을 명문화해야 역U자의 오른쪽 경사가 의미를 가진다. 같은 이유로 sweet zone의 폭(S 기준 약 ±0.1)을 난이도와 레벨 디자인의 손잡이로 쓴다."
    },
    {
-    "insight": "물성을 과장하자. 실제 딱지는 1mm 남짓 종이지만, 게임에서는 포커칩처럼 두툼하고 모서리가 둥근 원판이어야 Supercell의 '두툼하고 둥근' 톤이 나오고 뒤집히는 동작도 읽힌다.",
-    "why_it_matters": "얇은 원판은 회전할 때 옆에서 보면 선으로 사라져 뒤집힘이 덜 보인다. 기본 CylinderGeometry는 모서리가 각져서 inverted hull 외곽선에 틈이 생긴다(소스로 확인).",
-    "design_implication": "두께는 지름의 6~8%로 잡는다. LatheGeometry나 bevel을 준 ExtrudeGeometry로 둥근 모서리 프로파일을 만들면 법선이 연결돼 외곽선이 깨지지 않는다. 옆면에는 희귀도 색 줄무늬를 넣는다(일반 회청 #DDE6EE, 레어 #2F7FD6, 에픽 #8A3AD6, 전설 #FFB800+포일). 그러면 3/4 시점에서 판돈 더미 안에 전설이 몇 장 있는지 옆면만 보고 알 수 있어 긴장감이 생긴다."
+    "insight": "물리가 안정되려면 딱지가 두꺼워야 하고(두께/지름 4% 이상, 엔진 스케일 R=1), 이는 목표 아트 톤(CoC, 로얄킹덤, 앵그리버드의 두툼하고 둥근 형태)과 정확히 맞아떨어진다.",
+    "why_it_matters": "실제 비율(약 2%, 1mm)로 만들면 원판끼리 파고들고 떨린다. 모바일 화면에서도 얇은 원판은 앞뒷면과 뒤집힘이 잘 안 보인다.",
+    "design_implication": "딱지 3D 모델은 두께/지름 6~8%의 '두툼한 토큰'으로 하고 가장자리를 둥글게 깎되(시각적 bevel), 충돌체는 일반 cylinder(halfH=0.04~0.05, R=1)를 쓴다. roundCylinder는 굴러서 날아가 버리는 문제가 실험에서 나왔다. 앞면(캐릭터)과 뒷면(단색, 패턴)의 색 대비를 극대화해 뒤집힘이 한눈에 보이게 한다. Tripo 같은 도구로 만든 메쉬는 렌더링에만 쓰고 충돌체는 단순 실린더로 따로 둔다."
    },
    {
-    "insight": "three.js로 저예산 'Royal/Clash 룩'을 내는 렌더 레시피가 있다. 툰 셰이딩이 아니라, 채도를 지키는 톤매핑, 따뜻한 3점 조명, 환경 반사, 접촉 AO, 선택적 외곽선과 블룸의 조합이다.",
-    "why_it_matters": "ACES는 채도 높은 원색의 색상과 채도를 틀어버리는 반면 Khronos Neutral은 'no hue shifts'를 표방한다(ACES에 대한 부분은 기억에 기반). 환경맵이 없으면 iridescence와 clearcoat가 거의 보이지 않는다(소스로 확인). 딱지 더미는 접촉 그림자가 있어야 '쌓여 있다'고 읽힌다.",
-    "design_implication": "three를 0.160에서 r162 이상으로 올린다. 구체적으로: renderer.toneMapping=NeutralToneMapping, exposure 1.0~1.1. HemisphereLight는 하늘 #FFF3DC, 땅 #7A5434. 키 DirectionalLight는 #FFE6C0에 PCFSoft 그림자. 림 라이트는 #9FD8FF. scene.environment는 PMREM(RoomEnvironment)으로 깔고, 종이에는 envMapIntensity 약 0.3, 포일에는 약 1.0을 준다. AO는 N8AO halfRes를 쓰거나 r160을 유지하면 GTAOPass, 저사양 기기에서는 딱지 아래 블롭 그림자 텍스처로 대체한다. 블룸은 전설 딱지와 VFX에만 선택적으로 건다. 조준 대상은 OutlinePass로 표시한다(pulsePeriod 약 1.2, visibleEdgeColor 흰색). 딱지 앞면은 MeshToon이 아니라 Standard(인쇄 카드 질감, roughness 약 0.55)로 하고, 툰은 3D 캐릭터나 소품을 넣을 때만 쓴다. MeshPhysical은 레어 이상에만 써서 픽셀 비용을 줄인다."
+    "insight": "물리로 쌓을 수 있는 동적 딱지는 한 더미에 약 20~30장이 한계다. 50장, 100장 판돈은 구조를 다르게 짜야 한다.",
+    "why_it_matters": "사용자 원안의 5~100장 판돈을 그대로 한 기둥으로 쌓으면 떨림, 관통, 붕괴가 생기고 결과가 이상하게 보인다.",
+    "design_implication": "방법은 둘이다. (A) 판돈 20장마다 더미를 하나씩 원형으로 배치한다. '어느 더미를 노릴지'라는 결정이 하나 더 생겨 좋다. (B) 한 기둥이되 위쪽 12~20장만 동적으로 두고 나머지는 Fixed로 둔 뒤, 위가 비면 다음 장을 동적으로 올린다(실험상 안정). 목업은 (A)를 기본으로 하고, 판돈 단계는 5/10/20/40처럼 20장 단위로 묶어 관리한다."
    },
    {
-    "insight": "홀로 딱지는 희귀도마다 '포일 패턴'을 다르게 하고, 그 반짝임이 뒤집히는 순간에 처음 드러나게 설계하면 수집욕과 공개의 쾌감이 겹친다.",
-    "why_it_matters": "레퍼런스(pokemon-cards-css)는 희귀도별로 23종 포일 스타일을 둘 만큼 '포일의 종류'가 수집 가치의 언어로 쓰이고 있음을 보여준다. 뒷면이 공통이라 뒤집기 전에는 정체를 모르므로, 뒤집힘 순간이 곧 공개 순간이다.",
-    "design_implication": "등급별 패턴: 레어는 리버스 홀로(배경만 포일, 캐릭터는 무광. iridescenceMap의 R 채널로 마스크), 에픽은 코스모스·글리터(반짝이 노이즈 텍스처에 iridescenceThicknessMap), 전설은 전면 레인보우에 애니메이션 시닝 스윕과 금색 옆면, 그리고 착지 순간 0.1초 hit-stop과 블룸 펄스. 컬렉션 화면(DOM)에서는 CSS 홀로를 직접 다시 구현한다(GPL이라 복사 금지). 포인터나 자이로 기울기에 반응하는 radial glare와 color-dodge 무지개 레이어를 쓴다. 포일은 앞면 링과 배경에만 두어 캐릭터 판독성을 해치지 않게 한다."
+    "insight": "결과 판정은 물리가 완전히 멈추기를 기다리면 안 된다. 뒤집힌 더미는 10초가 지나도 잠들지 않는다.",
+    "why_it_matters": "턴제 게임에서 '아직 움직이는 중'이 이어지면 템포와 쾌감이 무너지고, PvP에서는 판정 시점을 둘러싼 분쟁이 생긴다.",
+    "design_implication": "판정 파이프라인은 블로우 → 1.5초 후부터 '조용한 원판'(속도 0.5 미만, 각속도 1.5 미만이 0.25초 지속)을 Fixed로 전환 → 4초에 전부 강제 확정 → 윗면 방향 벡터의 y 부호로 앞뒤 판정 순이다. |upY|<0.5로 애매한 원판은 '더미 쪽으로 떨어진다' 같은 규칙과 작은 정착 애니메이션으로 처리한다. 슬로모션은 dt를 바꾸지 말고 '프레임당 스텝 수'를 줄여서 만든다. dt는 1/60 고정을 유지해야 결정론이 보존된다."
    },
    {
-    "insight": "UI 규칙은 'Supercell 텍스트 문법과 Royal식 보상 연출'로 고정하면 목업 단계부터 톤이 일관된다.",
-    "why_it_matters": "흰 글자를 채도 높은 배경에 올리면 대비가 1.5~1.9:1에 그쳐(계산) 외곽선 없이는 읽히지 않는다. 버튼 색에 의미를 일관되게 부여하면 설명 없이도 조작할 수 있다는 목표에 바로 기여한다.",
-    "design_implication": "폰트는 디스플레이에 Lilita One과 Black Han Sans, 본문에 Jua, 큰 숫자에 Titan One을 쓰고 Google Fonts CSS2 API로 슬라이스 로딩한다. 모든 디스플레이 텍스트는 흰 채움에 -webkit-text-stroke 2~4px 잉크(paint-order: stroke fill), text-shadow 0 3~8px 0 잉크로 처리한다. 버튼은 3px 잉크 테두리, radius 14~24px, 위쪽 40%에 밝은 광택 띠, 아래에 4~6px 진한 립(box-shadow 0 5px 0)을 두고, 누르면 translateY(4px)하고 립을 없앤다. 색의 의미: 초록 #5AD43B/#2F9A1A는 진행과 PUFF, 골드 #FFCF33/#E08A00은 보상과 구매, 파랑 #3A8FE0/#2457B0은 나와 정보, 빨강 #FF4D5E/#B8213A는 상대와 취소. 패널은 크림 #FFF3D6에 잉크 3px 테두리. 획득 수치는 1.3배에서 1.0배로 튀는 오버슈트와 함께 카운트업하고, 따낸 딱지는 아이콘이 상단 카운터로 날아가 박히게 한다."
+    "insight": "PvP는 턴제라서 실시간 lockstep이나 롤백 넷코드가 필요 없다. '입력만 보내고, 서버가 다시 시뮬레이션해 권위 있게 판정'하면 충분하다.",
+    "why_it_matters": "가장 어려운 네트워크 문제(지연 보상, 실시간 동기화)를 피하면서도 부정행위(클라이언트 물리 조작)를 막을 수 있다. 블로우 한 번의 서버 비용도 120~170ms(CPU 단일 코어)라 감당할 만하다.",
+    "design_implication": "클라이언트는 입력(조준 높이, 방향, 파워 곡선 S(t), 시작 스텝)을 보내고 동시에 자기 화면에서는 즉시 로컬로 시뮬레이션한다. 서버는 Node에서 같은 버전의 @dimforge/rapier3d-deterministic으로 다시 돌려 결과와 해시를 내려준다. 상대방은 입력을 받아 리플레이하거나 서버 결과로 바로잡는다. 더미 초기 배치는 서버가 준 시드에서 정수 또는 고정소수점으로 만든다. 바람 모델의 cos/sin은 미리 계산한 테이블, exp는 유리함수 근사로 바꾼다. Math.hypot 대신 sqrt(x*x+y*y+z*z)를 쓴다(이 점은 내 기억 기반이라 확신 낮음). 원판 처리 순서는 배열 순서로 고정한다. 재접속과 관전은 스냅샷(약 58KB)으로 처리한다."
    },
    {
-    "insight": "AI 에셋 파이프라인은 '2D 먼저, 3D는 소품만'이 맞다. 딱지 앞면은 인쇄물이라 2D 일러스트 품질과 일관성이 전부다.",
-    "why_it_matters": "AI 3D(Tripo 등)는 토폴로지와 일관성이 약하고, 딱지 자체는 원판이라 3D 생성이 필요 없다. 3D가 필요한 곳은 테이블, 손이나 입 마스코트, 로비 소품 정도다. Hunyuan3D는 한국에서 라이선스가 적용되지 않는다.",
-    "design_implication": "2D는 이미지 생성 모델에 고정된 스타일 프롬프트(예: 'chunky round mascot, thick dark brown outline, 3-tone cel shading, warm light, centered in circle, flat background')와 레퍼런스 시트를 함께 넣어 초안을 뽑는다. 최종본은 벡터로 다시 그리거나 직접 보정해 선 굵기와 팔레트를 통일한다. 3D는 Tripo API(style 'object:clay' 또는 'person:person2cartoon', smart_low_poly, face_limit 5k~10k, GLTF 변환)를 쓰거나, 로컬 GPU가 있으면 TripoSG(8GB, MIT)나 TRELLIS(16GB, MIT)를 쓴다. 출시용 에셋 프롬프트에는 Clash, Supercell, Angry Birds 같은 상표나 캐릭터 이름을 넣지 않는다. 참고로 이 세션에는 이미지 생성과 image→GLB(generate_3d) MCP 도구가 연결돼 있어 다음 루프에서 바로 시도해 볼 수 있다(크레딧 소모)."
+    "insight": "게임성 조율(밸런싱)은 사람이 손으로 하기보다 헤드리스 파라미터 스윕(조준 높이 × 파워 스킬맵)으로 해야 한다.",
+    "why_it_matters": "현재 초기 설정은 한 번 불면 20장 중 15~20장이 넘어가 너무 후하다. 낮게 조준하면 전부 뒤집히는 지배 전략도 있다. 물리 상수 하나만 바꿔도 곡선 모양이 크게 바뀐다(gain 3에서 2, cLift 1에서 0.6으로 바꾸자 완만해짐).",
+    "design_implication": "skillmap.mjs 같은 스크립트를 CI에 넣어 '스윗스팟에서 한 번에 25~40%, 잭팟(80% 이상)은 정밀 입력에서만'이라는 목표 분포를 검사한다. 목업에 디버그 패널(gain, cLift, cPush, alpha, 더미 오프셋, 원판 사이 마찰)을 노출해 사용자 피드백 루프에서 바로 손볼 수 있게 한다."
    },
    {
-    "insight": "글로벌 진입을 위한 시각 전략: 형태는 전 세계가 아는 'POG형 원형 수집 디스크'로 가고, 한국은 장벽이 아니라 양념으로 쓴다.",
-    "why_it_matters": "해외에서는 '딱지'라고 하면 오징어게임의 사각 종이접기를 떠올리기 쉽다(기억 기반). 원형 수집 딱지는 POG나 멘코와 겹치므로, 형태는 익숙하게 하고 문화적 디테일로 차별화하는 편이 진입 장벽이 낮다.",
-    "design_implication": "로고와 아이콘은 둥근 디스크와 'POOF!' 같은 의성어(영문)를 중심에 둔다. 한국 요소는 단청 문양을 옆면 패턴으로, 한글 도장을 뒷면 로고로, 음식과 민속 캐릭터(만두, 호랑이, 도깨비)를 수집 테마로 녹인다. 첫 화면에는 한글 텍스트에 의존하는 정보가 없어야 한다."
+    "insight": "입으로 부는 감각은 마이크 입력으로 재현할 수 있지만, 마이크로는 방향을 알 수 없다. 방향과 높이는 화면 조준으로 정하고, 마이크는 파워와 타이밍만 맡아야 한다.",
+    "why_it_matters": "'입으로 푹'이 사용자 원안의 핵심 감성이지만 권한 요청, 시끄러운 환경, 접근성 문제가 있다. 이 판단은 1차 출처를 확인하지 못한 경험칙이다(확신 낮음).",
+    "design_implication": "기본은 스와이프 또는 '꾹 눌렀다 튕기기'로 조작하고, 마이크 불기는 옵션 모드(파티, 오프라인 데모용)로 둔다. 둘 다 같은 S(t) 곡선으로 바꿔 물리 쪽은 하나의 경로만 유지한다. 손으로 치는 모드는 바람이 아니라 충격량 모델이므로 별도 설계가 필요하다."
+   },
+   {
+    "insight": "목업 구현 레시피(바로 쓸 수 있는 시작값)",
+    "why_it_matters": "1시간 목업 안에 엔진 선택과 파라미터 탐색에 시간을 쓰지 않도록 검증된 시작점이 필요하다.",
+    "design_implication": "엔진: @dimforge/rapier3d-compat@0.21.0을 jsDelivr ESM으로 불러와 await RAPIER.init() 호출(PvP 단계에서 -deterministic-compat으로 교체, API 동일). 월드: gravity -9.81(가볍고 느린 느낌), 더 빠른 느낌을 원하면 -20~-40으로 하고 바람 gain도 같은 비율로 올림. timestep 1/60 고정, numSolverIterations 4, lengthUnit 1, contact_natural_frequency 기본값(30) 또는 45. 바닥: cylinder(0.5, 12), 마찰 0.5. 원판: cylinder(halfH=0.04, R=1), density 1, 마찰 0.5, 반발 0.1, 선형 감쇠 0.1, 각 감쇠 0.3, 오프셋 ±0.125R로 무작위 적층. 바람 모델(스텝마다, 블로우 지속 T=0.25초): 원판마다 테두리 K=8 지점 p=c+R·m_k(m_k=cosθ·u+sinθ·v). facing f=max(0,−m_k·d)가 0.05 이하면 건너뜀. s=(p−O)·d, lat=|(p−O)−s·d|, rc=r0+s·tanα(α=0.30, r0=0.25)이고 s≤0이거나 lat>rc면 건너뜀. O에서 p로 레이캐스트해 다른 원판이 먼저 맞으면 가려진 것으로 보고 건너뜀. v=Vmax·S·env(t)/(1+s/L)·exp(−2(lat/rc)²)(Vmax=40, L=4). q=½v²·(2πR/K)·(2halfH)·gain(gain=2). 공기 유입도 expo=min(1, 0.08+gap/(2halfH))이고, gap은 테두리 아랫면에서 −n̂ 방향 레이 거리. 힘 F=q·(cPush·f·d + cLift·expo·f·n̂_up)(cPush 0.25, cLift 0.6)를 applyImpulseAtPoint(F·dt, p)로 가함. 맨 위 원판 윗면이 노출돼 있으면 중심에 cTop=0.15 비율의 흡입 양력 추가. 판정: 1.5초 후 조용한 원판 고정, 4초 상한, upY 부호로 판정. 테이블 밖으로 나간 원판은 별도 규칙으로 처리. 참고 코드는 scratchpad/physlab/wind.mjs와 freeze.mjs."
    }
   ],
   "key_claims": [
-   "아트의 최우선 기준은 '뒤집힘과 소유 판독성'이다. 앞면과 뒷면 사이 L* 차이를 40 이상 두고 소유자 색 글로우를 넣어야 한다. 현재 목업은 일반 앞면 링과 뒷면 대비가 1.19:1로 기준에 못 미친다.",
-   "Supercell식 흰 글자, 진한 외곽선, 하드 섀도는 장식이 아니라 필수다. 게임 팔레트(초록, 골드, 하늘색) 위의 흰 글자 대비는 1.5~1.9:1에 그친다.",
-   "무료로 쓸 수 있는 Supercell풍 최적 조합은 Lilita One(OFL, 영문)과 Black Han Sans(OFL, 한글)다. 한글 폰트는 TTF가 1~2MB이므로 Google Fonts CSS2 API의 unicode-range 슬라이스(Bagel Fat One 기준 92조각)로 불러야 한다.",
-   "three.js에서 홀로 딱지(iridescence, clearcoat)가 보이려면 환경맵이 필수다. 채도를 지키려면 three를 r162 이상으로 올려 NeutralToneMapping을 쓴다(현재 목업은 r160에 환경맵 없음).",
-   "Hunyuan3D 2.0과 2.1은 라이선스상 한국에서 쓸 수 없다. 3D 생성은 Tripo API(clay 스타일, smart_low_poly, face_limit)나 MIT 모델(TripoSG, TripoSR, TRELLIS)로 하고, 딱지 앞면은 2D 생성 후 사람이 보정하는 방식으로 한다.",
-   "원형 딱지 캐릭터는 Angry Birds 문법(원형 몸통, 굵은 눈썹, 돌출부 하나, 캐릭터마다 고유한 색)을 따라야 한다. 현재 목업 24종 중 흰 몸통 5종은 ΔE<10이라 구별되지 않는다."
+   "웹 목업과 PvP용 물리엔진은 Rapier(@dimforge/rapier3d-compat, PvP는 -deterministic-compat)로 정한다. 얇은 원판 20장 쌓기 실험에서 cannon-es(2022년 이후 배포 중단)는 무너지고 30~70배 느렸으며, Jolt는 기본 설정에서 처짐이 35~45%에 달했다.",
+   "물리 월드는 실제 크기가 아니라 R=1 단위, 두께 0.06~0.1(두께/지름 4% 이상)로 키워야 한다. 두께 1mm 실제 크기는 엔진 허용 오차(0.005×lengthUnit) 때문에 무너진다. 동적 딱지는 한 더미 20~30장이 한계이므로 50장, 100장 판돈은 여러 더미로 나누거나 아래층을 고정(Fixed)해야 한다.",
+   "유체 시뮬레이션 없이 '원뿔 제트 + 레이캐스트 가림 + 가장자리 아래 틈 비례 양력 + 테두리 지점 임펄스' 모델만으로 '분리 지점 위 블록 뒤집힘'과 '파워 역U자 곡선'이 저절로 생긴다. 그래서 조준 높이 × 파워라는 두 축의 실력 구조를 물리만으로 만들 수 있다.",
+   "뒤집힌 더미는 어떤 solver 설정에서도 10초 넘게 잠들지 않는다. 판정 타이머(1.5초 후 조용한 원판 고정, 4초 상한)가 없으면 턴이 끝나지 않고 결과가 읽히지 않는다.",
+   "PvP는 턴제이므로 lockstep 없이 '입력만 전송하고 서버가 다시 시뮬레이션해 권위 판정'으로 충분하다. 단, npm README상 cross-platform 결정론은 -deterministic 패키지만 보장하고(웹 문서는 구버전), 빌드가 다르면 결과 해시가 달라지며, 게임 코드의 Math.sin/cos/exp도 결정론을 깬다."
   ],
   "risks": [
-   "조사 범위의 한계: WebSearch 한도가 이미 소진됐고 비 GitHub 도메인은 DNS 실패나 403으로 막혔다. 그래서 Supercell, Dream Games, Angry Birds의 스타일 원칙, 연도, 매출, 딱지 문화사는 모두 기억에 기반한 low 신뢰도다. 다음 루프에서 GDC Vault, 아트팀 인터뷰, 나무위키로 검증해야 한다.",
-   "스타일 모방 리스크: 화풍 자체는 보호 대상이 아니라고 알고 있지만(기억), Supercell 고유 UI(전용 폰트, 특정 버튼·아이콘 형태)를 그대로 따라 하면 트레이드 드레스나 앱스토어 copycat 심사에 걸릴 수 있다. 원칙만 가져오고 형태는 독자적으로 만들어야 한다.",
-   "AI 생성 에셋의 권리 리스크: 사람의 창작 기여가 없는 순수 AI 출력은 저작권 보호를 못 받을 수 있다(미국 저작권청 입장, 기억 기반). 일관성 문제도 있으므로 사람이 다시 그리거나 보정하는 단계가 필요하다. Hunyuan3D는 한국에서 라이선스가 적용되지 않는다(확인됨).",
-   "성능 리스크: 딱지 100~200장에 MeshPhysical, 2048 PCFSoft 그림자, 후처리 여러 개를 얹으면 저사양 모바일에서 프레임이 떨어진다. InstancedMesh, 레어 이상만 Physical 사용, AO halfRes나 블롭 그림자 대체, 기기 등급별 품질 프리셋이 필요하다.",
-   "포일과 블룸을 과하게 쓰면 캐릭터와 뒤집힘 판독성이 오히려 떨어진다. 포일은 링과 배경에만 마스크로 제한해야 한다.",
-   "CylinderGeometry에 inverted hull 외곽선을 쓰면 모서리에 틈이 생긴다. 둥근 bevel 프로파일로 지오메트리를 바꾸지 않으면 외곽선이 지저분해진다.",
-   "한글 웹폰트 용량(전체 TTF 0.9~2.1MB) 때문에 오프라인 단일 파일 빌드에서는 로딩이 크게 늘어난다. 서브셋 처리가 필요하다."
+   "현재 바람 모델 설정은 너무 후하다(한 번에 15~20/20장). 낮게 조준하고 세게 불면 전부 뒤집히는 지배 전략이 있어 밸런싱이 필요하다. 실제 딱지 불기가 이런 블록 뒤집힘 양상인지도 실물이나 영상으로 확인하지 못했다.",
+   "모든 성능 수치는 Node와 Xeon 2.1GHz 기준이다. 모바일 브라우저(특히 저가 안드로이드, iOS Safari)의 스텝 비용과 레이캐스트 비용은 재지 않았다.",
+   "cross-platform 결정론은 문서로만 확인했고, 같은 기기 안의 재현성만 실험했다. 브라우저 간(Chrome과 Safari) 해시 일치는 아직 검증하지 않았다.",
+   "Jolt 결과는 내 튜닝 미숙 때문일 수 있다(Jolt 문서가 실린더 불안정을 경고하긴 함).",
+   "Rapier 0.21.0은 배포 17일 차인 새 버전이다. 0.19에서 API가 제거된 전례가 있으니 버전을 정확히 고정하고, 업데이트 때 결과 해시가 바뀌는지 검사해야 한다.",
+   "compat 빌드는 gzip 기준 약 1.65MB로, 첫 로딩 시간과 글로벌 저사양 환경에 부담이 된다.",
+   "뒤집힌 더미의 미세 떨림을 고정 처리로 덮으면 '갑자기 멈추는' 부자연스러움이 보일 수 있다. 연출(감쇠 애니메이션, 카메라 전환)로 가려야 한다.",
+   "조사 한계가 있다. 웹검색 예산(다른 에이전트와 공유)이 소진됐고 WebFetch는 GitHub 외 도메인(나무위키, 네이버, 위키백과, gafferongames, box2d.org 등)에서 DNS 오류가 났다. 그래서 한국어 출처, 실제 바람 물리 문헌, 앵그리버드 튜닝 사례는 1차 확인을 못 했다(confidence low로 표기)."
   ],
   "open_questions": [
-   "판정 규칙: 더미를 뒷면이 위로 오게 쌓고 앞면으로 뒤집히면 이기는가, 그 반대인가? 어느 면이 '보상 면'인지에 따라 화려하게 만들 면이 정해진다.",
-   "카메라: 탑다운인가 3/4 시점인가? 3/4라면 옆면 희귀도 줄무늬가 핵심 정보가 되고, 탑다운이라면 앞면과 뒷면 대비가 전부다.",
-   "캐릭터 IP: 한국 음식과 민속을 바탕으로 한 오리지널(현재 목업 방향)로 갈 것인가, 계절이나 콜라보 테마를 열어둘 것인가? 글로벌 첫인상용 대표 마스코트(Angry Birds의 Red 같은 존재)는 누구인가?",
-   "딱지 앞면 일러스트를 2D 페인팅(인쇄물 느낌)으로 할 것인가, 3D 렌더를 2D로 찍어낸 Royal Match 하이키 렌더 룩으로 할 것인가?",
-   "최저 지원 기기는 무엇인가(저사양 안드로이드 포함 여부)? 이에 따라 후처리(AO, 블룸, 외곽선) 예산과 품질 프리셋이 정해진다.",
-   "입으로 부는 제스처의 시각 피드백(바람 줄기, 입김 파티클, 마이크 입력 게이지)을 어떤 아트 언어로 표현할 것인가? 이 렌즈 범위 밖이라 별도 조사가 필요하다.",
-   "검증 필요: Supercell UI 폰트의 실제 정체(전용 서체인지, Brawl Stars가 Lilita One 계열인지), Royal Kingdom의 정확한 출시 시점과 아트 파이프라인(실시간 3D인지 프리렌더인지)."
+   "실제 동딱지(알딱지)의 지름, 두께, 무게는 얼마인가? 불기 놀이를 할 때 딱지를 한 기둥으로 쌓았나, 퍼뜨린 더미였나? 다 같은 면이 위로 오게 쌓았나? 사용자 기억이나 영상 레퍼런스가 필요하다.",
+   "테이블 밖으로 날아간 딱지, 360도 두 번 뒤집혀 원래 면으로 착지한 딱지, 다른 딱지에 기대 선 딱지는 각각 누구의 것이 되는가? 이 규칙이 파워 역U자 곡선의 의미를 정한다.",
+   "한 번 불 때 몇 장 정도 넘어가는 것을 목표로 하는가(예: 스윗스팟 25~40%)? 한 판은 몇 턴 정도여야 하는가?",
+   "중력과 시간 배율 같은 '느낌'을 어떻게 잡을까? g=9.81에 R=1이면 느리고 떠 있는 느낌이고, g=20~40이면 빠르고 경쾌하다. 슬로모션 연출은 어느 구간에 넣을까?",
+   "마이크 불기 입력을 기본으로 할지 옵션으로 할지, 스와이프와 마이크를 어떻게 하나의 파워 곡선 S(t)로 바꿀지 정해야 한다.",
+   "손으로 치기 모드도 같은 게임 안에 넣을지 정해야 한다. 넣는다면 충격량 기반 모델(손바닥 판으로 테이블을 치는 진동, 공기 압축)을 따로 설계해야 한다.",
+   "50장, 100장 판돈을 여러 더미로 나눌지, 한 기둥에 아래층을 고정할지는 게임 디자인 쪽에서 정해야 한다."
   ]
  }
 ]

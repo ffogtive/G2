@@ -6,6 +6,7 @@
 //  H3. 내 딱지를 걸면 긴장, 상대 딱지(특히 내가 없는 레어)를 따면 수집 욕구가 돈다.
 
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { initPhysics, Table, DISC_R, DISC_H, mulberry32 } from './sim.js';
 import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, drawEdge, drawCharacter, rollCard } from './art.js';
 import { Sfx } from './audio.js';
@@ -65,7 +66,8 @@ const piles = { me: [], ai: [] };
 // ── 텍스처 ──────────────────────────────────────────────
 const texCache = new Map();
 const imgCache = new Map();
-let backTex, edgeTex;
+let backTex;
+const edgeTex = {};
 
 function faceTexture(id) {
   if (texCache.has(id)) return texCache.get(id);
@@ -96,13 +98,16 @@ function makeShared() {
   drawBack(bc.getContext('2d'), 512);
   backTex = new THREE.CanvasTexture(bc);
   backTex.colorSpace = THREE.SRGBColorSpace;
-  const ec = document.createElement('canvas');
-  ec.width = 256; ec.height = 32;
-  drawEdge(ec.getContext('2d'), 256, 32);
-  edgeTex = new THREE.CanvasTexture(ec);
-  edgeTex.colorSpace = THREE.SRGBColorSpace;
-  edgeTex.wrapS = THREE.RepeatWrapping;
-  edgeTex.repeat.set(6, 1);
+  for (const [rar, info] of Object.entries(RARITY)) {
+    const ec = document.createElement('canvas');
+    ec.width = 256; ec.height = 32;
+    drawEdge(ec.getContext('2d'), 256, 32, info.side);
+    const tx = new THREE.CanvasTexture(ec);
+    tx.colorSpace = THREE.SRGBColorSpace;
+    tx.wrapS = THREE.RepeatWrapping;
+    tx.repeat.set(6, 1);
+    edgeTex[rar] = tx;
+  }
 }
 
 const discGeo = new THREE.CylinderGeometry(DISC_R, DISC_R, DISC_H, 56, 1);
@@ -113,9 +118,9 @@ function discMaterials(id) {
   const fancy = c.rarity === 'epic' || c.rarity === 'legendary';
   const top = fancy
     ? new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.35, metalness: 0.1, iridescence: 0.9, iridescenceIOR: 1.6, clearcoat: 0.6, clearcoatRoughness: 0.25 })
-    : new THREE.MeshStandardMaterial({ map: faceTexture(id), roughness: 0.55, metalness: 0 });
-  const side = new THREE.MeshStandardMaterial({ map: edgeTex, roughness: 0.8, color: c.rarity === 'legendary' ? 0xffd34d : 0xffffff });
-  const bottom = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.7 });
+    : new THREE.MeshStandardMaterial({ map: faceTexture(id), roughness: 0.5, metalness: 0, envMapIntensity: 0.35 });
+  const side = new THREE.MeshStandardMaterial({ map: edgeTex[c.rarity], roughness: c.rarity === 'legendary' ? 0.3 : 0.8, metalness: c.rarity === 'legendary' ? 0.5 : 0, envMapIntensity: c.rarity === 'legendary' ? 1 : 0.3 });
+  const bottom = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.7, envMapIntensity: 0.3 });
   const mats = [side, top, bottom];
   matCache.set(id, mats);
   return mats;
@@ -231,6 +236,9 @@ function buildScene() {
 
   scene = new THREE.Scene();
   scene.background = skyTexture();
+  // 환경 반사: 홀로/코팅 딱지 광택용 (아트 리서치)
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
   camera = new THREE.PerspectiveCamera(40, 1, 0.1, 200);
 
   scene.add(new THREE.HemisphereLight(0xfff3dc, 0x7a5434, 1.15));
@@ -436,6 +444,20 @@ function flash(a = 0.5) {
   el.style.opacity = '0';
 }
 
+// 뒤집혀 드러난 딱지에 '누구 것이 됐는지' 색 테두리 (나=파랑, 상대=빨강)
+function ownerGlow(d, color) {
+  const m = meshes.get(d.id);
+  if (!m) return;
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(DISC_R * 1.02, 0.06, 8, 48),
+    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false }),
+  );
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = DISC_H / 2 + 0.01;
+  m.add(ring);
+  addTween(0.9, (k) => { ring.material.opacity = 0.95 * (1 - k * k); ring.scale.setScalar(1 + k * 0.15); }, () => { m.remove(ring); ring.geometry.dispose(); ring.material.dispose(); });
+}
+
 function shockwave(c, power) {
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.9, 1.05, 48),
@@ -553,6 +575,7 @@ function watchSim() {
       const c = CARD_BY_ID[d.cardId];
       fx.emit({ at: { x: p.x, y: p.y + 0.1, z: p.z }, n: 14 + (c.rarity !== 'common' ? 16 : 0), color: new THREE.Color(RARITY[c.rarity].ring[1]).getHex(), speed: 2.5, up: 3, life: 0.7, size: 0.22 });
       fx.text(new THREE.Vector3(p.x, p.y + 0.6, p.z), '+1', 'plus');
+      ownerGlow(d, simWatch.shooter === 'ai' ? 0xff4d5e : 0x3a8fe0);
       if (c.rarity !== 'common') fx.text(new THREE.Vector3(p.x, p.y + 1.1, p.z), RARITY[c.rarity].label, 'rar r-' + c.rarity);
       if (simWatch.count >= 4) { slowUntil = Math.max(slowUntil, now + 450); camZoom = Math.min(0.28, camZoom + 0.04); }
       navigator.vibrate?.(12);
@@ -561,9 +584,11 @@ function watchSim() {
       simWatch.count = Math.max(0, simWatch.count - 1);
     }
   }
-  const settled = !table.puff && simWatch.simTime > 0.6 && table.isSettled(0.08);
+  // 정지 판정: 기대 선 딱지의 미세 떨림 때문에 영원히 안 멈추는 경우가 있어(실측) 2.5초 이후엔 느린 떨림도 정지로 본다. 상한 5초.
+  const ms = table.maxSpeed();
+  const settled = !table.puff && simWatch.simTime > 0.6 && (ms < 0.08 || (simWatch.simTime > 2.5 && ms < 0.5));
   simWatch.quiet = settled ? simWatch.quiet + 1 : 0;
-  if ((simWatch.quiet > 12 || simWatch.simTime > 7) && simWatch.resolve) {
+  if ((simWatch.quiet > 12 || simWatch.simTime > 5) && simWatch.resolve) {
     const r = simWatch.resolve;
     simWatch.resolve = null;
     r();
@@ -1048,6 +1073,7 @@ async function blow(rawShot, who) {
   table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power });
   simWatch.revealed = new Set(table.liveDiscs().filter((d) => table.faceUp(d) > 0.5).map((d) => d.id));
   simWatch.count = 0;
+  simWatch.shooter = who;
   simWatch.simTime = 0;
   simWatch.quiet = 0;
   simWatch.vy.clear();

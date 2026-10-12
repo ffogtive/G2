@@ -4,10 +4,10 @@
 //       "귀엽다 → 이름이 궁금하다 → K-컬처 입구" 흐름을 만든다. (최종 아트는 3D/AI 생성으로 교체 예정)
 
 export const RARITY = {
-  common: { label: 'COMMON', ko: '일반', stars: 1, ring: ['#f4f1e8', '#cfc6b0'], rays: ['#ffe9a8', '#ffd76a'], weight: 60 },
-  rare: { label: 'RARE', ko: '레어', stars: 2, ring: ['#8fd3ff', '#2f7fd6'], rays: ['#c9ecff', '#7cc7ff'], weight: 28 },
-  epic: { label: 'EPIC', ko: '에픽', stars: 3, ring: ['#e6a6ff', '#8a3ad6'], rays: ['#f2d2ff', '#cf8cff'], weight: 10 },
-  legendary: { label: 'LEGEND', ko: '전설', stars: 5, ring: ['#ffe066', '#e08a00'], rays: ['#fff3b0', '#ffc93c'], weight: 2 },
+  common: { label: 'COMMON', ko: '일반', stars: 1, side: '#dde6ee', ring: ['#ffffff', '#e9eef3'], rays: ['#ffe9a8', '#ffd76a'], weight: 60 },
+  rare: { label: 'RARE', ko: '레어', stars: 2, side: '#2f7fd6', ring: ['#8fd3ff', '#2f7fd6'], rays: ['#c9ecff', '#7cc7ff'], weight: 28 },
+  epic: { label: 'EPIC', ko: '에픽', stars: 3, side: '#8a3ad6', ring: ['#e6a6ff', '#8a3ad6'], rays: ['#f2d2ff', '#cf8cff'], weight: 10 },
+  legendary: { label: 'LEGEND', ko: '전설', stars: 5, side: '#ffb800', ring: ['#ffe066', '#e08a00'], rays: ['#fff3b0', '#ffc93c'], weight: 2 },
 };
 
 // 24종 — 공통 12 / 레어 7 / 에픽 4 / 전설 1
@@ -444,7 +444,8 @@ export function drawBack(ctx, size) {
   ctx.scale(size, size);
   ctx.beginPath(); ctx.arc(0, 0, 0.5, 0, Math.PI * 2); ctx.clip();
   const g = ctx.createRadialGradient(-0.1, -0.1, 0.05, 0, 0, 0.6);
-  g.addColorStop(0, '#f1dcae'); g.addColorStop(1, '#d7b77a');
+  // 뒷면은 진한 마분지(L*≈54) — 앞면 흰 링(L*≈100)과 한눈에 구분되게 (아트 리서치: 뒤집힘 판독성 1순위)
+  g.addColorStop(0, '#c48a4c'); g.addColorStop(1, '#9b6634');
   ctx.fillStyle = g; ctx.fillRect(-0.5, -0.5, 1, 1);
   // 종이 섬유 노이즈
   for (let i = 0; i < 900; i++) {
@@ -453,6 +454,8 @@ export function drawBack(ctx, size) {
     ctx.fillRect(x, y, 0.012, 0.003);
   }
   // 동심원 인쇄 링
+  ctx.lineWidth = 0.03; ctx.strokeStyle = '#2a1a12';
+  ctx.beginPath(); ctx.arc(0, 0, 0.47, 0, Math.PI * 2); ctx.stroke();
   ctx.lineWidth = 0.02; ctx.strokeStyle = '#2f5bd3';
   ctx.beginPath(); ctx.arc(0, 0, 0.42, 0, Math.PI * 2); ctx.stroke();
   ctx.lineWidth = 0.008;
@@ -474,13 +477,19 @@ export function drawBack(ctx, size) {
   ctx.restore();
 }
 
-export function drawEdge(ctx, w, h) {
-  // 종이 단면: 여러 겹 레이어
+export function drawEdge(ctx, w, h, stripe) {
+  // 종이 단면: 여러 겹 레이어 + 가운데 희귀도 색 띠 (더미 옆면만 봐도 레어가 몇 장인지 보이게 → 어디를 노릴지 전략)
   ctx.fillStyle = '#e2c793';
   ctx.fillRect(0, 0, w, h);
   for (let i = 0; i < 6; i++) {
     ctx.fillStyle = i % 2 ? 'rgba(140,100,50,0.25)' : 'rgba(255,255,255,0.2)';
     ctx.fillRect(0, (i / 6) * h, w, h / 12);
+  }
+  if (stripe) {
+    ctx.fillStyle = stripe;
+    ctx.fillRect(0, h * 0.3, w, h * 0.4);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(0, h * 0.3, w, h * 0.06);
   }
 }
 
