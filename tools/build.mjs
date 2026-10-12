@@ -23,9 +23,15 @@ async function build() {
   const importmap = {
     imports: {
       three: 'https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js',
+      'three/examples/jsm/': 'https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/',
       '@dimforge/rapier3d-compat': 'https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.12.0/rapier.es.js',
     },
   };
+  // 재발 방지: 번들에 남은 bare import 가 import map 으로 풀리지 않으면 빌드 실패 (2026-10-12 아티팩트 부팅 멈춤 사고)
+  const keys = Object.keys(importmap.imports);
+  const bare = [...art.outputFiles[0].text.matchAll(/(?:from|import)\s*\(?\s*["']([^"'./][^"']*)["']/g)].map((m) => m[1]);
+  const unresolved = [...new Set(bare)].filter((spec) => !keys.some((k) => (k.endsWith('/') ? spec.startsWith(k) : spec === k)));
+  if (unresolved.length) throw new Error('import map 에 없는 모듈: ' + unresolved.join(', '));
   const artHtml = tpl.replace('<!--APP-->', () => `<script type="importmap">${JSON.stringify(importmap)}</script>\n<script type="module">${safe(art.outputFiles[0].text)}</script>`);
   writeFileSync(join(root, 'dist/puff-artifact.html'), artHtml);
   console.log(`built dist/puff.html (${(full.length / 1024).toFixed(0)} KB), dist/puff-artifact.html (${(artHtml.length / 1024).toFixed(0)} KB)`);

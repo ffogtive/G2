@@ -1431,6 +1431,13 @@ function wireUI() {
 }
 
 async function boot() {
+  try { await bootInner(); } catch (e) {
+    $('#bootMsg').textContent = 'Boot error: ' + (e && e.message ? e.message : e) + ' / 부팅 오류';
+    throw e;
+  }
+}
+
+async function bootInner() {
   try {
     await Promise.race([document.fonts?.ready, wait(2500)]);
     await Promise.all(['900 40px "Lilita One"', '40px "Black Han Sans"', '40px "Jua"'].map((f) => document.fonts?.load(f).catch(() => null)));
@@ -1444,6 +1451,7 @@ async function boot() {
   buildScene();
   wireUI();
   goHome();
+  window.__puffBooted = true;
   requestAnimationFrame((t0) => { lastT = t0; frame(t0); });
   // 자동 테스트용 훅: 더미의 화면 좌표(꼭대기·바닥)와 상태
   window.__puff = () => {

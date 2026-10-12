@@ -207,6 +207,18 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 @media (prefers-reduced-motion: reduce) { .logo h1, .hint .hand { animation: none; } }
 </style>
 
+<script>
+/* 부팅 감시: 모듈 로딩이 실패해도 'PUFF! …' 에서 말없이 멈추지 않고 이유를 보여 준다 */
+(function () {
+  function say(msg) { var el = document.getElementById('bootMsg'); if (el && !window.__puffBooted) el.textContent = msg; }
+  window.addEventListener('error', function (e) {
+    var what = e.message || (e.target && (e.target.src || e.target.href)) || 'unknown';
+    say('Load error: ' + what + ' / 로딩 오류. dist/puff.html 을 직접 열어 주세요.');
+  }, true);
+  window.addEventListener('unhandledrejection', function (e) { say('Load error: ' + ((e.reason && e.reason.message) || e.reason)); });
+  setTimeout(function () { say('Still loading after 15s (network or blocked script). / 15초째 로딩 중: 네트워크나 스크립트 차단일 수 있어요.'); }, 15000);
+})();
+</script>
 <div id="app">
   <canvas id="c" aria-label="Ddakji table"></canvas>
   <div id="vignette"></div>
