@@ -1,0 +1,19 @@
+{
+  "name": "g2-ddakji",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PUFF! — blow-to-flip ddakji arcade game (mockup)",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node tools/build.mjs --watch",
+    "spike": "node tools/physics-spike.mjs"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "0.12.0",
+    "three": "0.160.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0"
+  }
+}

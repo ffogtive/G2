@@ -1,0 +1,62 @@
+// i18n.js — 한/영. 글로벌 기본은 영어, 한국어 브라우저면 한국어.
+const D = {
+  en: {
+    title: 'PUFF!', subtitle: 'Blow. Flip. Keep.',
+    play: 'PLAY', collection: 'ALBUM', stake: 'POT', yourDdakji: 'Your ddakji',
+    modeKeeps: 'FOR KEEPS', modeFun: 'FOR FUN', funNote: 'Friendly match: everyone got their ddakji back.',
+    bounty: 'BOUNTY',
+    micAsk: 'Kids in Korea really blew on them. Try a REAL blow with your mic?', micYes: 'YES, BLOW!', micNo: 'Later',
+    vs: 'VS', rival: 'Rival', you: 'You',
+    yourTurn: 'YOUR TURN', rivalTurn: "RIVAL'S TURN",
+    hintAim: 'Touch the stack', hintPull: 'Pull back… let go!',
+    hintMic: 'Hold to aim, then BLOW into the mic!',
+    miss: 'MISS!', close: 'SO CLOSE!', nice: 'NICE!', great: 'GREAT!', amazing: 'AMAZING!', perfect: 'CLEAN SWEEP!',
+    flipped: 'flipped', pot: 'POT',
+    win: 'YOU WIN!', lose: 'YOU LOSE', draw: 'DRAW',
+    won: 'Won', lost: 'Lost', net: 'Net', newCard: 'NEW!',
+    again: 'REMATCH', home: 'HOME', back: 'BACK',
+    album: 'ALBUM', owned: 'owned', protectNote: 'Your last copy of each ddakji is never bet.',
+    micOn: 'Mic blow: ON', micOff: 'Mic blow: OFF', micFail: 'Mic not available here — use touch.',
+    sound: 'Sound', lang: '한국어',
+    rivalBets: 'Rival bets', includes: 'incl.',
+    turnLeft: 'turns left',
+    tooStrong: 'TOO HARD!',
+    tapToStart: 'TAP TO START',
+    notEnough: 'Not enough ddakji to bet',
+    restack: 'Re-stacking…',
+    rivals: ['Minsu', 'Jiwoo', 'Haneul', 'Dojun', 'Seoyeon'],
+  },
+  ko: {
+    title: 'PUFF!', subtitle: '후~ 불고, 뒤집고, 가져가!',
+    play: '시작', collection: '앨범', stake: '판돈', yourDdakji: '내 딱지',
+    modeKeeps: '따먹기', modeFun: '친선', funNote: '친선전이라 딱지는 모두 돌려받았어요.',
+    bounty: '현상금',
+    micAsk: '옛날엔 진짜 입으로 불었어요. 마이크에 진짜로 불어볼래요?', micYes: '불어볼래!', micNo: '나중에',
+    vs: 'VS', rival: '상대', you: '나',
+    yourTurn: '내 차례', rivalTurn: '상대 차례',
+    hintAim: '딱지 더미를 누르고', hintPull: '아래로 당겼다가… 놓기!',
+    hintMic: '누른 채로 마이크에 후~ 불어!',
+    miss: '헛바람!', close: '아깝다!', nice: '좋아!', great: '굿!', amazing: '대박!', perfect: '싹쓸이!',
+    flipped: '장 뒤집음', pot: '판돈',
+    win: '승리!', lose: '패배', draw: '무승부',
+    won: '딴 딱지', lost: '잃은 딱지', net: '순이익', newCard: 'NEW!',
+    again: '한 판 더', home: '홈', back: '뒤로',
+    album: '딱지 앨범', owned: '보유', protectNote: '종류별 마지막 한 장은 판돈으로 나가지 않아요.',
+    micOn: '마이크 불기: 켜짐', micOff: '마이크 불기: 꺼짐', micFail: '여기선 마이크를 쓸 수 없어요 — 터치로 하세요.',
+    sound: '소리', lang: 'English',
+    rivalBets: '상대 판돈', includes: '포함',
+    turnLeft: '턴 남음',
+    tooStrong: '너무 셌다!',
+    tapToStart: '탭해서 시작',
+    notEnough: '걸 딱지가 부족해요',
+    restack: '다시 쌓는 중…',
+    rivals: ['민수', '지우', '하늘', '도준', '서연'],
+  },
+};
+
+let LANG = (typeof navigator !== 'undefined' && /^ko/i.test(navigator.language || '')) ? 'ko' : 'en';
+
+export function setLang(l) { if (D[l]) LANG = l; document.documentElement.lang = LANG; }
+export function getLang() { return LANG; }
+export function t(k) { return (D[LANG] && D[LANG][k]) ?? D.en[k] ?? k; }
+export function cardName(c) { return LANG === 'ko' ? c.ko : c.name; }
