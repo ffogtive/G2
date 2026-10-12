@@ -1,6 +1,6 @@
 // botlib.mjs — 레벨 봇 공용: 플레이어 정책 → rules.js → sim.js (main.js 와 같은 기하·규칙)
 import { initPhysics, Table, DISC_H } from '../mockup/src/sim.js';
-import { sweetHiFor, resolveShot, gauss } from '../mockup/src/rules.js';
+import { sweetHiFor, resolveShot, gauss, POWER_MAX } from '../mockup/src/rules.js';
 export { initPhysics };
 
 export function mulberry32(seed) {
@@ -24,7 +24,7 @@ function puff(t, rng, pol, aimH) {
   const raw = {
     lat: 0,
     h: clamp(aimH ?? top * clamp(pol.hMean + gauss(rng) * pol.hSd, 0.03, 1), 0.03, top),
-    power: sweetHiFor(n) * clamp(pol.pMean + gauss(rng) * pol.pSd, 0.2, 1.3),
+    power: Math.min(POWER_MAX, sweetHiFor(n) * clamp(pol.pMean + gauss(rng) * pol.pSd, 0.2, 1.3)), // 숨 주머니 벽(POWER_MAX) 너머는 없다
   };
   const s = resolveShot(raw, n, top, rng, 1);
   const c = t.pileCenter();
@@ -56,7 +56,7 @@ export function playLevel(spec, rng, bot) {
   if (spec.type === 'rival') {
     const ai = aiPolicy(spec.aiSkill);
     let me = 0, them = 0, turn = 0;
-    const aiFirst = spec.role === 'boss' ? 1 : 0; // 보스판은 보스 선공 (main.js 와 동일)
+    const aiFirst = spec.role === 'boss' ? 1 : rng() < 0.5 ? 1 : 0; // 보스판은 보스 선공, 라이벌판은 가위바위보 (main.js 와 동일)
     while (t.liveDiscs().length && turn < 18) {
       const mine = (turn + aiFirst) % 2 === 0;
       const f = puff(t, rng, mine ? bot : ai);

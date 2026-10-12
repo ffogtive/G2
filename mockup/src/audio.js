@@ -72,16 +72,62 @@ export class Sfx {
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(0.06, t0 + 0.15);
     src.connect(bp).connect(g).connect(this.master);
+    let held = false;
     return {
       set: (p) => {
+        if (held) return;
         bp.frequency.setTargetAtTime(500 + p * 1400, this.ctx.currentTime, 0.05);
         g.gain.setTargetAtTime(0.03 + p * 0.09, this.ctx.currentTime, 0.05);
       },
+      // 숨 주머니 꽉: 들숨 소리가 뚝 끊김 (더 안 들어감)
+      hold: () => { held = true; g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.015); },
+      resume: () => { held = false; },
       stop: () => {
         g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03);
         src.stop(this.ctx.currentTime + 0.2);
       },
     };
+  }
+
+  // 숨 주머니 꽉 — 둔탁한 '읍' (성공음이 아니라 막힘)
+  cork() {
+    if (!this.ok) return;
+    this.tone(260, 0.07, 'sine', 0.22, 0, 140);
+    const t0 = this.ctx.currentTime;
+    const src = this.noise(0.03);
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 900;
+    const g = this.ctx.createGain();
+    this.env(g, t0, 0.002, 0.12, 0.025);
+    src.connect(lp).connect(g).connect(this.master);
+  }
+
+  // 참다가 입꼬리로 새는 김 'pff'
+  leak() {
+    if (!this.ok) return;
+    const t0 = this.ctx.currentTime;
+    const src = this.noise(0.1);
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 2.5;
+    const g = this.ctx.createGain();
+    this.env(g, t0, 0.005, 0.05, 0.075);
+    src.connect(bp).connect(g).connect(this.master);
+  }
+
+  // 콜록 — 너무 오래 참음 (로우패스 노이즈 두 번)
+  cough() {
+    if (!this.ok) return;
+    for (const w of [0, 0.18]) {
+      const t0 = this.ctx.currentTime + w;
+      const src = this.noise(0.14 + w); // noise() 는 지금 시작 → 두 번째 기침은 게인 엔벨로프로 늦춤
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 700;
+      const g = this.ctx.createGain();
+      g.gain.value = 0.0001; // 기본 게인 1 → 늦춘 기침 전에 소리가 새지 않게
+      this.env(g, t0, 0.01, 0.35, 0.12);
+      src.connect(lp).connect(g).connect(this.master);
+      this.tone(150, 0.1, 'triangle', 0.12, w, 90);
+    }
   }
 
   // 퍽! — 바람 노이즈 스윕 + 저음 쿵

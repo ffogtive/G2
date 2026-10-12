@@ -26,16 +26,18 @@ docs/design/     GDD (게임 기획서)
 docs/BLOCKERS.md 막힌 것 / 확인 필요한 결정 메모
 mockup/src/      목업 소스 (ES 모듈)
   sim.js    물리(Rapier). 렌더러 독립 → Node 에서 튜닝/테스트 가능
-  rules.js  숨 규칙(더미 양 비례 정답 숨, 과파워 흔들림) — 게임과 봇이 공유
+  rules.js  숨 규칙(더미 양 비례 정답 숨, 약함=들썩·초록=최대·셈=돌풍) + 숨 주머니(꽉·버팀·콜록) — 게임과 봇이 공유
   levels.js 레벨 1~10,000 생성 규칙(10판 톱니, 50판 동네) + levels-cal.json(봇 보정표)
   creatures.js 수집 테마 시안(동물 크리처 × 시즌 의상 9+1)
   art.js    딱지 앞/뒷면 캐릭터 아트 절차 생성 (외부 이미지 0)
-  main.js   three.js 장면·입력·연출·매치 흐름
+  main.js   three.js 장면·입력·연출·매치 흐름 (분필 원, 엄지 멈춤 눈금)
+  face.js   부는 얼굴(시안 B '뽀뽀 입') + 숨 주머니 고리
   audio.js  WebAudio 합성 효과음 / mic.js 마이크 불기 감지
   store.js  내 딱지 보관함(localStorage) / i18n.js 한·영
 mockup/index.html  UI 마크업 + CSS (빌드 템플릿)
 tools/build.mjs    → dist/puff.html (오프라인 단일 파일), dist/puff-artifact.html (claude.ai 아티팩트용)
 tools/tune.mjs     바람 물리 파라미터 자동 탐색
+tools/powercurve.mjs  숨 비율 → 뒤집힌 장수/원 밖 장수 곡선 (숨 규칙 바꾸면 필수)
 tools/physics-spike.mjs  물리 안정성/분포 측정
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
 tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행

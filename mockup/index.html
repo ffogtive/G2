@@ -90,8 +90,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .pot span { font-size: 0.8rem; display: block; line-height: 1; opacity: 0.85; }
 .pot b { font-size: 1.6rem; line-height: 1.1; }
 #quitBtn { position: absolute; left: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
-#puffWrap { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(30vw, 170px); aspect-ratio: 1; pointer-events: none; transition: bottom 0.3s, top 0.3s; }
-#puffWrap.ai { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 64px); width: min(22vw, 120px); }
+#puffWrap { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(46vw, 230px); aspect-ratio: 1; pointer-events: none; transition: bottom 0.3s, top 0.3s; }
+#puffWrap.ai { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 64px); width: min(26vw, 140px); }
 #puffCanvas { width: 100%; height: 100%; }
 .hint { position: absolute; left: 50%; top: 58%; transform: translateX(-50%); text-align: center; pointer-events: none; font-family: var(--display); font-size: 1.3rem; color: #fff; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); white-space: nowrap; }
 .hint .hand { width: 54px; height: 54px; margin: 0 auto 6px; border-radius: 50%; background: rgba(255,255,255,0.85); border: 3px solid var(--ink); position: relative; animation: pull 1.6s ease-in-out infinite; }
@@ -120,6 +120,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 /* 떠오르는 글자 */
 .float { position: absolute; transform: translate(-50%, -50%); font-family: var(--display); font-size: 1.6rem; color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); animation: rise 1.3s ease-out both; white-space: nowrap; }
 .float.plus { color: #9ff07a; font-size: 2rem; }
+.breath-fb.fbCough { color: #ffb3b3; }
 .float.out { color: #ffffff; font-size: 1.5rem; background: #e2452f; padding: 0 8px; border-radius: 8px; -webkit-text-stroke: 0; }
 .big small.outs { display: block; color: #ffd1c9; font-size: 0.42em; }
 .float.rar { font-size: 1rem; padding: 2px 8px; border-radius: 8px; border: 2px solid var(--ink); -webkit-text-stroke: 1px var(--ink); }
@@ -206,8 +207,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 #dailyCard h2 { margin: 0; font-family: var(--display); }
 #dailyShare { width: 100%; box-sizing: border-box; font-family: var(--body); font-size: 1rem; border: 3px solid var(--ink); border-radius: 12px; padding: 8px; resize: none; margin: 8px 0 12px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
 #breath { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.breath-fb { position: absolute; left: 50%; bottom: calc(max(8px, env(safe-area-inset-bottom)) + min(30vw, 170px) + 6px); transform: translateX(-50%); font-family: var(--display); font-size: 1.35rem; color: #fff; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); white-space: nowrap; pointer-events: none; }
-.breath-fb.ai { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 64px + min(22vw, 120px) + 4px); font-size: 1.05rem; }
+.breath-fb { position: absolute; left: 50%; bottom: calc(max(8px, env(safe-area-inset-bottom)) + min(46vw, 230px) - 10px); transform: translateX(-50%); font-family: var(--display); font-size: 1.35rem; color: #fff; -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); white-space: nowrap; pointer-events: none; }
+.breath-fb.ai { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 64px + min(26vw, 140px) + 4px); font-size: 1.05rem; }
 .breath-fb.fbPerfect { color: #9ff07a; }
 .breath-fb.fbTooStrong, .breath-fb.fbTooWeak { color: #ffb3b3; }
 .breath-fb.go { animation: fbIn 1.6s ease-out both; }

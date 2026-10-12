@@ -55,3 +55,35 @@ export function resolveShot(shot, n, top, rng, overShake = 1) {
 }
 
 export { gauss };
+
+// ── 숨 주머니 (재윤님 3차: "숨도 무한으로 모을 수는 없고, 제한된 숨 주머니 속에서 스탑포인트를") ──
+// 설계 패널 4안 → 심사 3명 만장일치 A안 '볼 주머니: 꽉 → 버팀 → 콜록'.
+// 🧭 가설(미검증): 주머니 끝 '꽉'(F)은 모든 판의 정답보다 위에 고정된 절대 자다. 꽉에 닿는 순간(소리 끊김·손끝 걸림·숨 줄기 멈춤)이
+//   멈춤점이 되고, 정답은 언제나 꽉 아래 '더미 양에 비례한 자리'라서 감이 실력으로 남는다.
+//   틀렸다는 신호: 꽉 ±5% 에서 놓는 비율이 10%↑ (꽉을 정답으로 착각) / 장수와 놓은 숨의 상관이 약함.
+export const POUCH_FULL = 1.12; // 꽉 = sweetHiFor 상한. 지금 판(N ≤ 24)의 정답(hi ≤ 1.0)보다 항상 위 → 꽉에서 놓으면 늘 손해(돌풍)
+export const POUCH_DETENT = 0.08; // 꽉에서 손가락이 이만큼(당김 단위) 더 가도 숨이 안 늘어남 = 손끝 멈춤 신호
+export const POUCH_GAIN = 0.4; // 그 너머는 고무줄처럼 뻑뻑하게(0.4배) 우겨넣기 → 벽 POWER_MAX
+export const STRAIN_MS = 1400; // 꽉에서 버틸 수 있는 시간(벽에서는 절반). 넘으면 콜록
+export const STRAIN_RECOVER_MS = 900;
+export const LEAK_AT = 0.35; // 버팀이 이만큼 차면 입꼬리로 김이 샘(연출만, 숨은 그대로)
+
+// 당긴 거리(u, 1 = 화면 짧은 변 × pull) → 숨. 꽉 아래는 지금과 1:1 (정답 당김 거리 불변)
+export function pouchPower(u) {
+  u = Math.max(0, u);
+  if (u <= POUCH_FULL) return u;
+  if (u <= POUCH_FULL + POUCH_DETENT) return POUCH_FULL;
+  return Math.min(POWER_MAX, POUCH_FULL + (u - POUCH_FULL - POUCH_DETENT) * POUCH_GAIN);
+}
+// 꽉 래치(히스테리시스: 꽉 근처에서 깜빡이지 않게)
+export function fullLatch(p, was) {
+  return was ? p >= POUCH_FULL - 0.03 : p >= POUCH_FULL - 0.005;
+}
+// 버팀 s(0..1): 꽉인 동안 차오르고(벽에 가까울수록 빨리), 꽉에서 내려오면 천천히 풀린다
+export function strainStep(s, p, dtMs, full, strainMs = STRAIN_MS) {
+  if (full) {
+    const k = clamp((p - POUCH_FULL) / (POWER_MAX - POUCH_FULL), 0, 1);
+    return Math.min(1, s + dtMs / (strainMs * (1 - 0.5 * k)));
+  }
+  return Math.max(0, s - dtMs / STRAIN_RECOVER_MS);
+}

@@ -1,4 +1,9 @@
-// 방향 B — "뽀뽀 입 클로즈업" 부는 얼굴 (순수 Canvas 2D, 외부 이미지 0)
+// face.js — 부는 얼굴 (얼굴 시안 B "뽀뽀 입 클로즈업" 채택, 3차 피드백: 표정에서부터 '바람을 분다'가 읽혀야 함)
+// + 숨 주머니(3차 설계 패널 A안): 충전 중 볼 = 주머니에 찬 숨(절대값, 정답과 무관), 빨개짐·땀·새는 김 = '꽉'에서 버틴 시간(strain)
+//
+// st = { mode: 'idle'|'charge'|'blow'|'cough', t, who,
+//        p     : charge = 주머니 채움 비율(0..~1.12, 1 = 꽉) / blow = 결과 숨 비율(정답 대비, 약함·적정·돌풍 표정)
+//        fill  : blow 시작 때 볼 크기(주머니 비율), strain: 0..1 버팀, full: 꽉 래치, windAng: 바람 방향(기본 위) }
 //
 // 얼굴을 크게, 빨간 오므린 입술을 주인공으로. 바람은 입에서 원뿔로 퍼지는 줄무늬 + 링(충격파) + 머리 쪽 바람 덩어리.
 //   charge : 들숨(p<0.42, 입꼬리로 빨려드는 숨 줄) → 참기(볼 풍선이 얼굴 밖으로, 뽀뽀 입이 쭉, 눈 질끈, 콧구멍 벌름)
@@ -97,8 +102,10 @@ function drawBody(ctx, pal) {
 }
 
 // ── 머리 실루엣: 뒷머리 뽀글 + 얼굴 + 볼 풍선을 하나의 잉크 외곽선으로 ──
+export const CHEEK_R0 = 0.055, CHEEK_R1 = 0.137;
+const cheekR = (puff) => Math.sqrt(CHEEK_R0 * CHEEK_R0 + (CHEEK_R1 * CHEEK_R1 - CHEEK_R0 * CHEEK_R0) * clamp(puff, 0, 1.15));
 function drawHead(ctx, pal, skin, skinHi, puff, hairFly) {
-  const cx = 0.17 + 0.085 * puff, cr = 0.055 + 0.082 * puff, cy = 0.075;
+  const cr = cheekR(puff), k = (cr - CHEEK_R0) / (CHEEK_R1 - CHEEK_R0), cx = 0.17 + 0.085 * k, cy = 0.075;
   const hair = [];
   const N = 11;
   for (let i = 0; i < N; i++) {
@@ -374,6 +381,19 @@ function drawStrain(ctx, heat, t, geo) {
   }
 }
 
+// 콜록: 너무 오래 참아서 숨이 터져 나감 — 회색 구름이 양옆으로, 볼이 푹 꺼짐
+function drawCough(ctx, t) {
+  for (const sg of [-1, 1]) for (let i = 0; i < 3; i++) {
+    const k = clamp(t * 2.2 - i * 0.18, 0, 1);
+    if (k <= 0) continue;
+    const x = sg * (0.06 + 0.3 * ease(k)), y = MOUTH_Y - 0.01 - 0.06 * k + i * 0.03;
+    ctx.save(); ctx.globalAlpha = 1 - k * 0.7;
+    ctx.beginPath(); circ(ctx, x, y, 0.03 + 0.03 * k); circ(ctx, x + sg * 0.03, y + 0.01, 0.022 + 0.02 * k);
+    ctx.strokeStyle = INK; ctx.lineWidth = 0.008; ctx.stroke(); ctx.fillStyle = '#d9d4cf'; ctx.fill();
+    ctx.restore();
+  }
+}
+
 // 돌풍: 머리카락이 뒤로 휘날림 + 뜯겨 나가는 곱슬
 function drawHairWhip(ctx, pal, t, k) {
   ctx.strokeStyle = `rgba(42,26,18,${0.85 * k})`; ctx.lineWidth = LW * 0.9;
@@ -543,19 +563,22 @@ function jet(ctx, p, t, w0, fade) {
 
 // ── 공개 함수 ─────────────────────────────────────────
 export function drawBlowFace(ctx, S, st = {}) {
-  const mode = st.mode === 'charge' || st.mode === 'blow' ? st.mode : 'idle';
-  const charge = mode === 'charge', blow = mode === 'blow';
+  const mode = st.mode === 'charge' || st.mode === 'blow' || st.mode === 'cough' ? st.mode : 'idle';
+  const charge = mode === 'charge', blow = mode === 'blow', cough = mode === 'cough';
   const p = clamp(Number(st.p) || 0, 0, 1.3);
+  const strain = clamp(Number(st.strain) || 0, 0, 1);
+  const fill = clamp(st.fill ?? p, 0, 1.15);
   const t = Math.max(0, Number(st.t) || 0);
   const ai = st.who === 'ai';
   const pal = ai ? PAL.ai : PAL.me;
   const aimX = clamp(Number(st.aimX) || 0, -1, 1);
   const weakB = blow && p < 0.7, overB = blow && p > 1.1;
 
-  const heat = charge ? smooth(1.05, 1.25, p) : overB ? 0.8 * (1 - smooth(0.1, 0.5, t)) : 0;
-  const puff = charge ? p : blow ? p * (1 - ease(t / 0.16)) : 0;
+  // 빨개짐은 '정답 대비 숨'이 아니라 '꽉에서 버틴 시간'에서만 (정답 누설 금지 — 3차 설계 패널)
+  const heat = charge ? strain : overB ? 0.8 * (1 - smooth(0.1, 0.5, t)) : cough ? 0.6 * (1 - smooth(0.2, 0.7, t)) : 0;
+  const puff = charge ? (st.full ? 1 : Math.min(1, p)) : blow ? fill * (1 - ease(t / 0.16)) : 0;
   const recoil = blow ? (0.012 + 0.035 * smooth(0.8, 1.25, p)) * smooth(0, 0.035, t) * (1 - smooth(0.1, 0.45, t)) : 0;
-  const shake = charge ? Math.sin(t * 73) * 0.008 * heat : overB ? Math.sin(t * 61) * 0.007 * (1 - smooth(0.15, 0.45, t)) : 0;
+  const shake = charge ? Math.sin(t * 73) * (0.002 + 0.01 * heat) * (st.full ? 1 : heat > 0 ? 1 : 0) : overB ? Math.sin(t * 61) * 0.007 * (1 - smooth(0.15, 0.45, t)) : cough ? Math.sin(t * 50) * 0.012 * (1 - smooth(0.2, 0.6, t)) : 0;
   const bob = mode === 'idle' ? Math.sin(t * 2.2) * 0.004 : 0;
   const tilt = aimX * 0.12;
   const hairFly = overB ? smooth(0, 0.05, t) * (1 - smooth(0.3, 0.6, t)) : 0;
@@ -566,6 +589,8 @@ export function drawBlowFace(ctx, S, st = {}) {
   let eye = 'open', bIn = -0.004, bOut = 0;
   if (mode === 'idle') {
     if ((t + 0.6) % 3.3 > 3.16) eye = 'blink';
+  } else if (cough) {
+    eye = 'squeeze'; bIn = 0.03; bOut = -0.02;
   } else if (charge) {
     if (p < 0.4) { eye = 'up'; bIn = -0.016; bOut = -0.006; }
     else { eye = 'squeeze'; bIn = lerp(0.008, 0.03, smooth(0.4, 1.2, p)); bOut = -0.012; }
@@ -595,15 +620,43 @@ export function drawBlowFace(ctx, S, st = {}) {
   drawBrows(ctx, bIn, bOut);
   drawEyes(ctx, eye, skin, aimX, heat);
   drawNose(ctx, mixHex(pal.skinDk, '#e0503e', heat * 0.7), flare);
-  const hole = drawMouth(ctx, mode, p, t, heat);
+  const hole = drawMouth(ctx, cough ? 'blow' : mode, cough ? 0.5 : p, t, heat);
   if (charge && heat > 0) drawStrain(ctx, heat, t, geo);
   if (charge && p < 0.42) drawInhale(ctx, p, t);
+  if (cough) drawCough(ctx, t);
   ctx.restore();
 
   if (blow) {
     const mx = HX + shake - Math.sin(tilt) * MOUTH_Y;
     const my = HY + recoil + Math.cos(tilt) * MOUTH_Y;
-    drawWind(ctx, mx, my, -Math.PI / 2 + aimX * 0.38, p, t, hole);
+    drawWind(ctx, mx, my, (st.windAng ?? -Math.PI / 2) + aimX * 0.38, p, t, hole);
+  }
+  ctx.restore();
+}
+
+// ── 숨 주머니 고리 (3차 설계 패널 A안) ─────────────────────────
+// 얼굴 둘레의 큰 고리 = 한 번에 들이쉴 수 있는 숨의 끝('꽉'). 볼이 부풀어 고리에 닿으면 꽉 찬 것.
+// 고정된 절대 자 — 판(더미 양)에 따라 움직이지 않으므로 정답을 알려 주지 않는다.
+// st = { fill: 0..~1.12, full, over(꽉 너머로 우겨넣는 중), strain, t }
+export const RING_RX = 0.4, RING_RY = 0.37;
+export function drawPouchRing(ctx, S, st = {}) {
+  const fill = clamp(Number(st.fill) || 0, 0, 1.2);
+  const t = Number(st.t) || 0;
+  ctx.save();
+  ctx.scale(S, S);
+  ctx.translate(HX, HY);
+  const wob = st.over ? 1 + 0.012 * Math.sin(t * 40) : 1;
+  ctx.beginPath(); ctx.ellipse(0, 0, RING_RX * wob, RING_RY * wob, 0, 0, TAU);
+  if (st.over) {
+    ctx.setLineDash([]); ctx.strokeStyle = INK; ctx.lineWidth = 0.03; ctx.stroke();
+    ctx.strokeStyle = '#e8304a'; ctx.lineWidth = 0.016; ctx.stroke();
+  } else if (st.full) {
+    ctx.setLineDash([]); ctx.strokeStyle = INK; ctx.lineWidth = 0.026; ctx.stroke();
+    ctx.strokeStyle = mixHex('#f3e3c8', '#ff8f7a', clamp(Number(st.strain) || 0, 0, 1)); ctx.lineWidth = 0.012; ctx.stroke();
+  } else {
+    ctx.setLineDash([0.03, 0.022]); ctx.lineDashOffset = 0;
+    ctx.strokeStyle = `rgba(42,26,18,${0.35 + 0.35 * smooth(0.5, 1, fill)})`; ctx.lineWidth = 0.012; ctx.stroke();
+    ctx.setLineDash([]);
   }
   ctx.restore();
 }
