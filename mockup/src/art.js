@@ -39,6 +39,9 @@ export const CARDS = [
 ];
 
 export const CARD_BY_ID = Object.fromEntries(CARDS.map((c) => [c.id, c]));
+// 레벨 전용 특수 딱지 (앨범에는 없음): 황금 딱지 = 목표물. 옆면이 금색이라 더미 속 위치가 보인다.
+export const GOLDEN = { id: 'golden', name: 'GOLDEN', ko: '황금 딱지', rarity: 'legendary', special: true };
+CARD_BY_ID.golden = GOLDEN;
 
 const INK = '#2a1a12';
 
@@ -378,8 +381,32 @@ function star(ctx, x, y, r, fill) {
   ctx.lineWidth = 0.008; ctx.strokeStyle = INK; ctx.stroke();
 }
 
+// 황금 딱지 앞면: 금빛 방사 + 큰 별 + GOLD
+export function drawGolden(ctx, size) {
+  ctx.save();
+  ctx.translate(size / 2, size / 2);
+  ctx.scale(size, size);
+  ctx.beginPath(); ctx.arc(0, 0, 0.5, 0, Math.PI * 2); ctx.clip();
+  const g = ctx.createRadialGradient(-0.12, -0.15, 0.02, 0, 0, 0.6);
+  g.addColorStop(0, '#fff6c2'); g.addColorStop(0.5, '#ffcf33'); g.addColorStop(1, '#c98200');
+  ctx.fillStyle = g; ctx.fillRect(-0.5, -0.5, 1, 1);
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  for (let i = 0; i < 24; i += 2) { const a0 = (i / 24) * Math.PI * 2, a1 = ((i + 1) / 24) * Math.PI * 2; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, 0.75, a0, a1); ctx.closePath(); ctx.fill(); }
+  star(ctx, 0, -0.04, 0.3, '#fff3a0');
+  ctx.fillStyle = '#7a4a00';
+  ctx.font = '900 0.12px "Lilita One", "Black Han Sans", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('GOLD', 0, 0.33);
+  ctx.restore();
+  ctx.save(); ctx.translate(size / 2, size / 2); ctx.scale(size, size);
+  ctx.lineWidth = 0.06; ctx.strokeStyle = '#ffe066'; ctx.beginPath(); ctx.arc(0, 0, 0.465, 0, Math.PI * 2); ctx.stroke();
+  ctx.lineWidth = 0.012; ctx.strokeStyle = INK; ctx.beginPath(); ctx.arc(0, 0, 0.497, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+
 // 90년대 문방구 딱지 인쇄 느낌: 방사형 줄무늬 + 망점 + 굵은 테두리 + 이름 띠
 export function drawFace(ctx, size, c) {
+  if (c.id === 'golden') { drawGolden(ctx, size); return; }
   const R = RARITY[c.rarity];
   ctx.save();
   ctx.clearRect(0, 0, size, size);
@@ -474,6 +501,23 @@ export function drawBack(ctx, size) {
   ctx.font = '900 0.09px "Black Han Sans", "Lilita One", sans-serif';
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('딱지', 0, 0.3);
+  ctx.restore();
+}
+
+// 테이프 감은 무거운 딱지: 뒷면에 은색 테이프 X (원작 '테이프 감기' 꼼수)
+export function drawTape(ctx, size) {
+  ctx.save();
+  ctx.translate(size / 2, size / 2);
+  ctx.scale(size, size);
+  ctx.beginPath(); ctx.arc(0, 0, 0.5, 0, Math.PI * 2); ctx.clip();
+  for (const a of [0.6, -0.6]) {
+    ctx.save(); ctx.rotate(a);
+    const g = ctx.createLinearGradient(0, -0.09, 0, 0.09);
+    g.addColorStop(0, 'rgba(210,220,230,0.92)'); g.addColorStop(0.5, 'rgba(250,252,255,0.95)'); g.addColorStop(1, 'rgba(180,190,200,0.92)');
+    ctx.fillStyle = g; ctx.fillRect(-0.6, -0.09, 1.2, 0.18);
+    ctx.fillStyle = 'rgba(120,130,140,0.25)'; for (let x = -0.6; x < 0.6; x += 0.05) ctx.fillRect(x, -0.09, 0.006, 0.18);
+    ctx.restore();
+  }
   ctx.restore();
 }
 

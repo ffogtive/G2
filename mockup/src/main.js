@@ -8,12 +8,14 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { initPhysics, Table, DISC_R, DISC_H, mulberry32 } from './sim.js';
-import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, drawEdge, drawCharacter, rollCard } from './art.js';
+import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, drawEdge, drawTape, rollCard } from './art.js';
 import { Sfx } from './audio.js';
 import { Mic } from './mic.js';
 import { t, setLang, getLang, cardName } from './i18n.js';
 import * as Store from './store.js';
 import { Fx } from './fx.js';
+import * as Rules from './rules.js';
+import { levelSpec, starsFor, chapterOf, CHAPTERS, RIVALS, CHAPTER_LEN } from './levels.js';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -25,10 +27,7 @@ const easeInOut = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) 
 // ── 파워 구간 ─────────────────────────────────────────────
 // 재윤님 피드백 1: 정답 숨 세기는 '쌓인 양'에 비례한다 — 많이 쌓이면 크게, 적으면 살짝.
 // 게이지 구간은 튜토리얼에서만 보여 주고 이후엔 감으로. 물리로 넘길 때는 이 양에 맞는 숨을 0.95 로 정규화.
-const POWER_MAX = 1.25;
-const PHYS_SWEET = 0.95;
-function sweetHiFor(n) { return clamp(0.42 + 0.53 * Math.sqrt(Math.max(1, n) / 20), 0.5, 1.12); }
-function sweetLoFor(n) { return sweetHiFor(n) * 0.78; }
+const { POWER_MAX, sweetHiFor, sweetLoFor } = Rules; // 화면과 레벨 봇이 같은 규칙을 쓴다 (rules.js)
 function liveCount() { return table ? table.liveDiscs().length : 20; }
 const GUIDE_PUFFS = 6; // 처음 6번 불 때까지만 초록/빨강 가이드
 function guideOn() { return feel.guide >= 0.5 || (profile.tutorialPuffs || 0) < GUIDE_PUFFS; }
@@ -72,7 +71,7 @@ const piles = { me: [], ai: [] };
 // ── 텍스처 ──────────────────────────────────────────────
 const texCache = new Map();
 const imgCache = new Map();
-let backTex;
+let backTex, backTapeTex;
 const edgeTex = {};
 
 function faceTexture(id) {
@@ -104,7 +103,13 @@ function makeShared() {
   drawBack(bc.getContext('2d'), 512);
   backTex = new THREE.CanvasTexture(bc);
   backTex.colorSpace = THREE.SRGBColorSpace;
-  for (const [rar, info] of Object.entries(RARITY)) {
+  const tc = document.createElement('canvas');
+  tc.width = tc.height = 512;
+  drawBack(tc.getContext('2d'), 512);
+  drawTape(tc.getContext('2d'), 512);
+  backTapeTex = new THREE.CanvasTexture(tc);
+  backTapeTex.colorSpace = THREE.SRGBColorSpace;
+  for (const [rar, info] of [...Object.entries(RARITY), ['tape', { side: '#c9d3dc' }], ['golden', { side: '#ffcf33' }]]) {
     const ec = document.createElement('canvas');
     ec.width = 256; ec.height = 32;
     drawEdge(ec.getContext('2d'), 256, 32, info.side);
@@ -118,22 +123,35 @@ function makeShared() {
 
 const discGeo = new THREE.CylinderGeometry(DISC_R, DISC_R, DISC_H, 56, 1);
 const matCache = new Map();
-function discMaterials(id) {
-  if (matCache.has(id)) return matCache.get(id);
+function discMaterials(id, heavy = false) {
+  const key = id + (heavy ? ':h' : '');
+  if (matCache.has(key)) return matCache.get(key);
   const c = CARD_BY_ID[id];
+  if (id === 'golden') {
+    // 황금 딱지: 옆면이 금빛으로 번쩍 → 더미 속 위치가 보인다(어디를 노릴지)
+    const mats = [
+      new THREE.MeshStandardMaterial({ map: edgeTex.golden, color: 0xffd34d, roughness: 0.25, metalness: 0.85, emissive: 0x3a2500, envMapIntensity: 1.2 }),
+      new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.25, metalness: 0.4, clearcoat: 0.8 }),
+      new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.6, color: 0xffe9a0, envMapIntensity: 0.6 }),
+    ];
+    matCache.set(key, mats);
+    return mats;
+  }
   const fancy = c.rarity === 'epic' || c.rarity === 'legendary';
   const top = fancy
     ? new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.35, metalness: 0.1, iridescence: 0.9, iridescenceIOR: 1.6, clearcoat: 0.6, clearcoatRoughness: 0.25 })
     : new THREE.MeshStandardMaterial({ map: faceTexture(id), roughness: 0.5, metalness: 0, envMapIntensity: 0.35 });
-  const side = new THREE.MeshStandardMaterial({ map: edgeTex[c.rarity], roughness: c.rarity === 'legendary' ? 0.3 : 0.8, metalness: c.rarity === 'legendary' ? 0.5 : 0, envMapIntensity: c.rarity === 'legendary' ? 1 : 0.3 });
-  const bottom = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.7, envMapIntensity: 0.3 });
+  const side = heavy
+    ? new THREE.MeshStandardMaterial({ map: edgeTex.tape, roughness: 0.35, metalness: 0.3, envMapIntensity: 0.8 })
+    : new THREE.MeshStandardMaterial({ map: edgeTex[c.rarity], roughness: c.rarity === 'legendary' ? 0.3 : 0.8, metalness: c.rarity === 'legendary' ? 0.5 : 0, envMapIntensity: c.rarity === 'legendary' ? 1 : 0.3 });
+  const bottom = new THREE.MeshStandardMaterial({ map: heavy ? backTapeTex : backTex, roughness: 0.7, envMapIntensity: 0.3 });
   const mats = [side, top, bottom];
-  matCache.set(id, mats);
+  matCache.set(key, mats);
   return mats;
 }
 
-function makeDiscMesh(id) {
-  const m = new THREE.Mesh(discGeo, discMaterials(id));
+function makeDiscMesh(id, heavy = false) {
+  const m = new THREE.Mesh(discGeo, discMaterials(id, heavy));
   m.castShadow = true;
   m.receiveShadow = true;
   m.userData.cardId = id;
@@ -694,7 +712,7 @@ function watchSim() {
 
 // ── 화면 전환 ───────────────────────────────────────────
 function show(id) {
-  for (const s of ['#home', '#hud', '#result', '#album', '#boot', '#sheet']) $(s).hidden = s !== id;
+  for (const s of ['#home', '#hud', '#result', '#album', '#boot', '#sheet', '#map']) $(s).hidden = s !== id;
 }
 
 function refreshTexts() {
@@ -705,6 +723,7 @@ function refreshTexts() {
   $('#albumProg').textContent = `${Store.ownedKinds(profile)}/${CARDS.length}`;
   $('#sheetBtn').classList.toggle('ready', sheetReady());
   $('#dailyBtn').textContent = `${t('daily')} #${dayNumber()}`;
+  $('#playLv').textContent = `${t('levelWord')} ${prog().level}`;
   $('#sndBtn').setAttribute('aria-pressed', String(!sfx.muted));
   $('#sndBtn').classList.toggle('off', sfx.muted);
   const max = Store.maxStake(profile);
@@ -780,6 +799,9 @@ function backImage() {
 function goHome() {
   runId++;
   $('#dailyCard').hidden = true;
+  $('#lvResult').hidden = true;
+  $('#lvIntro').hidden = true;
+  $('#potLbl').textContent = t('pot');
   cancelInput?.();
   tension(false);
   simWatch.resolve = null;
@@ -842,23 +864,25 @@ function aiStakeFor(n, rng) {
   return out;
 }
 
-async function startMatch() {
+async function startMatch(opts = {}) {
   sfx.unlock();
   const my = ++runId;
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
-  const seed = (Math.floor(performance.now() * 1000) ^ 0x5bd1e995) >>> 0;
+  const lv = opts.level || null; // 레벨의 라이벌 판: '레벨용 딱지'로 겨룸 → 내 컬렉션은 잃지 않음
+  const seed = lv ? lv.seed >>> 0 : (Math.floor(performance.now() * 1000) ^ 0x5bd1e995) >>> 0;
   const rng = mulberry32(seed);
   // 첫 판 = 연습 판: 친선·5장씩·내가 먼저·상대 약하게 (첫 경험에서 바로 '우수수'를 맛보게 — 리서치 10장)
-  const practice = profile.stats.matches === 0;
-  const n = practice ? 5 : stakeN;
-  const myStake = Store.pickStake(profile, n, rng);
+  const practice = !lv && profile.stats.matches === 0;
+  const n = lv ? lv.stake : practice ? 5 : stakeN;
+  const myStake = lv ? Array.from({ length: n }, () => rollCard(rng, null)) : Store.pickStake(profile, n, rng);
   if (myStake.length < n) { toast(t('notEnough')); return; }
   const aiStake = aiStakeFor(n, rng);
   const pot = shuffle([...myStake.map((id) => ({ id, from: 'me' })), ...aiStake.map((id) => ({ id, from: 'ai' }))], rng);
-  const rivalName = t('rivals')[Math.floor(rng() * 5)];
-  const rivalCard = CARDS[Math.floor(rng() * CARDS.length)];
-  match = { seed, rng, myStake, aiStake, pot, rivalName, rivalCard, mode: practice ? 'fun' : mode, practice, n, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
+  const rv = lv ? RIVALS.find((r) => r.id === lv.rival) : null;
+  const rivalName = rv ? (getLang() === 'ko' ? rv.ko : rv.en) : t('rivals')[Math.floor(rng() * 5)];
+  const rivalCard = rv ? CARD_BY_ID[rv.card] : CARDS[Math.floor(rng() * CARDS.length)];
+  match = { seed, rng, myStake, aiStake, pot, rivalName, rivalCard, mode: practice || lv ? 'fun' : mode, practice, n, level: lv, aiSkill: lv ? lv.aiSkill : 1, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
   table = new Table(seed, { lift: 519.59 * feel.wind });
   table.addPile(pot.map((p) => p.id));
   table.discs.forEach((d, i) => { d.from = pot[i].from; });
@@ -877,6 +901,7 @@ async function startMatch() {
   $('#meScore').textContent = '0';
   $('#aiScore').textContent = '0';
   $('#potN').textContent = String(pot.length);
+  $('#potLbl').textContent = t('pot');
   puffer.mode = 'idle';
   puffer.p = 0;
   show('#hud');
@@ -884,7 +909,7 @@ async function startMatch() {
   if (my !== runId) return;
   await introDrop();
   if (my !== runId) return;
-  match.turn = match.practice ? 'me' : await rps();
+  match.turn = match.practice || match.level ? 'me' : await rps();
   if (my !== runId) return;
   await gameLoop(my);
 }
@@ -895,7 +920,8 @@ async function vsSplash() {
   $('#vsMe').textContent = `${t('you')} · ${match.n}`;
   $('#vsAi').textContent = `${match.rivalName} · ${match.n}`;
   $('#vsBait').innerHTML = bait ? `<span class="bounty">${t('bounty')}</span> <img alt="" src="${faceImage(bait.id, 40)}"> <b class="r-${bait.rarity}">${cardName(bait)}</b>` : '';
-  $('#vsMode').textContent = match.practice ? t('practice') : match.mode === 'fun' ? t('modeFun') : t('modeKeeps');
+  $('#vsMode').textContent = match.level ? `${t('levelWord')} ${match.level.n}` : match.practice ? t('practice') : match.mode === 'fun' ? t('modeFun') : t('modeKeeps');
+  if (match.level) $('#vsBait').innerHTML = '';
   el.hidden = false;
   el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
   sfx.whoosh();
@@ -1120,7 +1146,7 @@ async function aiShot() {
   // 상대: 그럴듯한 조준 + 실수 (난이도 중간)
   const rng = match.rng;
   const g0 = () => { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-  const g = () => g0() * (match.practice ? 1.8 : 1);
+  const g = () => g0() * (match.practice ? 1.8 : 1) / (match.aiSkill || 1);
   const top = table.columnTop();
   const c = table.pileCenter();
   const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
@@ -1149,14 +1175,7 @@ async function aiShot() {
 // 숨 세기 해석: 더미 양에 맞는 숨(hi)을 물리의 0.95 로 정규화.
 // 너무 세게 불면 힘은 더 안 오르고, 숨이 차서 조준이 흔들린다 (게임 규칙으로 만든 '과유불급')
 function resolveShot(shot, rng) {
-  const hi = sweetHiFor(liveCount());
-  const ratio = shot.power / hi;
-  if (shot.power <= hi) return { ...shot, power: PHYS_SWEET * ratio, ratio };
-  const ex = shot.power - hi;
-  const g = () => { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
-  const top = table.columnTop();
-  const k = feel.overShake * (0.95 / hi); // 적은 더미에서 과하게 불면 더 크게 흔들림
-  return { ...shot, power: PHYS_SWEET + ex * 0.25, lat: clamp(shot.lat + g() * ex * 3.2 * k, -1.6, 1.6), h: clamp(shot.h + g() * ex * 2.4 * k, 0.03, top), over: true, ratio };
+  return Rules.resolveShot(shot, liveCount(), table.columnTop(), rng, feel.overShake);
 }
 
 // 불고 난 뒤 '숨 결과' 피드백 — 게이지 없이 감을 익히게 하는 결과 지식(knowledge of results)
@@ -1297,7 +1316,7 @@ async function collect(flipped, who) {
     await wait(85);
   }
   if (flipped.length) await wait(480);
-  $('#potN').textContent = String(table.liveDiscs().length);
+  if (match.solo) updateLevelHud(); else $('#potN').textContent = String(table.liveDiscs().length);
 }
 
 async function restack() {
@@ -1327,6 +1346,7 @@ async function restack() {
 
 async function endMatch() {
   simOn = false;
+  if (match.level) { await finishLevel({ win: piles.me.length > piles.ai.length, me: piles.me.length, ai: piles.ai.length }); return; }
   // 턴 제한으로 남은 딱지는 원래 주인에게
   const leftover = table.liveDiscs();
   const meWon = piles.me.length;
@@ -1453,6 +1473,211 @@ function showDailyCard(n) {
   $('#dailyCard').hidden = false;
 }
 
+// ── 레벨 (재윤님 피드백 4: 컴퓨터와 하는 1만 판 구조) ─────────────────────────
+// 맵(아래→위) · 레벨 소개 · 혼자 하는 판(N장 중 T장 / 황금 딱지, 숨 K번) · 라이벌 판(대전 재사용) · 별 & 보상
+const fmt = (str, v) => str.replace(/\{(\w+)\}/g, (_, k) => (v[k] ?? ''));
+function prog() {
+  profile.level = profile.level || 1;
+  profile.stars = profile.stars || {};
+  return profile;
+}
+function chapterName(ci) { const c = CHAPTERS[ci % CHAPTERS.length]; return getLang() === 'ko' ? c.ko : c.en; }
+function rivalName(id) { const r = RIVALS.find((x) => x.id === id); return r ? (getLang() === 'ko' ? r.ko : r.en) : '?'; }
+function goalText(spec) {
+  if (spec.type === 'flip') return fmt(t('goalFlip'), { n: spec.N, t: spec.target, p: spec.puffs });
+  if (spec.type === 'golden') return fmt(t('goalGolden'), { p: spec.puffs });
+  return fmt(t('goalRival'), { r: rivalName(spec.rival), s: spec.stake });
+}
+function tierLabel(tier) { return tier === 'hard' ? t('hard') : tier === 'superhard' ? t('superhard') : ''; }
+
+function openMap() {
+  sfx.unlock(); sfx.pop();
+  prog();
+  const cur = profile.level;
+  const shown = Math.max(60, Math.ceil((cur + 15) / CHAPTER_LEN) * CHAPTER_LEN);
+  const STEP = 96, PAD = 140;
+  const H = shown * STEP + PAD * 2;
+  const path = $('#mapPath');
+  path.innerHTML = '';
+  path.style.height = H + 'px';
+  const pts = [];
+  for (let n = 1; n <= shown; n++) {
+    const spec = levelSpec(n);
+    const y = H - PAD - (n - 1) * STEP;
+    const x = 50 + Math.sin(n * 0.85) * 26;
+    pts.push(`${x},${y}`);
+    if (spec.idx === 1) {
+      const band = document.createElement('div');
+      band.className = 'chap';
+      band.style.top = (y - STEP * (CHAPTER_LEN - 0.5)) + 'px';
+      band.style.height = (STEP * CHAPTER_LEN) + 'px';
+      band.style.setProperty('--c', CHAPTERS[spec.chapterIdx % CHAPTERS.length].color);
+      band.innerHTML = `<span>${t('chapter')} ${spec.chapterIdx + 1} · ${chapterName(spec.chapterIdx)}</span>`;
+      path.appendChild(band);
+    }
+    const b = document.createElement('button');
+    b.type = 'button';
+    const done = profile.stars[n] > 0;
+    b.className = `lv ${spec.tier} ${n === cur ? 'cur' : n < cur || done ? 'done' : 'locked'} t-${spec.type}`;
+    b.style.left = x + '%';
+    b.style.top = y + 'px';
+    const st = profile.stars[n] || 0;
+    b.innerHTML = `<b>${n}</b>${spec.tier === 'hard' || spec.tier === 'superhard' ? `<em>${tierLabel(spec.tier)}</em>` : ''}${done ? `<i>${'★'.repeat(st)}${'☆'.repeat(3 - st)}</i>` : ''}${spec.type === 'rival' ? '<u>VS</u>' : spec.type === 'golden' ? '<u class="g">★</u>' : ''}`;
+    b.disabled = n > cur;
+    b.addEventListener('click', () => openLevelIntro(n));
+    path.appendChild(b);
+  }
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'trail');
+  svg.setAttribute('viewBox', `0 0 100 ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.6" stroke-dasharray="2 2.4" vector-effect="non-scaling-stroke" />`;
+  path.prepend(svg);
+  const teaser = document.createElement('div');
+  teaser.className = 'teaser';
+  const far = levelSpec(10000);
+  teaser.innerHTML = `${t('teaser')}<br><small>Lv.10000 · ${chapterName(far.chapterIdx)} · ${goalText(far)}</small>`;
+  teaser.style.top = '20px';
+  path.appendChild(teaser);
+  const total = Object.values(profile.stars).reduce((a, b) => a + b, 0);
+  $('#mapStars').textContent = `★ ${total}`;
+  $('#mapTitle').textContent = `${t('chapter')} ${chapterOf(cur).ci + 1} · ${chapterName(chapterOf(cur).ci)}`;
+  show('#map');
+  const sc = $('#mapScroll');
+  requestAnimationFrame(() => { sc.scrollTop = H - PAD - (cur - 1) * STEP - sc.clientHeight * 0.6; });
+}
+
+function openLevelIntro(n) {
+  sfx.pop();
+  const spec = levelSpec(n);
+  $('#liTitle').textContent = `${t('levelWord')} ${n}`;
+  const tl = tierLabel(spec.tier);
+  $('#liTier').textContent = tl;
+  $('#liTier').className = 'tier-tag ' + spec.tier;
+  $('#liTier').hidden = !tl;
+  $('#liGoal').textContent = goalText(spec);
+  const img = $('#liImg');
+  img.src = spec.type === 'golden' ? faceImage('golden', 70) : spec.type === 'rival' ? faceImage(RIVALS.find((r) => r.id === spec.rival).card, 70) : backImage();
+  const intro = spec.intro || (spec.heavy && n === 11 ? 'heavy' : null);
+  $('#liNew').hidden = !intro;
+  if (intro) $('#liNewText').textContent = t('intro_' + intro);
+  $('#liHeavy').hidden = !spec.heavy;
+  $('#liHeavy').textContent = fmt(t('heavyNote'), { k: spec.heavy });
+  $('#lvIntro').hidden = false;
+  $('#liPlay').onclick = () => { $('#lvIntro').hidden = true; startLevel(n); };
+}
+
+function updateLevelHud() {
+  if (!match || !match.solo) return;
+  const sp = match.level;
+  $('#potLbl').textContent = t('goal');
+  $('#potN').textContent = sp.type === 'flip' ? `${match.flipped}/${sp.target}` : match.goldenTaken ? '✓' : '★';
+  $('#rivalName').textContent = t('puffsLeft');
+  $('#aiScore').textContent = String(match.puffsLeft);
+}
+
+async function startLevel(n) {
+  sfx.unlock();
+  const spec = levelSpec(n);
+  if (spec.type === 'rival') return startMatch({ level: spec });
+  const my = ++runId;
+  for (const m of homeMeshes) scene.remove(m);
+  homeMeshes = [];
+  const rng = mulberry32(spec.seed >>> 0);
+  const ids = Array.from({ length: spec.N }, () => rollCard(rng, null));
+  let goldenIdx = -1;
+  if (spec.type === 'golden') { goldenIdx = Math.round((1 - spec.goldenDepth) * (spec.N - 1)); ids[goldenIdx] = 'golden'; }
+  const heavy = new Set();
+  while (heavy.size < Math.min(spec.heavy, spec.N - 1)) { const i = Math.floor(rng() * spec.N); if (i !== goldenIdx) heavy.add(i); }
+  match = { seed: spec.seed, rng, myStake: [], aiStake: [], pot: ids.map((id) => ({ id, from: 'level' })), rivalName: '', rivalCard: CARDS[0], mode: 'fun', level: spec, solo: true, n: spec.N, turn: 'me', turnNo: 0, best: 0, flipsMe: 0, puffsLeft: spec.puffs, flipped: 0, goldenTaken: false };
+  table = new Table(spec.seed >>> 0, { lift: 519.59 * feel.wind });
+  table.addPile(ids, { heavy });
+  table.settle();
+  clearMatchMeshes();
+  for (const d of table.discs) { const m = makeDiscMesh(d.cardId, d.heavy); meshes.set(d.id, m); scene.add(m); }
+  syncMeshes();
+  state = 'match';
+  camZoom = 0;
+  $('#meScore').textContent = '0';
+  $('#rivalAva').src = spec.type === 'golden' ? faceImage('golden', 48) : backImage();
+  updateLevelHud();
+  puffer.mode = 'idle'; puffer.p = 0;
+  show('#hud');
+  await introDrop();
+  if (my !== runId) return;
+  await banner(`${t('levelWord')} ${n}${spec.tier === 'hard' || spec.tier === 'superhard' ? ' · ' + tierLabel(spec.tier) : ''}`, spec.tier === 'normal' || spec.tier === 'relief' ? 'b-me' : 'b-ai');
+  const goalMet = () => (spec.type === 'flip' ? match.flipped >= spec.target : match.goldenTaken);
+  while (match.puffsLeft > 0 && !goalMet()) {
+    tension(spec.type === 'flip' && spec.target - match.flipped <= 2 && match.puffsLeft === 1);
+    const shot = await playerShot();
+    tension(false);
+    if (my !== runId || !shot) return;
+    match.puffsLeft--;
+    updateLevelHud();
+    await blow(shot, 'me');
+    const flipped = await simulate();
+    if (my !== runId) return;
+    await react(flipped, 'me');
+    if (flipped.some((d) => d.cardId === 'golden')) match.goldenTaken = true;
+    match.flipped += flipped.length;
+    await collect(flipped, 'me');
+    if (my !== runId) return;
+    if (goalMet() || match.puffsLeft === 0 || table.liveDiscs().length === 0) break;
+    await restack();
+    if (my !== runId) return;
+  }
+  await finishLevel({ win: goalMet(), flipped: match.flipped, puffsLeft: match.puffsLeft });
+}
+
+async function finishLevel(res) {
+  simOn = false;
+  tension(false);
+  const spec = match.level;
+  prog();
+  const stars = starsFor(spec, res);
+  const before = new Set(Object.keys(profile.inv).filter((k) => profile.inv[k] > 0));
+  const rewards = [];
+  if (res.win) {
+    profile.stars[spec.n] = Math.max(profile.stars[spec.n] || 0, stars);
+    profile.level = Math.max(profile.level, spec.n + 1);
+    // 보상: 별 수만큼 딱지 (하드/슈퍼하드는 +1) — '하면 할수록 쌓이는 자산'
+    const k = stars + (spec.tier === 'hard' || spec.tier === 'superhard' ? 1 : 0);
+    const rr = mulberry32((spec.seed ^ (Date.now() & 0xffff)) >>> 0);
+    for (let i = 0; i < k; i++) { const id = rollCard(rr, spec.tier === 'superhard' && i === 0 ? 'rare' : null); rewards.push(id); profile.inv[id] = (profile.inv[id] || 0) + 1; }
+  }
+  profile.stats.levelsPlayed = (profile.stats.levelsPlayed || 0) + 1;
+  Store.save(profile);
+  sfx.fanfare(res.win);
+  if (res.win) fx.confetti({ x: 0, y: 0, z: 0 }, 120 + stars * 60);
+  await wait(450);
+  $('#lrTitle').textContent = res.win ? t('clear') : t('failed');
+  $('#lrTitle').className = 'res-title ' + (res.win ? 'win' : 'lose');
+  $('#lrStars').innerHTML = [0, 1, 2].map((i) => `<span class="${i < stars ? 'on' : ''}" style="animation-delay:${0.25 + i * 0.25}s">★</span>`).join('');
+  let detail = '';
+  if (spec.type === 'flip') detail = `${res.flipped} / ${spec.target}`;
+  else if (spec.type === 'golden') detail = res.win ? t('goldenGot') : t('goldenMiss');
+  else detail = `${res.me} : ${res.ai}`;
+  if (!res.win && spec.type === 'flip' && spec.target - res.flipped <= 2) detail += ` — ${fmt(t('nearMiss'), { k: spec.target - res.flipped })}`;
+  $('#lrDetail').textContent = detail;
+  const grid = $('#lrCards');
+  grid.innerHTML = '';
+  rewards.forEach((id, i) => {
+    const c = CARD_BY_ID[id];
+    const div = document.createElement('div');
+    div.className = 'rc r-' + c.rarity;
+    div.style.animationDelay = (0.9 + i * 0.12) + 's';
+    div.innerHTML = `<img alt="${cardName(c)}" src="${faceImage(id, 64)}">${!before.has(id) ? `<em>${t('newCard')}</em>` : ''}`;
+    grid.appendChild(div);
+  });
+  $('#lrNext').hidden = !res.win;
+  $('#lrNext').onclick = () => { $('#lvResult').hidden = true; clearMatchMeshes(); openLevelIntro(spec.n + 1); };
+  $('#lrRetry').onclick = () => { $('#lvResult').hidden = true; clearMatchMeshes(); startLevel(spec.n); };
+  $('#lrMap').onclick = () => { $('#lvResult').hidden = true; goHome(); openMap(); };
+  state = 'result';
+  puffer.mode = 'hidden';
+  $('#lvResult').hidden = false;
+}
+
 // ── 손맛 튜닝 패널 ─────────────────────────────────────
 function openTune() {
   sfx.unlock(); sfx.pop();
@@ -1498,7 +1723,10 @@ function openAlbum() {
 
 // ── 부트 ───────────────────────────────────────────────
 function wireUI() {
-  $('#playBtn').addEventListener('click', () => { sfx.unlock(); sfx.pop(); startMatch(); });
+  $('#playBtn').addEventListener('click', () => { sfx.unlock(); openMap(); });
+  $('#freeBtn').addEventListener('click', () => { sfx.unlock(); sfx.pop(); startMatch(); });
+  $('#mapBack').addEventListener('click', () => { sfx.pop(); goHome(); });
+  $('#liClose').addEventListener('click', () => { $('#lvIntro').hidden = true; });
   $('#albumBtn').addEventListener('click', openAlbum);
   $('#sheetBtn').addEventListener('click', openSheet);
   $('#tuneBtn').addEventListener('click', openTune);
@@ -1516,7 +1744,7 @@ function wireUI() {
   $('#albumBack').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#againBtn').addEventListener('click', () => { sfx.pop(); clearMatchMeshes(); startMatch(); });
   $('#homeBtn').addEventListener('click', () => { sfx.pop(); goHome(); });
-  $('#quitBtn').addEventListener('click', () => { simOn = false; table = null; goHome(); });
+  $('#quitBtn').addEventListener('click', () => { const wasLevel = match && match.level; simOn = false; table = null; goHome(); if (wasLevel) openMap(); });
   $('#langBtn').addEventListener('click', () => {
     setLang(getLang() === 'ko' ? 'en' : 'ko');
     profile.settings.lang = getLang();
@@ -1572,7 +1800,7 @@ async function bootInner() {
     const c = table.pileCenter();
     const top = table.columnTop();
     const toScreen = (y) => { const v = new THREE.Vector3(c.x, y, c.z).project(camera); return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight }; };
-    return { state, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), turn: match?.turn };
+    return { state, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
   };
 }
 
