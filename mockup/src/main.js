@@ -751,13 +751,16 @@ async function startMatch() {
   homeMeshes = [];
   const seed = (Math.floor(performance.now() * 1000) ^ 0x5bd1e995) >>> 0;
   const rng = mulberry32(seed);
-  const myStake = Store.pickStake(profile, stakeN, rng);
-  if (myStake.length < stakeN) { toast(t('notEnough')); return; }
-  const aiStake = aiStakeFor(stakeN, rng);
+  // 첫 판 = 연습 판: 친선·5장씩·내가 먼저·상대 약하게 (첫 경험에서 바로 '우수수'를 맛보게 — 리서치 10장)
+  const practice = profile.stats.matches === 0;
+  const n = practice ? 5 : stakeN;
+  const myStake = Store.pickStake(profile, n, rng);
+  if (myStake.length < n) { toast(t('notEnough')); return; }
+  const aiStake = aiStakeFor(n, rng);
   const pot = shuffle([...myStake.map((id) => ({ id, from: 'me' })), ...aiStake.map((id) => ({ id, from: 'ai' }))], rng);
   const rivalName = t('rivals')[Math.floor(rng() * 5)];
   const rivalCard = CARDS[Math.floor(rng() * CARDS.length)];
-  match = { seed, rng, myStake, aiStake, pot, rivalName, rivalCard, mode, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
+  match = { seed, rng, myStake, aiStake, pot, rivalName, rivalCard, mode: practice ? 'fun' : mode, practice, n, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
   table = new Table(seed, { lift: 519.59 * feel.wind });
   table.addPile(pot.map((p) => p.id));
   table.discs.forEach((d, i) => { d.from = pot[i].from; });
@@ -783,7 +786,7 @@ async function startMatch() {
   if (my !== runId) return;
   await introDrop();
   if (my !== runId) return;
-  match.turn = await rps();
+  match.turn = match.practice ? 'me' : await rps();
   if (my !== runId) return;
   await gameLoop(my);
 }
@@ -791,10 +794,10 @@ async function startMatch() {
 async function vsSplash() {
   const el = $('#vs');
   const bait = match.aiStake.map((id) => CARD_BY_ID[id]).find((c) => c.rarity !== 'common');
-  $('#vsMe').textContent = `${t('you')} · ${stakeN}`;
-  $('#vsAi').textContent = `${match.rivalName} · ${stakeN}`;
+  $('#vsMe').textContent = `${t('you')} · ${match.n}`;
+  $('#vsAi').textContent = `${match.rivalName} · ${match.n}`;
   $('#vsBait').innerHTML = bait ? `<span class="bounty">${t('bounty')}</span> <img alt="" src="${faceImage(bait.id, 40)}"> <b class="r-${bait.rarity}">${cardName(bait)}</b>` : '';
-  $('#vsMode').textContent = match.mode === 'fun' ? t('modeFun') : t('modeKeeps');
+  $('#vsMode').textContent = match.practice ? t('practice') : match.mode === 'fun' ? t('modeFun') : t('modeKeeps');
   el.hidden = false;
   el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
   sfx.whoosh();
@@ -1018,7 +1021,8 @@ function playerShot() {
 async function aiShot() {
   // 상대: 그럴듯한 조준 + 실수 (난이도 중간)
   const rng = match.rng;
-  const g = () => { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const g0 = () => { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const g = () => g0() * (match.practice ? 1.8 : 1);
   const top = table.columnTop();
   const c = table.pileCenter();
   const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
