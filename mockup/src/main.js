@@ -610,6 +610,7 @@ function refreshTexts() {
   $('#invCount').textContent = Store.total(profile);
   $('#albumProg').textContent = `${Store.ownedKinds(profile)}/${CARDS.length}`;
   $('#sheetBtn').classList.toggle('ready', sheetReady());
+  $('#dailyBtn').textContent = `${t('daily')} #${dayNumber()}`;
   $('#sndBtn').setAttribute('aria-pressed', String(!sfx.muted));
   $('#sndBtn').classList.toggle('off', sfx.muted);
   const max = Store.maxStake(profile);
@@ -684,6 +685,7 @@ function backImage() {
 
 function goHome() {
   runId++;
+  $('#dailyCard').hidden = true;
   cancelInput?.();
   tension(false);
   simWatch.resolve = null;
@@ -1262,6 +1264,82 @@ async function endMatch() {
   show('#result');
 }
 
+// ── 오늘의 더미 (워들식 데일리): 모두 같은 배치, 한 방에 몇 장? → 이모지 카드 공유 (리서치 8·10장) ──
+const DAILY_TRIES = 3;
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function dayNumber() { return Math.floor((Date.parse(todayKey()) - Date.parse('2026-10-12')) / 86400000) + 1; }
+function dailyState() {
+  const k = todayKey();
+  if (!profile.daily || profile.daily.date !== k) profile.daily = { date: k, best: 0, tries: 0 };
+  return profile.daily;
+}
+
+async function startDaily() {
+  sfx.unlock(); sfx.pop();
+  const ds = dailyState();
+  if (ds.tries >= DAILY_TRIES) { showDailyCard(); return; }
+  const my = ++runId;
+  for (const m of homeMeshes) scene.remove(m);
+  homeMeshes = [];
+  let h = 2166136261;
+  for (const ch of todayKey()) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  const seed = h >>> 0;
+  const rng = mulberry32(seed);
+  const ids = Array.from({ length: 20 }, () => rollCard(rng, null));
+  match = { seed, rng, myStake: [], aiStake: [], pot: ids.map((id) => ({ id, from: 'daily' })), rivalName: '', rivalCard: CARDS[0], mode: 'fun', daily: true, n: 20, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
+  table = new Table(seed, { lift: 519.59 * feel.wind });
+  table.addPile(ids);
+  table.settle();
+  clearMatchMeshes();
+  for (const d of table.discs) { const m = makeDiscMesh(d.cardId); meshes.set(d.id, m); scene.add(m); }
+  syncMeshes();
+  state = 'match';
+  camZoom = 0;
+  $('#rivalName').textContent = t('daily');
+  $('#rivalAva').src = backImage();
+  $('#meScore').textContent = '0';
+  $('#aiScore').textContent = `#${dayNumber()}`;
+  $('#potN').textContent = '20';
+  puffer.mode = 'idle'; puffer.p = 0;
+  show('#hud');
+  await introDrop();
+  if (my !== runId) return;
+  await banner(`${t('daily')} #${dayNumber()} · ${ds.tries + 1}/${DAILY_TRIES}`, 'b-me');
+  const shot = await playerShot();
+  if (my !== runId || !shot) return;
+  await blow(shot, 'me');
+  const flipped = await simulate();
+  if (my !== runId) return;
+  await react(flipped, 'me');
+  ds.tries++;
+  ds.best = Math.max(ds.best, flipped.length);
+  ds.last = flipped.length;
+  Store.save(profile);
+  await wait(400);
+  if (my !== runId) return;
+  showDailyCard(flipped.length);
+}
+
+function dailyShareText(n) {
+  const full = Math.round(n / 4);
+  const bar = '🟡'.repeat(full) + '⚪'.repeat(5 - full);
+  return `PUFF! ${t('daily')} #${dayNumber()} ${bar} ${n}/20\nBlow. Flip. Keep.`;
+}
+
+function showDailyCard(n) {
+  const ds = dailyState();
+  const shown = n ?? ds.best;
+  $('#dailyNum').textContent = `#${dayNumber()}`;
+  $('#dailyScore').textContent = `${shown}/20`;
+  $('#dailyMeta').textContent = `${t('dailyBest')} ${ds.best}/20 · ${t('dailyLeft')} ${Math.max(0, DAILY_TRIES - ds.tries)}`;
+  $('#dailyShare').value = dailyShareText(ds.best);
+  $('#dailyAgain').disabled = ds.tries >= DAILY_TRIES;
+  $('#dailyCard').hidden = false;
+}
+
 // ── 손맛 튜닝 패널 ─────────────────────────────────────
 function openTune() {
   sfx.unlock(); sfx.pop();
@@ -1311,6 +1389,14 @@ function wireUI() {
   $('#albumBtn').addEventListener('click', openAlbum);
   $('#sheetBtn').addEventListener('click', openSheet);
   $('#tuneBtn').addEventListener('click', openTune);
+  $('#dailyBtn').addEventListener('click', startDaily);
+  $('#dailyAgain').addEventListener('click', () => { $('#dailyCard').hidden = true; clearMatchMeshes(); startDaily(); });
+  $('#dailyHome').addEventListener('click', () => { $('#dailyCard').hidden = true; goHome(); });
+  $('#dailyCopy').addEventListener('click', async () => {
+    const ta = $('#dailyShare');
+    try { await navigator.clipboard.writeText(ta.value); toast(t('copied')); }
+    catch (e) { ta.focus(); ta.select(); toast(t('copyManual')); }
+  });
   $('#tuneClose').addEventListener('click', () => { sfx.pop(); closeTune(false); toast(tuneSummary()); });
   $('#tuneReset').addEventListener('click', () => { sfx.pop(); closeTune(true); });
   $('#sheetDone').addEventListener('click', () => { sfx.pop(); goHome(); });

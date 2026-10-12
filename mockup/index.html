@@ -200,6 +200,9 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .trow input { grid-column: 1 / -1; width: 100%; accent-color: var(--go-dark); }
 .trow b { font-family: var(--display); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 #tune h2 { margin: 0 0 6px; font-family: var(--display); }
+.daily-score { font-family: var(--display); font-size: 4rem; color: var(--gold); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); line-height: 1.1; }
+#dailyCard h2 { margin: 0; font-family: var(--display); }
+#dailyShare { width: 100%; box-sizing: border-box; font-family: var(--body); font-size: 1rem; border: 3px solid var(--ink); border-radius: 12px; padding: 8px; resize: none; margin: 8px 0 12px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
 #toast { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); background: rgba(42,26,18,0.85); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 1rem; max-width: 86vw; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .logo h1, .hint .hand { animation: none; } }
 </style>
@@ -227,6 +230,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
       <div class="bet"><span class="lbl" data-t="stake">POT</span><div id="chips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
       <button id="playBtn" class="btn xl" type="button" data-t="play">PLAY</button>
       <div class="row">
+        <button id="dailyBtn" class="btn blue" type="button">DAILY STACK</button>
         <button id="sheetBtn" class="btn gold" type="button" data-t="sheet">FREE SHEET</button>
         <button id="albumBtn" class="btn blue" type="button"><span data-t="collection">ALBUM</span> <small id="albumProg">0/24</small></button>
         <button id="micBtn" class="btn ghost" type="button">Mic: OFF</button>
@@ -278,6 +282,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     </div>
   </section>
 
+  <div id="dailyCard" class="modal" hidden><div class="panel"><h2 class="disp"><span data-t="daily">DAILY STACK</span> <span id="dailyNum"></span></h2><div id="dailyScore" class="daily-score"></div><p id="dailyMeta" class="note"></p><textarea id="dailyShare" rows="3" readonly aria-label="share text"></textarea><div class="row"><button id="dailyCopy" class="btn gold" type="button" data-t="copy">COPY</button><button id="dailyAgain" class="btn" type="button" data-t="dailyAgain">TRY AGAIN</button><button id="dailyHome" class="btn blue" type="button" data-t="home">HOME</button></div></div></div>
   <div id="tune" class="modal" hidden><div class="panel"><h2 class="disp" data-t="tuneTitle">Feel tuning</h2><div id="tuneRows"></div><div class="row"><button id="tuneReset" class="btn blue" type="button" data-t="tuneReset">RESET</button><button id="tuneClose" class="btn" type="button" data-t="tuneClose">DONE</button></div></div></div>
   <div id="micOffer" class="modal" hidden><div class="panel"><p class="ask" data-t="micAsk"></p><div class="row"><button id="micYes" class="btn gold" type="button" data-t="micYes">YES</button><button id="micNo" class="btn blue" type="button" data-t="micNo">Later</button></div></div></div>
   <div id="toast" hidden></div>
