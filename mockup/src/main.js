@@ -16,6 +16,7 @@ import * as Store from './store.js';
 import { Fx } from './fx.js';
 import * as Rules from './rules.js';
 import { levelSpec, starsFor, chapterOf, CHAPTERS, RIVALS, CHAPTER_LEN } from './levels.js';
+import { SERIES_A, drawCreature } from './creatures.js';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -29,8 +30,17 @@ const easeInOut = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) 
 // 게이지 구간은 튜토리얼에서만 보여 주고 이후엔 감으로. 물리로 넘길 때는 이 양에 맞는 숨을 0.95 로 정규화.
 const { POWER_MAX, sweetHiFor, sweetLoFor } = Rules; // 화면과 레벨 봇이 같은 규칙을 쓴다 (rules.js)
 function liveCount() { return table ? table.liveDiscs().length : 20; }
-const GUIDE_PUFFS = 6; // 처음 6번 불 때까지만 초록/빨강 가이드
-function guideOn() { return feel.guide >= 0.5 || (profile.tutorialPuffs || 0) < GUIDE_PUFFS; }
+// 게이지 '단계적 은퇴' (2라운드 리서치: 갑자기 끄면 감이 아니라 의존만 깨진다)
+//  0: 1~3번째 숨 — 실시간 게이지(초록/빨강, 더미 양에 따라 초록이 미끄러짐)
+//  1: 4~8번째 — 테두리만 + 놓은 직후 0.6초 '정답 스냅샷'(사후 결과 지식)
+//  2: 9~15번째 — 게이지 없음. '딱 좋은 숨!'은 매번, 교정 문구는 크게 틀렸을 때만
+//  3: 16번째~ — 글자 없음. 소리(칭)와 지난 숨 고스트, 결과만
+function guideStage() {
+  if (feel.guide >= 0.5) return 0;
+  const k = profile.tutorialPuffs || 0;
+  return k < 3 ? 0 : k < 8 ? 1 : k < 15 ? 2 : 3;
+}
+function guideOn() { return guideStage() === 0; }
 const MAX_TURNS = 18;
 
 // ── 상태 ─────────────────────────────────────────────────
@@ -324,7 +334,7 @@ function layout() {
 }
 
 // ── 조준 기즈모 ──────────────────────────────────────────
-let reticle, layerRing, aimLine;
+let reticle, layerRing, aimLine, ghostRing;
 function buildAimGizmo() {
   reticle = new THREE.Mesh(
     new THREE.RingGeometry(0.16, 0.26, 32),
@@ -333,6 +343,13 @@ function buildAimGizmo() {
   reticle.renderOrder = 10;
   reticle.visible = false;
   scene.add(reticle);
+  ghostRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.17, 0.22, 32),
+    new THREE.MeshBasicMaterial({ color: 0x2a1a12, transparent: true, opacity: 0.35, depthTest: false, side: THREE.DoubleSide }),
+  );
+  ghostRing.renderOrder = 9;
+  ghostRing.visible = false;
+  scene.add(ghostRing);
   layerRing = new THREE.Mesh(
     new THREE.TorusGeometry(DISC_R * 1.08, 0.025, 8, 64),
     new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6, depthTest: false }),
@@ -379,6 +396,12 @@ function showGizmo(shot, color = 0xffffff) {
   reticle.position.copy(g.aim).addScaledVector(g.dir, -0.02);
   reticle.lookAt(g.aim.clone().addScaledVector(g.dir, -1));
   reticle.material.color.setHex(color);
+  // 지난 숨 고스트: 직전 조준 자리 (내 차례일 때만)
+  if (lastBreath.aim && puffer.who === 'me' && breath.mode === 'charge') {
+    ghostRing.visible = true;
+    ghostRing.position.copy(lastBreath.aim).addScaledVector(g.dir, -0.03);
+    ghostRing.lookAt(lastBreath.aim.clone().addScaledVector(g.dir, -1));
+  }
   const s = 0.8 + (shot.power || 0) * 0.6;
   reticle.scale.setScalar(s);
   layerRing.position.set(g.center.x, shot.h, g.center.z);
@@ -392,6 +415,7 @@ function showGizmo(shot, color = 0xffffff) {
 
 function hideGizmo() {
   reticle.visible = layerRing.visible = aimLine.visible = false;
+  if (ghostRing) ghostRing.visible = false;
   if (breath.mode === 'charge') breath.mode = 'off';
 }
 
@@ -455,7 +479,8 @@ function drawBreath(dt) {
 }
 
 // ── 퍼퍼(볼 빵빵 얼굴) ───────────────────────────────────
-const puffer = { p: 0, mode: 'idle', t: 0, who: 'me' };
+const puffer = { p: 0, mode: 'idle', t: 0, who: 'me', snapUntil: 0, snapP: 0, snapN: 0 };
+const lastBreath = { p: null, aim: null }; // 지난 숨 고스트 (내 숨만)
 function drawPuffer() {
   const cv = $('#puffCanvas');
   if (!cv) return;
@@ -487,6 +512,25 @@ function drawPuffer() {
   ctx.fillStyle = over ? 'rgba(255,60,60,0.75)' : 'rgba(255,120,120,0.6)';
   ctx.beginPath(); ctx.arc(-0.19 - p * 0.03, 0.06, cheek, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(0.19 + p * 0.03, 0.06, cheek, 0, Math.PI * 2); ctx.fill();
+  // 절대 눈금: 볼 반짝임 3단계(흰 김 0.55 / 하늘 0.75 / 금 0.95) — 정답이 아니라 '내 숨의 크기' 자
+  if (!blow && p >= 0.55) {
+    const col = p >= 0.95 ? '255,210,63' : p >= 0.75 ? '120,210,255' : '255,255,255';
+    const tw = 0.6 + 0.4 * Math.sin(performance.now() * 0.02);
+    ctx.fillStyle = `rgba(${col},${0.85 * tw})`;
+    for (const sgn of [-1, 1]) {
+      const cx = sgn * (0.19 + p * 0.03), cy = 0.06;
+      for (let k = 0; k < 3; k++) { const a = performance.now() * 0.004 + k * 2.1; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * (cheek + 0.02), cy + Math.sin(a) * (cheek + 0.02), 0.012, 0, Math.PI * 2); ctx.fill(); }
+    }
+  }
+  // 지난 숨 고스트: 직전에 불었던 볼 크기를 점선으로 (결과 지식, 정답 아님)
+  if (!blow && puffer.who === 'me' && lastBreath.p != null && puffer.mode === 'charge') {
+    const gc = 0.06 + lastBreath.p * 0.09;
+    ctx.setLineDash([0.02, 0.018]);
+    ctx.lineWidth = 0.012;
+    ctx.strokeStyle = 'rgba(42,26,18,0.55)';
+    for (const sgn of [-1, 1]) { ctx.beginPath(); ctx.arc(sgn * (0.19 + lastBreath.p * 0.03), 0.06, gc, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.setLineDash([]);
+  }
   // 눈
   ctx.lineCap = 'round';
   ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 0.03;
@@ -509,9 +553,11 @@ function drawPuffer() {
     ctx.beginPath(); ctx.ellipse(0, 0.14, Math.max(0.012, r), 0.025, 0, 0, Math.PI * 2); ctx.fill();
   }
   ctx.restore();
-  // 파워 게이지 (아크) — 튜토리얼(가이드)일 때만. 구간은 '더미 양'에 따라 움직인다
-  if (!guideOn()) return;
-  const n = liveCount();
+  // 파워 게이지 (아크) — 단계적 은퇴. 구간은 '더미 양'에 따라 움직인다
+  const stage = puffer.who === 'ai' ? 3 : guideStage();
+  const snap = performance.now() < puffer.snapUntil; // 놓은 직후 정답 스냅샷 (stage 1)
+  if (stage >= 2 || (stage === 1 && !snap && puffer.mode !== 'charge')) return;
+  const n = puffer.snapN || liveCount();
   const SWEET_LO = sweetLoFor(n), SWEET_HI = sweetHiFor(n);
   const R = S * 0.46;
   ctx.save();
@@ -522,15 +568,23 @@ function drawPuffer() {
   ctx.lineWidth = S * 0.06;
   ctx.strokeStyle = 'rgba(42,26,18,0.55)';
   ctx.beginPath(); ctx.arc(0, 0, R, a0, a1); ctx.stroke();
+  if (stage === 1 && !snap) {
+    // 테두리 + 내 숨 바늘(흰색)만 — 정답 구간은 숨김
+    if (p > 0.01) { ctx.lineWidth = S * 0.045; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(0, 0, R, a0, ang(Math.min(p, POWER_MAX))); ctx.stroke(); }
+    ctx.restore();
+    return;
+  }
   ctx.lineWidth = S * 0.035;
   ctx.strokeStyle = 'rgba(109,255,90,0.55)';
   ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_LO), ang(SWEET_HI)); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,77,77,0.5)';
   ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_HI + 0.05), a1); ctx.stroke();
-  if (p > 0.01) {
+  const pv = snap ? puffer.snapP : p;
+  if (pv > 0.01) {
     ctx.lineWidth = S * 0.045;
-    ctx.strokeStyle = '#' + powerColor(p).toString(16).padStart(6, '0');
-    ctx.beginPath(); ctx.arc(0, 0, R, a0, ang(Math.min(p, POWER_MAX))); ctx.stroke();
+    const hiN = sweetHiFor(n);
+    ctx.strokeStyle = pv > hiN * 1.05 ? '#ff4d4d' : pv >= sweetLoFor(n) ? '#6dff5a' : '#ffe066';
+    ctx.beginPath(); ctx.arc(0, 0, R, a0, ang(Math.min(pv, POWER_MAX))); ctx.stroke();
   }
   ctx.restore();
 }
@@ -869,7 +923,8 @@ async function startMatch(opts = {}) {
   const my = ++runId;
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
-  const lv = opts.level || null; // 레벨의 라이벌 판: '레벨용 딱지'로 겨룸 → 내 컬렉션은 잃지 않음
+  const lv = opts.level || null;
+  lastBreath.aim = null; // 레벨의 라이벌 판: '레벨용 딱지'로 겨룸 → 내 컬렉션은 잃지 않음
   const seed = lv ? lv.seed >>> 0 : (Math.floor(performance.now() * 1000) ^ 0x5bd1e995) >>> 0;
   const rng = mulberry32(seed);
   // 첫 판 = 연습 판: 친선·5장씩·내가 먼저·상대 약하게 (첫 경험에서 바로 '우수수'를 맛보게 — 리서치 10장)
@@ -1118,6 +1173,9 @@ function playerShot() {
       aiming.lat = clamp(aiming.lat0 - dx / (minDim * 0.5), -1.35, 1.35);
       puffer.p = aiming.power;
       inhale?.set(aiming.power);
+      // 절대 피치 계단: 숨 크기를 8칸 음계로 (같은 크기 = 같은 음 → 귀로 익히는 자)
+      const step = Math.min(7, Math.floor((aiming.power / POWER_MAX) * 8));
+      if (step !== aiming.step) { aiming.step = step; if (step > 0) sfx.tone([392, 440, 494, 523, 587, 659, 698, 784][step], 0.05, 'triangle', 0.06); }
       showGizmo(aiming, powerColor(aiming.power));
     };
     const fire = (shot) => {
@@ -1181,6 +1239,12 @@ function resolveShot(shot, rng) {
 // 불고 난 뒤 '숨 결과' 피드백 — 게이지 없이 감을 익히게 하는 결과 지식(knowledge of results)
 function breathFeedback(ratio, who) {
   const key = ratio < 0.62 ? 'fbTooWeak' : ratio < 0.86 ? 'fbWeak' : ratio <= 1.0 ? 'fbPerfect' : ratio <= 1.15 ? 'fbStrong' : 'fbTooStrong';
+  if (who === 'me') {
+    const st = guideStage();
+    if (key === 'fbPerfect' && st >= 2) sfx.tone(1568, 0.25, 'sine', 0.12); // '칭' — 좋은 숨엔 소리
+    if (st === 3) return; // 16번째 숨부터 글자 없음
+    if (st === 2 && key !== 'fbPerfect' && ratio >= 0.68 && ratio <= 1.18) return; // 크게 틀렸을 때만 교정
+  } else if (who === 'ai' && guideStage() >= 2) return;
   const el = $('#breathFb');
   el.textContent = (who === 'ai' ? t('rival') + ': ' : '') + t(key);
   el.className = 'breath-fb ' + key + (who === 'ai' ? ' ai' : '');
@@ -1194,7 +1258,11 @@ function breathFeedback(ratio, who) {
 async function blow(rawShot, who) {
   const shot = resolveShot(rawShot, match.rng);
   const g = shotGeometry(shot);
-  if (who === 'me') { profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile); }
+  if (who === 'me') {
+    puffer.snapUntil = performance.now() + 900; puffer.snapP = rawShot.power; puffer.snapN = liveCount();
+    lastBreath.p = rawShot.power; lastBreath.aim = g.aim.clone();
+    profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile);
+  }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);
   breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, rawShot.power / sweetHiFor(liveCount())); breath.who = who;
   puffer.mode = 'blow';
@@ -1414,6 +1482,7 @@ async function startDaily() {
   sfx.unlock(); sfx.pop();
   const ds = dailyState();
   if (ds.tries >= DAILY_TRIES) { showDailyCard(); return; }
+  lastBreath.aim = null;
   const my = ++runId;
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
@@ -1580,6 +1649,7 @@ async function startLevel(n) {
   sfx.unlock();
   const spec = levelSpec(n);
   if (spec.type === 'rival') return startMatch({ level: spec });
+  lastBreath.aim = null;
   const my = ++runId;
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
@@ -1705,8 +1775,34 @@ function tuneSummary() {
 }
 
 // ── 앨범 ───────────────────────────────────────────────
+// 수집 테마 시안 탭 (2라운드 리서치 1순위: 동물 크리처 × 시즌 의상 × 시크릿) — 재윤님 비교용
+function creatureImage(item, size, silhouette) {
+  const key = 'cr:' + item.id + ':' + size + ':' + (silhouette ? 1 : 0);
+  if (imgCache.has(key)) return imgCache.get(key);
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size * 2;
+  drawCreature(cv.getContext('2d'), size * 2, item, { silhouette });
+  const url = cv.toDataURL('image/png');
+  imgCache.set(key, url);
+  return url;
+}
+function openPreview() {
+  const grid = $('#albumGrid');
+  grid.innerHTML = '';
+  for (const it of SERIES_A.items) {
+    const div = document.createElement('div');
+    div.className = 'ac' + (it.secret ? ' r-epic' : '');
+    div.innerHTML = `<img alt="${getLang() === 'ko' ? it.ko : it.en}" src="${creatureImage(it, 72, false)}"><span>${getLang() === 'ko' ? it.ko : it.en}</span>`;
+    grid.appendChild(div);
+  }
+  $('#albumBar').style.width = '0%';
+  $('#albumCount').textContent = getLang() === 'ko' ? SERIES_A.ko + ' — 9종 + 시크릿 1 (시안)' : SERIES_A.en + ' — 9 + 1 secret (concept)';
+  document.querySelectorAll('#albumTabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === 'preview'));
+}
+
 function openAlbum() {
   sfx.unlock(); sfx.pop();
+  document.querySelectorAll('#albumTabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === 'mine'));
   const grid = $('#albumGrid');
   grid.innerHTML = '';
   for (const c of CARDS) {
@@ -1742,6 +1838,7 @@ function wireUI() {
   $('#tuneReset').addEventListener('click', () => { sfx.pop(); closeTune(true); });
   $('#sheetDone').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#albumBack').addEventListener('click', () => { sfx.pop(); goHome(); });
+  document.querySelectorAll('#albumTabs button').forEach((b) => b.addEventListener('click', () => { sfx.pop(); if (b.dataset.tab === 'preview') openPreview(); else openAlbum(); }));
   $('#againBtn').addEventListener('click', () => { sfx.pop(); clearMatchMeshes(); startMatch(); });
   $('#homeBtn').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#quitBtn').addEventListener('click', () => { const wasLevel = match && match.level; simOn = false; table = null; goHome(); if (wasLevel) openMap(); });

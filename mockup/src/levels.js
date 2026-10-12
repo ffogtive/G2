@@ -1,34 +1,54 @@
-// levels.js — 레벨 1 ~ 10,000+ 결정론적 생성 규칙 (렌더러 독립 → 봇으로 난이도 측정 가능)
+// levels.js — 레벨 1 ~ 10,000+ 결정론적 생성 규칙 (렌더러 독립 → 봇으로 난이도 측정·보정)
 //
-// 🧭 가설 (미검증 — 2라운드 리서치로 재조정 예정)
-//  - 1만 판을 버티게 하는 건 캐릭터 성장이 아니라 ① 톱니형 난이도(어려운 판 → 쉬운 '안도' 판)
-//    ② 주기적인 새 기믹 ③ 맵/동네 진척(메타)이다. (캔디크러시·로얄킹덤에서 배운 구조)
-//  - 레벨 = 시드 + 규칙. 같은 번호는 누구에게나 같은 판. 난이도는 물리 봇 성공률로 측정해 곡선에 맞춘다.
+// 🧭 가설 (2라운드 리서치 반영, 미검증)
+//  - 1만 판은 '난이도 계단'이 아니라 ① 10판 톱니 템플릿(로얄 매치 x5 하드 / x9 슈퍼하드 / 직후 휴식)
+//    ② 주기적인 새 요소(복잡도 계단) ③ 잃지 않는 메타(동네 재건)로 버틴다. 캐릭터 성장은 없다.
+//  - 난이도 '손잡이'는 레벨마다 하나(목표 비율 / 황금 깊이 / 상대 실력). 값은 물리 봇 클리어율로 보정한다
+//    (King 식: 봇 예측 → 사람 큐레이션). 보정표 levels-cal.json 이 있으면 그 값을 쓴다.
+//  - 플레이어 쪽 물리는 절대 보정하지 않는다 ('감'의 공정성). 보정은 판 구성과 AI 에서만.
 
-export const CHAPTER_LEN = 20;
+import CAL from './levels-cal.json' with { type: 'json' };
+
+export const CHAPTER_LEN = 50; // 동네 1곳 = 10판 블록 5개, 50번째 = 골목대장전 (리서치)
 
 export const CHAPTERS = [
   { id: 'alley', ko: '골목길', en: 'Back Alley', color: '#7cc46a' },
   { id: 'shop', ko: '문방구 앞', en: 'Corner Shop', color: '#ffb84d' },
   { id: 'playground', ko: '놀이터', en: 'Playground', color: '#5fc8ff' },
   { id: 'school', ko: '학교 운동장', en: 'Schoolyard', color: '#ff8fa8' },
-  { id: 'town', ko: '동네 딱지대회', en: 'Town Cup', color: '#b36bff' },
+  { id: 'market', ko: '시장 골목', en: 'Market Lane', color: '#b36bff' },
+  { id: 'beach', ko: '바닷가 마을', en: 'Seaside Town', color: '#4dd0c8' },
   { id: 'tokyo', ko: '도쿄 멘코 골목', en: 'Tokyo Menko Lane', color: '#ff6b6b' },
-  { id: 'la', ko: 'LA 밀크캡 해변', en: 'LA Milk-cap Beach', color: '#4dd0c8' },
-  { id: 'cdmx', ko: '멕시코시티 타조 시장', en: 'Mexico City Tazo Market', color: '#ffd23f' },
+  { id: 'la', ko: 'LA 밀크캡 해변', en: 'LA Milk-cap Beach', color: '#ffd23f' },
 ];
 
 export const RIVALS = [
+  { id: 'kongi', ko: '콩이', en: 'Kongi', card: 'mandu' },
   { id: 'minsu', ko: '민수', en: 'Minsu', card: 'tteok' },
   { id: 'jiwoo', ko: '지우', en: 'Jiwoo', card: 'tokki' },
-  { id: 'boss', ko: '골목대장', en: 'Alley Boss', card: 'horangi' },
-  { id: 'grandma', ko: '문방구 할머니', en: 'Shop Grandma', card: 'dokkaebi' },
   { id: 'twins', ko: '쌍둥이', en: 'The Twins', card: 'kkachi' },
-  { id: 'champ', ko: '딱지왕', en: 'Ddakji Champ', card: 'king' },
+  { id: 'grandma', ko: '문방구 할머니', en: 'Shop Grandma', card: 'dokkaebi' },
+  { id: 'boss', ko: '골목대장', en: 'Alley Boss', card: 'horangi' },
 ];
 
-// 기믹 도입 스케줄 (처음 등장하는 판에선 소개 카드)
-export const INTRO = { 4: 'rival', 6: 'golden', 11: 'heavy' };
+// 10판 블록 템플릿 (2라운드 리서치: 로얄 매치 패턴 + PUFF! 적용). rate = 학습자 봇 목표 클리어율
+export const SLOTS = {
+  1: { role: 'new', rate: 0.92, puffs: 3 },
+  2: { role: 'practice', rate: 0.85, puffs: 3 },
+  3: { role: 'practice2', rate: 0.75, puffs: 3 },
+  4: { role: 'rival', rate: 0.6 },
+  5: { role: 'hard', rate: 0.4, puffs: 2 }, // L35 전에는 'normal'(0.65)
+  6: { role: 'relief', rate: 0.93, puffs: 3 }, // 대박 휴식판(싹쓸이 쾌감)
+  7: { role: 'applied', rate: 0.68, puffs: 3 },
+  8: { role: 'precision', rate: 0.6, puffs: 3 }, // 황금 딱지 깊숙이
+  9: { role: 'boss', rate: 0.25 }, // L59 전에는 0.5
+  10: { role: 'reward', rate: 0.93, puffs: 3 },
+};
+export const FIRST_HARD = 35;
+export const FIRST_SUPERHARD = 59;
+
+// 새 요소 '복잡도 계단' (처음 등장하는 판에서 소개 카드)
+export const INTRO = { 4: 'rival', 11: 'golden', 21: 'heavy' };
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -39,47 +59,58 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-// 톱니형 난이도: 완만히 오르는 기본선 + 10판 주기의 톱니 (5번째 하드, 10번째 슈퍼하드, 하드 직후 안도)
-export function difficulty(n) {
-  const base = 0.12 + 0.5 * (1 - Math.exp(-n / 150)) + 0.12 * (1 - Math.exp(-n / 2000));
-  const pos = (n - 1) % 10; // 0..9
-  const saw = [0, 0.03, 0.06, 0.09, 0.2, -0.08, 0.02, 0.05, 0.09, 0.3][pos];
-  const tier = pos === 9 ? 'superhard' : pos === 4 ? 'hard' : pos === 5 ? 'relief' : 'normal';
-  return { d: clamp(base + saw, 0.05, 0.98), tier };
-}
 
 export function chapterOf(n) {
   const ci = Math.floor((n - 1) / CHAPTER_LEN);
-  return { ci, chapter: CHAPTERS[ci % CHAPTERS.length], lap: Math.floor(ci / CHAPTERS.length), idx: ((n - 1) % CHAPTER_LEN) + 1 };
+  return { ci, chapter: CHAPTERS[ci % CHAPTERS.length], idx: ((n - 1) % CHAPTER_LEN) + 1 };
 }
 
-export function levelSpec(n) {
-  const rng = mulberry32(0x9e3779b1 ^ (n * 2654435761));
-  const { d, tier } = difficulty(n);
+// 슬롯 → 티어/목표 클리어율 (첫 하드·슈퍼하드 전에는 진폭을 작게)
+export function slotOf(n) {
+  const slot = ((n - 1) % 10) + 1;
+  const base = SLOTS[slot];
+  let tier = 'normal', rate = base.rate, role = base.role;
+  if (role === 'hard') { if (n >= FIRST_HARD) tier = 'hard'; else { rate = 0.65; role = 'applied'; } }
+  if (role === 'boss') { if (n >= FIRST_SUPERHARD) tier = 'superhard'; else rate = 0.5; }
+  if (role === 'relief' || role === 'reward' || role === 'new') tier = 'relief';
+  if (n % CHAPTER_LEN === 0) { role = 'boss'; tier = n >= FIRST_SUPERHARD ? 'superhard' : 'hard'; rate = n >= FIRST_SUPERHARD ? 0.25 : 0.45; }
+  return { slot, role, tier, rate, puffs: base.puffs };
+}
+
+export function levelSpec(n, kOverride) {
+  const rng = mulberry32(0x9e3779b1 ^ Math.imul(n, 2654435761));
+  const s = slotOf(n);
   const ch = chapterOf(n);
-  const unlocked = { rival: n >= 4, golden: n >= 6, heavy: n >= 11 };
-  // 목표 종류: 챕터 마지막(20)과 4·14번째는 라이벌, 나머지는 섞기
+  const has = { rival: n >= 4, golden: n >= 11, heavy: n >= 21 };
+  // 목표 종류: 4번칸·보스 = 라이벌, 정밀칸 = 황금(해금 후), 나머지는 섞기
   let type = 'flip';
-  if (n === 4 || (n > 4 && (ch.idx === 20 || ch.idx === 14 || (ch.idx === 4 && n > 20)))) type = 'rival';
-  else if (n === 6 || (unlocked.golden && rng() < 0.35)) type = 'golden';
-  const N = Math.round(clamp(7 + 15 * d + (rng() - 0.5) * 3, 6, 24));
-  const heavy = unlocked.heavy && (n === 11 || rng() < 0.3 + 0.3 * d) ? Math.round(N * (0.12 + 0.3 * d)) : 0;
-  const spec = { n, tier, d: +d.toFixed(3), chapter: ch.chapter.id, chapterIdx: ch.ci, idx: ch.idx, type, N, heavy, intro: INTRO[n] || null, seed: (rng() * 2 ** 31) | 0 };
+  if (s.role === 'rival' && has.rival) type = 'rival';
+  else if (s.role === 'boss' && has.rival) type = 'rival';
+  else if (s.role === 'precision' && has.golden) type = 'golden';
+  else if (has.golden && (s.role === 'applied' || s.role === 'practice2') && rng() < 0.4) type = 'golden';
+  // 더미 크기: L1~10 은 3→16장으로 커지며 '양에 따라 숨'을 익힌다. 휴식/보상판은 크게(싹쓸이 쾌감)
+  let N = Math.round(clamp(6 + 13 * (1 - Math.exp(-n / 28)) + (rng() - 0.5) * 4, 3, 22));
+  if (n <= 10) N = [3, 5, 4, 8, 7, 12, 10, 9, 14, 16][n - 1];
+  if (s.role === 'relief' || s.role === 'reward') N = Math.max(N, 12);
+  if (s.role === 'precision' && type === 'flip') N = Math.max(4, Math.round(N * 0.7));
+  const heavy = has.heavy && (n === 21 || (s.role !== 'relief' && s.role !== 'reward' && rng() < 0.35)) ? Math.max(1, Math.round(N * (0.12 + 0.2 * rng()))) : 0;
+  const spec = { n, tier: s.tier, role: s.role, rate: s.rate, chapter: ch.chapter.id, chapterIdx: ch.ci, idx: ch.idx, type, N, heavy, intro: INTRO[n] || null, seed: (rng() * 2 ** 31) | 0 };
+  // 난이도 손잡이 k (0=쉬움 … 1=어려움): 보정표 → 없으면 목표 클리어율로 추정
+  const k = kOverride ?? CAL[n] ?? clamp(1.05 - s.rate, 0.02, 0.98);
+  spec.k = +k.toFixed(3);
   if (type === 'flip') {
-    spec.puffs = d < 0.3 ? 3 : d < 0.55 ? 3 : 2;
-    spec.target = Math.max(2, Math.round(N * clamp(0.36 + 0.42 * d, 0.3, 0.85)));
+    spec.puffs = s.puffs || 3;
+    spec.target = Math.max(1, Math.min(N, Math.round(N * (0.2 + 0.75 * k))));
   } else if (type === 'golden') {
-    spec.puffs = d < 0.45 ? 3 : 2;
-    spec.goldenDepth = +clamp(0.15 + 0.7 * d + (rng() - 0.5) * 0.15, 0.1, 0.9).toFixed(2); // 위에서부터 깊이 비율
+    spec.puffs = s.puffs || 3;
+    spec.goldenDepth = +clamp(0.1 + 0.85 * k, 0.1, 0.95).toFixed(2); // 위에서부터 깊이 비율
   } else {
-    const r = RIVALS[(ch.ci + (ch.idx === 20 ? 2 : 0)) % RIVALS.length];
-    spec.rival = r.id;
-    spec.stake = Math.round(clamp(4 + 8 * d, 4, 12));
+    const ri = s.role === 'boss' ? 5 : Math.min(4, Math.floor(n / 25));
+    spec.rival = RIVALS[ri].id;
+    spec.stake = Math.round(clamp(4 + n / 12, 4, 12));
     spec.N = spec.stake * 2;
-    spec.aiSkill = +clamp(0.5 + 1.3 * d, 0.4, 2).toFixed(2);
+    spec.aiSkill = +clamp(0.3 + 2.2 * k, 0.3, 2.5).toFixed(2);
   }
   return spec;
 }
@@ -87,7 +118,10 @@ export function levelSpec(n) {
 // 별: 목표 달성 1★ + 여유(남은 숨/초과 달성)로 2·3★
 export function starsFor(spec, res) {
   if (!res.win) return 0;
-  if (spec.type === 'flip') return 1 + (res.puffsLeft >= 1 || res.flipped >= Math.ceil(spec.target * 1.35) ? 1 : 0) + (res.puffsLeft >= 1 && res.flipped >= Math.ceil(spec.target * 1.35) ? 1 : 0);
+  if (spec.type === 'flip') {
+    const extra = res.flipped >= Math.min(spec.N, Math.ceil(spec.target * 1.35));
+    return 1 + (res.puffsLeft >= 1 || extra ? 1 : 0) + (res.puffsLeft >= 1 && extra ? 1 : 0);
+  }
   if (spec.type === 'golden') return 1 + Math.min(2, res.puffsLeft);
   const share = res.me / Math.max(1, res.me + res.ai);
   return share >= 0.75 ? 3 : share >= 0.6 ? 2 : 1;

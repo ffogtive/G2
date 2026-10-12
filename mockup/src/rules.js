@@ -8,8 +8,9 @@ export const PHYS_SWEET = 0.95;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
+// 1장 ≈ 0.45, 20장 = 0.95, 40장 ≈ 1.12 — 차이를 넓혀 '양에 따라 다르게 분다'가 손가락으로 느껴지게 (2라운드 리서치: 기존 폭은 손가락 한 개 폭)
 export function sweetHiFor(n) {
-  return clamp(0.42 + 0.53 * Math.sqrt(Math.max(1, n) / 20), 0.5, 1.12);
+  return clamp(0.45 + 0.5 * Math.sqrt((Math.max(1, n) - 1) / 19), 0.45, 1.12);
 }
 export function sweetLoFor(n) {
   return sweetHiFor(n) * 0.78;

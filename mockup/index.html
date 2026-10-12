@@ -248,6 +248,9 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .lr-stars span.on { color: var(--gold); animation: starIn 0.5s cubic-bezier(.2,1.6,.4,1) both; }
 @keyframes starIn { 0% { transform: scale(0) rotate(-40deg); } 100% { transform: scale(1) rotate(0); } }
 .lr-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; margin: 10px 0 14px; }
+.seg.tabs { margin: 10px 0 0; box-shadow: none; }
+.seg.tabs button { flex: 1; font-size: 0.9rem; }
+.seg.tabs button.on { background: linear-gradient(#ffe066, var(--gold)); color: var(--ink); -webkit-text-stroke: 0; }
 #toast { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); background: rgba(42,26,18,0.85); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 1rem; max-width: 86vw; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .logo h1, .hint .hand { animation: none; } }
 </style>
@@ -340,6 +343,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
   <section id="album" class="screen" hidden>
     <div class="panel">
       <div class="album-head"><h2 data-t="album">ALBUM</h2><button id="albumBack" class="btn blue" type="button" data-t="back">BACK</button></div>
+      <div id="albumTabs" class="seg tabs"><button type="button" data-tab="mine" class="on" data-t="tabMine">MY DDAKJI</button><button type="button" data-tab="preview" data-t="tabPreview">NEXT THEME (CONCEPT)</button></div>
       <div class="bar"><div id="albumBar"></div></div>
       <div id="albumCount" class="disp"></div>
       <div id="albumGrid"></div>
