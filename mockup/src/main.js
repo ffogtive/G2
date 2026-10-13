@@ -3878,4 +3878,15 @@ window.__puffLifecycle = {
   },
 };
 
+// 앱 '뒤로' 다리(안드로이드 뒤로 버튼): 맨 위에 열린 창의 닫기·돌아가기 버튼을 누른 것처럼 한다.
+// 처리했으면 true. 홈 화면에서만 false → 앱이 닫힌다(판 도중에 눌러 앱이 꺼지는 사고 방지)
+const BACK_ORDER = [['#tune', '#tuneClose'], ['#micOffer', '#micNo'], ['#pvpLobby', '#pvpClose'], ['#dailyCard', '#dailyHome'],
+  ['#lvIntro', '#liClose'], ['#lvResult', '#lrMap'], ['#album', '#albumBack'], ['#map', '#mapBack'], ['#result', '#homeBtn'], ['#hud', '#quitBtn']];
+window.__puffBack = () => {
+  for (const [box, btn] of BACK_ORDER) {
+    const b = $(box), k = $(btn);
+    if (b && !b.hidden && k && !k.hidden && !k.disabled) { k.click(); return true; }
+  }
+  return state !== 'home'; // 펼치기·부팅 중에는 삼킨다
+};
 boot();

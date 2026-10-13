@@ -199,28 +199,45 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     // SafeArea 를 쓰지 않는다: 게임 CSS 가 env(safe-area-inset-*) 로 노치·홈 막대를 직접 피한다(viewport-fit=cover)
     final topInset = MediaQuery.paddingOf(context).top;
-    return Scaffold(
-      backgroundColor: kBg,
-      body: Stack(children: [
-        Positioned.fill(child: WebViewWidget(controller: _web)),
-        // 노치 옆 안전 영역(게임 CSS 가 비워 두는 곳)만 — 안전 영역이 없는 기기는 --dart-define=NATIVE_DEMO=true 로
-        if (topInset >= 20)
-          Positioned(
-            left: 0,
-            top: 0,
-            width: 88,
-            height: topInset,
-            child: RawGestureDetector(
-              behavior: HitTestBehavior.opaque,
-              gestures: {
-                LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
-                  () => LongPressGestureRecognizer(duration: const Duration(milliseconds: 1500)),
-                  (r) => r.onLongPress = _openNativeDemo,
-                ),
-              },
+    // 안드로이드 뒤로 버튼: 게임이 열린 창·화면을 먼저 닫는다(window.__puffBack). 홈에서만 앱을 닫는다
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _onBack();
+      },
+      child: Scaffold(
+        backgroundColor: kBg,
+        body: Stack(children: [
+          Positioned.fill(child: WebViewWidget(controller: _web)),
+          // 노치 옆 안전 영역(게임 CSS 가 비워 두는 곳)만 — 안전 영역이 없는 기기는 --dart-define=NATIVE_DEMO=true 로
+          if (topInset >= 20)
+            Positioned(
+              left: 0,
+              top: 0,
+              width: 88,
+              height: topInset,
+              child: RawGestureDetector(
+                behavior: HitTestBehavior.opaque,
+                gestures: {
+                  LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                    () => LongPressGestureRecognizer(duration: const Duration(milliseconds: 1500)),
+                    (r) => r.onLongPress = _openNativeDemo,
+                  ),
+                },
+              ),
             ),
-          ),
-      ]),
+        ]),
+      ),
     );
+  }
+
+  Future<void> _onBack() async {
+    Object? handled;
+    try {
+      handled = await _web.runJavaScriptReturningResult('window.__puffBack ? window.__puffBack() : false');
+    } catch (_) {
+      handled = false; // 페이지가 아직 없으면 앱을 닫는다
+    }
+    if (handled != true && handled != 'true') await SystemNavigator.pop();
   }
 }
