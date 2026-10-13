@@ -40,6 +40,12 @@ dependencies:
   webview_flutter_android: 4.14.1
   # iOS 소리 세션(무음 스위치여도 '푸', 다른 앱 음악은 안 끊음)
   audio_session: 0.2.4
+  # B 시제품(네이티브 3D 장면 데모, lib/native/): Flutter GPU(Impeller) 위 3D 엔진. 0.24.x 는 2주가 안 돼 0.23.0 고정
+  flutter_scene: 0.23.0
+  vector_math: ^2.1.4
+  # flutter_scene 의 간접 의존 — 최신(10/10~10/13 출시)이 2주가 안 돼 그 전 판으로 고정
+  archive: 4.3.0
+  image: 4.10.1
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +73,8 @@ flutter:
   # 빠지면 첫 실행이 검은 화면 → test/asset_test.dart 가 지킨다
   assets:
     - assets/www/
+    # B 시제품 데모(lib/native/)가 재생하는 웹 물리 녹화(app/tool/make_track_fixture.mjs 가 만듦, 약 45KB)
+    - assets/native/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

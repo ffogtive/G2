@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -13,14 +14,22 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 import 'haptics.dart';
+import 'native/demo_page.dart';
 
 const kGamePort = 47821;
 const kBg = Color(0xFF2A1A12);
+// B 시제품(네이티브 3D 장면 데모, lib/native/) 숨은 입구: --dart-define=NATIVE_DEMO=true 면 웹뷰 게임 대신 데모만 띄운다.
+// 평소 빌드에서는 왼쪽 위 노치 옆(안전 영역, 게임 UI 가 없는 곳)을 1.5초 길게 누르면 열린다. 기본은 언제나 웹뷰 게임.
+const kNativeDemo = bool.fromEnvironment('NATIVE_DEMO');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  if (kNativeDemo) {
+    runApp(const NativeDemoApp());
+    return;
+  }
   // 무음 스위치가 켜져 있어도 '푸' 소리(게임 핵심 피드백), 다른 앱 음악은 끊지 않음
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration(
@@ -142,6 +151,16 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     }
   }
 
+  // 숨은 입구 → 네이티브 데모. 웹 게임을 먼저 내려(빈 페이지) WebGL·rAF 가 GPU 를 같이 쓰지 않게 한다(FPS 측정 오염 방지).
+  // 돌아오면 게임을 다시 연다(진행 중이던 판은 버림 — 디버그 입구라서)
+  Future<void> _openNativeDemo() async {
+    HapticFeedback.mediumImpact();
+    await _web.loadHtmlString('<html><body style="background:#2a1a12"></body></html>');
+    if (!mounted) return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NativeDemoPage()));
+    if (mounted) await _reload();
+  }
+
   Future<void> _reload() async {
     final url = await GameServer.ensure(); // 백그라운드에서 듣기 소켓이 회수됐을 수 있다 → 다시 연다
     await _web.loadRequest(url);
@@ -166,6 +185,29 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     // SafeArea 를 쓰지 않는다: 게임 CSS 가 env(safe-area-inset-*) 로 노치·홈 막대를 직접 피한다(viewport-fit=cover)
-    return Scaffold(backgroundColor: kBg, body: WebViewWidget(controller: _web));
+    final topInset = MediaQuery.paddingOf(context).top;
+    return Scaffold(
+      backgroundColor: kBg,
+      body: Stack(children: [
+        Positioned.fill(child: WebViewWidget(controller: _web)),
+        // 노치 옆 안전 영역(게임 CSS 가 비워 두는 곳)만 — 안전 영역이 없는 기기는 --dart-define=NATIVE_DEMO=true 로
+        if (topInset >= 20)
+          Positioned(
+            left: 0,
+            top: 0,
+            width: 88,
+            height: topInset,
+            child: RawGestureDetector(
+              behavior: HitTestBehavior.opaque,
+              gestures: {
+                LongPressGestureRecognizer: GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                  () => LongPressGestureRecognizer(duration: const Duration(milliseconds: 1500)),
+                  (r) => r.onLongPress = _openNativeDemo,
+                ),
+              },
+            ),
+          ),
+      ]),
+    );
   }
 }

@@ -34,6 +34,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- B 시제품(lib/native/ 네이티브 3D 데모, flutter_scene): Flutter GPU API 켜기. 웹뷰 게임에는 영향 없음 -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableFlutterGPU"
+            android:value="true" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
