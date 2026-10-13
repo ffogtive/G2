@@ -103,7 +103,7 @@
 ## 리눅스에서 확인한 것 (2026-10-13, 이 컨테이너)
 
 ```bash
-cd native/puff_sim && cargo build --release && cargo test --release     # 19 통과(단위 4 · 결정성 5 · 앱 ABI 5 + 황금 해시 그대로)
+cd native/puff_sim && cargo build --release && cargo test --release     # 14 통과(단위 4 · 결정성 5 · 앱 ABI 5, 황금 해시 그대로)
 (cd dart && dart run bin/ffi_check.dart ../target/release/libpuff_sim.so) # Dart = Rust = C: a6be48c3edfb264d
 cd ../../app && flutter analyze && flutter test                            # 문제 0 · 48 통과
 app/tool/linux_check.sh                                                     # 실제 앱 화면(위 그림)
