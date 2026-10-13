@@ -58,9 +58,21 @@ let profile = Store.load();
 profile.cue = Object.assign({ breath: 0, bBig: 0, height: 0, side: 0, star: 0, prev: null }, profile.cue || {});
 profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.cue.relapse || {});
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 0 };
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1 };
 const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
+// 9차: 콩닥 숨 1(차분)을 기본으로(재윤님 '1 차분이 지금보다 괜찮다') — 저장된 튜닝값도 한 번 옮긴다
+if ((profile.settings.feelV || 0) < 9) { profile.settings.feel = { ...(profile.settings.feel || {}), beat: 1 }; profile.settings.feelV = 9; Store.save(profile); }
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
+// 9차 물안경(재윤님: '초록 가이드는 아이템을 쓰면 보이게'): 이번 숨에 초록 구간이 보이는 아이템. 평생 첫 3숨은 무료(튜토리얼)
+profile.items = Object.assign({ goggles: 3 }, profile.items || {});
+let gogglesOn = false;
+const GOGGLE_FREE_PUFFS = 3, GOGGLE_MAX = 9;
+// 체험(할머니가 빌려준 물안경): 레벨이면 L1~2, 자유 대전이면 평생 첫 3숨 (아이템·PvP 기획서 1.5)
+function goggleTrial() { return match?.level ? match.level.n <= 2 : (profile.tutorialPuffs || 0) < GOGGLE_FREE_PUFFS; }
+function gogglesActive() { return gogglesOn || goggleTrial() || feel.guide >= 0.5; }
+// 9차 입술 높이: 'eye' 눈높이(지금 입) | 'low' 책상에 턱. 판마다 눈높이로 시작, 저장 안 함
+let pose = 'eye', poseK = 0;
+const POSE_UNLOCK_PUFFS = 9;
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
 const sfx = new Sfx();
@@ -84,6 +96,7 @@ let camAim = 0, camAimGoal = 0;
 // 9차(재윤님: '딱지 오른쪽을 노리면 몸과 앵글이 그쪽으로 가서 가운데를 맞춰야'): 누른 뒤 1인칭 몸이 옆걸음 → 표적이 입술 바로 앞 가운데.
 // 회전이 아니라 평행 이동: 바람은 지금처럼 진행 방향과 평행(물리 그대로) — 돌면 정면으로 맞아 '옆을 불면 반대쪽으로 굴러감'(4차)·★칸 판이 사라진다
 let camStrafe = 0, camStrafeGoal = 0;
+const reducedMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const camStrafeSide = new THREE.Vector3(1, 0, 0);
 const camAimPos = new THREE.Vector3(), camAimTarget = new THREE.Vector3();
 let acc = 0;
@@ -537,7 +550,7 @@ function takeCueSnap(raw, shot, g) {
   const n = live.length, type = match?.level?.type || 'flip';
   const k = Cues.lidCount(order.map((o) => o.y), shot.h, DISC_H);
   const win = Cues.idealWindow(n, type);
-  cue.snap = { order, n, k, win, type, ratio: shot.ratio ?? 1, lat: raw.lat || 0, f: Cues.tideFill(raw.power, n), stH: cueStage('height'), stB: cueStage('breath'), pls: pocketLatSign(g) };
+  cue.snap = { order, n, k, win, type, ratio: shot.ratio ?? 1, lat: raw.lat || 0, f: Cues.tideFill(raw.power, n), stH: cueStage('height'), stB: cueStage('breath'), pls: pocketLatSign(g), pose: raw.pose || 'eye' };
   // 카운터는 스냅샷 뒤에 올린다 (이번 영수증은 '쏘기 전 단계'로 그림)
   const c = profile.cue;
   c.breath++; if (n >= 8) c.bBig++;
@@ -570,7 +583,12 @@ function receiptTip(R) {
   const flips = R.fl.size, outs = R.ou.size;
   if (R.type === 'goldenSide' && R.kind === 'side') return t('rcpSideStar');
   if (R.kind === 'breath') return R.ratio < Rules.GREEN_LO ? t('rcpWeak') : t('rcpStrong');
-  if (R.kind === 'height') return R.win && R.k < R.win[0] ? t('rcpHigh') : t('rcpLow');
+  if (R.pose === 'low' && R.k <= 1 && flips < Math.max(1, R.n * 0.5)) return t('rcpLowTop'); // 책상 입으로 맨 위: 약함
+  if (R.kind === 'height' && R.pose !== 'low') {
+    const low = !(R.win && R.k < R.win[0]);
+    if (low && poseUnlocked() && R.n >= 8 && (profile.settings.useLowTips || 0) < 3) { profile.settings.useLowTips = (profile.settings.useLowTips || 0) + 1; Store.save(profile); return t('rcpUseLow'); }
+    return low ? t('rcpLow') : t('rcpHigh');
+  }
   if (R.kind === 'side') return t('rcpSide');
   if (flips >= Math.max(1, R.n * 0.5) && outs < 2) return t('rcpGood');
   if (outs >= 2) return t('rcpStrong');
@@ -823,6 +841,69 @@ function mixRGB(a, b, k) { return a.map((x, i) => Math.round(x + (b[i] - x) * cl
 
 // 첫 터치 가이드(6차: "처음엔 딱지 어디를 찍을지 가이드 — 찍으라고"): 위에서 3장째 가운데에 손가락이 꾹 → 아래로 쭉 당기는 시범.
 // 7차: 평생 첫 TAP_GUIDE_PUFFS 숨(맨 처음 튜토리얼)에만. 공략 단서 토글과 무관한 조작 안내다.
+// ── 9차 입술 높이 레일 · 물안경 칩 ──
+function giveGoggles(k) { // 9차 물안경 얻기(최대 9). 지금은 시작 3개 + 같은 판 3연패 +1 — 정식 경제는 docs/design/items-pvp.md
+  const before = profile.items.goggles || 0;
+  profile.items.goggles = Math.min(GOGGLE_MAX, before + k);
+  if (profile.items.goggles > before) setTimeout(() => toast(t('goggleGot')), 1200);
+}
+function poseUnlocked() { return (profile.tutorialPuffs || 0) >= POSE_UNLOCK_PUFFS; }
+function setPose(p, quiet) {
+  if (p === 'low' && liveCount() < Rules.LOW_POSE_MIN_N) { if (!quiet) toast(t('poseSmall')); p = 'eye'; }
+  if (p === pose) return;
+  pose = p;
+  if (!quiet) { sfx.tone(p === 'low' ? 262 : 330, 0.07, 'triangle', 0.06); navigator.vibrate?.(12); }
+  if (p === 'low' && !profile.settings.poseTipSeen) { profile.settings.poseTipSeen = true; Store.save(profile); toast(t('poseLowTip')); }
+}
+function updateRail() {
+  const rail = $('#lipRail'), gg = $('#goggles');
+  const mine = state === 'match' && myTurn.on && puffer.who === 'me';
+  const showRail = mine && !myTurn.pressed && fpvOn() && poseUnlocked();
+  if (rail.hidden === showRail) rail.hidden = !showRail;
+  const small = liveCount() < Rules.LOW_POSE_MIN_N;
+  if (pose === 'low' && small && mine) setPose('eye', true); // 작은 더미: 보이게 눈높이로 되돌림
+  rail.classList.toggle('low', pose === 'low');
+  rail.classList.toggle('off', small);
+  const free = goggleTrial() || feel.guide >= 0.5;
+  const showG = mine && !myTurn.pressed && !free; // 누르기 전에만 (기획서 1.7)
+  if (gg.hidden === showG) gg.hidden = !showG;
+  if (showG) {
+    gg.classList.toggle('on', gogglesOn);
+    gg.classList.toggle('empty', (profile.items.goggles || 0) <= 0 && !gogglesOn);
+    gg.classList.toggle('nudge', !gogglesOn && (profile.cue.relapse.breath || 0) > 0 && (profile.items.goggles || 0) > 0); // 같은 숨 실수 2연속 → '물안경 쓸래?'
+    const nTxt = String(profile.items.goggles || 0);
+    if ($('#gogglesN').textContent !== nTxt) $('#gogglesN').textContent = nTxt;
+  }
+}
+// 물안경을 쓴 숨: 1인칭 화면 가장자리에 둥근 렌즈 테 두 개 + 옅은 하늘색
+function drawGoggleRims() {
+  if (!(state === 'match' && myTurn.on && fpvOn() && puffer.who === 'me' && (gogglesOn || goggleTrial()))) return;
+  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
+  const W = cv.width / dpr, H = cv.height / dpr, r = Math.max(W, H) * 0.62;
+  ctx.save(); ctx.scale(dpr, dpr);
+  ctx.fillStyle = 'rgba(120,210,255,0.07)'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(40,120,200,0.55)'; ctx.lineWidth = 14;
+  for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(W / 2 + sx * W * 0.27, H * 0.45, r * 0.62, r * 0.78, 0, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.restore();
+}
+// 책상 자세의 입 높이를 더미 앞면에 분홍 점선으로(누르기 전에만)
+function drawLipLine() {
+  if (!(pose === 'low' && poseK > 0.4 && myTurn.on && !myTurn.pressed && table && state === 'match')) return;
+  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
+  const c = table.pileCenter();
+  const dir = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
+  const side = new THREE.Vector3(-dir.z, 0, dir.x);
+  ctx.save(); ctx.scale(dpr, dpr);
+  ctx.strokeStyle = 'rgba(255,110,150,0.9)'; ctx.lineWidth = 3; ctx.setLineDash([7, 6]);
+  ctx.beginPath();
+  for (let i = 0; i <= 12; i++) {
+    const a = -1.2 + (2.4 * i) / 12;
+    const p = new THREE.Vector3(c.x, Rules.LIP_MIN, c.z).addScaledVector(dir, Math.cos(a) * DISC_R * 1.04).addScaledVector(side, Math.sin(a) * DISC_R * 1.04).project(camera);
+    const x = (p.x * 0.5 + 0.5) * window.innerWidth, y = (-p.y * 0.5 + 0.5) * window.innerHeight;
+    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  }
+  ctx.stroke(); ctx.restore();
+}
 const TAP_GUIDE_PUFFS = 3;
 function drawTapGuide(now) {
   if (!myTurn.on || myTurn.pressed || !table || state !== 'match' || cue.receipt) return; // 카드가 떠 있으면 카드 먼저
@@ -849,7 +930,7 @@ function drawTapGuide(now) {
   const micMode = micEnabled && mic.ready;
   const minDim = Math.min(window.innerWidth, window.innerHeight);
   // 당김 시범 길이: 숨 가이드 단계에서만 '정답 근처', 그 뒤엔 '당긴다'만 알려 주는 고정 길이
-  const pull = micMode ? 0 : guideStage() <= 1 ? minDim * feel.pull * sweetHiFor(n) * 0.9 : minDim * 0.12;
+  const pull = micMode ? 0 : gogglesActive() ? minDim * feel.pull * sweetHiFor(n) * 0.9 : minDim * 0.12; // 정답 길이는 물안경일 때만
   const cyc = ((now - myTurn.t0) % 2600) / 2600; // 0~0.3 누름, 0.3~0.8 당김, 0.8~1 떼기
   const press = micMode ? Math.min(1, cyc / 0.3) : cyc < 0.3 ? cyc / 0.3 : 1;
   const drag = micMode ? 0 : cyc < 0.3 ? 0 : cyc < 0.8 ? (cyc - 0.3) / 0.5 : 1;
@@ -941,7 +1022,7 @@ function updateCues(now) {
   cue.sleeve.scale.set(1, Math.max(0.02, top - y0), 1);
   cue.sleeve.material.opacity = pulling ? 0.05 : 0.16;
   // 금 띠: 위에서 2~4장째
-  const showBand = !pulling && st.win && cueStage('height') === 0;
+  const showBand = !pulling && st.win && cueStage('height') === 0 && pose !== 'low';
   for (const m of Object.values(cue.band)) m.visible = !!showBand;
   if (showBand) {
     const yTop = ys[st.win[0] - 1] + DISC_H / 2, yBot = ys[Math.min(ys.length, st.win[1]) - 1] - DISC_H / 2;
@@ -951,8 +1032,9 @@ function updateCues(now) {
   }
   // 숨 물결 (숨 단계 ≤ 1, 당기는 동안)
   const beat = beatOn();
-  const bst = beat ? 0 : cueStage('breath'); // 콩닥 숨(시험): 목표(초록)는 늘 보이고 어려움은 박동이 맡는다
-  const showTide = pulling && bst <= 1;
+  // 9차: 숨 물결(초록 구간)은 물안경을 쓴 숨에만. 흰 물결도 '꼭대기 = 정답'을 흘리므로 안경이 없으면 아예 없다
+  const bst = 0;
+  const showTide = pulling && gogglesActive();
   for (const k of ['body', 'line', 'brim', 'bulge']) cue.tide[k].visible = showTide;
   if (!showTide) { cue.tide.f = 0; return; }
   const T = cue.tide;
@@ -1294,14 +1376,18 @@ function frame(now) {
   if (table && state === 'match') target.y += clamp(table.columnTop() * 0.25, 0, 1.2);
   camAim += ((state === 'match' ? camAimGoal : 0) - camAim) * Math.min(1, dt * 5);
   camStrafe += ((state === 'match' && fpvOn() ? camStrafeGoal : 0) - camStrafe) * Math.min(1, dt * 6);
+  const poseGoal = state === 'match' && fpvOn() && pose === 'low' && (myTurn.on || performance.now() < myTurn.until + 450) ? (reducedMotion ? 0.5 : 1) : 0;
+  poseK += (poseGoal - poseK) * Math.min(1, dt * 6);
   let aimPos = camAimPos;
   if (camAim > 0.001 && table) {
     const top = table.columnTop();
     if (fpvOn()) {
       // 1인칭(6차): 입 높이에서 더미를 바라본다 — 10장 옆면 121px·폭 87% (three.js 투영 계산), 더미는 아래 입술·볼 위에
       const portrait = window.innerWidth / window.innerHeight < 0.85;
-      aimPos = new THREE.Vector3(0, top * 0.7 + (portrait ? 1.0 : 0.9), portrait ? 5.2 : 4.6).addScaledVector(camStrafeSide, camStrafe);
-      target.lerp(new THREE.Vector3(0, top * 0.5, 0).addScaledVector(camStrafeSide, camStrafe), camAim);
+      // 9차 책상 자세: 고개를 책상까지 숙임 — 더미 앞 가운데가 화면 같은 높이(±4px)에 오게 시선을 맞춤(설계 패널)
+      const eyeP = new THREE.Vector3(0, top * 0.7 + (portrait ? 1.0 : 0.9), portrait ? 5.2 : 4.6), lowP = new THREE.Vector3(0, 0.36, portrait ? 4.9 : 4.4);
+      aimPos = eyeP.lerp(lowP, poseK).addScaledVector(camStrafeSide, camStrafe);
+      target.lerp(new THREE.Vector3(0, top * 0.5, 0).lerp(new THREE.Vector3(0, 0.12 + 0.667 * top, 0), poseK).addScaledVector(camStrafeSide, camStrafe), camAim);
     } else target.lerp(camAimTarget.clone().setY(top * 0.5), camAim);
   }
   const pos = camBase.clone().lerp(aimPos, camAim).lerp(new THREE.Vector3(0, 1, 0), camZoom);
@@ -1326,6 +1412,9 @@ function frame(now) {
     drawSlideArrow(bctx, bdpr);
   }
   drawTapGuide(now);
+  drawLipLine();
+  drawGoggleRims();
+  updateRail();
   drawPocketHint(now);
   updateCues(now);
   drawReceipt(now);
@@ -1480,7 +1569,7 @@ function goHome() {
   cancelInput?.();
   tension(false);
   simWatch.resolve = null;
-  puffer.who = 'me'; $('#puffWrap').classList.remove('ai'); myTurn.on = false; cue.receipt = null;
+  puffer.who = 'me'; $('#puffWrap').classList.remove('ai'); myTurn.on = false; cue.receipt = null; pose = 'eye'; gogglesOn = false;
   // 파산 방지: 딱지가 바닥나면 문방구 할머니가 기본 딱지 10장 (리서치: 빈털터리 방지)
   if (Store.maxStake(profile) < 5) {
     const rng = mulberry32((Date.now() & 0xffff) + 11);
@@ -1571,7 +1660,7 @@ async function startMatch(opts = {}) {
     scene.add(m);
   }
   syncMeshes();
-  state = 'match';
+  state = 'match'; pose = 'eye'; gogglesOn = false;
   camZoom = 0;
   snapCam();
   $('#rivalName').textContent = rivalName;
@@ -1846,7 +1935,8 @@ function playerShot() {
       sfx.unlock();
       const s = pointerAim(ev);
       if (!s) return;
-      aiming = { ...s, sx: ev.clientX, sy: ev.clientY, full: false, strain: 0 };
+      aiming = { ...s, sx: ev.clientX, sy: ev.clientY, full: false, strain: 0, pose };
+      const my = Rules.mouthYFor(pose); if (my != null) aiming.mouthY = my; // 눈높이는 mouthY 를 아예 안 넘김(물리 비트 동일)
       if (beatOn()) { aiming.n = liveCount(); aiming.beat = { ph: 0, k: 0, u: 0, t0: performance.now(), buf: [], rng: mulberry32((Math.random() * 2 ** 31) | 0) }; aiming.eff = 0; } // 박동 난수는 경기 rng 와 따로(켜고 꺼도 상대·판 흐름이 같게)
       myTurn.pressed = true;
       camStrafeSide.set(-s.dir.z, 0, s.dir.x).normalize(); camStrafeGoal = s.lat || 0; // 몸이 표적 쪽으로 옆걸음
@@ -1898,7 +1988,7 @@ function playerShot() {
       puffer.p = aiming.power;
       inhale?.set(aiming.power / F);
       // 음계 8칸(0~꽉)은 가이드 단계에서만. 이후엔 연속 들숨 소리만 (음이 시작되는 칸이 정답표가 되지 않게)
-      if (guideStage() <= 1 && aiming.power < F) {
+      if (gogglesActive() && aiming.power < F) { // 음계 8칸도 정답 단서 → 물안경일 때만
         const step = Math.min(7, Math.floor((aiming.power / F) * 8));
         if (step !== aiming.step) { aiming.step = step; if (step > 0) sfx.tone([392, 440, 494, 523, 587, 659, 698, 784][step], 0.05, 'triangle', 0.06); }
       }
@@ -1907,6 +1997,7 @@ function playerShot() {
     };
     const fire = (shot) => {
       aiming = null;
+      if (gogglesOn) { profile.items.goggles = Math.max(0, (profile.items.goggles || 0) - 1); gogglesOn = false; Store.save(profile); } // 놓을 때 1개(콜록·취소면 안 씀)
       profile.firstPlay = false;
       finish(shot);
     };
@@ -2026,14 +2117,16 @@ async function blow(rawShot, who) {
   hideGizmo();
   sfx.puff(Math.min(1.2, rawShot.power), shot.ratio ?? 1); // '푸' — 약함·초록·셈에 따라 길이·거칠기
   navigator.vibrate?.(Math.round(20 + shot.power * 30));
-  fx.wind(g.origin, g.aim, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
+  if (who === 'me') window.__lastShot = { pose: rawShot.pose || 'eye', mouthY: rawShot.mouthY ?? null, power: rawShot.power }; // 테스트용
+  const windFrom = rawShot.mouthY != null ? new THREE.Vector3(g.aim.x - g.dir.x * Rules.LIP_BACK, rawShot.mouthY, g.aim.z - g.dir.z * Rules.LIP_BACK) : g.origin; // 책상 입: 낮은 곳에서 올려 붊
+  fx.wind(windFrom, g.aim, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
   if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 }); // 너무 낮게: 바닥 먼지
   fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, g.aim.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
   shake = 0.18 + rawShot.power * 0.22;
   flash(0.55 * Math.min(1, rawShot.power));
   shockwave(table.pileCenter(), rawShot.power);
   // 물리에 바람 적용
-  table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power, blast: shot.blast || 0 });
+  table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power, blast: shot.blast || 0, ...(rawShot.mouthY != null ? { mouthY: rawShot.mouthY } : {}) });
   if (shot.blast > 0.15) {
     // 너무 센 숨 = 돌풍: 휘잉~ 먼지바람이 더미를 통째로 밀어 버린다 (들어 올리지 못하고 날려 버림)
     sfx.whoosh();
@@ -2275,7 +2368,7 @@ async function startDaily() {
   clearMatchMeshes();
   for (const d of table.discs) { const m = makeDiscMesh(d.cardId); meshes.set(d.id, m); scene.add(m); }
   syncMeshes();
-  state = 'match';
+  state = 'match'; pose = 'eye'; gogglesOn = false;
   camZoom = 0;
   snapCam();
   $('#rivalName').textContent = t('daily');
@@ -2445,7 +2538,7 @@ async function startLevel(n) {
   clearMatchMeshes();
   for (const d of table.discs) { const m = makeDiscMesh(d.cardId, d.heavy); meshes.set(d.id, m); scene.add(m); }
   syncMeshes();
-  state = 'match';
+  state = 'match'; pose = 'eye'; gogglesOn = false;
   camZoom = 0;
   snapCam();
   $('#meScore').textContent = '0';
@@ -2499,6 +2592,9 @@ async function finishLevel(res) {
   const stars = Math.min(feel.guide >= 0.5 ? 2 : 3, starsFor(spec, res));
   const before = new Set(Object.keys(profile.inv).filter((k) => profile.inv[k] > 0));
   const rewards = [];
+  profile.failStreak = profile.failStreak || {};
+  if (res.win) delete profile.failStreak[spec.n];
+  else if ((profile.failStreak[spec.n] = (profile.failStreak[spec.n] || 0) + 1) >= 3) { profile.failStreak[spec.n] = 0; giveGoggles(1); } // 같은 판 3연패 → 물안경 1
   if (res.win) {
     profile.stars[spec.n] = Math.max(profile.stars[spec.n] || 0, stars);
     profile.level = Math.max(profile.level, spec.n + 1);
@@ -2640,6 +2736,22 @@ function wireUI() {
   document.querySelectorAll('#albumTabs button').forEach((b) => b.addEventListener('click', () => { sfx.pop(); if (b.dataset.tab === 'preview') openPreview(); else openAlbum(); }));
   $('#againBtn').addEventListener('click', () => { sfx.pop(); clearMatchMeshes(); startMatch(); });
   $('#homeBtn').addEventListener('click', () => { sfx.pop(); goHome(); });
+  // 9차: 입술 높이 레일(탭 = 칸 고르기, 레일 몸통 탭 = 바꾸기) · 키보드 ↑↓ · 물안경 칩
+  $('#lipRail').addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const b = e.target.closest('[data-pose]');
+    setPose(b ? b.dataset.pose : pose === 'eye' ? 'low' : 'eye');
+  });
+  window.addEventListener('keydown', (e) => {
+    if ($('#lipRail').hidden) return;
+    if (e.key === 'ArrowDown') setPose('low'); else if (e.key === 'ArrowUp') setPose('eye');
+  });
+  $('#goggles').addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    if (gogglesOn) { gogglesOn = false; return; } // 놓기 전 다시 탭 = 안 씀
+    if ((profile.items.goggles || 0) <= 0) { toast(t('goggleEmpty')); return; }
+    gogglesOn = true; toast(t('goggleUsed')); sfx.tone(784, 0.06, 'triangle', 0.05);
+  });
   $('#quitBtn').addEventListener('click', () => { const wasLevel = match && match.level; simOn = false; table = null; goHome(); if (wasLevel) openMap(); });
   $('#langBtn').addEventListener('click', () => {
     setLang(getLang() === 'ko' ? 'en' : 'ko');

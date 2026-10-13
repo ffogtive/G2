@@ -90,6 +90,25 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .pot span { font-size: 0.8rem; display: block; line-height: 1; opacity: 0.85; }
 .pot b { font-size: 1.6rem; line-height: 1.1; }
 #quitBtn { position: absolute; left: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
+/* 9차: 입술 높이 2단 레일(오른쪽 아래, HOME 과 거울 자리). 탭으로 칸 고르기. 누르는 동안·상대 차례엔 숨김 */
+#lipRail { position: absolute; right: 10px; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 4px); width: 56px; height: 120px; border-radius: 28px; background: rgba(42,26,18,0.55); border: 3px solid #2a1a12; box-shadow: 0 3px 0 #2a1a12; touch-action: none; }
+#lipRail .notch { position: absolute; left: 0; width: 100%; height: 56px; background: none; border: 0; padding: 0; cursor: pointer; }
+#lipRail .notch[data-pose="eye"] { top: 2px; } #lipRail .notch[data-pose="low"] { bottom: 2px; }
+#lipRail .notch::after { content: ''; position: absolute; left: 50%; top: 50%; width: 14px; height: 4px; margin: -2px 0 0 -7px; border-radius: 2px; background: rgba(255,255,255,0.5); }
+#lipRail .lipHandle { position: absolute; left: 6px; width: 40px; height: 24px; top: 16px; border-radius: 12px 12px 14px 14px; background: radial-gradient(ellipse at 50% 35%, #f6a3ad, #d4566a 60%, #a8304a); border: 2.5px solid #2a1a12; transition: top 0.25s ease; pointer-events: none; }
+#lipRail.low .lipHandle { top: 74px; }
+#lipRail.off .notch[data-pose="low"] { opacity: 0.35; cursor: not-allowed; }
+#lipRail .lipLbl { position: absolute; right: 62px; font-family: var(--display); font-size: 0.8rem; color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; white-space: nowrap; pointer-events: none; opacity: 0.85; }
+#lipRail .lipLbl.eye { top: 20px; } #lipRail .lipLbl.low { bottom: 20px; }
+#lipRail.low .lipLbl.low, #lipRail:not(.low) .lipLbl.eye { color: #ffe27a; }
+/* 9차: 물안경(초록 숨 가이드 아이템). 레일 위. 탭 = 이번 숨에 쓰기(놓을 때 1개), 다시 탭 = 취소 */
+#goggles { position: absolute; right: 10px; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 136px); width: 56px; height: 56px; border-radius: 50%; background: #bfe9ff; border: 3px solid #2a1a12; box-shadow: 0 3px 0 #2a1a12; padding: 0; cursor: pointer; }
+#goggles .lens { position: absolute; left: 7px; top: 15px; width: 36px; height: 18px; border-radius: 9px; background: linear-gradient(90deg, #5fd3ff 0 46%, #2a1a12 46% 54%, #5fd3ff 54%); border: 2.5px solid #2a1a12; }
+#goggles b { position: absolute; right: -6px; bottom: -6px; min-width: 22px; height: 22px; border-radius: 11px; background: #ff5d73; color: #fff; font: 700 13px/22px var(--display); border: 2px solid #2a1a12; }
+#goggles.on { background: #6dffb0; transform: scale(1.08); }
+#goggles.empty { filter: grayscale(1); opacity: 0.6; }
+#goggles.nudge { animation: gogNudge 0.9s ease-in-out infinite; }
+@keyframes gogNudge { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-8px) rotate(-6deg); } 60% { transform: translateY(-4px) rotate(5deg); } }
 #puffWrap { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(46vw, 230px); aspect-ratio: 1; pointer-events: none; transition: bottom 0.3s, top 0.3s; }
 #puffWrap.ai { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 64px); width: min(26vw, 140px); }
 #puffCanvas { width: 100%; height: 100%; }
@@ -318,6 +337,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <div id="rps" class="rps" hidden><div class="card"><p id="rpsTitle" class="disp"></p><div class="hands"><button type="button" data-h="rock" aria-label="rock">✊</button><button type="button" data-h="scissors" aria-label="scissors">✌️</button><button type="button" data-h="paper" aria-label="paper">✋</button></div><div class="vsline"><span class="disp">VS</span><span id="rpsAi" class="ai-hand">❔</span></div><p id="rpsRes" class="disp res"></p></div></div>
     <div id="vs" hidden><div class="card"><div class="vsrow"><span id="vsMe"></span><span class="vsx">VS</span><span id="vsAi"></span></div><div id="vsBait"></div><div id="vsMode" class="vsmode"></div></div></div>
     <button id="quitBtn" class="btn ghost" type="button" data-t="home">HOME</button>
+    <div id="lipRail" hidden><button type="button" data-pose="eye" class="notch"></button><button type="button" data-pose="low" class="notch"></button><div class="lipHandle" aria-hidden="true"></div><span class="lipLbl eye" data-t="poseEye"></span><span class="lipLbl low" data-t="poseLow"></span></div>
+    <button id="goggles" type="button" hidden><span class="lens" aria-hidden="true"></span><b id="gogglesN">0</b></button>
   </section>
 
   <section id="result" class="screen" hidden>

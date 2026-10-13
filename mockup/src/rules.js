@@ -144,3 +144,11 @@ export function beatStep(st, dtMs, holdMs, fullness, tier, rng) {
   const w = beatWave(st.ph);
   return b.A * (1 + 0.5 * g) * boost * (w > 0 ? w * (1 + b.f * st.u) : w);
 }
+
+// ── 입술 높이 (9차, 재윤님: '입술의 y축 위치는 컨트롤 못하나?') ──
+// 물리가 구분하는 자세는 둘(tools/mouthmap.mjs 16시드): 눈높이 = 지금 입(조준 높이를 따라감, sim 기본 경로·비트 동일) / 책상 = 입술을 책상에 댐.
+// 책상 입은 8장↑ 가운데 층을 ×1.2~3.3 넘기지만(퍼올림), 맨 위를 노리면 손해(14장 ×0.67) → 정답 하나가 아니다.
+export const LIP_BACK = 2.6; // 입 ~ 조준점 수평 거리(sim TUNE.lipBack 과 같음)
+export const LIP_MIN = 0.15; // 책상에 댄 입술 높이(sim TUNE.lipMinY)
+export const LOW_POSE_MIN_N = 6; // 6장 미만은 퍼올릴 각이 없다(6장 더미 높이 0.36 vs 입 0.15)
+export const mouthYFor = (pose) => (pose === 'low' ? LIP_MIN : null); // null = mouthY 를 아예 넘기지 않음(눈높이)
