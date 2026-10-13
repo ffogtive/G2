@@ -22,11 +22,14 @@ npm run app:www > "$OUT/app-www.log" 2>&1
 if command -v flutter >/dev/null; then (cd app && flutter pub get && flutter analyze && flutter test) > "$OUT/flutter-check.log" 2>&1; fi
 # 보낼 것: app/(빌드 산출물 제외) + 맥 스크립트 + 설정(기기 ID 등, 비밀 아님)
 TAR=$(mktemp /tmp/puff-app-XXXX.tar)
-tar -C "$REPO" --exclude 'app/build' --exclude 'app/.dart_tool' --exclude 'app/ios/Pods' -cf "$TAR" app tools/iphone/mac-build-install.command
+# app/pubspec.yaml 이 ../native/puff_sim/dart 를 path 의존으로 쓴다 → 같은 상대 경로로 함께 보낸다(코덱스 리뷰)
+tar -C "$REPO" --exclude 'app/build' --exclude 'app/.dart_tool' --exclude 'app/ios/Pods' \
+  --exclude 'native/puff_sim/target' --exclude 'native/puff_sim/dist' --exclude 'native/puff_sim/dart/.dart_tool' \
+  -cf "$TAR" app native/puff_sim tools/iphone/mac-build-install.command
 ssh -o BatchMode=yes "$APPLE_BUILD_SSH" "mkdir -p '$MAC_DIR/incoming' && rm -rf '$MAC_DIR/incoming/'*"
 scp -q "$TAR" "$APPLE_BUILD_SSH:$MAC_DIR/incoming/src.tar"
 scp -q "$CFG" "$APPLE_BUILD_SSH:$MAC_DIR/iphone-deploy.env"
-ssh -o BatchMode=yes "$APPLE_BUILD_SSH" "set -e; cd '$MAC_DIR/incoming' && tar -xf src.tar && rm -rf '$MAC_DIR/app' && mv app '$MAC_DIR/app' && cp tools/iphone/mac-build-install.command '$MAC_DIR/' && chmod 700 '$MAC_DIR/mac-build-install.command'"
+ssh -o BatchMode=yes "$APPLE_BUILD_SSH" "set -e; cd '$MAC_DIR/incoming' && tar -xf src.tar && rm -rf '$MAC_DIR/app' && mv app '$MAC_DIR/app' && mkdir -p '$MAC_DIR/native' && rm -rf '$MAC_DIR/native/puff_sim.new' && mv native/puff_sim '$MAC_DIR/native/puff_sim.new' && { [ -d '$MAC_DIR/native/puff_sim/target' ] && mv '$MAC_DIR/native/puff_sim/target' '$MAC_DIR/native/puff_sim.new/target' || true; } && rm -rf '$MAC_DIR/native/puff_sim' && mv '$MAC_DIR/native/puff_sim.new' '$MAC_DIR/native/puff_sim' && cp tools/iphone/mac-build-install.command '$MAC_DIR/' && chmod 700 '$MAC_DIR/mac-build-install.command'"
 rm -f "$TAR"
 RUN="$MAC_DIR/.local/deploy-runs/$STAMP"
 set +e

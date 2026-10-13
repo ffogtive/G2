@@ -3586,6 +3586,9 @@ function netOnMsg(M, topic, msg) {
     return;
   }
   if (M.ended) return;
+  // 상대가 정해졌으면 상대가 보낸 것만 받는다. by 는 플랫폼이 찍어 위조할 수 없다(null = 보증 없음 → 버림).
+  // 방 코드를 아는 제3자가 blow·trk·end 를 흘려 진짜 상대의 재생을 덮거나 되감는 것을 막음(코덱스 리뷰). 진짜 샷은 db 로도 온다
+  if (M.oppUid && msg.by !== M.oppUid) return;
   const d = msg.data;
   if (!d || typeof d.t !== 'string') return;
   const key = d.t.split('.')[0];
@@ -3872,5 +3875,18 @@ async function bootInner() {
     return { state, puffP: puffer.p, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), frontTop: fr(top), frontBottom: fr(0), reticle: ret, turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
   };
 }
+
+// 앱(Flutter) 수명주기 다리: 뒤로 가면 마이크·소리를 멈추고, 돌아오면 사용자가 켜 둔 마이크만 다시 켠다(코덱스 리뷰 — 백그라운드 녹음 금지)
+let micResume = false;
+window.__puffLifecycle = {
+  pause() {
+    if (micEnabled && mic.ready) { mic.stop(); micResume = true; }
+    try { sfx.ctx?.suspend?.(); } catch (e) { /* 소리 없음 */ }
+  },
+  async resume() {
+    try { sfx.ctx?.resume?.(); } catch (e) { /* 소리 없음 */ }
+    if (micResume) { micResume = false; const ok = await mic.start(); micEnabled = ok; if (!ok) toast(t('micFail')); }
+  },
+};
 
 boot();

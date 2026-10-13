@@ -20,6 +20,12 @@ printf '실행 기록: %s\n' "$RUN"
 export PATH="$HOME/flutter/bin:$HOME/development/flutter/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 command -v flutter >/dev/null || { echo 'flutter 가 PATH 에 없습니다' >&2; exit 2; }
 test -f "$APP_DIR/assets/www/index.html" || { echo '게임 에셋이 없습니다(서버에서 npm run app:www 필요)' >&2; exit 3; }
+# 네이티브 데모용 Rust 물리(선택): cargo 가 있으면 아이폰용 정적 라이브러리를 굽고 링크를 켠다. 없으면 데모는 녹화 재생(웹 게임은 무관)
+if command -v cargo >/dev/null && [ -x "$HERE/native/puff_sim/scripts/build-ios.sh" ]; then
+  "$HERE/native/puff_sim/scripts/build-ios.sh" --device-only > "$RUN/rust-ios.log" 2>&1 || echo 'Rust 링크 생략(로그 rust-ios.log)' | tee -a "$RUN/notes.txt"
+else
+  "$HERE/native/puff_sim/scripts/build-ios.sh" --off > /dev/null 2>&1 || true
+fi
 cd "$APP_DIR"
 { flutter --version; xcodebuild -version; } > "$RUN/versions.txt" 2>&1
 flutter pub get > "$RUN/pub.log" 2>&1

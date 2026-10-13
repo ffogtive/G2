@@ -127,7 +127,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     _web = WebViewController.fromPlatformCreationParams(
       params,
       // 마이크 모드(선택): 게임이 getUserMedia 를 부르면 허락(iOS 는 Info.plist 문구로 시스템 권한을 한 번 더 묻는다)
-      onPermissionRequest: (request) => request.grant(),
+      onPermissionRequest: _onPermission,
     )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       // iOS 웹 콘텐츠 프로세스가 죽으면(메모리 압박) 빈 화면이 남는다 → 다시 연다
@@ -166,12 +166,25 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     await _web.loadRequest(url);
   }
 
+  // 마이크 모드(선택): 웹이 getUserMedia 를 부르면 — 안드로이드는 런타임 권한(RECORD_AUDIO)을 먼저 받고, iOS 는 시스템이 Info.plist 문구로 묻는다
+  static const _perm = MethodChannel('puff/permissions');
+  Future<void> _onPermission(WebViewPermissionRequest request) async {
+    if (Platform.isAndroid && request.types.contains(WebViewPermissionResourceType.microphone)) {
+      final ok = await _perm.invokeMethod<bool>('microphone') ?? false;
+      if (!ok) return request.deny();
+    }
+    return request.grant();
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) GameServer.ensure();
-    // 앱이 뒤로 가면 게임에 '창 벗어남'을 알려 조준·들숨을 취소(게임은 blur·visibilitychange 를 듣는다)
+    if (state == AppLifecycleState.resumed) {
+      // 돌아오면 서버 생존 확인 후 소리를 깨우고, 사용자가 켜 둔 마이크만 다시 켠다
+      GameServer.ensure().then((_) => _web.runJavaScript('window.__puffLifecycle && window.__puffLifecycle.resume()'));
+    }
+    // 앱이 뒤로 가면 조준·들숨을 취소(blur)하고 마이크 트랙·소리를 멈춘다(백그라운드 녹음·배터리 방지)
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      _web.runJavaScript("window.dispatchEvent(new Event('blur'))");
+      _web.runJavaScript("window.dispatchEvent(new Event('blur')); window.__puffLifecycle && window.__puffLifecycle.pause()");
     }
   }
 

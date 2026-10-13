@@ -1,5 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 마이크 모드(선택, 기본 끔): 켤 때 런타임으로 묻는다(MainActivity 'puff/permissions') -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <application
         android:label="PUFF!"
         android:networkSecurityConfig="@xml/network_security_config"
