@@ -1,0 +1,10 @@
+{
+  "appId": "com.ffogtive.puff",
+  "appName": "PUFF!",
+  "webDir": "app/www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#2a1a12",
+    "scrollEnabled": false
+  }
+}

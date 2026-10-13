@@ -61,6 +61,12 @@ LIST=4,9 node tools/calibrate.mjs 0 0 20 out.json            # 특정 레벨 재
 node tools/tune.mjs 140   # 물리 재튜닝(수 분)
 ```
 
+## 앱 (iOS, Capacitor) — 재윤님 아이폰 설치
+
+- `capacitor.config.json`(appId `com.ffogtive.puff`) + `ios/`(Xcode 프로젝트, Swift Package Manager) + `mockup/app/native.js`(앱 전용: 진동 → 탭틱 햅틱)
+- `npm run app:ios` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + native.js → app/www) → `npx cap sync ios`
+- **설치 순서는 `docs/app/ios-local.md`** (맥 + Xcode + 개발자 계정 필요. 클라우드 세션에서는 설치 불가 — 재윤님 맥의 로컬 세션에서)
+
 ## 물리에서 배운 것 (실측, 2026-10-12)
 
 - Rapier 기본 `erp` 로는 쌓인 얇은 원판이 영원히 떨린다 → `erp = 0.2` 에서 20장 완전 정지.
