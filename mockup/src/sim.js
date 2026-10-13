@@ -57,6 +57,21 @@ export const TUNE = {
   loneLift: 0, // 실험 결과 역효과(가설 수정: 1장은 힘이 모자란 게 아니라 너무 셈) → 끔
   protMin: 0.14,
   protMax: 0.26,
+  // 7차 실험(재윤님: '밑에서 입을 퍼올려 불면 포물선으로 잘 넘어간다 / 지금은 입이 수평 고정이라 위·아래 공략이 안 통한다').
+  // blow({ jetPitch }) = 제트의 위아래 기울기(라디안, + = 입이 조준점 아래에서 위로 퍼올림, − = 위에서 내리 붊).
+  // 기울기는 지금 게임의 입(0.1 rad = 5.7° 내려봄 = pitch0)에서 잰다: tilt = jetPitch + pitch0, up/down = sin(tilt) 의 양/음 부분.
+  // jetPitch 를 안 넘기면(지금 main.js·botlib 전부) up = down = 0, 퍼짐 계수 = 1 → 아래 항이 전부 ×1 / +0 → 기존과 비트 동일.
+  // 수평 밀기는 원래부터 진행 방향(P.d.x, P.d.z)을 쓰므로 기울면 cos(pitch) 만큼 저절로 줄어든다(새 항 없음).
+  // 튜닝·실측: tools/pitchmap.mjs (재윤님 숨 3단 0.7/0.9/1.1 × 층 × 기울기). 위험-보상 사다리: 위(안전·작게) ↔ 수평 ↔ 퍼올림(정확한 숨이면 크게·포물선, 세면 원 밖)
+  pitch0: 0.1,
+  tiltSpread: 1, // 비스듬한 제트는 원기둥 옆면에 세로로 길게 닿음(원뿔이 저절로 더 많은 층을 덮음) → 같은 숨이 퍼진 만큼 세기 × cos(tilt). 0 이면 공짜 이득(+30° 가운데 4.8→7.3장)
+  scoopGap: 0.065, // 위로 부는 바람이 붙어 있는 테두리 밑에도 파고듦: 틈 += scoopGap·up·세기² (압력 ∝ 세기² → 약한 숨은 못 파고듦)
+  scoopLift: 0, // 위로 향한 운동량이 테두리를 더 들기: 들기 × (1 + scoopLift·up). 실측: 0.25 만 줘도 약한 숨(0.7배)을 구해 줘서 숨 규칙이 무너짐 → 0, 위 운동량은 scoopRise 로
+  scoopRise: 3, // 파고든 공기(틈 증가분만큼의 들기)가 밑면 전체를 받쳐 중심째 띄움 → 포물선
+  scoopCarry: 0.6, // 그 띄움의 방향: 0 = 수직, 1 = 제트 방향. 0.6 ≈ 앞위 45° → '솟았다가 넘어감'
+  scoopBlast: 10, // 퍼올리며 너무 세게(돌풍) 불면 띄움 × (1 + scoopBlast·blast) → 원 밖으로 날아감 (퍼올림의 대가)
+  press: 0.5, // 위에서 내리 부는 바람이 누름: 들기 × (1 − press·down)
+  pressBlast: 2.5, // 위에서 내리 불면 넘치는 숨이 더미·책상으로 빠짐: 돌풍 × (1 − pressBlast·down) (위 공략의 장점 = 숨이 넘쳐도 덜 날아감)
 };
 
 export async function initPhysics() {
@@ -251,14 +266,23 @@ export class Table {
   }
 
   // 바람!  aim: 맞힐 지점(원기둥 표면 근처 x,y,z), dir: 부는 수평 방향(x,z), dist: 입~조준점 거리,
-  //         power: 0..1 (1 초과 = 오버파워), pitch: 아래로 내려 부는 각(라디안)
-  blow({ aim, dir, power, dist = 2.6, pitch = 0.1, origin, blast = 0 }) {
+  //         power: 0..1 (1 초과 = 오버파워), pitch: 아래로 내려 부는 각(라디안, 옛 인자 — 힘에는 안 씀)
+  //         jetPitch: 7차 실험 인자. 위로 퍼올려 부는 각(라디안, + = 입이 조준점 아래, − = 위, 지금 게임 = −0.1).
+  //                   넘기면 pitch 를 대신하고 기울기가 힘에 들어간다(TUNE 7차 항목). 안 넘기면 기존과 비트 동일
+  //                   주의: 입은 축을 따라 dist 뒤에 둔다 → 낮은 층을 크게 퍼올리면 입 자리가 책상 밑(가상 축). 화면에 그릴 땐 따로 맞출 것
+  blow({ aim, dir, power, dist = 2.6, pitch = 0.1, origin, blast = 0, jetPitch }) {
+    const tilted = Number.isFinite(jetPitch);
+    if (tilted) pitch = -jetPitch;
+    const tilt = tilted ? this.T.pitch0 - pitch : 0; // 지금 입 각도 대비 위(+)/아래(−) 기울기
+    const up = Math.max(0, Math.sin(tilt)), down = Math.max(0, -Math.sin(tilt));
+    const spreadK = tilted ? 1 - this.T.tiltSpread * (1 - Math.cos(tilt)) : 1; // 비스듬히 퍼져 닿는 만큼 약해짐
+    if (down > 0) blast *= Math.max(0, 1 - this.T.pressBlast * down); // 위에서 누르듯 불면 넘치는 숨이 빠짐
     const len = Math.hypot(dir.x, dir.z) || 1;
     const dx = dir.x / len, dz = dir.z / len;
     const cp = Math.cos(pitch), sp = Math.sin(pitch);
     const d = { x: dx * cp, y: -sp, z: dz * cp };
     const o = origin ?? { x: aim.x - d.x * dist, y: aim.y - d.y * dist, z: aim.z - d.z * dist };
-    this.puff = { o, d, power, t: 0, jit: new Map(), blast };
+    this.puff = { o, d, power, t: 0, jit: new Map(), blast, up, down, spreadK };
     // 딱지별 변동 계수(같은 입력도 결과가 조금씩 다름 → 물리의 가변 보상)
     for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
   }
@@ -313,7 +337,7 @@ export class Table {
       const rj = T.jetR0 + a * T.jetSpread;
       const cone = Math.exp(-((lat / rj) ** 2));
       if (cone < 0.02) continue;
-      let s = P.power * Math.exp(-a / T.jetFalloff) * cone * env * (P.jit.get(d.id) ?? 1);
+      let s = P.power * Math.exp(-a / T.jetFalloff) * cone * env * (P.jit.get(d.id) ?? 1) * P.spreadK;
       // 차폐: 입 → 가장자리 사이에 다른 딱지가 있으면 약해짐
       const ray = new RAPIER.Ray(P.o, { x: rx / Math.hypot(rx, ry, rz), y: ry / Math.hypot(rx, ry, rz), z: rz / Math.hypot(rx, ry, rz) });
       const hit = this.world.castRay(ray, Math.hypot(rx, ry, rz) - 0.08, true, undefined, undefined, d.collider, b);
@@ -322,7 +346,10 @@ export class Table {
       const down = new RAPIER.Ray({ x: e.x, y: e.y - 0.01, z: e.z }, { x: 0, y: -1, z: 0 });
       const g = this.world.castRay(down, 2, true, undefined, undefined, d.collider, b);
       const gap = g ? g.toi : 2;
-      let liftF = Math.min(1.35, Math.max(T.minLift, gap / T.gapRef));
+      // 퍼올림(7차): 아래에서 올라오는 바람은 붙어 있는 테두리 밑에도 파고든다(∝ 세기²). up = 0 이면 + 0 → 그대로
+      const wedge = T.scoopGap * P.up * P.power * P.power;
+      let liftF = Math.min(1.35, Math.max(T.minLift, (gap + wedge) / T.gapRef));
+      const liftW = wedge > 0 ? liftF - Math.min(1.35, Math.max(T.minLift, gap / T.gapRef)) : 0; // 파고든 공기로 늘어난 들기
       if (T.loneLift && this.isLone(d, c, nrm)) liftF = Math.max(liftF, T.loneLift * (0.45 + 0.55 * sinT));
       const m = b.mass();
       const k = s * m * T.dt;
@@ -330,7 +357,11 @@ export class Table {
       const pw = P.power;
       const bl = P.blast || 0;
       const cosT = Math.sqrt(1 - sinT * sinT);
-      const liftK = T.lift * liftF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT));
+      // 기울기(7차): 위에서 내리 불면 눌림(press). 기울기 0 이면 ×1 → 그대로
+      const liftB = T.lift * liftF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT)) * (1 - T.press * P.down);
+      const liftK = liftB * (1 + T.scoopLift * P.up);
+      // 퍼올림 띄움: 파고든 공기만큼 밑면 전체를 받쳐 중심째 앞위로 → 포물선. 돌풍이면 훨씬 세게(원 밖으로)
+      const riseK = liftW > 0 ? (liftB / liftF) * liftW * T.scoopRise * (1 + T.scoopBlast * bl) : 0;
       const pushK = T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k * (1 + T.blastPush * bl);
       // 미는 방향: 진행 방향 ↔ 맞은 면 안쪽(−rh) 사이. 정면이면 그대로, 옆을 맞으면 반대쪽 대각선으로 꺾임
       let fx = P.d.x, fz = P.d.z;
@@ -341,6 +372,11 @@ export class Table {
         fx *= dl / fl; fz *= dl / fl;
       }
       b.applyImpulseAtPoint({ x: fx * pushK, y: liftK, z: fz * pushK }, e, true);
+      if (riseK > 0) {
+        const cx = P.d.x * T.scoopCarry, cy = 1 - T.scoopCarry + P.d.y * T.scoopCarry, cz = P.d.z * T.scoopCarry;
+        const cl = Math.hypot(cx, cy, cz) || 1;
+        b.applyImpulse({ x: (riseK * cx) / cl, y: (riseK * cy) / cl, z: (riseK * cz) / cl }, true);
+      }
       // 옆을 스치는 바람 → 테두리를 끌고 감 = 팽이 회전 (원판 법선 축)
       if (side && T.spin) { const tq = T.spin * sinT * side * k * DISC_R; b.applyTorqueImpulse({ x: nrm.x * tq, y: nrm.y * tq, z: nrm.z * tq }, true); }
       if (bl > 0) b.applyImpulse({ x: P.d.x * T.push * T.blastShove * bl * k, y: 0, z: P.d.z * T.push * T.blastShove * bl * k }, true);
