@@ -7,7 +7,7 @@
 
 ## 지금 바로 해 볼 것
 
-- **웹 최신판**: [PUFF! 아티팩트](https://claude.ai/artifact/GHMV2EfcRBWWM9biiqq7eY) (버전 18)
+- **웹 최신판**: [PUFF! 아티팩트](https://claude.ai/artifact/GHMV2EfcRBWWM9biiqq7eY) (버전 19)
   - 바뀐 점
     - 물안경 파란 테가 없어졌다.
     - 숨 원인 문구가 한 목소리로 말한다.
