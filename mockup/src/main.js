@@ -49,6 +49,7 @@ function cueStage(rule) {
   return st;
 }
 function guideStage() { return cueStage('breath'); }
+function beatOn() { return (feel.beat || 0) >= 1 && !(micEnabled && mic.ready); } // 8차 시험: 콩닥 숨(마이크 모드엔 없음)
 function guideOn() { return guideStage() === 0; }
 const MAX_TURNS = 18;
 
@@ -57,8 +58,8 @@ let profile = Store.load();
 profile.cue = Object.assign({ breath: 0, bBig: 0, height: 0, side: 0, star: 0, prev: null }, profile.cue || {});
 profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.cue.relapse || {});
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1 };
-const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1] };
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 0 };
+const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
@@ -945,12 +946,13 @@ function updateCues(now) {
     cue.band.body.material.opacity = st.inWin ? 0.28 + 0.22 * (0.5 + 0.5 * Math.sin(now * 0.025)) : 0.2;
   }
   // 숨 물결 (숨 단계 ≤ 1, 당기는 동안)
-  const bst = cueStage('breath');
+  const beat = beatOn();
+  const bst = beat ? 0 : cueStage('breath'); // 콩닥 숨(시험): 목표(초록)는 늘 보이고 어려움은 박동이 맡는다
   const showTide = pulling && bst <= 1;
   for (const k of ['body', 'line', 'brim', 'bulge']) cue.tide[k].visible = showTide;
   if (!showTide) { cue.tide.f = 0; return; }
   const T = cue.tide;
-  T.f += (Cues.tideFill(st.p, st.n) - T.f) * 0.35;
+  T.f += (Cues.tideFill(st.p, st.n) - T.f) * (beat ? 0.7 : 0.35); // 콩닥: 물결이 박동을 늦게 따라가면 타이밍이 어긋남
   const fh = Math.min(T.f, 1) * top;
   const col = bst === 0 ? (st.ratio < Rules.GREEN_LO ? 0xffe9a0 : st.ratio <= 1.0 ? 0x6dffb0 : 0xff8a8a) : 0xffffff;
   const op = bst === 0 ? 0.32 : lerp(0.28, 0.12, clamp(((profile.cue.breath || 0) - 3) / 5, 0, 1));
@@ -1789,6 +1791,17 @@ function playerShot() {
       if (!aiming || (micEnabled && mic.ready)) { lastT = 0; return; }
       const dt = lastT ? Math.min(50, now - lastT) : 0; // 백그라운드에서 돌아와도 한꺼번에 콜록하지 않게 50ms 상한
       lastT = now;
+      if (aiming.beat) {
+        // 콩닥 숨: 당긴 숨(가운데) + 박동 → 볼·물결·숨 줄기가 모두 유효 숨으로 오르내림. 꽉 래치·버팀은 당긴 숨 기준(안정)
+        const off = Rules.beatStep(aiming.beat, dt, now - aiming.beat.t0, aiming.power / F, feel.beat, aiming.beat.rng);
+        aiming.eff = clamp(aiming.power + sweetHiFor(aiming.n) * off, 0, POWER_MAX);
+        aiming.beat.buf.push({ t: now, eff: aiming.eff });
+        while (aiming.beat.buf.length > 2 && aiming.beat.buf[0].t < now - 400) aiming.beat.buf.shift();
+        puffer.p = aiming.eff;
+        breath.over = aiming.eff > F + 0.01;
+        inhale?.set(aiming.eff / F);
+        if (aiming.power >= 0.05) { showGizmo({ ...aiming, power: aiming.eff }, powerColor()); showCues({ ...aiming, power: aiming.eff }); }
+      }
       aiming.strain = Rules.strainStep(aiming.strain || 0, aiming.power, dt, aiming.full, feel.strainMs);
       puffer.strain = breath.strain = aiming.strain;
       if (aiming.strain >= Rules.LEAK_AT && now >= leakAt) { sfx.leak(); leakAt = now + lerp(260, 140, (aiming.strain - Rules.LEAK_AT) / (1 - Rules.LEAK_AT)); }
@@ -1827,6 +1840,7 @@ function playerShot() {
       const s = pointerAim(ev);
       if (!s) return;
       aiming = { ...s, sx: ev.clientX, sy: ev.clientY, full: false, strain: 0 };
+      if (beatOn()) { aiming.n = liveCount(); aiming.beat = { ph: 0, k: 0, u: 0, t0: performance.now(), buf: [], rng: mulberry32((Math.random() * 2 ** 31) | 0) }; aiming.eff = 0; } // 박동 난수는 경기 rng 와 따로(켜고 꺼도 상대·판 흐름이 같게)
       myTurn.pressed = true;
       el.setPointerCapture?.(ev.pointerId);
       puffer.mode = 'charge';
@@ -1872,6 +1886,7 @@ function playerShot() {
       aiming.power = Rules.pouchPower(dy / (minDim * feel.pull));
       breath.finger = { x: ev.clientX, y: ev.clientY };
       updatePouch();
+      if (aiming.beat) return; // 콩닥 숨: 볼·물결·조준은 rAF 루프가 유효 숨으로 그린다
       puffer.p = aiming.power;
       inhale?.set(aiming.power / F);
       // 음계 8칸(0~꽉)은 가이드 단계에서만. 이후엔 연속 들숨 소리만 (음이 시작되는 칸이 정답표가 되지 않게)
@@ -1887,11 +1902,20 @@ function playerShot() {
       profile.firstPlay = false;
       finish(shot);
     };
-    const up = () => {
+    const up = (ev) => {
       if (!aiming) return;
       if (micEnabled && mic.ready) { if (!micBlowing) { aiming = null; puffer.mode = 'idle'; puffer.p = 0; hideGizmo(); clearInterval(micTimer); unpress(); } return; }
       if (aiming.power < 0.06) {
         aiming = null; puffer.mode = 'idle'; puffer.p = 0; hideGizmo(); resetPouch(); inhale?.stop(); inhale = null; unpress();
+        return;
+      }
+      if (aiming.beat) {
+        // 놓은 순간(화면·터치 지연 50ms 앞당김)의 유효 숨. 고리 버퍼에서 읽는다 — 모두에게 같은 보정
+        const tt = (ev?.timeStamp || performance.now()) - 50, buf = aiming.beat.buf;
+        let e = buf.length ? buf[0].eff : aiming.power;
+        for (const b of buf) if (b.t <= tt) e = b.eff;
+        const { beat, eff, ...rest } = aiming;
+        fire({ ...rest, power: e });
         return;
       }
       fire({ ...aiming });
@@ -2669,7 +2693,7 @@ async function bootInner() {
     const fr = (y) => { const v = new THREE.Vector3(c.x + tc.x * DISC_R, y, c.z + tc.z * DISC_R).project(camera); return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight }; };
     const rv = reticle?.visible ? reticle.position.clone().project(camera) : null;
     const ret = rv ? { x: (rv.x * 0.5 + 0.5) * window.innerWidth, y: (-rv.y * 0.5 + 0.5) * window.innerHeight } : null; // 표적 화면 좌표(터치 일치 검사용)
-    return { state, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), frontTop: fr(top), frontBottom: fr(0), reticle: ret, turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
+    return { state, puffP: puffer.p, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), frontTop: fr(top), frontBottom: fr(0), reticle: ret, turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
   };
 }
 

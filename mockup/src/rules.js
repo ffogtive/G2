@@ -117,3 +117,30 @@ export function pickProtrusion(table, toward, skill, rng) {
   }
   return best;
 }
+
+// ── 콩닥 숨 (8차 시험 토글, 재윤님: "숨 레인지가 왔다갔다할 때 순간 놓아 초록에 닿게 — 재밌으려나?") ──
+// 당긴 길이가 박동의 '가운데', 놓는 순간이 박동의 어디인지가 숨을 정한다. 크기는 정답 숨 hi(n) 대비 비율이라 장수와 무관.
+// 원안(0↔꽉 그네)은 초록 체류 47~110ms 로 아이·어르신이 20~45% → 기각(8차 설계 패널). 창이 150ms 밑인 등급은 두지 않는다.
+// 봇·상대·레벨 보정에는 들어가지 않는다(튜닝 beat 기본 0).
+export const BEAT_TIERS = { 1: { A: 0.08, T: 1500, f: 0 }, 2: { A: 0.18, T: 1100, f: 0.15 } }; // 1 차분 / 2 보통
+// 파형: 부드러운 삼각파(0.75·삼각 + 0.25·사인), 위상 0 = 골(−1), 0.5 = 마루(+1). 순수 사인은 마루에 오래 머물러 '마루 노리기'가 공짜
+export function beatWave(ph) {
+  const x = ph - Math.floor(ph);
+  const tri = x < 0.5 ? -1 + 4 * x : 3 - 4 * x;
+  return 0.75 * tri + 0.25 * -Math.cos(2 * Math.PI * x);
+}
+// st = { ph, k, u } 를 dtMs 만큼 진행하고 오프셋(정답 대비 비율)을 돌려준다.
+// 오래 들수록(0.6s 뒤 2s 동안) 크기 ×1.5·주기 ×0.8, 꽉에 가까울수록 크기 최대 ×2.5·꽉이면 주기 ×0.7 (숨 참으면 심장이 빨라짐)
+// 들쭉날쭉: 박동마다 마루만 (1 + f·u), u ∈ [−1, 1] 는 rng(경기 시드) — 오르는 동안 보이므로 숨긴 정보가 아니다
+export function beatStep(st, dtMs, holdMs, fullness, tier, rng) {
+  const b = BEAT_TIERS[tier];
+  if (!b) return 0;
+  const g = clamp((holdMs - 600) / 2000, 0, 1);
+  const boost = 1 + 1.5 * clamp((fullness - 0.8) / 0.2, 0, 1);
+  const T = b.T * (1 - 0.2 * g) * (fullness >= 1 ? 0.7 : 1);
+  st.ph += dtMs / T;
+  const k = Math.floor(st.ph + 0.5); // 마루마다 새 들쭉날쭉
+  if (k !== st.k) { st.k = k; st.u = b.f ? rng() * 2 - 1 : 0; }
+  const w = beatWave(st.ph);
+  return b.A * (1 + 0.5 * g) * boost * (w > 0 ? w * (1 + b.f * st.u) : w);
+}
