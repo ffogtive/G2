@@ -882,17 +882,6 @@ function updateRail() {
     if ($('#gogglesN').textContent !== nTxt) $('#gogglesN').textContent = nTxt;
   }
 }
-// 물안경을 쓴 숨: 1인칭 화면 가장자리에 둥근 렌즈 테 두 개 + 옅은 하늘색
-function drawGoggleRims() {
-  if (!(state === 'match' && myTurn.on && fpvOn() && puffer.who === 'me' && (gogglesOn || goggleTrial()))) return;
-  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
-  const W = cv.width / dpr, H = cv.height / dpr, r = Math.max(W, H) * 0.62;
-  ctx.save(); ctx.scale(dpr, dpr);
-  ctx.fillStyle = 'rgba(120,210,255,0.07)'; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = 'rgba(40,120,200,0.55)'; ctx.lineWidth = 14;
-  for (const sx of [-1, 1]) { ctx.beginPath(); ctx.ellipse(W / 2 + sx * W * 0.27, H * 0.45, r * 0.62, r * 0.78, 0, 0, Math.PI * 2); ctx.stroke(); }
-  ctx.restore();
-}
 // 책상 자세의 입 높이를 더미 앞면에 분홍 점선으로(누르기 전에만)
 function drawLipLine() {
   if (!(pose === 'low' && poseK > 0.4 && myTurn.on && !myTurn.pressed && table && state === 'match')) return;
@@ -1415,7 +1404,7 @@ function frame(now) {
   }
   drawTapGuide(now);
   drawLipLine();
-  drawGoggleRims();
+  // 물안경 렌즈 테(파란 선)는 그리지 않는다 — 재윤님 10차 '이상하다'. 효과는 숨 물결(초록 띠)과 칩 불빛으로만 (설계서 v2 §8.2)
   updateRail();
   drawPocketHint(now);
   updateCues(now);
