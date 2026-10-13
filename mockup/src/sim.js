@@ -119,6 +119,36 @@ export function mulberry32(seed) {
   };
 }
 
+// ── PvP 턴 기록용 (P0, docs/design/items-pvp.md §2.1 일관성 방식) ─────────────
+// 아래 셋(턴별 시드·스텝 판정·새 월드)은 새 함수일 뿐, 기존 Table 경로(addPile·blow·step·runUntilSettled)는 한 줄도 안 바뀐다 → 솔로 비트 동일.
+// 32비트 해시(FNV-1a + murmur3 fmix). Node·브라우저 모두 같은 정수 연산이라 같은 값
+function fmix32(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+export function hash32(str, seed = 0x811c9dc5) {
+  let h = seed >>> 0;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return fmix32(h);
+}
+// 턴별 시드: puffSeed = H(seed, g, turn, seat), stackSeed = H(seed, g, turn, 'stack'), beatSeed = H(seed, g, turn, seat, 'beat')
+export function turnSeed(seed, ...parts) { return hash32([seed >>> 0, ...parts].join('|')); }
+export function turnSeeds(seed, g, turn, seat) {
+  return { puff: turnSeed(seed, g, turn, seat), stack: turnSeed(seed, g, turn, 'stack'), beat: turnSeed(seed, g, turn, seat, 'beat') };
+}
+
+// 스텝 기준 멈춤 판정(stepJudge). 게임 watchSim 은 '12프레임 조용하면' 판정 → 60Hz 폰(프레임당 2스텝)과 120Hz 폰(1스텝)이
+// 다른 순간에 판정한다. 같은 조건(0.6초 뒤 · 느림 0.08 · 2.5초 뒤엔 0.5 · 상한 5초)을 '물리 스텝 수'로 옮긴 것. dt = 1/120 기준 스텝 수.
+// 조용함 24스텝 = 0.2초 = 60Hz 12프레임. 지금은 PvP(turn.js)만 쓴다. 솔로 watchSim·봇 runUntilSettled 는 그대로(솔로 불변 원칙)
+export const JUDGE = { minSteps: 72, lateSteps: 300, quietSteps: 24, maxSteps: 600, eps: 0.08, lateEps: 0.5 };
+
+// 같은 엔진·같은 규칙인지: TUNE + JUDGE + Rapier 버전. (sim.js 코드 자체의 변경은 빌드가 소스 해시를 더해야 잡힌다 — P0.5)
+export function simVersion() {
+  return hash32(JSON.stringify(TUNE) + JSON.stringify(JUDGE) + (RAPIER.version?.() ?? '?')).toString(16).padStart(8, '0');
+}
+
 // 광선 필터: 동적 몸체(딱지)만. (Rapier 0.12 JS 의 QueryFilterFlags 값은 WASM 쪽과 어긋나 EXCLUDE_FIXED(1)가 책상을 못 거른다 → 술어로)
 const discOnly = (c) => c.parent()?.isDynamic();
 
@@ -599,5 +629,35 @@ export class Table {
       const q = d.body.rotation();
       return { id: d.id, p: { x: p.x, y: p.y, z: p.z }, q: { x: q.x, y: q.y, z: q.z, w: q.w } };
     });
+  }
+
+  // ── PvP (P0) ──
+  // 턴마다 새 월드: 남은 딱지(판 id = pot 순서, 오름차순)로 stackSeed 더미를 새로 쌓고 가라앉힌다.
+  // 식은 월드에 다시 쌓은 자세를 꽂으면 30스텝 안에 최대 0.043 움직이고 속도가 0.21까지 튄다(§2.0) → 턴 상태 = (liveIds, stackSeed) 20B 로 끝.
+  // d.pid = 판 id (코덱·판정 결과가 쓰는 번호). cardOf(pid) = 그림 카드 id(화면용, 없으면 pid). heavy = 테이프 딱지 pid 집합
+  static fromTurnState(liveIds, stackSeed, { cardOf, heavy, tune } = {}) {
+    const t = new Table(stackSeed >>> 0, tune);
+    const ids = [...liveIds];
+    const hv = new Set();
+    if (heavy) ids.forEach((pid, i) => { if (heavy.has(pid)) hv.add(i); });
+    t.addPile(ids.map((pid) => (cardOf ? cardOf(pid) : pid)), { heavy: hv });
+    t.discs.forEach((d, i) => { d.pid = ids[i]; });
+    t.settle();
+    return t;
+  }
+
+  // 스텝 판정: 매 step() 뒤에 한 번 부른다. j = { n: 0, quiet: 0 } (판정마다 새로). 판정 순간이면 true
+  stepJudge(j) {
+    j.n++;
+    const ms = this.maxSpeed();
+    const ok = !this.puff && j.n > JUDGE.minSteps && (ms < JUDGE.eps || (j.n > JUDGE.lateSteps && ms < JUDGE.lateEps));
+    j.quiet = ok ? j.quiet + 1 : 0;
+    return j.quiet > JUDGE.quietSteps || j.n >= JUDGE.maxSteps;
+  }
+
+  // 판정 결과(main.js simulate 와 같은 규칙): 원 안에서 그림이 위 = 뒤집힘, 원 밖(책상 밖 포함) = 무효
+  judgeResult() {
+    const live = this.liveDiscs();
+    return { flipped: live.filter((d) => this.faceUp(d) > 0.2 && this.inCircle(d)), outs: live.filter((d) => !this.inCircle(d)) };
   }
 }
