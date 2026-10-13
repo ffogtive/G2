@@ -2619,6 +2619,7 @@ async function startLevel(n) {
       } else if (g) pocketPulse(true);
     }
     await react(flipped, 'me');
+    if (flipped.length >= 5) match.bigPuff = true; // 솔로 레벨 대박도 마이크 제안 무장 대상(코덱스 최종 리뷰) — 제안은 결과 창을 닫을 때
     if (flipped.some((d) => d.cardId === 'golden')) match.goldenTaken = true;
     match.flipped += flipped.length;
     await collect(flipped, 'me');
@@ -2634,6 +2635,7 @@ async function finishLevel(res) {
   simOn = false;
   tension(false);
   const spec = match.level;
+  if (match.bigPuff) micOfferArmed = true; // 판이 끝까지 갔을 때만(중간에 나가면 finishLevel 에 오지 않음)
   prog();
   // '가이드 항상 보기'를 켜면 별은 최대 2개 (진행은 막지 않고 최상위 보상만 잠금 — 마리오카트 보조 조향 방식)
   const stars = Math.min(feel.guide >= 0.5 ? 2 : 3, starsFor(spec, res));
