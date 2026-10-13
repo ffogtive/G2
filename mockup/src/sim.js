@@ -52,6 +52,9 @@ export const TUNE = {
   // 다시 쌓을 때 몇 장이 삐져나옴(실험, 기본 끔). 4차 교차 검토: '삐져나온 곳을 노리면 더 넘어간다'는 거울 짝 비교에서
   // 옆 삐져나옴 +1장(오차 2배 수준)뿐, 앞쪽 삐져나옴은 이득 없음 → 보상 없는 무작위만 늘어서 끔. 다시 켜려면 설계부터
   protrudeP: 0,
+  // 마지막 한 장(재윤님 4차: '1장 남으면 죽어도 안 넘어감'): 책상에 혼자 납작하게 놓인 딱지는 테두리 밑 틈이 0 → 들기가 최소치뿐.
+  // 바닥에 깔린 바람이 테두리 밑으로 파고드는 '바닥 쿠션'을 혼자 놓인 딱지에만 준다. 가장자리(옆)를 맞힐수록 크게.
+  loneLift: 0, // 실험 결과 역효과(가설 수정: 1장은 힘이 모자란 게 아니라 너무 셈) → 끔
   protMin: 0.14,
   protMax: 0.26,
 };
@@ -319,7 +322,8 @@ export class Table {
       const down = new RAPIER.Ray({ x: e.x, y: e.y - 0.01, z: e.z }, { x: 0, y: -1, z: 0 });
       const g = this.world.castRay(down, 2, true, undefined, undefined, d.collider, b);
       const gap = g ? g.toi : 2;
-      const liftF = Math.min(1.35, Math.max(T.minLift, gap / T.gapRef));
+      let liftF = Math.min(1.35, Math.max(T.minLift, gap / T.gapRef));
+      if (T.loneLift && this.isLone(d, c, nrm)) liftF = Math.max(liftF, T.loneLift * (0.45 + 0.55 * sinT));
       const m = b.mass();
       const k = s * m * T.dt;
       // 파워 곡선: 들어 올림은 파워에 비례, 미는 힘은 파워^pushExp → 너무 세게 불면 '뒤집히기보다 밀려남'(스윗스팟 생성)
@@ -380,6 +384,17 @@ export class Table {
       if (!this.puff && i > 30 && this.isSettled()) break;
     }
     return { steps: i, flipped: this.liveDiscs().filter((d) => this.faceUp(d) > 0.2 && this.inCircle(d)) };
+  }
+
+  // 책상에 혼자 납작하게 놓였나: 바닥 높이 + 거의 수평 + 위·옆으로 겹친 딱지 없음
+  isLone(d, c, nrm) {
+    if (Math.abs(nrm.y) < 0.95 || c.y > DISC_H * 0.9) return false;
+    for (const o of this.liveDiscs()) {
+      if (o === d) continue;
+      const p = o.body.translation();
+      if (Math.hypot(p.x - c.x, p.z - c.z) < 2 * DISC_R && p.y > c.y - 0.02) return false;
+    }
+    return true;
   }
 
   // 분필 원 안인가 (원 밖에 떨어진 딱지는 그림이 보여도 무효 → 다시 쌓임)

@@ -5,6 +5,11 @@
 
 export const POWER_MAX = 1.25;
 export const PHYS_SWEET = 0.95;
+// 마지막 한 장(재윤님 4차: '1장 남으면 죽어도 안 넘어감'): 초록 숨을 장수와 상관없이 0.95 로 쓰면 1장은 2~3 높이로 솟아
+// 빙글빙글 돌다 동전 던지기로 떨어졌다(뒤집힘 25%). 장수별 물리 세기 실측(tools/stackpower.mjs, 16시드):
+// 1장은 0.75 에서 69%(옆 63%)로 정점, 2장 이상은 0.95 까지 계속 오름 → 1장만 낮춘다.
+export const PHYS_SWEET_ONE = 0.75;
+export const physSweetFor = (n) => (n <= 1 ? PHYS_SWEET_ONE : PHYS_SWEET);
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -36,16 +41,17 @@ export const BLAST_SPAN = +(globalThis.process?.env?.BLAST_SPAN ?? 0.4); // 초�
 export function resolveShot(shot, n, top, rng, overShake = 1) {
   const hi = sweetHiFor(n);
   const ratio = shot.power / hi;
+  const PS = physSweetFor(n);
   if (ratio < GREEN_LO) {
     const lift = Math.pow(clamp((ratio - WEAK_ZERO) / (GREEN_LO - WEAK_ZERO), 0, 1), WEAK_EXP);
-    return { ...shot, power: WEAK_FLOOR + (PHYS_SWEET - WEAK_FLOOR) * lift, ratio, blast: 0 };
+    return { ...shot, power: WEAK_FLOOR + (PS - WEAK_FLOOR) * lift, ratio, blast: 0 };
   }
-  if (ratio <= 1.0) return { ...shot, power: PHYS_SWEET, ratio, blast: 0 };
+  if (ratio <= 1.0) return { ...shot, power: PS, ratio, blast: 0 };
   const ex = ratio - 1.0;
   const k = overShake;
   return {
     ...shot,
-    power: PHYS_SWEET,
+    power: PS,
     blast: clamp(ex / BLAST_SPAN, 0, 1.4),
     h: clamp(shot.h + gauss(rng) * ex * 1.2 * k, 0.03, top),
     lat: clamp((shot.lat || 0) + gauss(rng) * ex * 1.0 * k, -0.95, 0.95), // 숨이 넘치면 조준도 조금 흔들림
