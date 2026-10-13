@@ -580,7 +580,8 @@ export function drawBlowFace(ctx, S, st = {}) {
   const recoil = blow ? (0.012 + 0.035 * smooth(0.8, 1.25, p)) * smooth(0, 0.035, t) * (1 - smooth(0.1, 0.45, t)) : 0;
   const shake = charge ? Math.sin(t * 73) * (0.002 + 0.01 * heat) * (st.full ? 1 : heat > 0 ? 1 : 0) : overB ? Math.sin(t * 61) * 0.007 * (1 - smooth(0.15, 0.45, t)) : cough ? Math.sin(t * 50) * 0.012 * (1 - smooth(0.2, 0.6, t)) : 0;
   const bob = mode === 'idle' ? Math.sin(t * 2.2) * 0.004 : 0;
-  const tilt = aimX * 0.12;
+  const coneSign = (st.windAng ?? -Math.PI / 2) > 0 ? -1 : 1; // 아래로 부는 얼굴은 같은 화면 쪽을 보려면 회전 부호가 반대
+  const tilt = aimX * 0.12 * coneSign;
   const hairFly = overB ? smooth(0, 0.05, t) * (1 - smooth(0.3, 0.6, t)) : 0;
   const skin = mixHex(pal.skin, '#ff6f5a', heat * 0.85);
   const skinHi = mixHex(pal.skinHi, '#ffb3a0', heat * 0.8);
@@ -629,7 +630,7 @@ export function drawBlowFace(ctx, S, st = {}) {
   if (blow) {
     const mx = HX + shake - Math.sin(tilt) * MOUTH_Y;
     const my = HY + recoil + Math.cos(tilt) * MOUTH_Y;
-    drawWind(ctx, mx, my, (st.windAng ?? -Math.PI / 2) + aimX * 0.38, p, t, hole);
+    drawWind(ctx, mx, my, (st.windAng ?? -Math.PI / 2) + aimX * 0.38 * coneSign, p, t, hole);
   }
   ctx.restore();
 }

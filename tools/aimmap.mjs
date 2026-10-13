@@ -1,6 +1,6 @@
 // aimmap.mjs — 조준 지점(좌우 lat × 높이 h) → 물리 반응 지도 (재윤님 4차: 닿는 곳에 따라 딱지가 실제로 다르게 반응해야)
 // 사용: node tools/aimmap.mjs [시드=6] [장수=12] [숨 비율=0.9]
-// 지표: flip = 원 안에서 뒤집힌 장수 / side = 움직인 딱지의 평균 옆 이동(+ = 바람 기준 왼쪽) / fwd = 평균 앞 이동
+// 지표: flip = 원 안에서 뒤집힌 장수 / side = 움직인 딱지의 평균 옆 이동(+z = 바람 진행 방향 기준 오른쪽, main.js side 와 같음) / fwd = 평균 앞 이동
 //       spin = 퍼프 직후 평균 |세로축 회전| / roll = 뒤집힘 축이 옆으로 기운 정도(0 = 앞으로 넘어감, 1 = 옆으로 굴러 넘어감) / out = 원 밖
 import { initPhysics, Table } from '../mockup/src/sim.js';
 import { sweetHiFor, resolveShot } from '../mockup/src/rules.js';
@@ -26,7 +26,7 @@ for (const hf of HS) {
       const sh = resolveShot({ lat, h: Math.max(0.03, top * hf), power: sweetHiFor(N) * R }, N, top, mul(s * 31 + N), 1);
       const c = t.pileCenter();
       const p0 = new Map(t.liveDiscs().map((d) => [d.id, { ...d.body.translation() }]));
-      // 바람 방향 +x, 옆 = +z (바람을 등지고 왼쪽)
+      // 바람 방향 +x, 옆 = +z (바람 진행 방향 기준 오른쪽 = D × up)
       t.blow({ aim: { x: c.x - Math.sqrt(1 - sh.lat * sh.lat), y: sh.h, z: c.z + sh.lat }, dir: { x: 1, z: 0 }, power: sh.power, blast: sh.blast || 0 });
       for (let i = 0; i < 30; i++) t.step();
       for (const d of t.liveDiscs()) spin += Math.abs(d.body.angvel().y) / N;

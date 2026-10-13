@@ -10,12 +10,12 @@ export function mulberry32(seed) {
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // 정책: h=조준 높이 비율, p=더미 양에 맞는 숨 대비 비율 (초록 구간 0.78~1.0 의 가운데 0.89 를 노린다)
-// 4차: 좌우 조준 부활 — latSd = 좌우 오차, seek = 삐져나온 딱지를 노리는 실력(rules.pickProtrusion, 0 = 안 노림)
+// 4차: 좌우 조준 부활 — latSd = 좌우 오차. seek(삐져나온 딱지 노리기)는 교차 검토에서 이득 없음·역효과로 확인돼 모두 0
 export const BOTS = {
   learner: { hMean: 0.82, hSd: 0.12, latSd: 0.25, pMean: 0.89, pSd: 0.15, seek: 0 }, // 보정 기준: 감 익히는 중인 보통 사람(가운데 언저리)
-  typical: { hMean: 0.86, hSd: 0.08, latSd: 0.18, pMean: 0.89, pSd: 0.08, seek: 1.3 },
+  typical: { hMean: 0.86, hSd: 0.08, latSd: 0.18, pMean: 0.89, pSd: 0.08, seek: 0 },
   novice: { hMean: 0.6, hSd: 0.25, latSd: 0.45, pMean: 0.85, pSd: 0.25, seek: 0 },
-  expert: { hMean: 0.9, hSd: 0.04, latSd: 0.1, pMean: 0.9, pSd: 0.04, seek: 2.3 },
+  expert: { hMean: 0.9, hSd: 0.04, latSd: 0.1, pMean: 0.9, pSd: 0.04, seek: 0 },
 };
 
 function puff(t, rng, pol, aimH) {
@@ -51,7 +51,7 @@ function buildTable(spec, rng) {
 
 // 상대 AI 정책 (main.js aiShot 과 동일): 실력이 오르면 조준 높이도 맨 위 근처로 (고수는 위를 노린다)
 export function aiPolicy(skill) {
-  return { hMean: 0.68 + 0.18 * clamp((skill - 1) / 1.2, 0, 1), hSd: 0.17 / skill, latSd: 0.3 / skill, pMean: 0.89, pSd: 0.14 / skill, seek: skill };
+  return { hMean: 0.68 + 0.18 * clamp((skill - 1) / 1.2, 0, 1), hSd: 0.17 / skill, latSd: 0.3 / skill, pMean: 0.89, pSd: 0.14 / skill, seek: 0 }; // seek 끔(4차 교차 검토)
 }
 
 export function playLevel(spec, rng, bot) {

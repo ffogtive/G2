@@ -89,8 +89,9 @@ export function strainStep(s, p, dtMs, full, strainMs = STRAIN_MS) {
 }
 
 // ── 삐져나온 딱지 노리기 (4차) ──────────────────────────────
-// 다시 쌓은 더미에서 '부는 사람 쪽'으로 삐져나온 딱지를 찾는다. 그 테두리 밑은 틈이 커서 바람이 파고든다
-// (tools/aimmap.mjs PROT 실험: 0.25 삐져나온 쪽을 노리면 8.3장 vs 가운데 6.8장 vs 반대쪽 3.3장).
+// ⚠ 실험용, 지금은 아무도 안 씀(AI·봇 seek 0). 4차 교차 검토: 처음 근거(한쪽 6시드 8.3 vs 6.8 vs 3.3)는 거울 짝 비교에서
+//   재현되지 않았고(옆 삐져나옴 +1장 정도), 이 함수는 아래쪽 딱지 높이를 골라 고수 AI 를 오히려 약하게 만들었다.
+// 다시 쌓은 더미에서 '부는 사람 쪽'으로 삐져나온 딱지를 찾는다.
 // toward = 더미 → 부는 사람 수평 단위벡터. 반환 { lat, h, amount } 또는 null. 실력이 높을수록 자주 찾는다.
 // lat 부호는 main.js shotGeometry 와 같다: 바람 방향 D 기준 side = (−D.z, D.x).
 export function pickProtrusion(table, toward, skill, rng) {

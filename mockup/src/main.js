@@ -68,6 +68,9 @@ let slowUntil = 0;
 let hitStopUntil = 0;
 let shake = 0;
 let camZoom = 0;
+// 조준 시점(4차): 내 차례에 조준하는 동안 카메라를 낮춰 더미 옆면을 크게 — 위에서 내려다보면 10장 옆면이 42px 뿐이라 상하 조준이 거칠었다
+let camAim = 0, camAimGoal = 0;
+const camAimPos = new THREE.Vector3(), camAimTarget = new THREE.Vector3();
 let acc = 0;
 let lastT = performance.now();
 const tweens = [];
@@ -334,6 +337,9 @@ function layout() {
   camera.fov = portrait ? 50 : 36;
   camBase.set(0, portrait ? 6.6 : 4.4, portrait ? 8.6 : 6.9);
   camTarget.set(0, portrait ? 0.4 : 0.9, portrait ? -2.4 : -0.8);
+  // 낮고 가까이: 더미 옆면이 약 2배(10장 82→169px, 폭 164→266px, three.js 투영 계산)
+  camAimPos.set(0, portrait ? 2.4 : 2.0, portrait ? 6.2 : 5.6);
+  camAimTarget.set(0, 0, portrait ? -0.8 : -0.3); // y 는 더미 높이의 절반으로 frame 에서 채움
   pileX = portrait ? 2.5 : 4.4;
   camera.updateProjectionMatrix();
   const bc = $('#breath');
@@ -472,7 +478,7 @@ function showGizmo(shot, color = 0xffffff) {
 function hideGizmo() {
   reticle.visible = layerRing.visible = aimLine.visible = false;
   if (ghostRing) ghostRing.visible = false;
-  if (breath.mode === 'charge') breath.mode = 'off';
+  if (breath.mode === 'charge') { breath.mode = 'off'; puffer.aimX = 0; } // 취소: 얼굴도 정면으로 (불 때는 바람 방향 유지)
 }
 
 // ── 숨 줄기 (재윤님 피드백 2: '입 → 바람 → 딱지' 인과를 눈으로) ─────────────
@@ -773,7 +779,9 @@ function frame(now) {
   const sh = shake;
   const target = camTarget.clone();
   if (table && state === 'match') target.y += clamp(table.columnTop() * 0.25, 0, 1.2);
-  const pos = camBase.clone().lerp(new THREE.Vector3(0, 1, 0), camZoom);
+  camAim += ((state === 'match' ? camAimGoal : 0) - camAim) * Math.min(1, dt * 5);
+  if (camAim > 0.001 && table) target.lerp(camAimTarget.clone().setY(table.columnTop() * 0.5), camAim);
+  const pos = camBase.clone().lerp(camAimPos, camAim).lerp(new THREE.Vector3(0, 1, 0), camZoom);
   pos.x += (Math.random() - 0.5) * sh; pos.y += (Math.random() - 0.5) * sh;
   if (state === 'home') {
     const a = now * 0.00012;
@@ -1171,14 +1179,33 @@ function pointerAim(ev) {
   ray.setFromCamera(new THREE.Vector2(nx, ny), camera);
   const c = table.pileCenter();
   const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
-  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(toCam, new THREE.Vector3(c.x, 0, c.z));
-  const hit = new THREE.Vector3();
-  if (!ray.ray.intersectPlane(plane, hit)) return null;
   const dir = toCam.clone().negate();
   const side = new THREE.Vector3(-dir.z, 0, dir.x);
-  // 누른 곳 = 바람이 닿는 곳 (재윤님 4차: 좌우·상하 모두). 표적은 손가락 바로 밑, 당기는 동안 움직이지 않는다
-  const lat = clamp(new THREE.Vector3(hit.x - c.x, 0, hit.z - c.z).dot(side), -0.9 * DISC_R, 0.9 * DISC_R);
   const top = table.columnTop();
+  // 누른 곳 = 바람이 닿는 곳 (재윤님 4차: 좌우·상하 모두). 표적은 손가락 바로 밑, 당기는 동안 움직이지 않는다.
+  // 터치 광선을 실제 원기둥(반지름 R, 높이 0~top)에 쏴서 맞은 점을 그대로 쓴다.
+  // (전에는 더미 중심을 지나는 세로 평면에서 읽어서, 위에서 내려다보는 카메라로는 표적이 손가락보다 0.25~0.7 아래에 찍혔다 — 4차 교차 검토)
+  const o = ray.ray.origin, v = ray.ray.direction;
+  const ox = o.x - c.x, oz = o.z - c.z;
+  const qa = v.x * v.x + v.z * v.z, qb = 2 * (ox * v.x + oz * v.z), qc = ox * ox + oz * oz - DISC_R * DISC_R;
+  const disc = qb * qb - 4 * qa * qc;
+  let hit = null;
+  if (qa > 1e-6 && disc >= 0) {
+    const t = (-qb - Math.sqrt(disc)) / (2 * qa);
+    const y = o.y + t * v.y;
+    if (y <= top) hit = new THREE.Vector3(o.x + t * v.x, Math.max(0.03, y), o.z + t * v.z); // 옆면(아래로 넘치면 맨 아래)
+    else if (v.y < 0) {
+      const tt = (top - o.y) / v.y; // 옆면 위로 넘치면 윗면을 누른 것 → 맨 위 층
+      hit = new THREE.Vector3(o.x + tt * v.x, top - 0.02, o.z + tt * v.z);
+    }
+  }
+  if (!hit) {
+    // 더미 바깥(옆)을 누름: 중심 세로 평면으로 읽어 가장자리로 붙인다
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(toCam, new THREE.Vector3(c.x, 0, c.z));
+    hit = new THREE.Vector3();
+    if (!ray.ray.intersectPlane(plane, hit)) return null;
+  }
+  const lat = clamp(new THREE.Vector3(hit.x - c.x, 0, hit.z - c.z).dot(side), -0.9 * DISC_R, 0.9 * DISC_R);
   const h = clamp(hit.y, 0.03, Math.max(0.05, top - 0.02));
   return { dir: { x: dir.x, z: dir.z }, lat, h, power: 0 };
 }
@@ -1191,6 +1218,7 @@ function playerShot() {
     let inhale = null;
     let micPeak = 0, micBlowing = false, micTimer = null;
     const F = Rules.POUCH_FULL;
+    camAimGoal = 1; // 조준 시점으로
     // ── 숨 주머니: 꽉 래치 · 버팀 · 콜록 (3차 설계 패널 A안) ──
     const resetPouch = () => {
       puffer.strain = breath.strain = 0;
@@ -1240,6 +1268,7 @@ function playerShot() {
     cancelInput = () => finish(null);
     const finish = (shot) => {
       cancelInput = null;
+      camAimGoal = 0; // 불고 나면 뒤집히는 장면을 보도록 원래 시점으로
       cancelAnimationFrame(raf);
       resetPouch();
       document.removeEventListener('visibilitychange', onVis);
@@ -1342,7 +1371,8 @@ async function aiShot() {
   const c = table.pileCenter();
   const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
   const dir = toCam.clone(); // 상대는 맞은편에서 내 쪽으로 분다
-  const target = Rules.pickProtrusion(table, { x: -dir.x, z: -dir.z }, (match.aiSkill || 1) * feel.aiSkill, rng); // 고수는 삐져나온 곳을 노린다
+  // 삐져나온 딱지 노리기(Rules.pickProtrusion)는 꺼 둔다 — 4차 교차 검토: 이득이 실측되지 않았고, 아래쪽 딱지를 노려 고수일수록 약해졌다
+  const target = null;
   const shot = {
     dir: { x: dir.x, z: dir.z },
     lat: clamp((target ? target.lat : 0) + g() * 0.3 / feel.aiSkill, -0.9, 0.9),
@@ -1439,7 +1469,7 @@ async function blow(rawShot, who) {
   slowUntil = performance.now() + 120 + 380; // 날아오르는 순간만 짧게 슬로모(대박 조짐이면 watchSim 에서 연장)
   acc = 0;
   simOn = true;
-  setTimeout(() => { puffer.mode = 'idle'; puffer.p = 0; $('#puffWrap').classList.remove('ai'); puffer.who = 'me'; }, 450);
+  setTimeout(() => { puffer.mode = 'idle'; puffer.p = 0; puffer.aimX = 0; $('#puffWrap').classList.remove('ai'); puffer.who = 'me'; }, 450);
 }
 
 function simulate() {
@@ -1550,12 +1580,15 @@ async function collect(flipped, who) {
 }
 
 async function restack() {
-  // 남은 딱지를 다시 원기둥으로
-  const targets = table.restackTargets({ x: 0, z: 0 });
-  const anims = targets.map(({ d, p, q }) => {
-    const m = meshes.get(d.id);
-    m.userData.anim = true;
-    return { m, from: m.position.clone(), q0: m.quaternion.clone(), to: new THREE.Vector3(p.x, p.y, p.z), q1: new THREE.Quaternion(q.x, q.y, q.z, q.w) };
+  // 남은 딱지를 다시 원기둥으로. 물리를 먼저 쌓아 가라앉힌 뒤 그 자세로 트윈한다
+  // (전에는 이상적인 높이로 트윈 → 끝에서 settle 이 기둥을 한 프레임에 툭 내려앉혔음 — 4차 교차 검토)
+  const live = table.liveDiscs();
+  const before = new Map(live.map((d) => { const m = meshes.get(d.id); m.userData.anim = true; return [d.id, { p: m.position.clone(), q: m.quaternion.clone() }]; }));
+  table.applyRestack(table.restackTargets({ x: 0, z: 0 }));
+  table.settle(240);
+  const anims = live.map((d) => {
+    const m = meshes.get(d.id), b = before.get(d.id), p = d.body.translation(), q = d.body.rotation();
+    return { m, from: b.p, q0: b.q, to: new THREE.Vector3(p.x, p.y, p.z), q1: new THREE.Quaternion(q.x, q.y, q.z, q.w) };
   });
   sfx.whoosh();
   await addTween(0.55, (k) => {
@@ -1566,8 +1599,6 @@ async function restack() {
       a.m.quaternion.slerpQuaternions(a.q0, a.q1, e);
     }
   });
-  table.applyRestack(targets);
-  table.settle(240);
   for (const a of anims) a.m.userData.anim = false;
   syncMeshes();
   sfx.clack(0.6);
@@ -2062,7 +2093,11 @@ async function bootInner() {
     const c = table.pileCenter();
     const top = table.columnTop();
     const toScreen = (y) => { const v = new THREE.Vector3(c.x, y, c.z).project(camera); return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight }; };
-    return { state, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
+    const tc = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize(); // 더미 → 카메라
+    const fr = (y) => { const v = new THREE.Vector3(c.x + tc.x * DISC_R, y, c.z + tc.z * DISC_R).project(camera); return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight }; };
+    const rv = reticle?.visible ? reticle.position.clone().project(camera) : null;
+    const ret = rv ? { x: (rv.x * 0.5 + 0.5) * window.innerWidth, y: (-rv.y * 0.5 + 0.5) * window.innerHeight } : null; // 표적 화면 좌표(터치 일치 검사용)
+    return { state, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), frontTop: fr(top), frontBottom: fr(0), reticle: ret, turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
   };
 }
 
