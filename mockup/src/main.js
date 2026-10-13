@@ -385,6 +385,91 @@ function buildChalkCircle() {
   chalk.renderOrder = 1;
   scene.add(chalk);
 }
+// ★칸 (황금 딱지 옆으로 넘기기, 5차): 분필 원 안 왼/오른쪽 반달(옆으로 0.6 이상)을 금색 분필 빗금으로.
+// 좌우는 플레이어 화면 기준 = 바람 방향 D 의 오른쪽 side=(−D.z, D.x). 카메라가 +z 에서 보므로 화면 오른쪽 = 세계 +x
+let pocket = null;
+const POCKET_MIN = 0.6;
+function pocketSide() {
+  const toCam = new THREE.Vector3(camBase.x, 0, camBase.z).normalize();
+  return new THREE.Vector3(toCam.z, 0, -toCam.x); // D = −toCam → side = (−D.z, D.x)
+}
+function buildPocket(which) {
+  clearPocket();
+  const R = table?.T?.circleR ?? 3.2;
+  const sign = which === 'left' ? -1 : 1;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 512;
+  const ctx = cv.getContext('2d');
+  const sc = 256 / (R + 0.5);
+  ctx.translate(256, 256);
+  ctx.save();
+  ctx.beginPath(); ctx.arc(0, 0, R * sc - 6, 0, Math.PI * 2); ctx.clip();
+  ctx.beginPath(); ctx.rect(sign > 0 ? POCKET_MIN * sc : -256, -256, 256 - POCKET_MIN * sc, 512); ctx.clip();
+  ctx.fillStyle = 'rgba(255,207,51,0.22)'; ctx.fillRect(-256, -256, 512, 512);
+  ctx.strokeStyle = 'rgba(255,214,90,0.75)'; ctx.lineWidth = 5;
+  for (let i = -20; i < 20; i++) { ctx.beginPath(); ctx.moveTo(i * 26 - 300, -300); ctx.lineTo(i * 26 + 300, 300); ctx.stroke(); }
+  ctx.restore();
+  // 경계선 + 별 + 화살표
+  ctx.strokeStyle = 'rgba(255,214,90,0.95)'; ctx.lineWidth = 8; ctx.setLineDash([16, 10]);
+  const xb = sign * POCKET_MIN * sc, yb = Math.sqrt(Math.max(0, (R * sc) ** 2 - xb * xb)) - 6;
+  ctx.beginPath(); ctx.moveTo(xb, -yb); ctx.lineTo(xb, yb); ctx.stroke(); ctx.setLineDash([]);
+  const cx = sign * (POCKET_MIN + (R - POCKET_MIN) * 0.5) * sc;
+  ctx.fillStyle = '#ffcf33'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 6;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? 22 : 52; ctx.lineTo(cx + Math.cos(a) * r, Math.sin(a) * r); }
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,214,90,0.95)';
+  ctx.beginPath(); ctx.moveTo(sign * 18, 0); ctx.lineTo(sign * -6, -22); ctx.lineTo(sign * -6, 22); ctx.closePath(); ctx.fill(); // 가운데에서 칸 쪽을 가리키는 작은 화살표
+  const tx = new THREE.CanvasTexture(cv);
+  tx.colorSpace = THREE.SRGBColorSpace;
+  const size = (R + 0.5) * 2;
+  pocket = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false }));
+  pocket.rotation.x = -Math.PI / 2;
+  // 캔버스 +x 가 '칸 쪽 side' 가 되도록 세로축 회전 (side 가 세계 +x 면 회전 0)
+  const sv = pocketSide();
+  pocket.rotation.z = Math.atan2(-sv.z, sv.x);
+  pocket.position.y = 0.006;
+  pocket.renderOrder = 1;
+  pocket.userData = { sign, side: sv };
+  scene.add(pocket);
+}
+// 조준 시점에서는 ★칸이 화면 밖일 수 있다 → 화면 가장자리에 ★칸 쪽을 가리키는 화살표(칸이 보이면 그 위에 ★)
+function drawPocketHint(now) {
+  if (!pocket || state !== 'match') return;
+  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
+  const sv = pocket.userData.side, sg = pocket.userData.sign, R = table?.T?.circleR ?? 3.2;
+  const w = new THREE.Vector3(sv.x * sg * (POCKET_MIN + (R - POCKET_MIN) * 0.5), 0.05, sv.z * sg * (POCKET_MIN + (R - POCKET_MIN) * 0.5));
+  const v = w.project(camera);
+  const W = cv.width / dpr, H = cv.height / dpr;
+  let x = (v.x * 0.5 + 0.5) * W, y = (-v.y * 0.5 + 0.5) * H;
+  const off = x < 24 || x > W - 24 || y < 80 || y > H - 40 || v.z > 1;
+  const m = 30;
+  if (off) { x = Math.min(W - m, Math.max(m, x)); y = Math.min(H * 0.62, Math.max(H * 0.3, y)); }
+  const pulse = 0.75 + 0.25 * Math.sin(now * 0.008);
+  ctx.save(); ctx.scale(dpr, dpr); ctx.translate(x, y);
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = '#ffcf33'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 3;
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = (i % 2 ? 7 : 16) * pulse; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+  if (off) {
+    const dir = x > W / 2 ? 1 : -1; // 화면 밖 쪽을 가리키는 삼각형
+    ctx.beginPath(); ctx.moveTo(dir * 30, 0); ctx.lineTo(dir * 20, -9); ctx.lineTo(dir * 20, 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function clearPocket() { if (pocket) { scene.remove(pocket); pocket.geometry.dispose(); pocket.material.map.dispose(); pocket.material.dispose(); pocket = null; } }
+function inPocket(d) {
+  if (!pocket || !table.inCircle(d)) return false;
+  const p = d.body.translation(), sv = pocket.userData.side;
+  return pocket.userData.sign * (p.x * sv.x + p.z * sv.z) >= POCKET_MIN;
+}
+function pocketPulse(good) {
+  if (!pocket) return;
+  addTween(0.9, (k) => { const a = Math.sin(Math.PI * k); pocket.material.color.setRGB(1, good ? 1 : 1 - 0.5 * a, good ? 1 - 0.3 * a : 1 - 0.5 * a); pocket.scale.setScalar(1 + 0.03 * a); }, () => { pocket && pocket.material.color.setRGB(1, 1, 1); pocket && pocket.scale.setScalar(1); });
+}
+
 // 원 밖으로 날아간 딱지가 있을 때: 분필 원이 번쩍 (규칙을 가리킨다)
 function chalkPulse() {
   if (!chalk) return;
@@ -793,6 +878,7 @@ function frame(now) {
   if (state === 'home') for (const m of homeMeshes) m.rotation.y += dt * 0.15;
   if (puffer.mode !== 'hidden') drawPuffer();
   drawBreath(Math.min(0.05, (now - (frame._last || now)) / 1000));
+  drawPocketHint(now);
   frame._last = now;
   renderer.render(scene, camera);
 }
@@ -872,6 +958,7 @@ function refreshTexts() {
 }
 
 function clearMatchMeshes() {
+  clearPocket();
   for (const m of meshes.values()) scene.remove(m);
   meshes.clear();
   for (const who of ['me', 'ai']) { for (const m of piles[who]) scene.remove(m); piles[who] = []; }
@@ -1749,6 +1836,7 @@ function rivalName(id) { const r = RIVALS.find((x) => x.id === id); return r ? (
 function goalText(spec) {
   if (spec.type === 'flip') return fmt(t('goalFlip'), { n: spec.N, t: spec.target, p: spec.puffs });
   if (spec.type === 'golden') return fmt(t('goalGolden'), { p: spec.puffs });
+  if (spec.type === 'goldenSide') return fmt(t('goalGoldenSide'), { p: spec.puffs, a: spec.pocket === 'left' ? '←' : '→' });
   return fmt(t('goalRival'), { r: rivalName(spec.rival), s: spec.stake });
 }
 function tierLabel(tier) { return tier === 'hard' ? t('hard') : tier === 'superhard' ? t('superhard') : ''; }
@@ -1785,7 +1873,7 @@ function openMap() {
     b.style.left = x + '%';
     b.style.top = y + 'px';
     const st = profile.stars[n] || 0;
-    b.innerHTML = `<b>${n}</b>${spec.tier === 'hard' || spec.tier === 'superhard' ? `<em>${tierLabel(spec.tier)}</em>` : ''}${done ? `<i>${'★'.repeat(st)}${'☆'.repeat(3 - st)}</i>` : ''}${spec.type === 'rival' ? '<u>VS</u>' : spec.type === 'golden' ? '<u class="g">★</u>' : ''}`;
+    b.innerHTML = `<b>${n}</b>${spec.tier === 'hard' || spec.tier === 'superhard' ? `<em>${tierLabel(spec.tier)}</em>` : ''}${done ? `<i>${'★'.repeat(st)}${'☆'.repeat(3 - st)}</i>` : ''}${spec.type === 'rival' ? '<u>VS</u>' : spec.type === 'golden' ? '<u class="g">★</u>' : spec.type === 'goldenSide' ? `<u class="g">${spec.pocket === 'left' ? '←★' : '★→'}</u>` : ''}`;
     b.disabled = n > cur;
     b.addEventListener('click', () => openLevelIntro(n));
     path.appendChild(b);
@@ -1820,7 +1908,7 @@ function openLevelIntro(n) {
   $('#liTier').hidden = !tl;
   $('#liGoal').textContent = goalText(spec);
   const img = $('#liImg');
-  img.src = spec.type === 'golden' ? faceImage('golden', 70) : spec.type === 'rival' ? faceImage(RIVALS.find((r) => r.id === spec.rival).card, 70) : backImage();
+  img.src = spec.type === 'golden' || spec.type === 'goldenSide' ? faceImage('golden', 70) : spec.type === 'rival' ? faceImage(RIVALS.find((r) => r.id === spec.rival).card, 70) : backImage();
   const intro = spec.intro || (spec.heavy && n === 11 ? 'heavy' : null);
   $('#liNew').hidden = !intro;
   if (intro) $('#liNewText').textContent = t('intro_' + intro);
@@ -1850,7 +1938,7 @@ async function startLevel(n) {
   const rng = mulberry32(spec.seed >>> 0);
   const ids = Array.from({ length: spec.N }, () => rollCard(rng, null));
   let goldenIdx = -1;
-  if (spec.type === 'golden') { goldenIdx = Math.round((1 - spec.goldenDepth) * (spec.N - 1)); ids[goldenIdx] = 'golden'; }
+  if (spec.type === 'golden' || spec.type === 'goldenSide') { goldenIdx = Math.round((1 - spec.goldenDepth) * (spec.N - 1)); ids[goldenIdx] = 'golden'; }
   const heavy = new Set();
   while (heavy.size < Math.min(spec.heavy, spec.N - 1)) { const i = Math.floor(rng() * spec.N); if (i !== goldenIdx) heavy.add(i); }
   match = { seed: spec.seed, rng, myStake: [], aiStake: [], pot: ids.map((id) => ({ id, from: 'level' })), rivalName: '', rivalCard: CARDS[0], mode: 'fun', level: spec, solo: true, n: spec.N, turn: 'me', turnNo: 0, best: 0, flipsMe: 0, puffsLeft: spec.puffs, flipped: 0, goldenTaken: false };
@@ -1864,7 +1952,8 @@ async function startLevel(n) {
   camZoom = 0;
   snapCam();
   $('#meScore').textContent = '0';
-  $('#rivalAva').src = spec.type === 'golden' ? faceImage('golden', 48) : backImage();
+  $('#rivalAva').src = spec.type === 'golden' || spec.type === 'goldenSide' ? faceImage('golden', 48) : backImage();
+  if (spec.type === 'goldenSide') buildPocket(spec.pocket);
   updateLevelHud();
   puffer.mode = 'idle'; puffer.p = 0;
   show('#hud');
@@ -1882,6 +1971,16 @@ async function startLevel(n) {
     await blow(shot, 'me');
     const flipped = await simulate();
     if (my !== runId) return;
+    if (spec.type === 'goldenSide') {
+      // ★칸 밖에 뒤집힌 황금 딱지는 무효 → 가져가지 않고 다시 쌓는다
+      const g = flipped.find((d) => d.cardId === 'golden');
+      if (g && !inPocket(g)) {
+        flipped.splice(flipped.indexOf(g), 1);
+        const p = g.body.translation();
+        fx.text(new THREE.Vector3(p.x, p.y + 0.6, p.z), t('pocketMiss'), 'out');
+        pocketPulse();
+      } else if (g) pocketPulse(true);
+    }
     await react(flipped, 'me');
     if (flipped.some((d) => d.cardId === 'golden')) match.goldenTaken = true;
     match.flipped += flipped.length;
@@ -1922,6 +2021,7 @@ async function finishLevel(res) {
   let detail = '';
   if (spec.type === 'flip') detail = `${res.flipped} / ${spec.target}`;
   else if (spec.type === 'golden') detail = res.win ? t('goldenGot') : t('goldenMiss');
+  else if (spec.type === 'goldenSide') detail = res.win ? t('goldenGot') : t('goldenSideMiss');
   else detail = `${res.me} : ${res.ai}`;
   if (!res.win && spec.type === 'flip' && spec.target - res.flipped <= 2) detail += ` — ${fmt(t('nearMiss'), { k: spec.target - res.flipped })}`;
   $('#lrDetail').textContent = detail;
@@ -1958,6 +2058,12 @@ function openTune() {
     inp.addEventListener('input', () => { feel[k] = +inp.value; row.querySelector('b').textContent = (+inp.value).toFixed(2); });
     box.appendChild(row);
   }
+  // 테스트용 레벨 바로가기 (재윤님이 새 판을 바로 해보게) — 주소 끝 #lv18 로도 열림
+  const jump = document.createElement('div');
+  jump.className = 'trow';
+  jump.innerHTML = `<span>${t('tune_jump')}</span><input id="tune-jump" type="number" min="1" max="10000" value="${prog().level}" style="width:5.5em"><button class="btn blue" type="button" id="tuneJumpGo">GO</button>`;
+  jump.querySelector('#tuneJumpGo').onclick = () => { const n = Math.max(1, Math.min(10000, +jump.querySelector('input').value || 1)); $('#tune').hidden = true; openLevelIntro(n); };
+  box.appendChild(jump);
   $('#tune').hidden = false;
 }
 function closeTune(reset) {
@@ -2086,6 +2192,8 @@ async function bootInner() {
   wireUI();
   goHome();
   window.__puffBooted = true;
+  const lvHash = /#lv(\d+)/.exec(location.hash || '');
+  if (lvHash) setTimeout(() => openLevelIntro(Math.max(1, +lvHash[1])), 400); // 테스트용: 주소 끝 #lv18
   requestAnimationFrame((t0) => { lastT = t0; frame(t0); });
   // 자동 테스트용 훅: 더미의 화면 좌표(꼭대기·바닥)와 상태
   window.__puff = () => {

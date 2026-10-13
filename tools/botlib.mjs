@@ -18,12 +18,13 @@ export const BOTS = {
   expert: { hMean: 0.9, hSd: 0.04, latSd: 0.1, pMean: 0.9, pSd: 0.04, seek: 0 },
 };
 
-function puff(t, rng, pol, aimH) {
+// keep(d) 가 true 인 뒤집힌 딱지는 가져가지 않는다(황금 옆으로: ★칸 밖은 무효 → 다시 쌓기)
+function puff(t, rng, pol, aimH, aimLat = 0, keep = null) {
   const n = t.liveDiscs().length;
   const top = t.columnTop();
   const tg = aimH == null && pol.seek ? pickProtrusion(t, { x: -1, z: 0 }, pol.seek, rng) : null; // 바람은 +x 로 분다
   const raw = {
-    lat: clamp((tg ? tg.lat : 0) + gauss(rng) * (pol.latSd ?? 0.25), -0.9, 0.9),
+    lat: clamp((tg ? tg.lat : aimLat) + gauss(rng) * (pol.latSd ?? 0.25), -0.9, 0.9),
     h: clamp(aimH ?? (tg ? tg.h + gauss(rng) * 0.05 : top * clamp(pol.hMean + gauss(rng) * pol.hSd, 0.03, 1)), 0.03, top),
     power: Math.min(POWER_MAX, sweetHiFor(n) * clamp(pol.pMean + gauss(rng) * pol.pSd, 0.2, 1.3)), // 숨 주머니 벽(POWER_MAX) 너머는 없다
   };
@@ -32,15 +33,24 @@ function puff(t, rng, pol, aimH) {
   // main.js shotGeometry 와 같은 기하: 표적은 원기둥 곡면 위(옆을 노리면 곡면을 따라 뒤로)
   const lat = clamp(s.lat || 0, -0.95, 0.95);
   t.blow({ aim: { x: c.x - Math.sqrt(1 - lat * lat), y: s.h, z: c.z + lat }, dir: { x: 1, z: 0 }, power: s.power, blast: s.blast || 0 });
-  const flipped = t.runUntilSettled(4).flipped;
+  let flipped = t.runUntilSettled(4).flipped;
+  if (keep) flipped = flipped.filter((d) => !keep(d));
   for (const d of flipped) t.remove(d);
   return flipped;
+}
+
+// 황금 옆으로: ★칸 = 분필 원 안에서 옆으로 0.6 이상 (봇 좌표: 바람 +x, 화면 오른쪽 = +z). main.js inPocket 과 같은 규칙
+export const POCKET_MIN = 0.6;
+export function inPocketBot(t, d, which) {
+  if (!t.inCircle(d)) return false;
+  const z = d.body.translation().z;
+  return (which === 'left' ? -z : z) >= POCKET_MIN;
 }
 
 function buildTable(spec, rng) {
   const ids = Array.from({ length: spec.N }, (_, i) => 'c' + i);
   let goldenIdx = -1;
-  if (spec.type === 'golden') { goldenIdx = Math.round((1 - spec.goldenDepth) * (spec.N - 1)); ids[goldenIdx] = 'golden'; }
+  if (spec.type === 'golden' || spec.type === 'goldenSide') { goldenIdx = Math.round((1 - spec.goldenDepth) * (spec.N - 1)); ids[goldenIdx] = 'golden'; }
   const heavy = new Set();
   while (heavy.size < Math.min(spec.heavy || 0, spec.N - 1)) { const i = Math.floor(rng() * spec.N); if (i !== goldenIdx) heavy.add(i); }
   const t = new Table(spec.seed >>> 0);
@@ -71,13 +81,17 @@ export function playLevel(spec, rng, bot) {
     return me > them;
   }
   let flipped = 0, golden = false, puffs = spec.puffs;
+  const side = spec.type === 'goldenSide';
+  // 학습자는 '반대쪽 옆을 분다'를 알고 노리지만 좌우·높이 오차가 있다 (★칸이 오른쪽(+z)이면 왼쪽(−z) 옆을 분다)
+  const sideLat = side ? (spec.pocket === 'left' ? 0.75 : -0.75) : 0;
+  const keep = side ? (d) => d.cardId === 'golden' && !inPocketBot(t, d, spec.pocket) : null;
   while (puffs > 0) {
     let aimH;
-    if (spec.type === 'golden') {
+    if (spec.type === 'golden' || side) {
       const g = t.liveDiscs().find((d) => d.cardId === 'golden');
       if (g) aimH = clamp(g.body.translation().y - DISC_H * 0.3 + gauss(rng) * bot.hSd * 0.6, 0.03, t.columnTop());
     }
-    const f = puff(t, rng, bot, aimH);
+    const f = puff(t, rng, bot, aimH, sideLat, keep);
     puffs--;
     flipped += f.length;
     if (f.some((d) => d.cardId === 'golden')) golden = true;

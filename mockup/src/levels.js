@@ -48,7 +48,7 @@ export const FIRST_HARD = 35;
 export const FIRST_SUPERHARD = 59;
 
 // 새 요소 '복잡도 계단' (처음 등장하는 판에서 소개 카드)
-export const INTRO = { 4: 'rival', 11: 'golden', 21: 'heavy' };
+export const INTRO = { 4: 'rival', 11: 'golden', 18: 'goldenSide', 21: 'heavy' };
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -82,15 +82,17 @@ export function levelSpec(n, kOverride) {
   const rng = mulberry32(0x9e3779b1 ^ Math.imul(n, 2654435761));
   const s = slotOf(n);
   const ch = chapterOf(n);
-  const has = { rival: n >= 4, golden: n >= 11, heavy: n >= 21 };
+  const has = { rival: n >= 4, golden: n >= 11, goldenSide: n >= 18, heavy: n >= 21 };
   // 목표 종류: 4번칸·보스 = 라이벌, 정밀칸 = 황금(해금 후), 나머지는 섞기
   let type = 'flip';
   if (s.role === 'rival' && has.rival) type = 'rival';
   else if (s.role === 'boss' && has.rival) type = 'rival';
+  else if (s.role === 'precision' && has.goldenSide && Math.floor(n / 10) % 2 === 1) type = 'goldenSide'; // 정밀 칸: 황금 ↔ 황금 옆으로 번갈아
   else if (s.role === 'precision' && has.golden) type = 'golden';
   else if (has.golden && (s.role === 'applied' || s.role === 'practice2') && rng() < 0.4) type = 'golden';
   if (INTRO[n] === 'golden') type = 'golden'; // 새 요소를 소개하는 판은 반드시 그 요소가 나온다
   if (INTRO[n] === 'rival') type = 'rival';
+  if (INTRO[n] === 'goldenSide') type = 'goldenSide';
   // 더미 크기: L1~10 은 3→16장으로 커지며 '양에 따라 숨'을 익힌다. 휴식/보상판은 크게(싹쓸이 쾌감)
   let N = Math.round(clamp(6 + 13 * (1 - Math.exp(-n / 28)) + (rng() - 0.5) * 4, 3, 22));
   if (n <= 10) N = [3, 5, 4, 8, 7, 12, 10, 9, 14, 16][n - 1];
@@ -119,6 +121,12 @@ export function levelSpec(n, kOverride) {
   } else if (type === 'golden') {
     spec.puffs = s.puffs || 3;
     spec.goldenDepth = +clamp(0.1 + 0.85 * k, 0.1, 0.95).toFixed(2); // 위에서부터 깊이 비율
+  } else if (type === 'goldenSide') {
+    // 황금 딱지 옆으로 넘기기 (재윤님 5차): 분필 원 안 ★칸(왼/오른쪽 반달)에 그림이 위로 오게 넘겨야 클리어.
+    // 가운데를 불면 제자리에 떨어져 칸에 못 감(0%) → 반대쪽 옆을 불어야 그쪽으로 굴러감 (tools/goldenside.mjs)
+    spec.puffs = k > 0.7 ? 2 : s.puffs || 3;
+    spec.goldenDepth = +clamp(0.1 + 0.6 * k, 0.1, 0.7).toFixed(2);
+    spec.pocket = Math.floor(n / 10) % 4 < 2 ? 'right' : 'left'; // 화면 기준, 판마다 번갈아 (18 오른쪽, 38 왼쪽, 58 오른쪽 …)
   } else {
     const ri = s.role === 'boss' ? 5 : Math.min(4, Math.floor(n / 25));
     spec.rival = RIVALS[ri].id;
@@ -136,7 +144,7 @@ export function starsFor(spec, res) {
     const extra = res.flipped >= Math.min(spec.N, Math.ceil(spec.target * 1.35));
     return 1 + (res.puffsLeft >= 1 || extra ? 1 : 0) + (res.puffsLeft >= 1 && extra ? 1 : 0);
   }
-  if (spec.type === 'golden') return 1 + Math.min(2, res.puffsLeft);
+  if (spec.type === 'golden' || spec.type === 'goldenSide') return 1 + Math.min(2, res.puffsLeft);
   const share = res.me / Math.max(1, res.me + res.ai);
   return share >= 0.75 ? 3 : share >= 0.6 ? 2 : 1;
 }
