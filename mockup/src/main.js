@@ -81,6 +81,10 @@ let shake = 0;
 let camZoom = 0;
 // 조준 시점(4차): 내 차례에 조준하는 동안 카메라를 낮춰 더미 옆면을 크게 — 위에서 내려다보면 10장 옆면이 42px 뿐이라 상하 조준이 거칠었다
 let camAim = 0, camAimGoal = 0;
+// 9차(재윤님: '딱지 오른쪽을 노리면 몸과 앵글이 그쪽으로 가서 가운데를 맞춰야'): 누른 뒤 1인칭 몸이 옆걸음 → 표적이 입술 바로 앞 가운데.
+// 회전이 아니라 평행 이동: 바람은 지금처럼 진행 방향과 평행(물리 그대로) — 돌면 정면으로 맞아 '옆을 불면 반대쪽으로 굴러감'(4차)·★칸 판이 사라진다
+let camStrafe = 0, camStrafeGoal = 0;
+const camStrafeSide = new THREE.Vector3(1, 0, 0);
 const camAimPos = new THREE.Vector3(), camAimTarget = new THREE.Vector3();
 let acc = 0;
 let lastT = performance.now();
@@ -709,7 +713,7 @@ function drawSlideArrow(ctx, dpr) {
   if (!st || puffer.who !== 'me' || !table) return;
   const star = st.type === 'goldenSide' && (profile.cue.star || 0) < 8;
   if (!(star || (cueStage('side') === 0 && Math.abs(st.lat) > 0.3))) return;
-  const g = shotGeometry({ dir: { x: -(camera.position.x - st.c.x), z: -(camera.position.z - st.c.z) }, lat: st.lat, h: st.h });
+  const g = shotGeometry({ dir: st.dir, lat: st.lat, h: st.h }); // 누를 때 정한 방향(몸이 옆걸음해도 바람 방향은 그대로)
   const phi = Cues.slideAngle(st.lat), sg = Math.sign(st.lat) || 0;
   const a = new THREE.Vector3(st.c.x, st.top + 0.05, st.c.z);
   const dirv = g.dir.clone().multiplyScalar(Math.cos(phi)).addScaledVector(g.side, -sg * Math.sin(phi));
@@ -923,7 +927,7 @@ function showCues(aiming) {
   const inWin = !!win && k >= win[0] && k <= win[1];
   if (inWin && !aiming.wasIn && (aiming.power || 0) < 0.05 && cueStage('height') === 0) sfx.tone(988, 0.06, 'triangle', 0.05); // 창에 들어오면 '띵'
   aiming.wasIn = inWin;
-  cue.st = { n, top, k, win, inWin, h: aiming.h, p: aiming.power || 0, ratio: (aiming.power || 0) / sweetHiFor(n), lat: aiming.lat || 0, ys: aiming.ys, c: table.pileCenter(), type };
+  cue.st = { n, top, k, win, inWin, h: aiming.h, p: aiming.power || 0, ratio: (aiming.power || 0) / sweetHiFor(n), lat: aiming.lat || 0, ys: aiming.ys, c: table.pileCenter(), type, dir: aiming.dir };
 }
 function updateCues(now) {
   const st = cue.st;
@@ -1289,14 +1293,15 @@ function frame(now) {
   const target = camTarget.clone();
   if (table && state === 'match') target.y += clamp(table.columnTop() * 0.25, 0, 1.2);
   camAim += ((state === 'match' ? camAimGoal : 0) - camAim) * Math.min(1, dt * 5);
+  camStrafe += ((state === 'match' && fpvOn() ? camStrafeGoal : 0) - camStrafe) * Math.min(1, dt * 6);
   let aimPos = camAimPos;
   if (camAim > 0.001 && table) {
     const top = table.columnTop();
     if (fpvOn()) {
       // 1인칭(6차): 입 높이에서 더미를 바라본다 — 10장 옆면 121px·폭 87% (three.js 투영 계산), 더미는 아래 입술·볼 위에
       const portrait = window.innerWidth / window.innerHeight < 0.85;
-      aimPos = new THREE.Vector3(0, top * 0.7 + (portrait ? 1.0 : 0.9), portrait ? 5.2 : 4.6);
-      target.lerp(new THREE.Vector3(0, top * 0.5, 0), camAim);
+      aimPos = new THREE.Vector3(0, top * 0.7 + (portrait ? 1.0 : 0.9), portrait ? 5.2 : 4.6).addScaledVector(camStrafeSide, camStrafe);
+      target.lerp(new THREE.Vector3(0, top * 0.5, 0).addScaledVector(camStrafeSide, camStrafe), camAim);
     } else target.lerp(camAimTarget.clone().setY(top * 0.5), camAim);
   }
   const pos = camBase.clone().lerp(aimPos, camAim).lerp(new THREE.Vector3(0, 1, 0), camZoom);
@@ -1714,7 +1719,8 @@ function pointerAim(ev) {
   const ny = -((ev.clientY - r.top) / r.height) * 2 + 1;
   ray.setFromCamera(new THREE.Vector2(nx, ny), camera);
   const c = table.pileCenter();
-  const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
+  const body = camera.position.clone().addScaledVector(camStrafeSide, -camStrafe); // 옆걸음 전 몸 자리
+  const toCam = new THREE.Vector3(body.x - c.x, 0, body.z - c.z).normalize();
   const dir = toCam.clone().negate();
   const side = new THREE.Vector3(-dir.z, 0, dir.x);
   const top = table.columnTop();
@@ -1821,6 +1827,7 @@ function playerShot() {
       myTurn.until = shot ? performance.now() + 650 : 0; // 불고 난 뒤 잠깐 볼이 꺼지는 모습까지
       hideCues();
       camAimGoal = 0; // 불고 나면 뒤집히는 장면을 보도록 원래 시점으로
+      camStrafeGoal = 0;
       cancelAnimationFrame(raf);
       resetPouch();
       document.removeEventListener('visibilitychange', onVis);
@@ -1842,6 +1849,7 @@ function playerShot() {
       aiming = { ...s, sx: ev.clientX, sy: ev.clientY, full: false, strain: 0 };
       if (beatOn()) { aiming.n = liveCount(); aiming.beat = { ph: 0, k: 0, u: 0, t0: performance.now(), buf: [], rng: mulberry32((Math.random() * 2 ** 31) | 0) }; aiming.eff = 0; } // 박동 난수는 경기 rng 와 따로(켜고 꺼도 상대·판 흐름이 같게)
       myTurn.pressed = true;
+      camStrafeSide.set(-s.dir.z, 0, s.dir.x).normalize(); camStrafeGoal = s.lat || 0; // 몸이 표적 쪽으로 옆걸음
       el.setPointerCapture?.(ev.pointerId);
       puffer.mode = 'charge';
       puffer.p = 0;
@@ -1920,7 +1928,7 @@ function playerShot() {
       }
       fire({ ...aiming });
     };
-    const unpress = () => { if (!myTurn.on) return; myTurn.pressed = false; myTurn.t0 = performance.now(); $('#hint').hidden = false; }; // 누름이 취소되면 안내를 다시
+    const unpress = () => { camStrafeGoal = 0; if (!myTurn.on) return; myTurn.pressed = false; myTurn.t0 = performance.now(); $('#hint').hidden = false; }; // 누름이 취소되면 안내를 다시
     const cancel = () => { if (!aiming) return; aiming = null; puffer.mode = 'idle'; puffer.p = 0; hideGizmo(); resetPouch(); inhale?.stop(); inhale = null; unpress(); };
     document.addEventListener('visibilitychange', onVis);
     window.addEventListener('blur', cancel);
@@ -1938,7 +1946,8 @@ async function aiShot() {
   const g = () => g0() * (match.practice ? 1.8 : 1) / (match.aiSkill || 1);
   const top = table.columnTop();
   const c = table.pileCenter();
-  const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
+  const body = camera.position.clone().addScaledVector(camStrafeSide, -camStrafe);
+  const toCam = new THREE.Vector3(body.x - c.x, 0, body.z - c.z).normalize();
   const dir = toCam.clone(); // 상대는 맞은편에서 내 쪽으로 분다
   // 삐져나온 딱지 노리기(Rules.pickProtrusion)는 꺼 둔다 — 4차 교차 검토: 이득이 실측되지 않았고, 아래쪽 딱지를 노려 고수일수록 약해졌다
   const target = null;
