@@ -30,7 +30,7 @@ mockup/src/      목업 소스 (ES 모듈)
   levels.js 레벨 1~10,000 생성 규칙(10판 톱니, 50판 동네) + levels-cal.json(봇 보정표)
   creatures.js 수집 테마 시안(동물 크리처 × 시즌 의상 9+1)
   art.js    딱지 앞/뒷면 캐릭터 아트 절차 생성 (외부 이미지 0)
-  main.js   three.js 장면·입력·연출·매치 흐름 (분필 원, 엄지 멈춤 눈금)
+  main.js   three.js 장면·입력·연출·매치 흐름 (분필 원, 엄지 멈춤 눈금, 1인칭 볼·입술, 손가락 시범, 방금 숨 카드)
   face.js   부는 얼굴(시안 B '뽀뽀 입') + 숨 주머니 고리
   cues.js   공략 단서 계산(숨 물결 = sweetHiFor 역함수, 2~4장째 창, 원인 분류) — 렌더러 독립
   audio.js  WebAudio 합성 효과음 / mic.js 마이크 불기 감지

@@ -97,7 +97,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .hint .hand { width: 54px; height: 54px; margin: 0 auto 6px; border-radius: 50%; background: rgba(255,255,255,0.85); border: 3px solid var(--ink); position: relative; animation: pull 1.6s ease-in-out infinite; }
 .hint .hand::after { content: ""; position: absolute; left: 50%; top: 100%; width: 4px; height: 40px; background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0)); transform: translateX(-50%); }
 @keyframes pull { 0%, 15% { transform: translateY(-40px) scale(1); } 20% { transform: translateY(-40px) scale(0.85); } 75% { transform: translateY(40px) scale(0.85); } 85%, 100% { transform: translateY(40px) scale(1.15); opacity: 0; } }
-.hint:not(.first) .hand { display: none; }
+.hint .hand { display: none; } /* 6차: 더미 위 손가락 시범(drawTapGuide)이 대신 */
+#puffWrap.fpvhide { opacity: 0; transition: opacity 0.2s; } /* 6차: 내 차례엔 1인칭(볼·입술)이 대신 */
 
 /* 배너 & 큰 글자 */
 .banner, .big { position: absolute; left: 50%; top: 30%; transform: translate(-50%, -50%); font-family: var(--display); white-space: nowrap; pointer-events: none; text-align: center; }

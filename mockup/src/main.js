@@ -57,8 +57,8 @@ let profile = Store.load();
 profile.cue = Object.assign({ breath: 0, bBig: 0, height: 0, side: 0, star: 0, prev: null }, profile.cue || {});
 profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.cue.relapse || {});
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1 };
-const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1] };
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1 };
+const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1] };
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
@@ -559,54 +559,95 @@ function makeReceipt(flipped, outs) {
   window.__puffReceipt = cue.receipt ? { kind, flips: flipped.length, outs: outs.length, k: sn.k } : null; // 테스트용
   trailEnd(pocketOk);
 }
+// 더미 영수증 '방금 숨' (6차: 재윤님 "빨간 막대가 무슨 뜻인지 모르겠다 — 내가 불었다는 건가?" → 더 친절하게)
+// 쏘기 전 더미를 딱지 모양으로 그리고 범례(내 것·원 밖 무효·그대로) + '여기 불었음' 바람 화살표 + 숨 컵('딱 좋음' 눈금) + 한 줄 조언
+function receiptTip(R) {
+  const flips = R.fl.size, outs = R.ou.size;
+  if (R.type === 'goldenSide' && R.kind === 'side') return t('rcpSideStar');
+  if (R.kind === 'breath') return R.ratio < Rules.GREEN_LO ? t('rcpWeak') : t('rcpStrong');
+  if (R.kind === 'height') return R.win && R.k < R.win[0] ? t('rcpHigh') : t('rcpLow');
+  if (R.kind === 'side') return t('rcpSide');
+  if (flips >= Math.max(1, R.n * 0.5) && outs < 2) return t('rcpGood');
+  if (outs >= 2) return t('rcpStrong');
+  return flips ? t('rcpOk') : t('rcpLuck');
+}
 function drawReceipt(now) {
   const R = cue.receipt;
   if (!R || state !== 'match') return;
-  const t = (now - R.t0) / 1000;
-  if (t > 2.2) { cue.receipt = null; return; }
-  const a = t < 0.15 ? t / 0.15 : t > 1.9 ? Math.max(0, (2.2 - t) / 0.3) : 1;
+  const t1 = (now - R.t0) / 1000, DUR = 3.6;
+  if (t1 > DUR) { cue.receipt = null; return; }
+  const a = t1 < 0.2 ? t1 / 0.2 : t1 > DUR - 0.4 ? Math.max(0, (DUR - t1) / 0.4) : 1;
   const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
-  const H = cv.height / dpr;
-  const rows = R.order.length, rh = clamp(180 / rows, 5, 12), bw = 30;
-  const x0 = 14, y0 = H * 0.34, cardH = rows * rh + 24;
-  const bump = (k) => (R.kind === k ? 1 + 0.12 * Math.abs(Math.sin(Math.min(t, 0.6) * Math.PI * 2 / 0.6)) : 1);
+  const H = cv.height / dpr, W = cv.width / dpr;
+  const rows = R.order.length, rh = clamp(150 / rows, 6, 13), dw = 46;
+  const cardW = Math.min(W - 16, 196), x0 = 8, y0 = H * 0.3;
+  const stackH = rows * rh;
+  const cardH = 30 + stackH + 30 + 44;
+  const bump = (k) => (R.kind === k ? 1 + 0.12 * Math.abs(Math.sin(Math.min(t1, 0.9) * Math.PI * 2 / 0.45)) : 1);
   ctx.save(); ctx.scale(dpr, dpr); ctx.globalAlpha = a;
-  ctx.fillStyle = 'rgba(42,26,18,0.55)';
-  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0 - 8, y0 - 12, bw + 54, cardH, 10) : ctx.rect(x0 - 8, y0 - 12, bw + 54, cardH); ctx.fill();
-  // 층 막대: 파랑 = 내가 넘김, 빨강 = 원 밖, 회색 = 그대로. 황금은 금 테두리
+  ctx.fillStyle = 'rgba(255,248,236,0.96)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, y0, cardW, cardH, 12) : ctx.rect(x0, y0, cardW, cardH); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#2a1a12'; ctx.font = '700 14px "Jua", sans-serif'; ctx.textBaseline = 'middle';
+  ctx.fillText(t('rcpTitle'), x0 + 10, y0 + 14);
+  // 더미 단면: 딱지 모양(둥근 막대). 파랑 = 내 것(넘김), 빨강 = 원 밖(무효), 회색 = 그대로
+  const sx0 = x0 + 34, sy0 = y0 + 28;
   R.order.forEach((o, i) => {
-    const y = y0 + i * rh;
-    ctx.fillStyle = R.fl.has(o.id) ? '#3a8fe0' : R.ou.has(o.id) ? '#ff4d5e' : 'rgba(255,255,255,0.3)';
-    ctx.fillRect(x0, y, bw, rh - 1.5);
-    if (o.golden) { ctx.strokeStyle = '#ffcf33'; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, y + 0.5, bw - 2, rh - 2.5); }
+    const y = sy0 + i * rh;
+    const col = R.fl.has(o.id) ? '#3a8fe0' : R.ou.has(o.id) ? '#ff4d5e' : '#c9b8a6';
+    ctx.fillStyle = col; ctx.strokeStyle = 'rgba(42,26,18,0.55)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(sx0, y + 0.5, dw, rh - 1.5, (rh - 1.5) / 2) : ctx.rect(sx0, y + 0.5, dw, rh - 1.5); ctx.fill(); ctx.stroke();
+    if (o.golden) { ctx.strokeStyle = '#ffb800'; ctx.lineWidth = 2.5; ctx.stroke(); }
+    if (rh >= 9) { ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.min(10, rh - 2)}px sans-serif`; ctx.textAlign = 'center'; ctx.fillText(R.fl.has(o.id) ? '✓' : R.ou.has(o.id) ? '✗' : '', sx0 + dw / 2, y + rh / 2); ctx.textAlign = 'left'; }
   });
-  // 내가 분 층 ◀ (높이 지적이면 통통)
-  const ky = y0 + (R.k - 0.5) * rh;
-  ctx.save(); ctx.translate(x0 + bw + 4, ky); ctx.scale(bump('height'), bump('height'));
-  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(8, -5); ctx.lineTo(8, 5); ctx.closePath(); ctx.fill(); ctx.restore();
-  // 금 괄호 [2~4] (높이 단계 ≤ 1)
+  // 금 괄호: 노리기 좋은 자리(위에서 2~4장째) — 높이 단계 ≤ 1
   if (R.win && R.stH <= 1) {
-    const ya = y0 + (R.win[0] - 1) * rh, yb = y0 + R.win[1] * rh - 1.5;
-    ctx.strokeStyle = '#ffcf33'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(x0 - 3, ya); ctx.lineTo(x0 - 6, ya); ctx.lineTo(x0 - 6, yb); ctx.lineTo(x0 - 3, yb); ctx.stroke();
+    const ya = sy0 + (R.win[0] - 1) * rh, yb = sy0 + R.win[1] * rh - 1.5;
+    ctx.strokeStyle = '#ffb800'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(sx0 + dw + 4, ya); ctx.lineTo(sx0 + dw + 8, ya); ctx.lineTo(sx0 + dw + 8, yb); ctx.lineTo(sx0 + dw + 4, yb); ctx.stroke();
   }
-  // 미니 컵: 이번 숨이 채운 높이 (넘치면 볼록 + 빨간 방울)
-  const cx = x0 + bw + 18, cw = 18, ch = rows * rh;
-  ctx.save(); ctx.translate(cx + cw / 2, y0 + ch / 2); ctx.scale(bump('breath'), bump('breath')); ctx.translate(-(cx + cw / 2), -(y0 + ch / 2));
-  ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.strokeRect(cx, y0, cw, ch);
-  const ff = Math.min(1, R.f);
-  ctx.fillStyle = R.stB <= 1 ? (R.ratio < Rules.GREEN_LO ? '#ffe9a0' : R.ratio <= 1 ? '#6dffb0' : '#ff8a8a') : 'rgba(255,255,255,0.7)';
-  ctx.fillRect(cx + 2, y0 + ch * (1 - ff), cw - 4, ch * ff);
-  if (R.f > 1) { ctx.beginPath(); ctx.ellipse(cx + cw / 2, y0, cw / 2 - 1, 6, 0, Math.PI, 0); ctx.fill(); }
-  if (R.ratio > 1) { ctx.fillStyle = '#ff4d5e'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx + 3 + i * 6, y0 - 8 - (i % 2) * 4, 2.2, 0, Math.PI * 2); ctx.fill(); } }
+  // 바람 화살표 → 내가 분 층 ("여기 불었음")
+  const ky = sy0 + (R.k - 0.5) * rh;
+  ctx.save(); ctx.translate(sx0 - 4, ky); ctx.scale(bump('height'), bump('height'));
+  ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-24, 0); ctx.lineTo(-4, 0); ctx.moveTo(-10, -5); ctx.lineTo(-4, 0); ctx.lineTo(-10, 5); ctx.stroke();
+  ctx.strokeStyle = 'rgba(42,26,18,0.5)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(-24, -6); ctx.lineTo(-14, -6); ctx.moveTo(-24, 6); ctx.lineTo(-14, 6); ctx.stroke();
   ctx.restore();
-  // 좌우 지적: 미니 화살표가 통통
-  if (R.kind === 'side') {
-    ctx.save(); ctx.translate(x0 + bw / 2, y0 + ch + 6); ctx.scale(bump('side'), bump('side'));
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.moveTo(6, -4); ctx.lineTo(10, 0); ctx.lineTo(6, 4); ctx.stroke();
-    ctx.restore();
+  ctx.fillStyle = '#2a1a12'; ctx.font = '700 11px "Jua", sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(t('rcpHere'), sx0 - 16, Math.max(sy0 - 6, ky - 12)); ctx.textAlign = 'left';
+  // 숨 컵: 이번 숨이 채운 만큼. '딱 좋음' 눈금 = 꼭대기(정답의 0.9배)
+  const cx = sx0 + dw + 30, cw = 22, cy0 = sy0, ch = stackH;
+  ctx.save(); ctx.translate(cx + cw / 2, cy0 + ch / 2); ctx.scale(bump('breath'), bump('breath')); ctx.translate(-(cx + cw / 2), -(cy0 + ch / 2));
+  const ff = Math.min(1.25, R.f);
+  ctx.fillStyle = R.ratio < Rules.GREEN_LO ? '#ffe28a' : R.ratio <= 1 ? '#59e39a' : '#ff8a8a';
+  ctx.fillRect(cx + 2, cy0 + ch * (1 - Math.min(1, ff)), cw - 4, ch * Math.min(1, ff));
+  if (R.f > 1) { ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy0, cw / 2 - 1, 7, 0, Math.PI, 0); ctx.fill(); }
+  if (R.ratio > 1) { ctx.fillStyle = '#ff4d5e'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx + 4 + i * 7, cy0 - 10 - (i % 2) * 5, 2.6, 0, Math.PI * 2); ctx.fill(); } }
+  ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2; ctx.strokeRect(cx, cy0, cw, ch);
+  ctx.strokeStyle = '#ffb800'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 4, cy0); ctx.lineTo(cx + cw + 4, cy0); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#2a1a12'; ctx.font = '700 10px "Jua", sans-serif';
+  ctx.fillText(t('rcpBreath'), cx - 1, cy0 + ch + 10);
+  ctx.fillStyle = '#b07a00'; ctx.fillText(t('rcpBrim'), cx + cw + 6, cy0 + 3);
+  // 범례
+  const ly = sy0 + stackH + 22;
+  const chip = (x, col, txt) => { ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, ly - 6, 14, 12, 6) : ctx.rect(x, ly - 6, 14, 12); ctx.fill(); ctx.fillStyle = '#2a1a12'; ctx.font = '700 11px "Jua", sans-serif'; ctx.fillText(txt, x + 17, ly); return x + 17 + ctx.measureText(txt).width + 8; };
+  let lx = x0 + 10;
+  lx = chip(lx, '#3a8fe0', t('rcpMine')); lx = chip(lx, '#ff4d5e', t('rcpOut')); chip(lx, '#c9b8a6', t('rcpStay'));
+  // 한 줄 조언
+  ctx.fillStyle = '#2a1a12'; ctx.font = '700 13px "Jua", sans-serif';
+  const tip = receiptTip(R);
+  wrapText(ctx, tip, x0 + 10, ly + 22, cardW - 20, 16);
+  ctx.restore();
+}
+function wrapText(ctx, txt, x, y, maxW, lh) {
+  const words = String(txt).split(' ');
+  let line = '';
+  for (const w of words) {
+    const tst = line ? line + ' ' + w : w;
+    if (ctx.measureText(tst).width > maxW && line) { ctx.fillText(line, x, y); line = w; y += lh; } else line = tst;
   }
-  ctx.restore();
+  if (line) ctx.fillText(line, x, y);
 }
 // 황금 굴러간 길 (★ 판): 금색 점선 + 끝 고리(칸 안 = 금, 밖 = 갈색). 다음에 불 때까지 남는다
 function trailStart(goldenDisc) {
@@ -666,6 +707,148 @@ function drawSlideArrow(ctx, dpr) {
   const ang = Math.atan2(by - ay, bx - ax);
   ctx.fillStyle = good ? '#ffcf33' : 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(bx + Math.cos(ang) * 10, by + Math.sin(ang) * 10); ctx.lineTo(bx + Math.cos(ang + 2.5) * 16, by + Math.sin(ang + 2.5) * 16); ctx.lineTo(bx + Math.cos(ang - 2.5) * 16, by + Math.sin(ang - 2.5) * 16); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+// ── 1인칭 (재윤님 6차: "실제 딱지를 보고 있는 1인칭 — 바람을 모을수록 볼따구가 시야에 보이게") ──────
+// 내 차례엔 정면 얼굴 대신 화면 아래 양쪽에서 내 볼이 차오르고, 가운데 아래에 오므린 내 입술이 보인다.
+// 볼 크기 = 숨 주머니(절대값). 꽉 = 볼이 눌려 납작 + 떨림, 버팀 = 붉어짐, 콜록 = 화면 흔들림 + 볼 푹.
+const myTurn = { on: false, t0: 0, until: 0, pressed: false };
+function fpvOn() { return (feel.fpv ?? 1) >= 0.5 && state === 'match'; }
+function fpvVisible() { return fpvOn() && (myTurn.on || performance.now() < myTurn.until || (puffer.who === 'me' && (puffer.mode === 'blow' || puffer.mode === 'cough'))); }
+function drawFPV(now) {
+  if (!fpvVisible() || puffer.who !== 'me') return;
+  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
+  const W = cv.width / dpr, H = cv.height / dpr;
+  const F = Rules.POUCH_FULL;
+  const mode = puffer.mode;
+  const tm = Math.max(0, (performance.now() - (puffer._t0 || performance.now())) / 1000); // drawPuffer 와 같은 시계(rAF 시각은 느린 기기에서 뒤처짐)
+  let fill = mode === 'charge' ? clamp(puffer.p / F, 0, 1.12) : 0;
+  if (mode === 'blow') fill = (puffer.fill || 0) * Math.max(0, 1 - tm / 0.22); // 불면 볼이 푹 꺼짐
+  if (mode === 'cough') fill = 0.3 * Math.max(0, 1 - tm / 0.3);
+  const strain = mode === 'charge' ? puffer.strain || 0 : 0;
+  const full = mode === 'charge' && puffer.full;
+  const v = 0.18 + 0.82 * Math.min(1, fill); // 볼이 시야에 들어온 정도 (기다릴 때도 살짝 보여 '내 얼굴' 기준을 만든다)
+  const shake = (full ? 1.5 : 0) + strain * 4 + (mode === 'cough' ? 9 * Math.max(0, 1 - tm / 0.5) : 0);
+  const sx = Math.sin(now * 0.07) * shake, sy = Math.cos(now * 0.09) * shake * 0.6;
+  ctx.save(); ctx.scale(dpr, dpr); ctx.translate(sx, sy);
+  // 아래 그늘 (얼굴 아래쪽이 시야를 가리는 느낌)
+  const vg = ctx.createLinearGradient(0, H * (0.78 - 0.08 * v), 0, H);
+  vg.addColorStop(0, 'rgba(60,30,20,0)'); vg.addColorStop(1, `rgba(60,30,20,${0.18 + 0.2 * v})`);
+  ctx.fillStyle = vg; ctx.fillRect(-20, H * 0.6, W + 40, H * 0.45);
+  const skin = strain > 0 ? mixRGB([255, 208, 156], [255, 120, 100], strain) : [255, 208, 156];
+  const skinDk = strain > 0 ? mixRGB([238, 166, 120], [220, 80, 70], strain) : [238, 166, 120];
+  for (const sg of [-1, 1]) {
+    // 볼: 아래 구석에서 밀고 들어오는 큰 둥근 살 (가까워서 흐릿한 가장자리)
+    const squash = full ? 0.9 : 1;
+    const cx = W / 2 + sg * (W * (0.62 - 0.17 * v)), cy = H * (1.07 - 0.1 * v);
+    const rx = W * (0.3 + 0.16 * v) * (full ? 1.04 : 1), ry = H * (0.14 + 0.08 * v) * squash;
+    const g = ctx.createRadialGradient(cx - sg * rx * 0.25, cy - ry * 0.45, rx * 0.08, cx, cy, Math.max(rx, ry));
+    g.addColorStop(0, `rgba(${skin.map((c) => Math.min(255, c + 25)).join(',')},1)`);
+    g.addColorStop(0.7, `rgba(${skin.join(',')},1)`);
+    g.addColorStop(0.92, `rgba(${skinDk.join(',')},0.95)`);
+    g.addColorStop(1, `rgba(${skinDk.join(',')},0)`);
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, sg * -0.18, 0, Math.PI * 2); ctx.fill();
+    // 볼 홍조 + 팽팽한 윤기
+    ctx.fillStyle = `rgba(255,110,120,${0.18 + 0.25 * v + 0.3 * strain})`;
+    ctx.beginPath(); ctx.ellipse(cx - sg * rx * 0.2, cy - ry * 0.25, rx * 0.35, ry * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+    if (v > 0.45) {
+      ctx.fillStyle = `rgba(255,255,255,${0.35 * (v - 0.45) / 0.55})`;
+      ctx.beginPath(); ctx.ellipse(cx - sg * rx * 0.38, cy - ry * 0.62, rx * 0.16, ry * 0.08, sg * 0.4, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // 윗입술: 1인칭으로 내려다본 내 입술 — 화면 아래 가운데에 반쯤 걸친 넓적한 큐피드 활 모양. 오므릴수록 좁아지며 앞(위)으로 쭉
+  const open = mode === 'blow' ? Math.min(1, tm / 0.05) * Math.max(0, 1 - tm / 0.5) : 0;
+  const pk = Math.min(1, fill);
+  const lw = W * (0.2 - 0.07 * pk + 0.03 * open), lh = H * (0.03 + 0.018 * pk);
+  const lx = W / 2, ly = H + 2 - lh * (0.9 + 0.5 * pk); // 윗입술 꼭대기선 높이
+  const lg = ctx.createLinearGradient(0, ly - lh, 0, H);
+  lg.addColorStop(0, '#f2707e'); lg.addColorStop(0.45, '#e0384f'); lg.addColorStop(1, '#9e1830');
+  ctx.fillStyle = lg;
+  ctx.beginPath();
+  ctx.moveTo(lx - lw, H + 4);
+  ctx.quadraticCurveTo(lx - lw * 0.95, ly + lh * 0.2, lx - lw * 0.5, ly); // 왼쪽 봉우리
+  ctx.quadraticCurveTo(lx - lw * 0.18, ly - lh * 0.18, lx, ly + lh * 0.28); // 가운데 골(인중 아래)
+  ctx.quadraticCurveTo(lx + lw * 0.18, ly - lh * 0.18, lx + lw * 0.5, ly);
+  ctx.quadraticCurveTo(lx + lw * 0.95, ly + lh * 0.2, lx + lw, H + 4);
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(120,30,40,0.45)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.beginPath(); ctx.ellipse(lx - lw * 0.45, ly + lh * 0.35, lw * 0.16, lh * 0.18, -0.2, 0, Math.PI * 2); ctx.fill();
+  // 오므림 주름
+  ctx.strokeStyle = `rgba(120,20,35,${0.25 + 0.35 * pk})`; ctx.lineWidth = 1.5;
+  for (const sg of [-1, 1]) for (let q = 1; q <= 2; q++) { ctx.beginPath(); ctx.moveTo(lx + sg * lw * (0.2 + q * 0.15), ly + lh * 0.6); ctx.lineTo(lx + sg * lw * (0.12 + q * 0.12), H); ctx.stroke(); }
+  // 불 때: 입 틈에서 바람이 확
+  if (open > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${0.6 * open})`;
+    ctx.beginPath(); ctx.ellipse(lx, ly - 6, lw * 0.28 * open, 10 * open, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // 참다가 새는 김 (버팀)
+  if (strain > Rules.LEAK_AT) {
+    const ph = (now * 0.0025) % 1;
+    ctx.fillStyle = `rgba(255,255,255,${0.7 * (1 - ph)})`;
+    ctx.beginPath(); ctx.arc(lx + lw * 0.7 + ph * 30, ly - 6 - ph * 26, 6 + ph * 8, 0, Math.PI * 2); ctx.fill();
+  }
+  // 콜록: 회색 기침 구름
+  if (mode === 'cough') {
+    for (let i = 0; i < 4; i++) { const k = clamp(tm * 2 - i * 0.12, 0, 1); ctx.fillStyle = `rgba(210,205,200,${0.8 * (1 - k)})`; ctx.beginPath(); ctx.arc(lx + (i - 1.5) * 40 * k, ly - 10 - 80 * k, 14 + 20 * k, 0, Math.PI * 2); ctx.fill(); }
+  }
+  ctx.restore();
+}
+function mixRGB(a, b, k) { return a.map((x, i) => Math.round(x + (b[i] - x) * clamp(k, 0, 1))); }
+
+// 첫 터치 가이드(6차: "처음엔 딱지 어디를 찍을지 가이드 — 찍으라고"): 위에서 3장째 가운데에 손가락이 꾹 → 아래로 쭉 당기는 시범.
+// 높이 단계 ≤ 1 이면 매 차례, 그 뒤엔 4초 동안 아무것도 안 누르면 다시.
+function drawTapGuide(now) {
+  if (!myTurn.on || myTurn.pressed || !table || state !== 'match') return;
+  const idle = now - myTurn.t0;
+  if (!(cueStage('height') <= 1 || idle > 4000)) return;
+  if (idle < 700) return; // 카메라가 내려앉은 뒤
+  const live = table.liveDiscs(), n = live.length;
+  if (!n) return;
+  const ys = live.map((d) => d.body.translation().y).sort((a, b) => b - a);
+  const k = Math.min(n, n <= 4 ? Math.ceil(n / 2) : 3);
+  const c = table.pileCenter();
+  const tc = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
+  const p = new THREE.Vector3(c.x + tc.x * DISC_R, ys[k - 1], c.z + tc.z * DISC_R).project(camera);
+  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
+  const W = cv.width / dpr, H = cv.height / dpr;
+  const x = (p.x * 0.5 + 0.5) * W, y = (-p.y * 0.5 + 0.5) * H;
+  const minDim = Math.min(window.innerWidth, window.innerHeight);
+  const pull = minDim * feel.pull * sweetHiFor(n) * 0.9; // 정답 근처 당김 길이(시범)
+  const cyc = ((now - myTurn.t0) % 2600) / 2600; // 0~0.3 누름, 0.3~0.8 당김, 0.8~1 떼기
+  const press = cyc < 0.3 ? cyc / 0.3 : 1, drag = cyc < 0.3 ? 0 : cyc < 0.8 ? (cyc - 0.3) / 0.5 : 1;
+  const fy = y + drag * drag * (3 - 2 * drag) * pull;
+  ctx.save(); ctx.scale(dpr, dpr);
+  // 누를 자리 물결 고리
+  for (let i = 0; i < 2; i++) {
+    const r = 10 + ((now * 0.05 + i * 22) % 44);
+    ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - (r - 10) / 44)})`; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+  }
+  // 당길 길 (점선 화살표)
+  if (cyc >= 0.3 && cyc < 0.95) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 4; ctx.setLineDash([8, 7]);
+    ctx.beginPath(); ctx.moveTo(x, y + 14); ctx.lineTo(x, fy - 6); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 손가락 (끝이 누를 자리)
+  const fx = x, fyy = cyc >= 0.8 ? y + pull : fy, s = 1 - 0.12 * press * (cyc < 0.8 ? 1 : 0);
+  ctx.translate(fx, fyy); ctx.scale(s, s);
+  ctx.fillStyle = '#ffe1c4'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, 2, 22, 58, 11) : ctx.rect(-11, 2, 22, 58); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(0, 6, 11, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.ellipse(-3, 2, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(dpr, dpr);
+  // 말풍선 (첫 몇 번만): 꾹 → 당겨요
+  if (cueStage('height') === 0) {
+    const txt = cyc < 0.3 ? t('tapHere') : t('tapPull');
+    ctx.font = '700 15px "Jua", sans-serif';
+    const tw = ctx.measureText(txt).width + 18, bx = clamp(x + 40, 8, W - tw - 8), by = y - 40;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw, 28, 10) : ctx.rect(bx, by, tw, 28); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2a1a12'; ctx.textBaseline = 'middle'; ctx.fillText(txt, bx + 9, by + 14);
+  }
   ctx.restore();
 }
 
@@ -826,7 +1009,8 @@ function drawBreath(dt) {
   if (breath.mode === 'charge' && breath.press && breath.who === 'me') drawThumbTick(ctx, dpr);
   if (breath.mode === 'charge') drawSlideArrow(ctx, dpr);
   const r = $('#puffWrap').getBoundingClientRect();
-  const mx = (r.left + r.width * 0.5) * dpr, my = (r.top + r.height * 0.68) * dpr;
+  let mx = (r.left + r.width * 0.5) * dpr, my = (r.top + r.height * 0.68) * dpr;
+  if (fpvVisible() && breath.who === 'me') { mx = W / 2; my = H - 0.05 * H; } // 1인칭: 내 입술에서
   const v = breath.aim.clone().project(camera);
   const ax = (v.x * 0.5 + 0.5) * W, ay = (-v.y * 0.5 + 0.5) * H;
   const p = clamp(breath.p, 0, 1.3);
@@ -1073,8 +1257,17 @@ function frame(now) {
   const target = camTarget.clone();
   if (table && state === 'match') target.y += clamp(table.columnTop() * 0.25, 0, 1.2);
   camAim += ((state === 'match' ? camAimGoal : 0) - camAim) * Math.min(1, dt * 5);
-  if (camAim > 0.001 && table) target.lerp(camAimTarget.clone().setY(table.columnTop() * 0.5), camAim);
-  const pos = camBase.clone().lerp(camAimPos, camAim).lerp(new THREE.Vector3(0, 1, 0), camZoom);
+  let aimPos = camAimPos;
+  if (camAim > 0.001 && table) {
+    const top = table.columnTop();
+    if (fpvOn()) {
+      // 1인칭(6차): 입 높이에서 더미를 바라본다 — 10장 옆면 121px·폭 87% (three.js 투영 계산), 더미는 아래 입술·볼 위에
+      const portrait = window.innerWidth / window.innerHeight < 0.85;
+      aimPos = new THREE.Vector3(0, top * 0.7 + (portrait ? 1.0 : 0.9), portrait ? 5.2 : 4.6);
+      target.lerp(new THREE.Vector3(0, top * 0.5, 0), camAim);
+    } else target.lerp(camAimTarget.clone().setY(top * 0.5), camAim);
+  }
+  const pos = camBase.clone().lerp(aimPos, camAim).lerp(new THREE.Vector3(0, 1, 0), camZoom);
   pos.x += (Math.random() - 0.5) * sh; pos.y += (Math.random() - 0.5) * sh;
   if (state === 'home') {
     const a = now * 0.00012;
@@ -1086,9 +1279,12 @@ function frame(now) {
   if (state === 'home') for (const m of homeMeshes) m.rotation.y += dt * 0.15;
   if (puffer.mode !== 'hidden') drawPuffer();
   drawBreath(Math.min(0.05, (now - (frame._last || now)) / 1000));
+  drawFPV(now);
+  drawTapGuide(now);
   drawPocketHint(now);
   updateCues(now);
   drawReceipt(now);
+  $('#puffWrap').classList.toggle('fpvhide', fpvOn() && puffer.who === 'me'); // 1인칭 모드: 내 정면 얼굴은 안 보임(상대 차례엔 상대 얼굴)
   frame._last = now;
   renderer.render(scene, camera);
 }
@@ -1518,6 +1714,7 @@ function playerShot() {
     let micPeak = 0, micBlowing = false, micTimer = null;
     const F = Rules.POUCH_FULL;
     camAimGoal = 1; // 조준 시점으로
+    myTurn.on = true; myTurn.t0 = performance.now(); myTurn.pressed = false;
     // ── 숨 주머니: 꽉 래치 · 버팀 · 콜록 (3차 설계 패널 A안) ──
     const resetPouch = () => {
       puffer.strain = breath.strain = 0;
@@ -1567,6 +1764,8 @@ function playerShot() {
     cancelInput = () => finish(null);
     const finish = (shot) => {
       cancelInput = null;
+      myTurn.on = false;
+      myTurn.until = shot ? performance.now() + 650 : 0; // 불고 난 뒤 잠깐 볼이 꺼지는 모습까지
       hideCues();
       camAimGoal = 0; // 불고 나면 뒤집히는 장면을 보도록 원래 시점으로
       cancelAnimationFrame(raf);
@@ -1588,6 +1787,7 @@ function playerShot() {
       const s = pointerAim(ev);
       if (!s) return;
       aiming = { ...s, sx: ev.clientX, sy: ev.clientY, full: false, strain: 0 };
+      myTurn.pressed = true;
       el.setPointerCapture?.(ev.pointerId);
       puffer.mode = 'charge';
       puffer.p = 0;
