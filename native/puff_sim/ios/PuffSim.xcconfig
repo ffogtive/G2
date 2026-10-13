@@ -1,0 +1,17 @@
+// PuffSim.xcconfig — Runner 타깃에 Rust 정적 라이브러리(PuffSim.xcframework)를 붙이는 설정.
+//
+// 쓰는 법 (맥에서, 한 번):
+//   1) native/puff_sim/scripts/build-ios.sh  → native/puff_sim/dist/PuffSim.xcframework
+//   2) app/ios/Flutter/Debug.xcconfig 와 Release.xcconfig 맨 아래에 한 줄:
+//        #include "../../../native/puff_sim/ios/PuffSim.xcconfig"
+//      (또는 Xcode → Runner → Build Settings 에 아래 값을 직접)
+//   3) Xcode → Runner → General → Frameworks, Libraries, and Embedded Content 에 PuffSim.xcframework 추가, 'Do Not Embed'(정적)
+//
+// 왜 -force_load: dart:ffi 는 DynamicLibrary.process() 로 실행 파일 안의 심볼을 '이름으로' 찾는다.
+//   Swift/ObjC 코드가 puff_* 를 직접 부르지 않으니 링커가 .a 를 통째로 버린다 → 강제로 전부 싣는다.
+// 왜 STRIP_STYLE = non-global: Release 의 기본(all)은 전역 심볼까지 지워서 dlsym 이 못 찾는다 (Flutter FFI 문서와 같음).
+PUFF_SIM_XCF = $(PROJECT_DIR)/../../native/puff_sim/dist/PuffSim.xcframework
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PUFF_SIM_XCF)/ios-arm64/libpuff_sim.a
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PUFF_SIM_XCF)/ios-arm64_x86_64-simulator/libpuff_sim.a
+STRIP_STYLE = non-global
+DEAD_CODE_STRIPPING = YES
