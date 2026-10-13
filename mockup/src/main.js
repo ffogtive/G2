@@ -18,6 +18,7 @@ import * as Rules from './rules.js';
 import { levelSpec, starsFor, chapterOf, CHAPTERS, RIVALS, CHAPTER_LEN } from './levels.js';
 import { SERIES_A, drawCreature } from './creatures.js';
 import { drawBlowFace, drawPouchRing } from './face.js';
+import * as Cues from './cues.js';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -36,19 +37,28 @@ function liveCount() { return table ? table.liveDiscs().length : 20; }
 //  1: 4~8번째 — 테두리만 + 놓은 직후 0.6초 '정답 스냅샷'(사후 결과 지식)
 //  2: 9~15번째 — 게이지 없음. '딱 좋은 숨!'은 매번, 교정 문구는 크게 틀렸을 때만
 //  3: 16번째~ — 글자 없음. 소리(칭)와 지난 숨 고스트, 결과만
-function guideStage() {
+// 공략 단서 단계(5차): 규칙마다 따로 센다. 0 = 1~3번째, 1 = 4~8, 2 = 9~15, 3 = 16~. 같은 실수 2연속이면 그 규칙만 2숨 동안 0
+function cueStage(rule) {
+  if ((feel.cues ?? 1) < 0.5) return 3;
   if (feel.guide >= 0.5) return 0;
-  const k = profile.tutorialPuffs || 0;
-  return k < 3 ? 0 : k < 8 ? 1 : k < 15 ? 2 : 3;
+  const c = profile.cue;
+  if (c.relapse[rule] > 0) return 0;
+  const k = c[rule] || 0;
+  let st = k < 3 ? 0 : k < 8 ? 1 : k < 15 ? 2 : 3;
+  if (rule === 'breath' && c.bBig < 3) st = Math.min(st, 1); // 큰 더미(8장↑)를 3번 겪기 전엔 물결을 남긴다
+  return st;
 }
+function guideStage() { return cueStage('breath'); }
 function guideOn() { return guideStage() === 0; }
 const MAX_TURNS = 18;
 
 // ── 상태 ─────────────────────────────────────────────────
 let profile = Store.load();
+profile.cue = Object.assign({ breath: 0, bBig: 0, height: 0, side: 0, star: 0, prev: null }, profile.cue || {});
+profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.cue.relapse || {});
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS };
-const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50] };
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1 };
+const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1] };
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
@@ -493,14 +503,16 @@ function buildAimGizmo() {
   ghostRing.renderOrder = 9;
   ghostRing.visible = false;
   scene.add(ghostRing);
+  // 틈 줄: 조준 높이에 더미를 감는 가는 흰 줄(내 입력을 비추는 자). 옆을 누르면 기운다(누른 쪽이 들림)
   layerRing = new THREE.Mesh(
-    new THREE.TorusGeometry(DISC_R * 1.1, 0.045, 8, 64),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthTest: false }),
+    new THREE.TorusGeometry(DISC_R * 1.012, 0.018, 6, 64),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthTest: false }),
   );
   layerRing.rotation.x = Math.PI / 2;
   layerRing.renderOrder = 9;
   layerRing.visible = false;
   scene.add(layerRing);
+  buildCueMeshes();
   const lg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(1, 0, 0)]);
   aimLine = new THREE.Line(lg, new THREE.LineDashedMaterial({ color: 0xffffff, dashSize: 0.18, gapSize: 0.12, transparent: true, opacity: 0.9, depthTest: false }));
   aimLine.renderOrder = 9;
@@ -508,13 +520,244 @@ function buildAimGizmo() {
   scene.add(aimLine);
 }
 
-function powerColor(p) {
-  if (!guideOn()) return 0xffffff; // 가이드 끝나면 색으로 정답을 알려 주지 않는다
-  const n = liveCount();
-  if (p > sweetHiFor(n)) return 0xff4d4d;
-  if (p >= sweetLoFor(n)) return 0x6dff5a;
-  return 0xffe066;
+// ── 쏜 뒤: 스냅샷 → 더미 영수증 · 황금 굴러간 길 (5차, 실제 결과만 그린다) ──────────
+function pocketLatSign(g) {
+  if (!pocket) return 0;
+  const sv = pocket.userData.side;
+  return Math.sign(pocket.userData.sign * (sv.x * g.side.x + sv.z * g.side.z)) || 0;
 }
+function takeCueSnap(raw, shot, g) {
+  const live = table.liveDiscs();
+  const order = live.map((d) => ({ id: d.id, y: d.body.translation().y, golden: d.cardId === 'golden' })).sort((a, b) => b.y - a.y);
+  const n = live.length, type = match?.level?.type || 'flip';
+  const k = Cues.lidCount(order.map((o) => o.y), shot.h, DISC_H);
+  const win = Cues.idealWindow(n, type);
+  cue.snap = { order, n, k, win, type, ratio: shot.ratio ?? 1, lat: raw.lat || 0, f: Cues.tideFill(raw.power, n), stH: cueStage('height'), stB: cueStage('breath'), pls: pocketLatSign(g) };
+  // 카운터는 스냅샷 뒤에 올린다 (이번 영수증은 '쏘기 전 단계'로 그림)
+  const c = profile.cue;
+  c.breath++; if (n >= 8) c.bBig++;
+  if (win) c.height++;
+  if (Math.abs(raw.lat || 0) > 0.3 || type === 'goldenSide') c.side++;
+  if (type === 'goldenSide') c.star++;
+  for (const r of Object.keys(c.relapse)) c.relapse[r] = Math.max(0, c.relapse[r] - 1);
+  Store.save(profile);
+  trailStart(type === 'goldenSide' ? live.find((d) => d.cardId === 'golden') : null);
+}
+function makeReceipt(flipped, outs) {
+  const sn = cue.snap;
+  if (!sn) return;
+  const fl = new Set(flipped.map((d) => d.id)), ou = new Set(outs.map((d) => d.id));
+  const g = table.liveDiscs().find((d) => d.cardId === 'golden');
+  const pocketOk = sn.type === 'goldenSide' && !!g && fl.has(g.id) && inPocket(g);
+  const kind = Cues.classifyShot({ n: sn.n, k: sn.k, ratio: sn.ratio, lat: sn.lat, flips: flipped.length, outs: outs.length, type: sn.type, pocketLatSign: sn.pls, pocketOk });
+  const c = profile.cue;
+  if (kind && kind === c.prev) { c.relapse[kind] = 2; c.prev = null; } else c.prev = kind;
+  Store.save(profile);
+  // 영수증은 높이·숨 단계가 낮을 때, 또는 꽝·원 밖 2장↑일 때, 또는 규칙이 다시 켜졌을 때만
+  const show = sn.stH <= 1 || sn.stB <= 1 || flipped.length === 0 || outs.length >= 2 || (kind && c.relapse[kind] > 0);
+  cue.receipt = show ? { ...sn, fl, ou, kind, t0: performance.now() } : null;
+  window.__puffReceipt = cue.receipt ? { kind, flips: flipped.length, outs: outs.length, k: sn.k } : null; // 테스트용
+  trailEnd(pocketOk);
+}
+function drawReceipt(now) {
+  const R = cue.receipt;
+  if (!R || state !== 'match') return;
+  const t = (now - R.t0) / 1000;
+  if (t > 2.2) { cue.receipt = null; return; }
+  const a = t < 0.15 ? t / 0.15 : t > 1.9 ? Math.max(0, (2.2 - t) / 0.3) : 1;
+  const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
+  const H = cv.height / dpr;
+  const rows = R.order.length, rh = clamp(180 / rows, 5, 12), bw = 30;
+  const x0 = 14, y0 = H * 0.34, cardH = rows * rh + 24;
+  const bump = (k) => (R.kind === k ? 1 + 0.12 * Math.abs(Math.sin(Math.min(t, 0.6) * Math.PI * 2 / 0.6)) : 1);
+  ctx.save(); ctx.scale(dpr, dpr); ctx.globalAlpha = a;
+  ctx.fillStyle = 'rgba(42,26,18,0.55)';
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0 - 8, y0 - 12, bw + 54, cardH, 10) : ctx.rect(x0 - 8, y0 - 12, bw + 54, cardH); ctx.fill();
+  // 층 막대: 파랑 = 내가 넘김, 빨강 = 원 밖, 회색 = 그대로. 황금은 금 테두리
+  R.order.forEach((o, i) => {
+    const y = y0 + i * rh;
+    ctx.fillStyle = R.fl.has(o.id) ? '#3a8fe0' : R.ou.has(o.id) ? '#ff4d5e' : 'rgba(255,255,255,0.3)';
+    ctx.fillRect(x0, y, bw, rh - 1.5);
+    if (o.golden) { ctx.strokeStyle = '#ffcf33'; ctx.lineWidth = 2; ctx.strokeRect(x0 + 1, y + 0.5, bw - 2, rh - 2.5); }
+  });
+  // 내가 분 층 ◀ (높이 지적이면 통통)
+  const ky = y0 + (R.k - 0.5) * rh;
+  ctx.save(); ctx.translate(x0 + bw + 4, ky); ctx.scale(bump('height'), bump('height'));
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(8, -5); ctx.lineTo(8, 5); ctx.closePath(); ctx.fill(); ctx.restore();
+  // 금 괄호 [2~4] (높이 단계 ≤ 1)
+  if (R.win && R.stH <= 1) {
+    const ya = y0 + (R.win[0] - 1) * rh, yb = y0 + R.win[1] * rh - 1.5;
+    ctx.strokeStyle = '#ffcf33'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x0 - 3, ya); ctx.lineTo(x0 - 6, ya); ctx.lineTo(x0 - 6, yb); ctx.lineTo(x0 - 3, yb); ctx.stroke();
+  }
+  // 미니 컵: 이번 숨이 채운 높이 (넘치면 볼록 + 빨간 방울)
+  const cx = x0 + bw + 18, cw = 18, ch = rows * rh;
+  ctx.save(); ctx.translate(cx + cw / 2, y0 + ch / 2); ctx.scale(bump('breath'), bump('breath')); ctx.translate(-(cx + cw / 2), -(y0 + ch / 2));
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.strokeRect(cx, y0, cw, ch);
+  const ff = Math.min(1, R.f);
+  ctx.fillStyle = R.stB <= 1 ? (R.ratio < Rules.GREEN_LO ? '#ffe9a0' : R.ratio <= 1 ? '#6dffb0' : '#ff8a8a') : 'rgba(255,255,255,0.7)';
+  ctx.fillRect(cx + 2, y0 + ch * (1 - ff), cw - 4, ch * ff);
+  if (R.f > 1) { ctx.beginPath(); ctx.ellipse(cx + cw / 2, y0, cw / 2 - 1, 6, 0, Math.PI, 0); ctx.fill(); }
+  if (R.ratio > 1) { ctx.fillStyle = '#ff4d5e'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx + 3 + i * 6, y0 - 8 - (i % 2) * 4, 2.2, 0, Math.PI * 2); ctx.fill(); } }
+  ctx.restore();
+  // 좌우 지적: 미니 화살표가 통통
+  if (R.kind === 'side') {
+    ctx.save(); ctx.translate(x0 + bw / 2, y0 + ch + 6); ctx.scale(bump('side'), bump('side'));
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.moveTo(6, -4); ctx.lineTo(10, 0); ctx.lineTo(6, 4); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+// 황금 굴러간 길 (★ 판): 금색 점선 + 끝 고리(칸 안 = 금, 밖 = 갈색). 다음에 불 때까지 남는다
+function trailStart(goldenDisc) {
+  if (cue.trail) { scene.remove(cue.trail); cue.trail.geometry.dispose(); cue.trail = null; }
+  if (cue.trailEnd) { scene.remove(cue.trailEnd); cue.trailEnd = null; }
+  if (!goldenDisc) return;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(64 * 3), 3));
+  geo.setDrawRange(0, 0);
+  cue.trail = new THREE.Line(geo, new THREE.LineDashedMaterial({ color: 0xffcf33, dashSize: 0.12, gapSize: 0.08, transparent: true, opacity: 0.9, depthTest: false }));
+  cue.trail.renderOrder = 9; cue.trail.userData = { disc: goldenDisc, n: 0, tick: 0 };
+  scene.add(cue.trail);
+}
+function trailStep() {
+  const T = cue.trail;
+  if (!T || T.userData.done) return;
+  if (++T.userData.tick % 3) return;
+  const d = T.userData.disc, n = T.userData.n;
+  if (d.removed || n >= 64) return;
+  const p = d.body.translation(), arr = T.geometry.attributes.position.array;
+  arr[n * 3] = p.x; arr[n * 3 + 1] = 0.02; arr[n * 3 + 2] = p.z;
+  T.userData.n = n + 1;
+  T.geometry.attributes.position.needsUpdate = true;
+  T.geometry.setDrawRange(0, T.userData.n);
+}
+function trailEnd(ok) {
+  const T = cue.trail;
+  if (!T) return;
+  T.userData.done = true;
+  T.computeLineDistances();
+  const n = T.userData.n;
+  if (n < 1) return;
+  const arr = T.geometry.attributes.position.array;
+  cue.trailEnd = new THREE.Mesh(new THREE.RingGeometry(0.18, 0.26, 24), new THREE.MeshBasicMaterial({ color: ok ? 0xffcf33 : 0x7a5a3a, transparent: true, opacity: 0.9, depthTest: false, side: THREE.DoubleSide }));
+  cue.trailEnd.rotation.x = -Math.PI / 2; cue.trailEnd.position.set(arr[(n - 1) * 3], 0.03, arr[(n - 1) * 3 + 2]); cue.trailEnd.renderOrder = 9;
+  scene.add(cue.trailEnd);
+}
+
+// 분필 화살표: 옆을 노리면 굴러갈 쪽(반대쪽 대각선). ★판에서 ★쪽을 가리키면 촉이 금색
+function drawSlideArrow(ctx, dpr) {
+  const st = cue.st;
+  if (!st || puffer.who !== 'me' || !table) return;
+  const star = st.type === 'goldenSide' && (profile.cue.star || 0) < 8;
+  if (!(star || (cueStage('side') === 0 && Math.abs(st.lat) > 0.3))) return;
+  const g = shotGeometry({ dir: { x: -(camera.position.x - st.c.x), z: -(camera.position.z - st.c.z) }, lat: st.lat, h: st.h });
+  const phi = Cues.slideAngle(st.lat), sg = Math.sign(st.lat) || 0;
+  const a = new THREE.Vector3(st.c.x, st.top + 0.05, st.c.z);
+  const dirv = g.dir.clone().multiplyScalar(Math.cos(phi)).addScaledVector(g.side, -sg * Math.sin(phi));
+  const b = a.clone().addScaledVector(dirv, 1.8);
+  const pa = a.clone().project(camera), pb = b.clone().project(camera);
+  const W = ctx.canvas.width / dpr, H = ctx.canvas.height / dpr;
+  const ax = (pa.x * 0.5 + 0.5) * W, ay = (-pa.y * 0.5 + 0.5) * H, bx = (pb.x * 0.5 + 0.5) * W, by = (-pb.y * 0.5 + 0.5) * H;
+  const good = st.type === 'goldenSide' && Math.abs(st.lat) >= 0.35 && -sg === pocketLatSign(g);
+  ctx.save(); ctx.scale(dpr, dpr);
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.setLineDash([10, 8]);
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke(); ctx.setLineDash([]);
+  const ang = Math.atan2(by - ay, bx - ax);
+  ctx.fillStyle = good ? '#ffcf33' : 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(bx + Math.cos(ang) * 10, by + Math.sin(ang) * 10); ctx.lineTo(bx + Math.cos(ang + 2.5) * 16, by + Math.sin(ang + 2.5) * 16); ctx.lineTo(bx + Math.cos(ang - 2.5) * 16, by + Math.sin(ang - 2.5) * 16); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+
+// ── 공략 단서 메시 (5차) ─────────────────────────────────
+const cue = { sleeve: null, band: null, tide: null, trail: null, trailEnd: null, st: null, receipt: null, snap: null };
+function openCyl(r, color, opacity, order) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 40, 1, true), new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, side: THREE.DoubleSide }));
+  m.renderOrder = order; m.visible = false; scene.add(m); return m;
+}
+function ring(r, tube, color, opacity, order) {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(r, tube, 6, 64), new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false }));
+  m.rotation.x = Math.PI / 2; m.renderOrder = order; m.visible = false; scene.add(m); return m;
+}
+function buildCueMeshes() {
+  // 소매: 조준한 딱지부터 꼭대기까지 = '뚜껑' (위에서 몇 장인지 셀 수 있게)
+  cue.sleeve = openCyl(DISC_R * 1.035, 0xffffff, 0.16, 7);
+  // 금 띠: 위에서 2~4장째 (실측 최고 높이 창) — 높이 단계 0 에서만, 누르는 동안만
+  cue.band = { body: openCyl(DISC_R * 1.05, 0xffcf33, 0.28, 8), top: ring(DISC_R * 1.05, 0.02, 0xffcf33, 0.9, 8), bot: ring(DISC_R * 1.05, 0.02, 0xffcf33, 0.9, 8) };
+  // 숨 물결: 당기면 책상에서 물이 차오름. 0.9·정답 = 꼭대기에 딱
+  const bulge = new THREE.Mesh(new THREE.SphereGeometry(DISC_R * 1.06, 24, 6, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3, depthWrite: false }));
+  bulge.renderOrder = 7; bulge.visible = false; scene.add(bulge);
+  cue.tide = { body: openCyl(DISC_R * 1.06, 0xffffff, 0.32, 7), line: ring(DISC_R * 1.07, 0.022, 0xffffff, 0.9, 7), brim: ring(DISC_R * 1.08, 0.03, 0xffcf33, 0.8, 7), bulge, f: 0 };
+}
+function hideCues() {
+  if (!cue.sleeve) return;
+  cue.sleeve.visible = false;
+  for (const m of Object.values(cue.band)) m.visible = false;
+  for (const k of ['body', 'line', 'brim', 'bulge']) cue.tide[k].visible = false;
+  cue.st = null;
+}
+// 내 조준 중(누름/당김) 단서 상태를 갱신. 실제 그리기 위치는 frame 의 updateCues 에서(찰랑·맥동)
+function showCues(aiming) {
+  if (!table || puffer.who !== 'me') return;
+  const live = table.liveDiscs();
+  const n = live.length, top = table.columnTop();
+  if (!aiming.ys) aiming.ys = live.map((d) => d.body.translation().y).sort((a, b) => b - a);
+  const k = Cues.lidCount(aiming.ys, aiming.h, DISC_H);
+  const type = match?.level?.type || 'flip';
+  const win = Cues.idealWindow(n, type);
+  const inWin = !!win && k >= win[0] && k <= win[1];
+  if (inWin && !aiming.wasIn && (aiming.power || 0) < 0.05 && cueStage('height') === 0) sfx.tone(988, 0.06, 'triangle', 0.05); // 창에 들어오면 '띵'
+  aiming.wasIn = inWin;
+  cue.st = { n, top, k, win, inWin, h: aiming.h, p: aiming.power || 0, ratio: (aiming.power || 0) / sweetHiFor(n), lat: aiming.lat || 0, ys: aiming.ys, c: table.pileCenter(), type };
+}
+function updateCues(now) {
+  const st = cue.st;
+  if (!st || state !== 'match' || !cue.sleeve) return;
+  const { c, top, h, ys } = st;
+  const pulling = st.p >= 0.05;
+  // 소매(뚜껑): 조준 딱지 아래 경계 ~ 꼭대기
+  const y0 = Math.max(0, h - DISC_H / 2);
+  cue.sleeve.visible = true;
+  cue.sleeve.position.set(c.x, (y0 + top) / 2, c.z);
+  cue.sleeve.scale.set(1, Math.max(0.02, top - y0), 1);
+  cue.sleeve.material.opacity = pulling ? 0.05 : 0.16;
+  // 금 띠: 위에서 2~4장째
+  const showBand = !pulling && st.win && cueStage('height') === 0;
+  for (const m of Object.values(cue.band)) m.visible = !!showBand;
+  if (showBand) {
+    const yTop = ys[st.win[0] - 1] + DISC_H / 2, yBot = ys[Math.min(ys.length, st.win[1]) - 1] - DISC_H / 2;
+    cue.band.body.position.set(c.x, (yTop + yBot) / 2, c.z); cue.band.body.scale.set(1, Math.max(0.02, yTop - yBot), 1);
+    cue.band.top.position.set(c.x, yTop, c.z); cue.band.bot.position.set(c.x, yBot, c.z);
+    cue.band.body.material.opacity = st.inWin ? 0.28 + 0.22 * (0.5 + 0.5 * Math.sin(now * 0.025)) : 0.2;
+  }
+  // 숨 물결 (숨 단계 ≤ 1, 당기는 동안)
+  const bst = cueStage('breath');
+  const showTide = pulling && bst <= 1;
+  for (const k of ['body', 'line', 'brim', 'bulge']) cue.tide[k].visible = showTide;
+  if (!showTide) { cue.tide.f = 0; return; }
+  const T = cue.tide;
+  T.f += (Cues.tideFill(st.p, st.n) - T.f) * 0.35;
+  const fh = Math.min(T.f, 1) * top;
+  const col = bst === 0 ? (st.ratio < Rules.GREEN_LO ? 0xffe9a0 : st.ratio <= 1.0 ? 0x6dffb0 : 0xff8a8a) : 0xffffff;
+  const op = bst === 0 ? 0.32 : lerp(0.28, 0.12, clamp(((profile.cue.breath || 0) - 3) / 5, 0, 1));
+  T.body.position.set(c.x, fh / 2 + 0.005, c.z); T.body.scale.set(1, Math.max(0.01, fh), 1);
+  T.body.material.color.setHex(col); T.body.material.opacity = op;
+  const wob = (st.ratio < 0.6 ? 0.025 : 0.008) * Math.sin(now * 0.009);
+  T.line.position.set(c.x, fh + wob, c.z); T.line.material.color.setHex(col);
+  T.brim.position.set(c.x, top, c.z); T.brim.material.color.setHex(bst === 0 ? 0xffcf33 : 0xffffff); T.brim.material.opacity = bst === 0 ? 0.85 : 0.5;
+  const bulge = clamp((T.f - 1) / 0.5, 0, 1) * 0.2;
+  T.bulge.visible = bulge > 0.005;
+  T.bulge.position.set(c.x, top, c.z); T.bulge.scale.set(1, bulge / (DISC_R * 1.06) + 0.001, 1);
+  T.bulge.material.color.setHex(col); T.bulge.material.opacity = op;
+  // 넘침(돌풍): 카메라 쪽 테두리에서 물보라
+  if (st.ratio > 1.0 && Math.random() < Math.min(1, (st.ratio - 1) / 0.1)) {
+    const tc = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
+    fx.emit({ at: { x: c.x + tc.x * DISC_R, y: top + 0.05, z: c.z + tc.z * DISC_R }, n: 2, color: bst === 0 ? 0xff8a8a : 0xffffff, speed: 1.2, up: 2.2, life: 0.4, size: 0.14, gravity: 3 });
+  }
+}
+
+// 조준점 색: 정답 색은 숨 물결이 맡는다(5차) → 늘 흰색
+function powerColor() { return 0xffffff; }
 
 // 슛 → 월드 조준점 (원기둥 앞쪽 접평면)
 function shotGeometry(shot) {
@@ -552,7 +795,9 @@ function showGizmo(shot, color = 0xffffff) {
   const s = 0.8 + (shot.power || 0) * 0.6;
   reticle.scale.setScalar(s);
   layerRing.position.set(g.center.x, shot.h, g.center.z);
-  layerRing.material.color.setHex(color);
+  // 기운 틈: 옆을 누르면 누른 쪽이 들리고 굴러갈 반대쪽이 내려간다 (좌우 단계 ≤ 1 이면 크게)
+  const tiltA = (puffer.who === 'me' && cueStage('side') <= 1 ? 0.25 : 0.1) * clamp(shot.lat || 0, -1, 1);
+  layerRing.quaternion.setFromAxisAngle(g.dir, -tiltA).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
   const from = g.origin.clone().lerp(g.aim, 0.15);
   aimLine.visible = false; // 숨 줄기(2D 오버레이)로 대체
   aimLine.geometry.setFromPoints([from, g.aim]);
@@ -561,6 +806,7 @@ function showGizmo(shot, color = 0xffffff) {
 }
 
 function hideGizmo() {
+  hideCues();
   reticle.visible = layerRing.visible = aimLine.visible = false;
   if (ghostRing) ghostRing.visible = false;
   if (breath.mode === 'charge') { breath.mode = 'off'; puffer.aimX = 0; } // 취소: 얼굴도 정면으로 (불 때는 바람 방향 유지)
@@ -578,6 +824,7 @@ function drawBreath(dt) {
   if (breath.mode === 'off' || !breath.aim || state !== 'match') return;
   if (!(breath.mode === 'charge' && breath.full)) breath.t += dt; // 꽉: 숨 줄기가 멈춘다(더 안 들어감)
   if (breath.mode === 'charge' && breath.press && breath.who === 'me') drawThumbTick(ctx, dpr);
+  if (breath.mode === 'charge') drawSlideArrow(ctx, dpr);
   const r = $('#puffWrap').getBoundingClientRect();
   const mx = (r.left + r.width * 0.5) * dpr, my = (r.top + r.height * 0.68) * dpr;
   const v = breath.aim.clone().project(camera);
@@ -704,46 +951,7 @@ function drawPuffer() {
     for (const sg of [-1, 1]) { ctx.beginPath(); ctx.arc(sg * cx, 0.075, cr, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
   }
-  // 파워 게이지 (주머니 바깥 호) — 단계적 은퇴. 초록 구간은 '더미 양'에 따라 움직이고, 꽉(F) 눈금은 고정
-  const gstage = ai ? 3 : stage;
-  const snap = now < puffer.snapUntil; // 놓은 직후 정답 스냅샷 (stage 1)
-  if (gstage >= 2 || (gstage === 1 && !snap && puffer.mode !== 'charge')) return;
-  const n = puffer.snapN || liveCount();
-  const SWEET_LO = sweetLoFor(n), SWEET_HI = sweetHiFor(n);
-  const p = puffer.p;
-  ctx.save();
-  ctx.translate(S * 0.5, S * 0.62);
-  const R = S * 0.475; // 주머니 고리(0.40) 바깥 — 겹치지 않게
-  const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
-  const ang = (v) => a0 + (a1 - a0) * (v / POWER_MAX);
-  ctx.lineCap = 'round';
-  ctx.lineWidth = S * 0.04;
-  ctx.strokeStyle = 'rgba(42,26,18,0.45)';
-  ctx.beginPath(); ctx.arc(0, 0, R, a0, a1); ctx.stroke();
-  // 꽉 너머(F~벽): 짙은 빨강 빗금
-  ctx.lineWidth = S * 0.03; ctx.strokeStyle = 'rgba(140,20,30,0.75)'; ctx.setLineDash([S * 0.012, S * 0.01]);
-  ctx.beginPath(); ctx.arc(0, 0, R, ang(F), a1); ctx.stroke(); ctx.setLineDash([]);
-  // 꽉 눈금
-  ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = S * 0.018;
-  ctx.beginPath(); ctx.moveTo(Math.cos(ang(F)) * (R - S * 0.045), Math.sin(ang(F)) * (R - S * 0.045)); ctx.lineTo(Math.cos(ang(F)) * (R + S * 0.045), Math.sin(ang(F)) * (R + S * 0.045)); ctx.stroke();
-  if (gstage === 1 && !snap) {
-    // 테두리 + 내 숨 바늘(흰색)만 — 정답 구간은 숨김
-    if (p > 0.01) { ctx.lineWidth = S * 0.035; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(0, 0, R, a0, ang(Math.min(p, POWER_MAX))); ctx.stroke(); }
-    ctx.restore();
-    return;
-  }
-  ctx.lineWidth = S * 0.03;
-  ctx.strokeStyle = 'rgba(109,255,90,0.6)';
-  ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_LO), ang(SWEET_HI)); ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,77,77,0.55)';
-  ctx.beginPath(); ctx.arc(0, 0, R, ang(SWEET_HI + 0.02), ang(F)); ctx.stroke();
-  const pv = snap ? puffer.snapP : p;
-  if (pv > 0.01) {
-    ctx.lineWidth = S * 0.035;
-    ctx.strokeStyle = pv > SWEET_HI ? '#ff4d4d' : pv >= SWEET_LO ? '#6dff5a' : '#ffe066';
-    ctx.beginPath(); ctx.arc(0, 0, R, a0, ang(Math.min(pv, POWER_MAX))); ctx.stroke();
-  }
-  ctx.restore();
+  // 원호 게이지는 5차에서 삭제 — 정답 숨은 더미 위 '숨 물결'이 보여 준다(cues)
 }
 
 // ── 임팩트 연출 ─────────────────────────────────────────
@@ -879,6 +1087,8 @@ function frame(now) {
   if (puffer.mode !== 'hidden') drawPuffer();
   drawBreath(Math.min(0.05, (now - (frame._last || now)) / 1000));
   drawPocketHint(now);
+  updateCues(now);
+  drawReceipt(now);
   frame._last = now;
   renderer.render(scene, camera);
 }
@@ -886,6 +1096,7 @@ function frame(now) {
 function watchSim() {
   // 착지 '탁' 소리 + 뒤집혀 드러나는 순간 연출
   const now = performance.now();
+  trailStep();
   for (const d of table.liveDiscs()) {
     const v = d.body.linvel();
     const prev = simWatch.vy.get(d.id) ?? 0;
@@ -959,6 +1170,7 @@ function refreshTexts() {
 
 function clearMatchMeshes() {
   clearPocket();
+  trailStart(null); cue.receipt = null; cue.snap = null; hideCues();
   for (const m of meshes.values()) scene.remove(m);
   meshes.clear();
   for (const who of ['me', 'ai']) { for (const m of piles[who]) scene.remove(m); piles[who] = []; }
@@ -1355,6 +1567,7 @@ function playerShot() {
     cancelInput = () => finish(null);
     const finish = (shot) => {
       cancelInput = null;
+      hideCues();
       camAimGoal = 0; // 불고 나면 뒤집히는 장면을 보도록 원래 시점으로
       cancelAnimationFrame(raf);
       resetPouch();
@@ -1379,9 +1592,11 @@ function playerShot() {
       puffer.mode = 'charge';
       puffer.p = 0;
       resetPouch();
+      breath.who = 'me';
       breath.press = { x: ev.clientX, y: ev.clientY };
       breath.finger = { x: ev.clientX, y: ev.clientY };
       showGizmo(aiming, powerColor(0));
+      showCues(aiming);
       $('#hint').hidden = true;
       if (micEnabled && mic.ready) {
         micPeak = 0; micBlowing = false;
@@ -1397,6 +1612,7 @@ function playerShot() {
             fire(shot);
           }
           showGizmo({ ...aiming, power: puffer.p }, powerColor(puffer.p));
+          if (aiming) showCues({ ...aiming, power: puffer.p });
         }, 30);
       } else {
         inhale = sfx.inhale();
@@ -1424,6 +1640,7 @@ function playerShot() {
         if (step !== aiming.step) { aiming.step = step; if (step > 0) sfx.tone([392, 440, 494, 523, 587, 659, 698, 784][step], 0.05, 'triangle', 0.06); }
       }
       showGizmo(aiming, powerColor(aiming.power));
+      showCues(aiming);
     };
     const fire = (shot) => {
       aiming = null;
@@ -1511,6 +1728,7 @@ function breathFeedback(ratio, who, forceKey) {
 async function blow(rawShot, who) {
   const shot = resolveShot(rawShot, match.rng);
   const g = shotGeometry(shot);
+  if (who === 'me') takeCueSnap(rawShot, shot, g);
   if (who === 'me') {
     puffer.snapUntil = performance.now() + 900; puffer.snapP = rawShot.power; puffer.snapN = liveCount();
     lastBreath.p = rawShot.power; lastBreath.aim = g.aim.clone(); lastBreath.normal = g.normal.clone();
@@ -1573,6 +1791,7 @@ function simulate() {
         fx.text(new THREE.Vector3(p.x, p.y + 0.5, p.z), 'OUT', 'out');
       }
       if (outs.length) chalkPulse();
+      if (simWatch.shooter === 'me') makeReceipt(flipped, outs);
       resolve(flipped);
     };
   });
