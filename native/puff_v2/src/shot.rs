@@ -112,7 +112,14 @@ impl ShotSpec {
                 "cp0" => s.aero.cp0 = num()?,
                 "cp_in" => s.aero.cp_in = num()?,
                 "cd" => s.aero.cd_orifice = num()?,
-                "f2" => s.aero.f2_impact = num()? > 0.5,
+                "f2" => {
+                    // f2=1 충돌만 (옛 선택), f2=2 충돌 + 흡입 (§4.7 F2 전체)
+                    let v = num()?;
+                    s.aero.f2_impact = v > 0.5;
+                    s.aero.f2_suction = v > 1.5;
+                }
+                "cs" => s.aero.cs = num()?,
+                "edge" => s.aero.edge_inlet = num()? > 0.5,
                 "audit" => s.audit = num()? > 0.5,
                 "trace" => s.trace = num()? > 0.5,
                 "max_after" => s.max_after = num()?,
@@ -184,6 +191,9 @@ pub struct ShotResult {
     pub aim_clamped: bool,
     pub phi0_deg: f64,
     pub jet_deg0: f64,
+    /// 쓸기가 해부 범위 끝에서 멈췄나, 숨 동안 최대 제트 각 (°)
+    pub sweep_stop: bool,
+    pub jet_deg_max: f64,
     pub j_peak: f64,
     pub cost: f64,
     pub vol_l: f64,
@@ -233,6 +243,8 @@ impl ShotResult {
             .b("aim_clamped", self.aim_clamped)
             .f("phi0_deg", self.phi0_deg, 2)
             .f("jet_deg0", self.jet_deg0, 2)
+            .b("sweep_stop", self.sweep_stop)
+            .f("jet_deg_max", self.jet_deg_max, 2)
             .f("j_peak", self.j_peak, 3)
             .f("cost", self.cost, 3)
             .f("vol_l", self.vol_l, 3);
@@ -326,6 +338,8 @@ pub fn run_shot_from(snap: &Snapshot, spec: &ShotSpec) -> ShotResult {
         aim_clamped: prog.rig.aim_clamped,
         phi0_deg: deg(prog.rig.phi0),
         jet_deg0: prog.rig.jet_deg0(),
+        sweep_stop: prog.sweep_stopped,
+        jet_deg_max: prog.jet_deg_max,
         j_peak: prog.j_peak,
         cost: prog.cost,
         vol_l: prog.vol_l,

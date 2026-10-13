@@ -14,8 +14,17 @@
 
 명령:
   python3 spike.py run <phase>      # phase: core_sel core_rep s6_sel s6_rep s4 s2_sel s2_rep s3_sel s3_rep s3ab_sel s3ab_rep s5x_sel s5x_rep
-  python3 spike.py analyze          # → docs/research/v2-spike/summary.json + 표 (stdout)
+                                    #        (고친 뒤 1차) s3v_sel s3v_rep s3v_ab corex f2_core f2_s2
+  python3 spike.py carry <옛 SPIKE_OUT> <phase...>   # 해부 각 자르기에 영향 없는 옛 샷을 새 raw 로 옮긴다(같은 바이너리면 같은 해시)
+  python3 spike.py analyze          # → $SPIKE_OUT/summary.json + 표 (stdout)
 환경: PUFF_BIN (기본 ../puff_sim/target/release/puff_v2), SPIKE_OUT (기본 docs/research/v2-spike), THREADS=3
+
+고친 뒤 1차 (docs/research/v2-spike.md §8, SPIKE_OUT=docs/research/v2-spike/fix1):
+  - 엔진: 턱 제트 각 −25~0°(φ ∈ [0, 25°])·눈높이 −50~−30° 해부 범위로 φ₀·쓸기 자르기, F4 책상 받침 입구 = 책상 모서리 점(edge=1)
+  - S3 새 규약 (측정 전에 고정): 쓸기 속도 9°/s 하나(설계서 좋은 쓸기 6~13°/s 의 가운데에 가장 가까운 격자값) vs 고정,
+    너무 빠름 = 18°/s(2배), N 30·40, 고르기 시드 1~32(§7.1), 보고 시드 1001~1256. 판정: 비 ≥ 1.15·하한 > 1 → PASS,
+    상한 < 1.15 → FAIL(이득 없음 확인), 그 밖 → INCONCLUSIVE(검정력 부족). 퍽 효과 ≤ 5% 는 한쪽: 하한 > 1.05 → FAIL, 상한 ≤ 1.05 → PASS
+  - F2 민감도: f2=2 (§4.7 충돌 + 흡입 Cs 0.8), 같은 조준 의도로 S1·S2 비교
 """
 import json, math, os, subprocess, sys, time
 
@@ -28,6 +37,17 @@ THREADS = int(os.environ.get('THREADS', '3'))
 
 SEL = list(range(1, 17))
 REP = list(range(33, 65))
+# 고친 뒤 1차: S3 새 규약 (측정 전에 고정)
+S3V_RATE = 9.0
+S3V_FAST = 18.0
+S3V_NS = (30, 40)
+S3V_K = [0.5, 1.5, 3, 5, 8, 13]
+S3V_SEL = list(range(1, 33))
+S3V_REP = list(range(1001, 1257))
+S3V_REP_FAST = list(range(1001, 1065))
+S3V_REP_PUFF = list(range(1001, 1129))
+S3V_REP_AB = list(range(1001, 1065))
+REPX = list(range(65, 97))  # S1 F2 민감도용 추가 보고 시드
 KGRID = [0.5, 1.5, 3, 5, 8, 13, 20]
 LEARN = dict(h_sd=0.12, lat_sd=0.25, q_rel_sd=0.15 / 0.89)  # tools/botlib.mjs BOTS.learner
 V1_LEARNER = dict(h_mean=0.82, p_mean=0.89)  # 민감도용 (v1 정책 평균 그대로)
@@ -115,7 +135,8 @@ _NOM = {}
 
 def nominal(n, seed):
     if (n, seed) not in _NOM:
-        out = subprocess.run([BIN, 'nominal', str(n), '1-64'], capture_output=True, text=True, check=True).stdout
+        lo = (seed - 1) // 256 * 256 + 1
+        out = subprocess.run([BIN, 'nominal', str(n), f'{lo}-{lo + 255}'], capture_output=True, text=True, check=True).stdout
         for line in out.split('\n'):
             if line.strip():
                 a, b, c = line.split()
@@ -174,7 +195,7 @@ def line(n, seed, arm, h, lat, tag, q=None, extra=''):
 # ───────── 실행 ─────────
 KEEP = ['tag', 'n', 'seed', 'pose', 'kind', 'q', 'dur', 'sweep', 'mode', 'lat', 'h', 'inset', 'flipped', 'out', 'flipped_out',
         'zero', 'whole', 'slide_max', 'apex_rise', 'available', 'aim_clamped', 'jet_deg0', 'j_peak', 'cost', 'vol_l',
-        'steps_after', 'cpu_ms', 'hash']
+        'steps_after', 'cpu_ms', 'hash', 'sweep_stop', 'jet_deg_max']
 
 
 def compact(d):
@@ -182,7 +203,7 @@ def compact(d):
     a = d.get('audit', {})
     o['aud'] = [a.get('h1', 0), a.get('h1_cavity', 0), a.get('h2', 0), a.get('h2c', 0), a.get('h3', 0), a.get('h4_nan', 0)]
     o['aud_worst'] = [round(a.get('h1_worst', 0), 3), round(a.get('h2_worst', 0), 3), round(a.get('h2c_worst', 0), 3)]
-    for k in ('slide_max', 'apex_rise', 'jet_deg0', 'cost', 'vol_l', 'cpu_ms', 'lat', 'h', 'j_peak'):
+    for k in ('slide_max', 'apex_rise', 'jet_deg0', 'jet_deg_max', 'cost', 'vol_l', 'cpu_ms', 'lat', 'h', 'j_peak'):
         if k in o and isinstance(o[k], float):
             o[k] = round(o[k], 4)
     return o
@@ -356,9 +377,116 @@ def plan(phase):
             for s in REP:
                 tag = f'core|pueok_q1|{n}|{s}|{k}'
                 L.append((tag, line(n, s, 'pueok_q1', h_of(n, s, k), 0.0, tag)))
+    elif phase == 's3v_sel':
+        for n in S3V_NS:
+            for arm in ('s3p_c_0', f's3p_c_{S3V_RATE:g}'):
+                for s in S3V_SEL:
+                    for k in S3V_K:
+                        if k > 0.8 * n:
+                            continue
+                        h, lat, _ = human(n, s, h_of(n, s, k), 'S3')
+                        tag = f's3v|{arm}|{n}|{s}|{k}'
+                        L.append((tag, line(n, s, arm, h, lat, tag)))
+    elif phase in ('s3v_rep', 's3v_ab'):
+        K = s3v_intents()
+        jobs = []
+        for n in S3V_NS:
+            if phase == 's3v_rep':
+                jobs += [(n, 's3p_c_0', K[n]['s3p_c_0'], S3V_REP), (n, f's3p_c_{S3V_RATE:g}', K[n]['sweep'], S3V_REP),
+                         (n, f's3p_c_{S3V_FAST:g}', K[n]['sweep'], S3V_REP_FAST),
+                         (n, 's3f_0', K[n]['puff'], S3V_REP_PUFF), (n, f's3f_{S3V_RATE:g}', K[n]['puff'], S3V_REP_PUFF)]
+            else:
+                jobs += [(n, f's3p_a_{S3V_RATE:g}', K[n]['sweep'], S3V_REP_AB), (n, f's3p_b_{S3V_RATE:g}', K[n]['sweep'], S3V_REP_AB)]
+        for n, arm, k, seeds in jobs:
+            for s in seeds:
+                h, lat, _ = human(n, s, h_of(n, s, k), 'S3')
+                tag = f's3v|{arm}|{n}|{s}|{k}'
+                L.append((tag, line(n, s, arm, h, lat, tag)))
+    elif phase in ('corex', 'f2_core'):
+        # S1 짝을 F2 켬(f2=2)으로: 같은 조준 의도(core_sel 고르기). corex = 기본 구성, 보고 시드 65~96 추가분
+        sel = load('core_sel')
+        seeds = REPX if phase == 'corex' else REP + REPX
+        for arm in ('puff_q1', 'pueok_q1'):
+            for n in (20, 30, 40):
+                rows = [r for r in sel if parse_tag(r['tag'])[1] == arm and r['n'] == n]
+                k, _, _ = best_cell(rows, lambda r: float(parse_tag(r['tag'])[4]))
+                for s in seeds:
+                    pre = 'corex' if phase == 'corex' else 'f2'
+                    tag = f'{pre}|{arm}|{n}|{s}|{k}'
+                    L.append((tag, line(n, s, arm, h_of(n, s, k), 0.0, tag, extra='' if phase == 'corex' else 'f2=2')))
+    elif phase == 'f2_s2':
+        s2s = load('s2_sel')
+        for n in (30, 40):
+            best = s2_best_arm(s2s, n)
+            rows = [r for r in s2s if parse_tag(r['tag'])[1] == best and r['n'] == n]
+            k, _, _ = best_cell(rows, lambda r: float(parse_tag(r['tag'])[4]))
+            for s in REP:
+                tag = f'f2s2|{best}|{n}|{s}|{k}'
+                L.append((tag, line(n, s, best, h_of(n, s, k), 0.0, tag, extra='f2=2')))
     else:
         raise SystemExit(f'모르는 phase {phase}')
     return L
+
+
+def s2_best_arm(s2s, n):
+    sc = {}
+    for arm in s2_arms():
+        rows = [r for r in s2s if parse_tag(r['tag'])[1] == arm and r['n'] == n]
+        _, sc_, _ = best_cell(rows, lambda r: float(parse_tag(r['tag'])[4]))
+        sc[arm] = sc_
+    return max(sc, key=lambda a: sc[a])
+
+
+def s3v_intents():
+    """S3 새 규약 의도: 고르기 시드 1~32 에서 고정·9°/s 팔의 K. 너무 빠름·(a)(b) 는 9°/s 팔의 K, 퍽 팔은 core 오라클 퍽 K"""
+    sel = load('s3v_sel')
+    core = load('core_sel')
+    out = {}
+    for n in S3V_NS:
+        d = {}
+        for arm, key in (('s3p_c_0', 's3p_c_0'), (f's3p_c_{S3V_RATE:g}', 'sweep')):
+            rows = [r for r in sel if parse_tag(r['tag'])[1] == arm and r['n'] == n]
+            d[key], _, _ = best_cell(rows, lambda r: float(parse_tag(r['tag'])[4]))
+        rows = [r for r in core if parse_tag(r['tag'])[1] == 'puff_q1' and r['n'] == n]
+        d['puff'], _, _ = best_cell(rows, lambda r: float(parse_tag(r['tag'])[4]))
+        out[n] = d
+    return out
+
+
+# ───────── 고친 뒤 1차: 옛 샷 옮기기 ─────────
+def clamp_affected(r):
+    """옛 엔진 샷이 해부 각 자르기(턱 −25~0°)에 영향을 받나: 시작 제트 각이 범위 밖이거나 쓸기가 0° 를 넘을 수 있으면 True.
+    jet_deg0 는 소수 2자리로 저장 → 0.02° 여유. 쓸기 상한 = 속도 × (떼기 + 1/30 − 지연) (30 Hz 마지막 프레임까지)"""
+    if r.get('pose', 'chin') == 'under':
+        return False
+    j = r['jet_deg0']
+    sw = r.get('sweep') or 0.0
+    if r['kind'] == 'pueok':
+        span = (r.get('dur') or 1.93) + 1 / 30 - DELAY
+    else:
+        span = 0.4
+    up = j + (sw * max(0.0, span) if sw > 0 else 0.0)
+    return j < -25.0 + 0.02 or up > -0.02
+
+
+def carry(src, phases):
+    for ph in phases:
+        old = {}
+        p = os.path.join(src, 'raw', ph + '.jsonl')
+        if os.path.exists(p + '.gz'):
+            import gzip
+            for l in gzip.open(p + '.gz', 'rt'):
+                if l.strip():
+                    r = json.loads(l)
+                    old[r['tag']] = r
+        want = {t for t, _ in plan(ph)}
+        have = {r['tag'] for r in load(ph)}
+        keep = [old[t] for t in sorted(want) if t in old and t not in have and not clamp_affected(old[t])]
+        os.makedirs(RAW, exist_ok=True)
+        with open(os.path.join(RAW, ph + '.jsonl'), 'a') as f:
+            for r in keep:
+                f.write(json.dumps(r, ensure_ascii=False, separators=(',', ':')) + '\n')
+        print(f'[carry {ph}] 계획 {len(want)}, 옮김 {len(keep)}, 새로 돌릴 것 {len(want) - len(keep) - len(have & want)}', flush=True)
 
 
 def s2_arms():
@@ -489,6 +617,9 @@ def arm_stats(rep):
                 mean_out=float(np.mean([x['out'] for x in v])), mean_flipped_out=float(np.mean([x['flipped_out'] for x in v])),
                 p_ge10=float(np.mean([f >= 10 for f in fl])), max_flipped=int(max(fl)),
                 jet_deg0_mean=float(np.mean([x['jet_deg0'] for x in v])), jet_up_frac=float(np.mean([x['jet_deg0'] > 0 for x in v])),
+                aim_clamped_frac=float(np.mean([bool(x.get('aim_clamped')) for x in v])),
+                sweep_stop_frac=float(np.mean([bool(x.get('sweep_stop')) for x in v])),
+                jet_deg_max_mean=float(np.mean([x.get('jet_deg_max', x['jet_deg0']) for x in v])),
                 audit_shots=int(sum(1 for x in v if sum(x['aud']) > 0)))
 
 
@@ -497,12 +628,13 @@ def pairs(repa, repb):
     return [repa[s]['flipped'] for s in ss], [repb[s]['flipped'] for s in ss], [repa[s]['zero'] for s in ss], [repb[s]['zero'] for s in ss]
 
 
-def sel_table(rows, arm, n):
+def sel_table(rows, arm, n, seeds=None):
     """고르기 시드 격자 평균 (K → 평균 뒤집힘, 평균 원 밖)"""
+    seeds = set(SEL if seeds is None else seeds)
     cells = {}
     for r in rows:
         t = parse_tag(r['tag'])
-        if t[1] == arm and r['n'] == n and r['seed'] in SEL:
+        if t[1] == arm and r['n'] == n and r['seed'] in seeds:
             cells.setdefault(t[4], []).append(r)
     return {k: dict(mean=round(float(np.mean([x['flipped'] for x in v])), 3), out=round(float(np.mean([x['out'] for x in v])), 2),
                     fout=round(float(np.mean([x['flipped_out'] for x in v])), 2), shots=len(v))
@@ -539,7 +671,9 @@ def analyze():
             A += a
             B += b
             s1['arms'][n] = dict(puff_q1=arm_stats(ra), pueok_q1=arm_stats(rb), sel_puff=sel_table(core, 'puff_q1', n), sel_pueok=sel_table(core, 'pueok_q1', n))
-            s1['per_n'][n] = dict(ratio=paired_ratio(a, b), diff=paired_diff(a, b))
+            prn = paired_ratio(a, b)
+            s1['per_n'][n] = dict(ratio=prn, diff=paired_diff(a, b), verdict=verdict_cmp(prn)[0],
+                                  note='두 팔 모두 0장 → 비 정의 안 됨' if prn is None else '')
         pr = paired_ratio(A, B)
         v, why = verdict_cmp(pr)
         s1['pooled'] = dict(ratio=pr, diff=paired_diff(A, B), mean_puff=float(np.mean(A)), mean_pueok=float(np.mean(B)))
@@ -691,19 +825,166 @@ def analyze():
                             too_fast_le_fixed=fast_ok, puff_sweep=pp, puff_effect_le_5pct=puff_ok, best_ok=best_ok)
         s3['verdict'] = 'PASS' if (best_ok and fast_ok and puff_ok) else 'FAIL'
         S['S3'] = s3
+    # S3 새 규약 (고친 뒤 1차)
+    if load('s3v_rep'):
+        S['S3'] = analyze_s3v()
+    # F2 민감도 (고친 뒤 1차)
+    if load('f2_core'):
+        S['F2'] = analyze_f2(core)
     # 감사
-    S['audit'] = {ph: audit_sum(load(ph)) for ph in ('core_sel', 'core_rep', 's6_sel', 's6_rep', 's4', 's2_sel', 's2_rep', 's3_sel', 's3_rep', 's3ab_sel', 's3ab_rep', 's5x_sel', 's5x_rep') if load(ph)}
+    S['audit'] = {ph: audit_sum(load(ph)) for ph in ('core_sel', 'core_rep', 's6_sel', 's6_rep', 's4', 's2_sel', 's2_rep', 's3_sel', 's3_rep', 's3ab_sel', 's3ab_rep', 's5x_sel', 's5x_rep',
+                                                     's3v_sel', 's3v_rep', 's3v_ab', 'corex', 'f2_core', 'f2_s2') if load(ph)}
     S['protocol'] = dict(sel_seeds=[SEL[0], SEL[-1]], rep_seeds=[REP[0], REP[-1]], kgrid=KGRID, learner_noise=LEARN, s3_rates=S3_RATES, s2_combos=S2_COMBOS,
-                         boot=BOOT, bin=os.path.relpath(BIN, REPO))
+                         boot=BOOT, bin=os.path.relpath(BIN, REPO),
+                         s3v=dict(rate=S3V_RATE, fast=S3V_FAST, ns=S3V_NS, kgrid=S3V_K, sel=[S3V_SEL[0], S3V_SEL[-1]], rep=[S3V_REP[0], S3V_REP[-1]],
+                                  rep_fast=[S3V_REP_FAST[0], S3V_REP_FAST[-1]], rep_puff=[S3V_REP_PUFF[0], S3V_REP_PUFF[-1]]))
     with open(os.path.join(OUT, 'summary.json'), 'w') as f:
         json.dump(r3(S), f, ensure_ascii=False, indent=1)
     return S
+
+
+def by_seed(rows, arm, n, seeds):
+    seeds = set(seeds)
+    out = {}
+    for r in rows:
+        t = parse_tag(r['tag'])
+        if t[1] == arm and r['n'] == n and r['seed'] in seeds:
+            out[r['seed']] = r
+    return out
+
+
+def log_ratio_se(a, b):
+    """짝 평균비의 로그 부트스트랩 표준오차 (검정력 계산용). 0 합은 뺀다"""
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    if len(a) == 0:
+        return None
+    rng = _rng()
+    idx = rng.integers(0, len(a), size=(BOOT, len(a)))
+    sa, sb = a[idx].sum(1), b[idx].sum(1)
+    ok = (sa > 0) & (sb > 0)
+    if ok.sum() < 20:
+        return None
+    return float(np.std(np.log(sb[ok] / sa[ok])))
+
+
+def tri(pr, need=1.15):
+    """새 판정 (측정 전에 고정): 비 ≥ need·하한 > 1 → PASS, 상한 < need → FAIL(효과 없음 확인), 그 밖 INCONCLUSIVE"""
+    if pr is None:
+        return 'INCONCLUSIVE'
+    if pr['ratio'] >= need and pr['lo'] > 1.0:
+        return 'PASS'
+    if pr['hi'] < need:
+        return 'FAIL'
+    return 'INCONCLUSIVE'
+
+
+def analyze_s3v():
+    rows = load('s3v_rep') + load('s3v_ab')
+    sel = load('s3v_sel')
+    K = s3v_intents()
+    sw, fast = f's3p_c_{S3V_RATE:g}', f's3p_c_{S3V_FAST:g}'
+    out = dict(protocol='새 규약: 속도 9°/s 고정, N 30·40, 고르기 1~32, 보고 1001~1256', intents=K, per_n={})
+    A, B, FA, FB, P0, P9 = [], [], [], [], [], []
+    for n in S3V_NS:
+        fx = by_seed(rows, 's3p_c_0', n, S3V_REP)
+        sv = by_seed(rows, sw, n, S3V_REP)
+        a, b, _, _ = pairs(fx, sv)
+        A += a; B += b
+        ff = by_seed(rows, 's3p_c_0', n, S3V_REP_FAST)
+        fs = by_seed(rows, fast, n, S3V_REP_FAST)
+        fa, fb, _, _ = pairs(ff, fs)
+        FA += fa; FB += fb
+        p0, p9, _, _ = pairs(by_seed(rows, 's3f_0', n, S3V_REP_PUFF), by_seed(rows, f's3f_{S3V_RATE:g}', n, S3V_REP_PUFF))
+        P0 += p0; P9 += p9
+        arms = {}
+        for arm, seeds in (('s3p_c_0', S3V_REP), (sw, S3V_REP), (fast, S3V_REP_FAST), ('s3f_0', S3V_REP_PUFF), (f's3f_{S3V_RATE:g}', S3V_REP_PUFF),
+                           (f's3p_a_{S3V_RATE:g}', S3V_REP_AB), (f's3p_b_{S3V_RATE:g}', S3V_REP_AB)):
+            rp = by_seed(rows, arm, n, seeds)
+            if not rp:
+                continue
+            st = arm_stats(rp)
+            if arm.startswith('s3p') and arm != 's3p_c_0':
+                base = by_seed(rows, 's3p_c_0', n, seeds)
+                x, y, _, _ = pairs(base, rp)
+                st['vs_fixed'] = paired_ratio(x, y)
+                st['vs_fixed_diff'] = paired_diff(x, y)
+            st['sel'] = sel_table(sel, arm, n, S3V_SEL) if arm in ('s3p_c_0', sw) else None
+            arms[arm] = st
+        out['per_n'][n] = dict(arms=arms, best_vs_fixed=paired_ratio(a, b), se_log=log_ratio_se(a, b))
+    pr = paired_ratio(A, B)
+    se = log_ratio_se(A, B)
+    fpr = paired_ratio(FA, FB)
+    pp = paired_ratio(P0, P9)
+    v_best = tri(pr)
+    v_fast = 'PASS' if float(np.mean(FB)) <= float(np.mean(FA)) + 1e-12 else 'FAIL'
+    if pp is None:
+        v_puff, why_puff = 'INCONCLUSIVE', '두 팔 모두 0장'
+    elif pp['hi'] <= 1.05:
+        v_puff, why_puff = 'PASS', '상한 ≤ 1.05'
+    elif pp['lo'] > 1.05:
+        v_puff, why_puff = 'FAIL', '하한 > 1.05 (쓸기가 퍽을 키움)'
+    else:
+        v_puff, why_puff = 'INCONCLUSIVE', 'CI 가 1.05 를 걸침'
+    parts = [v_best, v_fast, v_puff]
+    verdict = 'FAIL' if 'FAIL' in parts else 'PASS' if all(x == 'PASS' for x in parts) else 'INCONCLUSIVE'
+    mde80 = float(math.exp(2.8 * se)) if se else None
+    out['pooled'] = dict(best_vs_fixed=pr, diff=paired_diff(A, B), mean_fixed=float(np.mean(A)), mean_sweep=float(np.mean(B)), pairs=len(A),
+                         se_log=se, mde80=mde80, verdict_best=v_best,
+                         too_fast=dict(ratio=fpr, mean_fixed=float(np.mean(FA)), mean_fast=float(np.mean(FB)), pairs=len(FA), verdict=v_fast),
+                         puff_sweep=dict(ratio=pp, mean_fixed=float(np.mean(P0)), mean_sweep=float(np.mean(P9)), pairs=len(P0), verdict=v_puff, why=why_puff))
+    out['verdict'] = verdict
+    return out
+
+
+def analyze_f2(core):
+    """F2 켬(f2=2: 충돌 + 흡입) 민감도. 같은 조준 의도(core_sel 고르기)로 S1 짝 비, S2 최선 팔 비"""
+    f2 = load('f2_core')
+    cx = load('corex')
+    allbase = core + cx
+    res = dict(s1={}, s2={})
+    for label, seeds in (('33-64', REP), ('65-96', REPX), ('33-96', REP + REPX)):
+        Ab, Bb, Af, Bf = [], [], [], []
+        per = {}
+        for n in (20, 30, 40):
+            def g(rows, arm):
+                out = {}
+                for r in rows:
+                    t = parse_tag(r['tag'])
+                    if t[1] == arm and r['n'] == n and r['seed'] in seeds and t[0] in ('core', 'corex', 'f2'):
+                        out[r['seed']] = r
+                return out
+            ba, bb = g(allbase, 'puff_q1'), g(allbase, 'pueok_q1')
+            fa, fb = g(f2, 'puff_q1'), g(f2, 'pueok_q1')
+            a, b, _, _ = pairs(ba, bb)
+            c, d, _, _ = pairs(fa, fb)
+            Ab += a; Bb += b; Af += c; Bf += d
+            per[n] = dict(base=dict(puff=float(np.mean(a)) if a else None, pueok=float(np.mean(b)) if b else None, ratio=paired_ratio(a, b)),
+                          f2=dict(puff=float(np.mean(c)) if c else None, pueok=float(np.mean(d)) if d else None, ratio=paired_ratio(c, d)))
+        res['s1'][label] = dict(per_n=per, base=paired_ratio(Ab, Bb), f2=paired_ratio(Af, Bf), base_means=[float(np.mean(Ab)), float(np.mean(Bb))],
+                                f2_means=[float(np.mean(Af)), float(np.mean(Bf))], pairs=len(Af), verdict_base=verdict_cmp(paired_ratio(Ab, Bb))[0],
+                                verdict_f2=verdict_cmp(paired_ratio(Af, Bf))[0])
+    s2f = load('f2_s2')
+    if s2f:
+        A, B = [], []
+        for n in (30, 40):
+            best = s2_best_arm(load('s2_sel'), n)
+            fa = {r['seed']: r for r in f2 if parse_tag(r['tag'])[1] == 'puff_q1' and r['n'] == n and r['seed'] in REP}
+            fb = {r['seed']: r for r in s2f if parse_tag(r['tag'])[1] == best and r['n'] == n and r['seed'] in REP}
+            a, b, _, _ = pairs(fa, fb)
+            A += a; B += b
+            res['s2'][n] = dict(best_arm=best, puff=float(np.mean(a)), pueok=float(np.mean(b)), ratio=paired_ratio(a, b))
+        pr = paired_ratio(A, B)
+        res['s2']['pooled'] = dict(ratio=pr, means=[float(np.mean(A)), float(np.mean(B))], verdict=verdict_cmp(pr)[0])
+    res['audit_f2'] = audit_sum(f2 + (s2f or []))
+    return res
 
 
 if __name__ == '__main__':
     if len(sys.argv) >= 3 and sys.argv[1] == 'run':
         for ph in sys.argv[2:]:
             run_lines(ph, plan(ph))
+    elif len(sys.argv) >= 4 and sys.argv[1] == 'carry':
+        carry(sys.argv[2], sys.argv[3:])
     elif len(sys.argv) >= 2 and sys.argv[1] == 'plan':
         for ph in sys.argv[2:]:
             L = plan(ph)

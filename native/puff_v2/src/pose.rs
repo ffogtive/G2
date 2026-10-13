@@ -4,11 +4,15 @@
 //!
 //! | 자세 | 입 M (φ=0) | 회전축·쓸기 | 머리 기준 제트 (φ=0) |
 //! |---|---|---|---|
-//! | 눈높이 EYE | (lat, 5.6, z_f + 5.6) | 목 축 N = M + (0, −2.4, +3.2) 둘레 x 회전 | −50° (내려 붊; 조준 범위 −50~−26°) |
-//! | 턱 CHIN | C + (0, 1.8, −0.6), C = (lat, 0, z_f + 3.6) | 턱 접점 C 둘레 x 회전 | −25° (조준 범위 −25~0°) |
+//! | 눈높이 EYE | (lat, 5.6, z_f + 5.6) | 목 축 N = M + (0, −2.4, +3.2) 둘레 x 회전 | −50° (제트 각 범위 −50~−30°, §4.5) |
+//! | 턱 CHIN | C + (0, 1.8, −0.6), C = (lat, 0, z_f + 3.6) | 턱 접점 C 둘레 x 회전 | −25° (제트 각 범위 −25~0°, §4.5) |
 //! | 책상 밑 UNDER | (lat, −1.6, z_e + 1.8) | 몸 들기: 입이 위로 0.1 u/° (24° = 2.4 u), 제트 각 유지 | 조준으로 +30~+60° |
 //!
 //! 조준 → 시작 각: 표적 T(앞면 위 띠의 중심)에 제트 축이 닿는 φ₀ 를 닫힌 식(libm atan2)으로 푼다. 쓸기는 φ₀ 에서 시작한다.
+//!
+//! **해부 범위 (D8, §4.5 표 '제트 각')**: 턱·눈높이의 머리 각 φ 는 [0, φ_max] 로 자른다(턱 25° = 제트 −25~0°,
+//! 눈높이 20° = 제트 −50~−30°). 표적이 범위 밖이면 φ₀ 를 범위 끝에 두고 `aim_clamped`. 쓸기 φ₀ + Δφ 도 같은 범위에서
+//! 멈춘다(머리가 해부 한계에 닿음 — 세 진단 쓸기 (a)(b)(c) 모두 같은 유효 Δφ). 책상 밑은 제트 각 [30°, 60°].
 
 use crate::geom::{rad, rot_x, V3};
 
@@ -88,6 +92,9 @@ pub const EYE_UP: f64 = 5.6;
 pub const EYE_FWD: f64 = 5.6;
 pub const EYE_NECK: V3 = V3 { x: 0.0, y: -2.4, z: 3.2 };
 pub const EYE_REF_DEG: f64 = -50.0;
+/// 해부 범위 끝의 제트 각 (§4.5 표): 턱 0° (수평), 눈높이 −30°
+pub const CHIN_JET_MAX_DEG: f64 = 0.0;
+pub const EYE_JET_MAX_DEG: f64 = -30.0;
 pub const UNDER_Y: f64 = -1.6;
 pub const UNDER_FWD: f64 = 1.8;
 pub const UNDER_LIFT_PER_DEG: f64 = 0.1;
@@ -121,6 +128,18 @@ pub struct PoseRig {
     pub aim_clamped: bool,
     /// 높이 쓸기용 거리 D = |T − M(φ₀)|
     pub reach: f64,
+    /// 머리 각 φ 의 해부 범위 (rad). 책상 밑은 쓰지 않음
+    pub phi_lo: f64,
+    pub phi_hi: f64,
+}
+
+/// 자세별 머리 각 φ 범위 (rad, φ = 0 이 머리 기준 제트 각)
+pub fn phi_range(pose: Pose) -> (f64, f64) {
+    match pose {
+        Pose::Chin => (0.0, rad(CHIN_JET_MAX_DEG - CHIN_REF_DEG)),
+        Pose::Eye => (0.0, rad(EYE_JET_MAX_DEG - EYE_REF_DEG)),
+        Pose::Under => (rad(UNDER_MIN_DEG), rad(UNDER_MAX_DEG)),
+    }
 }
 
 impl PoseRig {
@@ -136,8 +155,18 @@ impl PoseRig {
                     let m0 = V3::new(lat, EYE_UP, z_f + EYE_FWD);
                     (m0 + EYE_NECK, m0, dir_deg(EYE_REF_DEG))
                 };
-                let (phi0, clamped) = solve_phi0(pivot, m0, d_ref, target);
-                let mut rig = PoseRig { pose, mode, pivot, m0, d_ref, phi0, target, aim_clamped: clamped, reach: 0.0 };
+                let (phi_lo, phi_hi) = phi_range(pose);
+                let (phi_raw, mut clamped) = solve_phi0(pivot, m0, d_ref, target);
+                let mut phi0 = phi_raw;
+                if phi0 < phi_lo {
+                    phi0 = phi_lo;
+                    clamped = true;
+                }
+                if phi0 > phi_hi {
+                    phi0 = phi_hi;
+                    clamped = true;
+                }
+                let mut rig = PoseRig { pose, mode, pivot, m0, d_ref, phi0, target, aim_clamped: clamped, reach: 0.0, phi_lo, phi_hi };
                 let (m, _) = rig.mouth_dir(0.0);
                 rig.reach = (target - m).len();
                 rig
@@ -157,15 +186,34 @@ impl PoseRig {
                     clamped = true;
                 }
                 let reach = (target - m0).len();
-                PoseRig { pose, mode, pivot: m0, m0, d_ref: dir_deg(th), phi0: rad(th), target, aim_clamped: clamped, reach }
+                let (phi_lo, phi_hi) = phi_range(pose);
+                PoseRig { pose, mode, pivot: m0, m0, d_ref: dir_deg(th), phi0: rad(th), target, aim_clamped: clamped, reach, phi_lo, phi_hi }
             }
         }
     }
 
-    /// 쓸기 각 Δφ(rad) 에서 입 위치와 제트 방향 (단위)
+    /// 해부 범위 안의 유효 쓸기 각: clamp(φ₀ + Δφ, φ_lo, φ_hi) − φ₀ (턱·눈높이). 책상 밑은 그대로
+    pub fn dphi_eff(&self, dphi: f64) -> f64 {
+        match self.pose {
+            Pose::Chin | Pose::Eye => {
+                let mut phi = self.phi0 + dphi;
+                if phi < self.phi_lo {
+                    phi = self.phi_lo;
+                }
+                if phi > self.phi_hi {
+                    phi = self.phi_hi;
+                }
+                phi - self.phi0
+            }
+            Pose::Under => dphi,
+        }
+    }
+
+    /// 쓸기 각 Δφ(rad, 명령된 머리 각) 에서 입 위치와 제트 방향 (단위). 턱·눈높이는 해부 범위에서 멈춘다
     pub fn mouth_dir(&self, dphi: f64) -> (V3, V3) {
         match self.pose {
             Pose::Chin | Pose::Eye => {
+                let dphi = self.dphi_eff(dphi);
                 let at = |phi: f64| -> (V3, V3) {
                     (self.pivot + rot_x(self.m0 - self.pivot, phi), rot_x(self.d_ref, phi))
                 };
@@ -236,8 +284,9 @@ mod tests {
     #[test]
     fn aim_solve_hits_target() {
         for pose in [Pose::Chin, Pose::Eye] {
-            for h in [0.3, 0.8, 1.5] {
+            for h in [0.5, 0.8, 1.5] {
                 let rig = PoseRig::new(pose, SweepMode::Native, 0.2, h, 1.0, 9.0);
+                assert!(!rig.aim_clamped, "{pose:?} h {h} 는 범위 안");
                 let (m, d) = rig.mouth_dir(0.0);
                 // 제트 축과 표적 사이 거리
                 let w = rig.target - m;
@@ -246,5 +295,29 @@ mod tests {
                 assert!(x > 0.0 && r < 1e-9, "{pose:?} h {h}: x {x} r {r}");
             }
         }
+    }
+    #[test]
+    fn anatomical_range_clamps_aim_and_sweep() {
+        // 턱: 높은 표적(2.4 u > 수평 제트 높이 1.885) → φ₀ = 25°, 제트 0°. 낮은 표적(0.1 u) → 제트 −25°
+        let hi = PoseRig::new(Pose::Chin, SweepMode::Native, 0.0, 2.4, 1.0, 9.0);
+        assert!(hi.aim_clamped && (hi.jet_deg0() - 0.0).abs() < 1e-9, "턱 위 {}", hi.jet_deg0());
+        let lo = PoseRig::new(Pose::Chin, SweepMode::Native, 0.0, 0.1, 1.0, 9.0);
+        assert!(lo.aim_clamped && (lo.jet_deg0() + 25.0).abs() < 1e-9, "턱 아래 {}", lo.jet_deg0());
+        // 쓸기: 어떤 Δφ 에도 제트 각은 [−25°, 0°] (세 모드 모두)
+        for mode in [SweepMode::Native, SweepMode::Angle, SweepMode::Height] {
+            let rig = PoseRig::new(Pose::Chin, mode, 0.0, 1.5, 1.0, 9.0);
+            for k in -10..=40 {
+                let (_, d) = rig.mouth_dir(rad(k as f64));
+                let a = crate::geom::deg(libm::atan2(d.y, -d.z));
+                assert!(a >= -25.0 - 1e-9 && a <= 1e-9, "{mode:?} Δφ {k}: {a}");
+            }
+            let full = rig.dphi_eff(rad(24.0));
+            assert!(full > 0.0 && full < rad(24.0), "유효 Δφ {}", crate::geom::deg(full));
+        }
+        // 눈높이: 제트 [−50°, −30°]
+        let e = PoseRig::new(Pose::Eye, SweepMode::Native, 0.0, 4.5, 1.0, 9.0);
+        assert!(e.aim_clamped && (e.jet_deg0() + 30.0).abs() < 1e-9, "눈 {}", e.jet_deg0());
+        let (_, d) = e.mouth_dir(rad(24.0));
+        assert!((crate::geom::deg(libm::atan2(d.y, -d.z)) + 30.0).abs() < 1e-9);
     }
 }

@@ -306,7 +306,13 @@ pub fn unit_extras() -> Vec<String> {
         let snap = crate::shot::settle_pile(&spec.pile, spec.solver);
         let sim = Sim::restore(&snap);
         let prog = BreathProgram::build(&spec.raw(), SweepMode::Native, sim.z_f, sim.desk.z_e);
-        let j = Jet::from_sample(&prog.samples[(0.15 / crate::breath::JET_DT) as usize]).unwrap();
+        let s = prog.samples[(0.15 / crate::breath::JET_DT) as usize];
+        // 공동 단위 시험이라 해부 범위(턱 −25°)로 자르지 않은 제트로 표적(앞면 0.03 u)을 직접 겨눈다 (약 −30°)
+        let rig = &prog.rig;
+        let (phi, _) = crate::pose::solve_phi0(rig.pivot, rig.m0, rig.d_ref, rig.target);
+        let m = rig.pivot + crate::geom::rot_x(rig.m0 - rig.pivot, phi);
+        let d = crate::geom::rot_x(rig.d_ref, phi);
+        let j = Jet::new(m, d, s.q_lps, s.a_cm2);
         let mut a = Aero::new(ap);
         a.compute(&sim, Some(&j));
         let r = a.out.max_pic_over_ext;

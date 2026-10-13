@@ -9,8 +9,12 @@
 //!   위 장에 +Π_c·A'_open (열린 영역 중심에), 받침에 반대.
 //! - **F6 비행 항력**: 접촉 중 = 정지 공기(v_rel = v), 공중(접촉 0) = v − u_air 이고 F1~F4 끔. 법선 Cd 1.17, 접선 0.03,
 //!   압력 중심 e_cp = 0.5R(1 − α/90°) 앞, 회전 저항 C_ω 0.20.
-//! - (선택, 기본 끔) F2 윗면 충돌 몫(벽 법칙, 아래로) — 스파이크 범위 밖이라 `f2_impact` 로만 켠다.
-//! - 벽면 제트·F5 전단·윗면 흡입·코안다: 없음.
+//! - (선택, 기본 끔) F2 윗면 (§4.7): `f2_impact` = 충돌 몫(벽 법칙, 아래로), `f2_suction` = 스치는 흐름 흡입
+//!   (|d·n| < 0.26 이고 유동 앞 1/3 인 윗면 점에 Π = −Cs·Π_loc·(1 − |d·n|/0.26), 바깥 법선 쪽 = 위로). §7.2 스파이크 구성은 끔.
+//!   CLI: f2=1 충돌만, f2=2 충돌 + 흡입 (§4.7 F2 전체), cs=0.8.
+//! - F4 책상 받침의 책상 밖 노드 (`edge_inlet`, 기본 켬): 입구 = 반지름 선이 책상 모서리를 지나는 점 E (돌출 밑면 쪽),
+//!   Π_ext = Cp_in·Π_wall(E, 밑면 법선), 틈 = E 에서 책상까지 + 휨·(r_E/R)² + g₀. 끄면 옛 선택(테두리 R+ε·반지름 법선·틈 0.25).
+//! - 벽면 제트·F5 전단·코안다: 없음.
 //!
 //! 힘 = Π·A'·W_ref (자기 질량이 아님). 가림은 해석적 광선(원기둥·상자), parry 금지(§4.8). 꼬리 컷: Π < Π_min 이면
 //! 힘도 걸지 않고 깨우지도 않는다. 제트 원뿔(r ≤ 3r½) 밖 딱지는 가리개 후보에서 뺀다(표적까지의 선분은 원뿔 안에 있다).
@@ -44,6 +48,12 @@ pub struct AeroParams {
     pub pi_min: f64,
     /// F2 윗면 충돌 몫 (스파이크 범위 밖, 기본 끔)
     pub f2_impact: bool,
+    /// F2 스치는 흐름 흡입 (§4.7, 기본 끔)
+    pub f2_suction: bool,
+    /// 흡입 계수 Cs (0.5~1.0)
+    pub cs: f64,
+    /// F4 책상 받침: 책상 밖 노드의 입구를 책상 모서리 점으로 (기본 켬)
+    pub edge_inlet: bool,
     /// F4 통로 길이 (u)
     pub l_ch: f64,
     /// 감사 광선 묶음 (고리 × 부채꼴)
@@ -68,6 +78,9 @@ impl Default for AeroParams {
             g_cap: 0.25,
             pi_min: 0.01,
             f2_impact: false,
+            f2_suction: false,
+            cs: 0.8,
+            edge_inlet: true,
             l_ch: 0.5,
             audit_rings: 12,
             audit_sectors: 24,
@@ -276,6 +289,8 @@ pub struct AeroOut {
     pub h3_violations: u32,
     pub sum_f1: V3,
     pub sum_f3: V3,
+    /// F2 흡입 합 (진단)
+    pub sum_f2s: V3,
     pub sum_f4_up: f64,
 }
 
@@ -305,6 +320,7 @@ impl AeroOut {
         self.h3_violations = 0;
         self.sum_f1 = V3::ZERO;
         self.sum_f3 = V3::ZERO;
+        self.sum_f2s = V3::ZERO;
         self.sum_f4_up = 0.0;
     }
 }
@@ -480,6 +496,9 @@ impl Aero {
                     }
                     self.f1(i, jet, &fr, &scene, wref);
                     self.f3(i, jet, &fr, &ci, &sim.desk, &scene, wref);
+                    if self.p.f2_suction {
+                        self.f2_suction(i, jet, &fr, &ci, &scene, wref);
+                    }
                     self.f4(i, jet, &fr, &ci, sim, &scene, wref);
                 }
                 if self.audit {
@@ -643,6 +662,66 @@ impl Aero {
         gap > self.p.gap_contact
     }
 
+    /// F2 흡입 (§4.7): 제트가 윗면을 스칠 때(|d·n| < 0.26) 유동 앞 1/3 의 덮이지 않은 윗면 점에
+    /// Π = −Cs·Π_loc·(1 − |d·n|/0.26), Π_loc = Π_c·exp(−2 ln2 (r/r½)²). 음압이라 힘은 바깥 법선(위) 쪽.
+    /// 바람이 그 점에 닿아야 한다(가림 광선, 자기 자신은 가리개에서 뺌).
+    fn f2_suction(&mut self, i: usize, jet: &Jet, fr: &[DiscFrame], ci: &ContactInfo, scene: &Scene, wref: f64) {
+        const GRAZE: f64 = 0.26;
+        let f = fr[i];
+        let n = f.up;
+        let dn = jet.d.dot(n);
+        let an = libm::fabs(dn);
+        if an >= GRAZE {
+            return;
+        }
+        let t = jet.d - n * dn;
+        let tl = t.len();
+        if tl < 1e-12 {
+            return;
+        }
+        let t = t * (1.0 / tl);
+        let fc = f.c + n * (0.5 * f.h);
+        let w = fc - jet.m;
+        let x = w.dot(jet.d);
+        if x + R < 0.0 || x - R > X_MAX {
+            return;
+        }
+        let r = (w - jet.d * x).len();
+        if r - R > ETA_CUT * jet.r_half((x + R).max(0.0)) {
+            return;
+        }
+        let nf = self.face.len();
+        let da = 1.0 / nf as f64;
+        let k_s = self.p.cs * (1.0 - an / GRAZE);
+        for m in 0..nf {
+            let (rr, ph) = self.face[m];
+            let off = (f.lx * libm::cos(ph) + f.lz * libm::sin(ph)) * (rr * R);
+            if off.dot(t) > -R / 3.0 {
+                continue; // 유동 앞 1/3 만
+            }
+            let p = fc + off;
+            if self.covered_above(i, p, fr, ci) {
+                continue;
+            }
+            let ps = p + n * self.p.eps;
+            let fl = match jet.field(ps) {
+                Some(fl) => fl,
+                None => continue,
+            };
+            let pi = k_s * fl.pi_c * fl.g * fl.g;
+            if pi < self.p.pi_min {
+                continue;
+            }
+            self.out.n_rays += 1;
+            if !scene.visible(jet.m, ps, (i, usize::MAX), true) {
+                continue;
+            }
+            let force = n * (pi * da * wref);
+            self.out.sum_f2s += force;
+            self.add(i, &f, p, force, None);
+        }
+    }
+
     /// 윗면 점 p 를 위의 접촉 짝이 덮는가 (F2 용)
     fn covered_above(&self, i: usize, p: V3, fr: &[DiscFrame], ci: &ContactInfo) -> bool {
         for &j in &ci.partners[i] {
@@ -698,6 +777,17 @@ impl Aero {
                     (g, top_empty(&sim.props[s], fs.warp_up, phs))
                 }
                 _ => {
+                    if !sim.desk.over(pk.x, pk.z) && self.p.edge_inlet {
+                        // 책상 밖 노드: 입구 = 반지름 선이 책상 모서리를 지나는 점 E (사양 미정 → 감사 반영 정의)
+                        let bo = bottom_offset(pi_, f.warp_up, ph);
+                        let (pe, g_e, g_rim) = self.edge_node(i, jet, &f, e, bo, &sim.desk, scene);
+                        if pe > maxext {
+                            maxext = pe;
+                        }
+                        gaps[k] = g_rim;
+                        nodes[k] = Node { pi_ext: pe, gap_rim: g_e, gap_ch: self.p.g0 + (g_e - self.p.g0) * 0.5625 };
+                        continue;
+                    }
                     let g = if sim.desk.over(pk.x, pk.z) { pk.y } else { self.p.g_cap };
                     (g, 0.0)
                 }
@@ -803,6 +893,49 @@ impl Aero {
             let fs = fr[s];
             self.add(s, &fs, cen, -force, Some(i));
         }
+    }
+
+    /// F4 책상 받침의 책상 밖 노드: 밑면 중심에서 반지름 방향 e 로 가다 책상 모서리를 지나는 점 E (λ = |E − c_b|/R).
+    /// 돌려줌: (입구 Π_ext = Cp_in·Π_wall(E 바로 밖, 밑면 법선), E 의 틈 = E 에서 책상까지 + 휨·λ² + g₀,
+    ///          열린 넓이 보간용 테두리 환산 틈 g₀ + (g_E − g₀)/λ² (≤ g_cap)).
+    /// 밑면 중심이 책상 밖이면(거의 떨어진 딱지) 이 노드는 닫힌 노드(틈 g₀, 입구 0)로 둔다.
+    #[allow(clippy::too_many_arguments)]
+    fn edge_node(&mut self, i: usize, jet: &Jet, f: &DiscFrame, e: V3, bo: f64, desk: &Desk, scene: &Scene) -> (f64, f64, f64) {
+        let cb = f.c - f.up * (0.5 * f.h);
+        let g0 = self.p.g0;
+        if !desk.over(cb.x, cb.z) {
+            return (0.0, g0, g0);
+        }
+        let mut lam = 1.0f64;
+        let ex = e.x * R;
+        let ez = e.z * R;
+        if ex > 1e-12 {
+            lam = lam.min((desk.hi.x - cb.x) / ex);
+        } else if ex < -1e-12 {
+            lam = lam.min((desk.lo.x - cb.x) / ex);
+        }
+        if ez > 1e-12 {
+            lam = lam.min((desk.hi.z - cb.z) / ez);
+        } else if ez < -1e-12 {
+            lam = lam.min((desk.lo.z - cb.z) / ez);
+        }
+        let lam = lam.clamp(1e-3, 1.0);
+        let pe_pt = cb + e * (lam * R);
+        let g_e = (pe_pt.y.clamp(0.0, self.p.g_cap) + bo * lam * lam + g0).min(self.p.g_cap);
+        let g_rim = (g0 + (g_e - g0) / (lam * lam)).min(self.p.g_cap);
+        // 입구 표본: E 에서 반지름 바깥으로 ε (돌출 밑면 아래 공기), 법선 = 밑면 바깥 법선 (−up)
+        let ek = pe_pt + e * self.p.eps - f.up * self.p.eps;
+        let mut pe = self.p.cp_in * jet.wall(ek, -f.up, self.p.cp0);
+        if pe >= self.p.pi_min {
+            self.out.n_rays += 1;
+            // 자기 자신(밑면 위 점)은 가리개에서 뺀다. 책상은 가린다
+            if !scene.visible(jet.m, ek, (i, usize::MAX), true) {
+                pe = 0.0;
+            }
+        } else {
+            pe = 0.0;
+        }
+        (pe, g_e, g_rim)
     }
 
     /// F6 비행 항력

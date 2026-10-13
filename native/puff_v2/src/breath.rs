@@ -231,6 +231,11 @@ pub struct BreathProgram {
     pub j_peak: f64,
     /// 푸어억 떼기 시각 (화면 초)
     pub t_stop: f64,
+    /// 쓸기가 해부 범위 끝에 닿은 표본이 있다 (턱·눈높이, 기록용)
+    pub sweep_stopped: bool,
+    /// 숨 동안 제트 각의 최소·최대 (수평 기준 °, + = 위)
+    pub jet_deg_min: f64,
+    pub jet_deg_max: f64,
 }
 
 #[inline]
@@ -289,6 +294,8 @@ impl BreathProgram {
         let alpha = 1.0 - libm::exp(-2.0 * core::f64::consts::PI * SWEEP_LP_HZ * dt);
         let (vmax, amax) = (rad(NECK_DPS), rad(NECK_DPS2));
         let (mut s_f, mut phi, mut w) = (0.0f64, 0.0f64, 0.0f64);
+        let mut sweep_stopped = false;
+        let (mut jet_min, mut jet_max) = (f64::INFINITY, f64::NEG_INFINITY);
         let mut q_peak = 0.0f64;
         let mut vol = 0.0f64;
         let mut j_peak = 0.0f64;
@@ -308,6 +315,12 @@ impl BreathProgram {
             w += dv;
             phi += w * dt;
             let (m, d) = rig.mouth_dir(phi);
+            if libm::fabs(rig.dphi_eff(phi) - phi) > 1e-12 {
+                sweep_stopped = true;
+            }
+            let ja = crate::geom::deg(libm::atan2(d.y, -d.z));
+            jet_min = jet_min.min(ja);
+            jet_max = jet_max.max(ja);
             // 유량·면적
             let (q, env, a) = match kind {
                 Kind::Puff => {
@@ -350,7 +363,7 @@ impl BreathProgram {
             samples.push(BreathSample { m, d, q_lps, a_cm2: a, dphi: phi });
         }
         let cost = cost_of(vol, q_peak);
-        BreathProgram { rig, kind, samples, q_peak, vol_l: vol, cost, j_peak, t_stop }
+        BreathProgram { rig, kind, samples, q_peak, vol_l: vol, cost, j_peak, t_stop, sweep_stopped, jet_deg_min: jet_min, jet_deg_max: jet_max }
     }
 
     pub fn duration(&self) -> f64 {

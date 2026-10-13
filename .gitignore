@@ -6,3 +6,4 @@ tools/scratch/
 mockup/assets/sfx/candidates/
 app/assets/www/
 docs/app/deploy-receipts/
+__pycache__/
