@@ -61,11 +61,12 @@ LIST=4,9 node tools/calibrate.mjs 0 0 20 out.json            # 특정 레벨 재
 node tools/tune.mjs 140   # 물리 재튜닝(수 분)
 ```
 
-## 앱 (iOS, Capacitor) — 재윤님 아이폰 설치
+## 앱 (Flutter, iOS·Android) — 재윤님: '플로터로 만들어'
 
-- `capacitor.config.json`(appId `com.ffogtive.puff`) + `ios/`(Xcode 프로젝트, Swift Package Manager) + `mockup/app/native.js`(앱 전용: 진동 → 탭틱 햅틱)
-- `npm run app:ios` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + native.js → app/www) → `npx cap sync ios`
-- **설치 순서는 `docs/app/ios-local.md`** (맥 + Xcode + 개발자 계정 필요. 클라우드 세션에서는 설치 불가 — 재윤님 맥의 로컬 세션에서)
+- `app/` = Flutter 껍데기(`com.ffogtive.puff`). 게임 본체는 웹 빌드 한 파일을 **앱 안 로컬 서버(127.0.0.1:47821) + 웹뷰**로 연다. 물리·PvP 동기는 웹 코드 그대로.
+- `npm run app:www` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + `mockup/app/bridge.js` 다리 코드 → `app/assets/www/index.html`)
+- 앱 쪽 검증: `cd app && flutter analyze && flutter test`. iOS 빌드·설치는 맥에서만 — **`docs/app/ios-local.md`**
+- 웹 진동(navigator.vibrate)은 iOS 웹뷰에 없다 → 다리 코드가 Flutter 채널 `PuffHaptic` 로 보내 햅틱으로
 
 ## 물리에서 배운 것 (실측, 2026-10-12)
 

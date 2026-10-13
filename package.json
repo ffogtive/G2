@@ -9,19 +9,13 @@
     "dev": "node tools/build.mjs --watch",
     "spike": "node tools/physics-spike.mjs",
     "app:www": "npm run build && node tools/app-www.mjs",
-    "app:ios": "npm run app:www && npx cap sync ios",
-    "app:open": "npx cap open ios",
-    "app:run": "npm run app:ios && npx cap run ios"
+    "app:run": "npm run app:www && cd app && flutter run --release"
   },
   "dependencies": {
-    "@capacitor/core": "8.5.2",
-    "@capacitor/haptics": "8.0.2",
-    "@capacitor/ios": "8.5.2",
     "@dimforge/rapier3d-compat": "0.12.0",
     "three": "0.162.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.2",
     "esbuild": "0.24.0"
   }
 }
