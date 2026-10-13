@@ -817,7 +817,7 @@ function drawFPV(now) {
 function mixRGB(a, b, k) { return a.map((x, i) => Math.round(x + (b[i] - x) * clamp(k, 0, 1))); }
 
 // 첫 터치 가이드(6차: "처음엔 딱지 어디를 찍을지 가이드 — 찍으라고"): 위에서 3장째 가운데에 손가락이 꾹 → 아래로 쭉 당기는 시범.
-// 높이 단계 ≤ 1 이면 매 차례, 그 뒤엔 4초 동안 아무것도 안 누르면 다시.
+// 7차: 평생 첫 TAP_GUIDE_PUFFS 숨(맨 처음 튜토리얼)에만. 공략 단서 토글과 무관한 조작 안내다.
 const TAP_GUIDE_PUFFS = 3;
 function drawTapGuide(now) {
   if (!myTurn.on || myTurn.pressed || !table || state !== 'match' || cue.receipt) return; // 카드가 떠 있으면 카드 먼저
@@ -1037,7 +1037,7 @@ function drawBreath(dt) {
   ctx.clearRect(0, 0, W, H);
   if (breath.mode === 'off' || !breath.aim || state !== 'match') return;
   if (!(breath.mode === 'charge' && breath.full)) breath.t += dt; // 꽉: 숨 줄기가 멈춘다(더 안 들어감)
-  // 엄지 눈금·분필 화살표는 1인칭 볼 위에 그린다(frame 에서 drawFPV 다음)
+  // 분필 화살표는 1인칭 볼 위에 그린다(frame 에서 drawFPV 다음). 엄지 눈금은 1인칭을 끈 경우에만
   const r = $('#puffWrap').getBoundingClientRect();
   let mx = (r.left + r.width * 0.5) * dpr, my = (r.top + r.height * 0.68) * dpr;
   if (fpvOn() && puffer.who === 'me' && breath.who === 'me') { mx = W / 2; my = H - 0.05 * H; } // 1인칭: 내 입술에서 (얼굴 숨김과 같은 조건)
