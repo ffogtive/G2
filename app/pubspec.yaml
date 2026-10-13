@@ -46,6 +46,10 @@ dependencies:
   # flutter_scene 의 간접 의존 — 최신(10/10~10/13 출시)이 2주가 안 돼 그 전 판으로 고정
   archive: 4.3.0
   image: 4.10.1
+  # B 시제품: Rust 딱지 물리(native/puff_sim)의 dart:ffi 바인딩 — 이 저장소 안 path 패키지(외부 의존 0).
+  # 라이브러리 자체는 iOS = 정적 링크(native/puff_sim/scripts/build-ios.sh), 안드로이드 = jniLibs. 없으면 데모가 녹화 재생으로 돈다
+  puff_sim_ffi:
+    path: ../native/puff_sim/dart
 
 dev_dependencies:
   flutter_test:

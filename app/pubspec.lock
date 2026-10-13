@@ -277,6 +277,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.1"
+  puff_sim_ffi:
+    dependency: "direct main"
+    description:
+      path: "../native/puff_sim/dart"
+      relative: true
+    source: path
+    version: "0.1.0"
   record_use:
     dependency: transitive
     description:

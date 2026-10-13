@@ -1,14 +1,12 @@
 // ffi_check.dart — 리눅스 .so 로 dart:ffi 바인딩 확인 (Flutter 없이 dart 만).
-//   cd native/puff_sim && cargo build --release && dart run dart/ffi_check.dart [target/release/libpuff_sim.so]
+//   cd native/puff_sim && cargo build --release && (cd dart && dart run bin/ffi_check.dart ../target/release/libpuff_sim.so)
 // 확인: 같은 시드 두 판 → 같은 해시·같은 결과, 프레임 버퍼 플래그 = 판정, 120Hz 한 프레임 비용.
 import 'dart:io';
-import 'puff_sim_ffi.dart';
-
-/// 64비트 해시를 C·Rust 와 같은 16진수로 (Dart int 는 부호 있는 64비트)
-String hex64(int v) => (v >>> 32).toRadixString(16).padLeft(8, '0') + (v & 0xffffffff).toRadixString(16).padLeft(8, '0');
+import 'package:puff_sim_ffi/puff_sim_ffi.dart';
 
 void main(List<String> args) {
-  final lib = PuffSimLib.open(args.isNotEmpty ? args[0] : 'target/release/libpuff_sim.so');
+  final lib = PuffSimLib.open(args.isNotEmpty ? args[0] : '../target/release/libpuff_sim.so');
+  stdout.writeln(lib.version);
   (int, int, int, int) round(int seed) {
     final t = lib.table(seed);
     t.addPile(16);

@@ -1,1 +1,3 @@
 #include "Generated.xcconfig"
+// B 시제품: Rust 딱지 물리 정적 링크 — native/puff_sim/scripts/build-ios.sh 를 돌렸을 때만 켜진다(없으면 건너뜀). docs/app/native-spike.md
+#include? "../../../native/puff_sim/dist/ios/link.xcconfig"

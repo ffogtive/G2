@@ -41,19 +41,22 @@ native/puff_sim/
   src/rules.rs          rules.js resolveShot·sweetHiFor·physSweetFor
   src/rng.rs            mulberry32·gauss — JS 와 비트 단위로 같은 수열 → 같은 시드 = 같은 더미·같은 jitter
   src/tune.rs           TUNE (sim.js 이름 그대로 + 엔진 손잡이), "key=value" 덮어쓰기
-  src/ffi.rs            C ABI (puff_new … puff_free), include/puff_sim.h
+  src/ffi.rs            C ABI (puff_new … puff_free), include/puff_sim.h — 앱용 malloc 없는 길(puff_blow_v·fire_v·resolve_v·info·settle_step…)
+  src/lib.rs fire_turn  turn.js ShotRun.fire 순서(숨 해석 난수 줄기 → 판 난수 → 조준 → blow)의 Rust 기준
   src/bin/puff_parity.rs  JS 도구의 Rust 판(powercurve·fromtop·aimmap·stackpower·mouthmap) + bench + hash/hashsweep + trace/settleprof
+                        + shots(앱 연결 대조 JSON → app/test/fixtures/sim_cli_shots.json)
   parity/jsref.mjs      JS 물리로 같은 다섯 도구를 돌려 '시드별' JSON (tools/*.mjs 는 평균만 찍어서 잡음 판정 불가)
   parity/compare.mjs    두 JSON → 칸별 z 점수(잡음 안?) + 헤드라인(손맛 모양) 판정
   parity/bench.mjs      JS WASM 스텝 시간 (Rust `puff_parity bench` 와 같은 시나리오)
   parity/data/          이번 측정 원본: JS·Rust 시드별 JSON(시드 1–16, 새 시드 17–32, PRESET=web), 벤치 (아래 표의 근거)
   tests/determinism.rs  같은 시드 → 같은 해시, C ABI 왕복, 황금 해시(아키텍처 간 계약)
+  tests/app_abi.rs      앱용 C ABI 길 = 구조체 길 = Table 직접 (fire_v · blow_v · settle_step · resolve_v · info)
   tests/c/ffi_smoke.c   헤더 + .so 를 C 에서 직접 (dart:ffi 와 같은 경로)
-  dart/puff_sim_ffi.dart  dart:ffi 바인딩(의존성 0, malloc 없음: puff_frame 버퍼를 asTypedList 로) — app/lib/native 데모가 가져다 쓸 것
-  dart/ffi_check.dart   리눅스 .so 로 바인딩 확인 (`dart run dart/ffi_check.dart`)
-  scripts/build-ios.sh  맥: staticlib × 3 → PuffSim.xcframework
+  dart/                 path 패키지 puff_sim_ffi — dart:ffi 바인딩(의존성 0, malloc 없음: 고정 버퍼를 asTypedList 로). 앱(app/)이 path 의존성으로 씀
+    lib/puff_sim_ffi.dart · bin/ffi_check.dart(리눅스 .so 로 확인)
+  scripts/build-ios.sh  맥: staticlib(기기·시뮬레이터) → 임베디드 비트코드 벗기기 → lipo → dist/ios/link.xcconfig 로 Runner 링크 켜기
   scripts/build-android.sh  cargo-ndk → app/android/app/src/main/jniLibs
-  ios/PuffSim.xcconfig  Runner 링크 설정(-force_load, STRIP_STYLE=non-global)
+  ios/PuffSim.xcconfig  Runner 링크 설정(PUFF_SIM_LDFLAGS = SDK 별 -force_load, STRIP_STYLE=non-global) — link.xcconfig 가 켤 때만
 ```
 
 ## 빌드·실행 (리눅스, 이 컨테이너)
@@ -67,7 +70,8 @@ node parity/compare.mjs js.json rust.json [--md] [--cells]
 cargo run --release --bin puff_parity -- bench 1,5,10,20,30,40 5 ; node parity/bench.mjs 1,5,10,20,30,40 5
 cargo run --release --bin puff_parity -- hashsweep 30  # 아키텍처 간 대조용 한 줄 해시
 cc -O2 -Iinclude tests/c/ffi_smoke.c -Ltarget/release -lpuff_sim -o target/ffi_smoke && LD_LIBRARY_PATH=target/release target/ffi_smoke
-PATH=/opt/flutter-sdk/flutter/bin:$PATH dart run dart/ffi_check.dart     # dart:ffi → 리눅스 .so
+(cd dart && PATH=/opt/flutter-sdk/flutter/bin:$PATH dart run bin/ffi_check.dart ../target/release/libpuff_sim.so)   # dart:ffi → 리눅스 .so
+target/release/puff_parity shots > ../../app/test/fixtures/sim_cli_shots.json   # 앱 연결 대조 고정본(물리·규칙을 바꾸면 다시)
 ```
 
 TUNE 덮어쓰기: `TUNE="friction=0.5,lift=500" cargo run --release --bin puff_parity -- powercurve` (sim.js camelCase 이름 그대로 됨).
@@ -227,7 +231,9 @@ loss(mean z², cap 25) = 1.009
 | 확인 | 방법 | 결과 |
 |---|---|---|
 | 같은 시드 → 같은 해시 (한 프로세스, 두 번) | `cargo test` same_seed_same_hashes (n 1·12·20·30 × 쌓기→settle→블로우→가져가기·다시 쌓기→책상 입 돌풍) | 같음 |
-| C ABI 왕복 | `cargo test` ffi_roundtrip_deterministic, `tests/c/ffi_smoke.c`, `dart/ffi_check.dart` | Rust·C·Dart 모두 `a6be48c3edfb264d` |
+| C ABI 왕복 | `cargo test` ffi_roundtrip_deterministic, `tests/c/ffi_smoke.c`, `dart/bin/ffi_check.dart` | Rust·C·Dart 모두 `a6be48c3edfb264d` |
+| 앱 경기 루프(Dart 숨 해석 → Rust) | `app/test/native_sim_ffi_test.dart` vs `puff_parity shots` (5판 11샷 × 화면 시계 4종) + 리눅스 데스크톱 실제 앱 | 해시·스텝·장수 모두 같음 (docs/app/native-spike.md) |
+| 숨 해석 수학 | Dart 순수 fdlibm(`app/lib/native/detmath.dart`) vs `puff_math_v`(libm) 각 10만 개 | 0개 다름 (dart:math 는 log 6%·cos 3% 다름 → 쓰면 안 됨). V8 Math.log·cos 도 fdlibm 과 가끔 1~2ulp 다르다(gauss 2000개 중 34) |
 | **아키텍처 3개** | `puff_parity hashsweep 30` (n 1·5·12·20·30 × 시드 30 × 체크포인트 ≈ 1,021 해시) | x86_64 = **aarch64**(aarch64-unknown-linux-musl, qemu-aarch64) = **wasm32**(wasm32-wasip1, node WASI): 모두 `ALL d46f38d59bafe885` |
 | 황금 해시 테스트를 arm64 에서 | `cargo test --target aarch64-unknown-linux-musl` (러너 qemu) | 9/9 통과 (golden_cross_platform 포함) |
 | **release 두 번 따로 빌드** | 빈 target 디렉터리 둘(`CARGO_TARGET_DIR`)에서 처음부터 → hashsweep + sha256 | 해시 같음, **산출물(.so·.a·바이너리) sha256 까지 같음** (재현 가능한 빌드) |
@@ -240,17 +246,21 @@ PvP 에서 양쪽 엔진이 같은지는 `puff_version()`(TUNE 지문 포함)으
 
 ## FFI: plain dart:ffi (flutter_rust_bridge 안 씀)
 
-- 매 프레임(120Hz) **동기** 호출 몇 개(step, transforms) + 고정 크기 POD 구조체 + f32 버퍼 하나. 비동기·스트림·복잡한 타입이 없다.
+- 매 프레임(120Hz) **동기** 호출 몇 개(step_judge, frame) + 핸들이 들고 있는 고정 버퍼(자세 f32 · 판 상태 f64 · 샷 결과 f64). 비동기·스트림·복잡한 타입이 없다.
+  앱은 구조체 없는 함수만 쓴다(`puff_blow_v`·`puff_info`·`puff_settle_step`…) → Dart 쪽 malloc·package:ffi 가 필요 없다. 모든 lookup 은 `isLeaf: true`.
   `Pointer<Float>.asTypedList` 로 자세 버퍼를 복사 없이 읽는다. flutter_rust_bridge 는 코드 생성기·런타임(메시지 직렬화, 기본 비동기)·버전 고정을 더하는데 여기서 얻는 게 없다.
 - 같은 C ABI 를 Swift·Kotlin·(필요하면) WASM 에서도 그대로 쓴다. 헤더는 `include/puff_sim.h` 하나(필요하면 `ffigen` 으로 Dart 바인딩 생성).
 - 로딩: 안드로이드 `DynamicLibrary.open('libpuff_sim.so')`, iOS `DynamicLibrary.process()`(정적 링크), 리눅스 테스트 `DynamicLibrary.open('native/puff_sim/target/release/libpuff_sim.so')`.
 
-## iOS (재윤님 맥에서)
+## iOS (재윤님 맥에서) — 자세한 순서·확인·문제 해결은 `docs/app/native-spike.md`
 
-1. `native/puff_sim/scripts/build-ios.sh` → `native/puff_sim/dist/PuffSim.xcframework` (기기 arm64 + 시뮬레이터 arm64/x86_64, IPHONEOS_DEPLOYMENT_TARGET 13.0)
-2. `app/ios/Flutter/Debug.xcconfig`·`Release.xcconfig` 끝에 `#include "../../../native/puff_sim/ios/PuffSim.xcconfig"`
-3. Xcode → Runner → General → Frameworks, Libraries… 에 `PuffSim.xcframework` 추가(Do Not Embed)
-4. 왜: dart:ffi 는 실행 파일 안 심볼을 이름으로 찾는다 → `-force_load` 로 .a 를 통째로 싣고, Release 의 `STRIP_STYLE=all` 은 전역 심볼을 지우니 `non-global`.
+1. `native/puff_sim/scripts/build-ios.sh [--device-only]` → `dist/ios/device/libpuff_sim.a`(아이폰) · `dist/ios/sim/libpuff_sim.a`(시뮬레이터 fat) + `dist/ios/link.xcconfig`
+2. Xcode 화면에서 할 일 없음: `app/ios/Flutter/Debug.xcconfig`·`Release.xcconfig` 가 이미 `#include? ".../dist/ios/link.xcconfig"` 를 갖고 있어
+   스크립트를 돌린 뒤에만 링크가 켜진다(`--off` 로 끔). 평소 빌드(웹뷰 게임)는 Rust 도구 없이 그대로.
+3. 왜 `-force_load`: dart:ffi 는 실행 파일 안 심볼을 이름으로 찾는다(`DynamicLibrary.process()`) → .a 를 통째로 싣는다. Release 의 `STRIP_STYLE=all` 은 전역 심볼을 지우니 `non-global`.
+4. 왜 비트코드 벗기기: rust-std 의 compiler_builtins 오브젝트에 `__LLVM,__bitcode`(Rust 의 LLVM 22)가 붙어 있어 더 낡은 LLVM 도구가 IR 로 읽다 넘어진다(리눅스 llvm-lipo 18 로 재현) →
+   Rust 와 같은 LLVM 의 `llvm-objcopy`(rustup component llvm-tools)로 섹션만 지운다.
+5. 리눅스에서 교차 컴파일 확인: `aarch64-apple-ios`·`aarch64-apple-ios-sim`·`x86_64-apple-ios` staticlib, `puff_*` 심볼 35/35, minos 13.0(기기)·14.0(시뮬), native-static-libs `-lSystem -lc -lm`.
 
 ## 남은 위험
 

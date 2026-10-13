@@ -16,7 +16,18 @@ pub struct PuffSim {
     judge: JudgeState,
     /// puff_frame 이 채우는 자세 버퍼 (딱지마다 f32 8개). Dart 는 포인터를 asTypedList 로 복사 없이 읽는다
     frame: Vec<f32>,
+    /// puff_info 가 채우는 판 상태 (PUFF_INFO_*). 핸들이 살아 있는 동안 주소가 안 바뀐다 → Dart 는 한 번 만든 뷰를 계속 본다
+    info: [f64; PUFF_INFO_LEN],
+    /// puff_fire_v · puff_resolve_v 결과 (PUFF_RES_*). 주소 고정
+    res: [f64; PUFF_RES_LEN],
+    /// puff_settle_step 의 진행 칸 (puff_settle 을 프레임마다 나눠 부르기)
+    settle_i: u32,
 }
+
+/// puff_info 칸: 꼭대기 y · 더미 중심 x·z · 살아 있는 수 · 뒤집힘 · 원 밖 · 바람 부는 중 · 최대 속도 · 판정 스텝 · 전체 스텝 · 시각(초)
+pub const PUFF_INFO_LEN: usize = 12;
+/// puff_fire_v / puff_resolve_v 칸: 비율 · 물리 세기 · 돌풍 · lat · h · 넘침(0/1) · 조준점 x·y·z · 소비 뒤 난수 상태
+pub const PUFF_RES_LEN: usize = 10;
 
 /// 블로우 인자 (sim.js blow 와 같음). use_mouth_y ≠ 0 이면 9차 '입술 높이' 경로(mouth_y = 입 절대 높이)
 #[repr(C)]
@@ -94,7 +105,14 @@ unsafe fn sim<'a>(p: *mut PuffSim) -> Option<&'a mut PuffSim> {
 
 #[no_mangle]
 pub extern "C" fn puff_new(seed: u32) -> *mut PuffSim {
-    Box::into_raw(Box::new(PuffSim { table: Table::new(seed), judge: JudgeState::default(), frame: Vec::new() }))
+    Box::into_raw(Box::new(PuffSim {
+        table: Table::new(seed),
+        judge: JudgeState::default(),
+        frame: Vec::new(),
+        info: [0.0; PUFF_INFO_LEN],
+        res: [0.0; PUFF_RES_LEN],
+        settle_i: 0,
+    }))
 }
 
 /// # Safety
@@ -401,6 +419,142 @@ pub unsafe extern "C" fn puff_state_hash(p: *mut PuffSim) -> u64 {
 #[no_mangle]
 pub extern "C" fn puff_sweet_hi_for(n: u32) -> f64 {
     rules::sweet_hi_for(n as usize)
+}
+
+// ── 앱(dart:ffi) 연결용: 구조체·malloc 없이, 결과는 핸들이 들고 있는 고정 버퍼로 ──────────────
+
+/// 구조체 없이 부르는 blow. dist 2.6 · pitch 0.1 = 게임 기본(BlowArgs::new). use_mouth_y ≠ 0 이면 9차 입술 높이 경로
+/// 앱은 숨 해석(resolveShot)을 Dart 에서 하고 물리 세기·돌풍·조준점만 여기로 넘긴다.
+/// # Safety
+/// `p` 유효 또는 null.
+#[no_mangle]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn puff_blow_v(p: *mut PuffSim, aim_x: f64, aim_y: f64, aim_z: f64, dir_x: f64, dir_z: f64, power: f64, blast: f64, mouth_y: f64, use_mouth_y: u32) -> u32 {
+    let Some(s) = sim(p) else { return 0 };
+    let mut b = BlowArgs::new(V3::new(aim_x, aim_y, aim_z), dir_x, dir_z, power, blast);
+    if use_mouth_y != 0 {
+        b.mouth_y = Some(mouth_y);
+    }
+    s.table.blow(&b);
+    s.judge = JudgeState::default();
+    1
+}
+
+/// 한 턴 쏘기(turn.js ShotRun.fire 순서: puff_seed 줄기로 숨 해석 → 같은 줄기를 판 난수로 → 조준 → blow).
+/// 반환: 핸들의 결과 버퍼 [비율, 물리 세기, 돌풍, lat, h, 넘침, 조준 x, y, z, 난수 상태] (PUFF_RES_LEN 개, 다음 fire/resolve 까지 유효). null 핸들이면 null
+/// # Safety
+/// `p` 유효 또는 null.
+#[no_mangle]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn puff_fire_v(p: *mut PuffSim, lat: f64, h: f64, breath: f64, dir_x: f64, dir_z: f64, mouth_y: f64, use_mouth_y: u32, puff_seed: u32) -> *const f64 {
+    let Some(s) = sim(p) else { return core::ptr::null() };
+    let my = if use_mouth_y != 0 { Some(mouth_y) } else { None };
+    let (r, aim) = crate::fire_turn(&mut s.table, Shot { lat, h, power: breath }, (dir_x, dir_z), my, puff_seed);
+    s.judge = JudgeState::default();
+    s.res = [r.ratio, r.power, r.blast, r.lat, r.h, r.over as u32 as f64, aim.x, aim.y, aim.z, s.table.rng.state() as f64];
+    s.res.as_ptr()
+}
+
+/// 숨 해석만(물리 안 건드림) — Dart 포팅(app/lib/native/rules.dart resolveShot)과 비트 대조하는 기준.
+/// n = 살아 있는 장수, top = 꼭대기 y, rng_state = mulberry32 상태. 반환: 결과 버퍼 [비율, 세기, 돌풍, lat, h, 넘침, 0, 0, 0, 소비 뒤 난수 상태]
+/// # Safety
+/// `p` 유효 또는 null(이면 null).
+#[no_mangle]
+pub unsafe extern "C" fn puff_resolve_v(p: *mut PuffSim, n: u32, top: f64, lat: f64, h: f64, breath: f64, rng_state: u32) -> *const f64 {
+    let Some(s) = sim(p) else { return core::ptr::null() };
+    let mut rng = Mulberry32::new(rng_state);
+    let r = rules::resolve_shot(Shot { lat, h, power: breath }, n as usize, top, &mut rng, 1.0);
+    s.res = [r.ratio, r.power, r.blast, r.lat, r.h, r.over as u32 as f64, 0.0, 0.0, 0.0, rng.state() as f64];
+    s.res.as_ptr()
+}
+
+/// 판 난수 상태 읽기 / 바꾸기 (Dart 가 resolveShot 에 쓴 줄기를 blow 의 jitter 로 이어 줄 때)
+/// # Safety
+/// `p` 유효 또는 null.
+#[no_mangle]
+pub unsafe extern "C" fn puff_rng_state(p: *mut PuffSim) -> u32 {
+    sim(p).map_or(0, |s| s.table.rng.state())
+}
+
+/// # Safety
+/// `p` 유효 또는 null.
+#[no_mangle]
+pub unsafe extern "C" fn puff_set_rng_state(p: *mut PuffSim, state: u32) {
+    if let Some(s) = sim(p) {
+        s.table.rng = Mulberry32::new(state);
+    }
+}
+
+/// 판 상태를 핸들의 고정 버퍼에 채우고 그 포인터를 준다(PUFF_INFO_LEN 개 f64, 핸들이 살아 있는 동안 주소 고정):
+/// [꼭대기 y, 더미 중심 x, z, 살아 있는 수, 뒤집힘, 원 밖, 바람 부는 중, 최대 속도, 판정 스텝, 전체 스텝, 시각, 0]
+/// # Safety
+/// `p` 유효 또는 null(이면 null).
+#[no_mangle]
+pub unsafe extern "C" fn puff_info(p: *mut PuffSim) -> *const f64 {
+    let Some(s) = sim(p) else { return core::ptr::null() };
+    let t = &s.table;
+    let (cx, cz) = t.pile_center();
+    s.info = [
+        t.column_top(),
+        cx,
+        cz,
+        t.live_ids().len() as f64,
+        t.flipped_ids().len() as f64,
+        t.out_ids().len() as f64,
+        t.puff.is_some() as u32 as f64,
+        t.max_speed(),
+        s.judge.n as f64,
+        t.steps as f64,
+        t.time,
+        0.0,
+    ];
+    s.info.as_ptr()
+}
+
+/// puff_settle 을 프레임마다 나눠 부르기: begin 뒤 settle_step 을 스텝마다 → 1 이면 끝.
+/// puff_settle(max) 와 같은 스텝·같은 멈춤 조건(61스텝 뒤 최대 속도 < 0.06)이라 결과 해시가 같다.
+/// # Safety
+/// `p` 유효 또는 null.
+#[no_mangle]
+pub unsafe extern "C" fn puff_settle_begin(p: *mut PuffSim) {
+    if let Some(s) = sim(p) {
+        s.settle_i = 0;
+    }
+}
+
+/// # Safety
+/// `p` 유효 또는 null.
+#[no_mangle]
+pub unsafe extern "C" fn puff_settle_step(p: *mut PuffSim, max_steps: u32) -> u32 {
+    let Some(s) = sim(p) else { return 1 };
+    if s.settle_i >= max_steps {
+        return 1;
+    }
+    let i = s.settle_i;
+    s.table.step();
+    s.settle_i += 1;
+    ((i > 60 && s.table.is_settled(0.06)) || s.settle_i >= max_steps) as u32
+}
+
+/// 검증용: 물리·숨 규칙이 쓰는 순수 Rust libm 함수 (0 log, 1 cos, 2 sin, 3 sqrt, 4 pow(x, 2)). 모르는 f 는 NaN.
+/// Dart 결정적 수학(app/lib/native/detmath.dart)이 이것과 비트 단위로 같아야 기기마다 숨 해석이 같다.
+#[no_mangle]
+pub extern "C" fn puff_math_v(f: u32, x: f64) -> f64 {
+    match f {
+        0 => libm::log(x),
+        1 => libm::cos(x),
+        2 => libm::sin(x),
+        3 => libm::sqrt(x),
+        4 => libm::pow(x, 2.0),
+        _ => f64::NAN,
+    }
+}
+
+/// 엔진 버전 문자열(NUL 끝, 정적 — 해제하지 말 것). malloc 없이 읽는 길(dart:ffi)
+#[no_mangle]
+pub extern "C" fn puff_version_cstr() -> *const c_char {
+    static V: std::sync::OnceLock<std::ffi::CString> = std::sync::OnceLock::new();
+    V.get_or_init(|| std::ffi::CString::new(crate::sim_version()).unwrap_or_default()).as_ptr()
 }
 
 /// 엔진 버전 문자열을 buf 에 (NUL 포함 cap 까지). 반환: 필요한 바이트 수(NUL 제외)

@@ -79,6 +79,11 @@ NET=artifact PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5   # 같은 
 - `npm run app:www` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + `mockup/app/bridge.js` 다리 코드 → `app/assets/www/index.html`)
 - 앱 쪽 검증: `cd app && flutter analyze && flutter test`. iOS 빌드·설치는 맥에서만 — **`docs/app/ios-local.md`**
 - 웹 진동(navigator.vibrate)은 iOS 웹뷰에 없다 → 다리 코드가 Flutter 채널 `PuffHaptic` 로 보내 햅틱으로
+- **B 시제품(네이티브 경기 장면, 웹뷰 없이)**: `native/puff_sim/`(Rust rapier3d 0.36 물리 + C ABI, README) + `app/lib/native/`(flutter_scene 장면 + `live_sim.dart` 경기 루프, dart:ffi).
+  기본은 언제나 웹뷰 게임. 데모 = `-t lib/native/demo_main.dart` · `--dart-define=NATIVE_DEMO=true` · 노치 옆 1.5초 누르기 (`NATIVE_BENCH=true` = 손 안 대고 벤치)
+  - 숨 해석은 Dart(`rules.dart resolveShot`)가 하고 Rust 엔 세기·돌풍·조준점만. 초월함수는 `detmath.dart`(순수 Dart fdlibm) — dart:math 를 쓰면 기기마다 마지막 비트가 달라 PvP 해시가 갈라진다(리눅스에서 log 6%·cos 3%)
+  - 물리·규칙을 바꾸면: `cargo test --release` → `target/release/puff_parity shots > app/test/fixtures/sim_cli_shots.json` → `cd app && flutter test` (리눅스 .so 로 Dart 경기 루프 = CLI 비트 대조)
+  - iOS 링크는 맥에서 `native/puff_sim/scripts/build-ios.sh` 를 돌렸을 때만 켜진다(`#include?`). 순서·확인·문제 해결 = `docs/app/native-spike.md`. 실제 앱을 이 컨테이너에서 보려면 `app/tool/linux_check.sh`(리눅스 데스크톱 + Impeller + Xvfb)
 - **아이폰 개발 설치는 `docs/app/iphone-deploy.md`**(재윤님 가이드 'claude-code-iphone-deployment.md' 의 G2 판)
   - 0절로 현재 환경을 판별한다. 맥 로컬이면 직접, 맥 SSH가 되는 서버면 `tools/iphone/deploy-from-server.sh`, 맥에 닿지 못하는 클라우드면 설치하지 말고 '설치 준비 미완료'로 보고한다(클라우드는 `[iphone-deploy]` 커밋으로 서버 세션에 넘긴다)
   - Bundle ID `com.ffogtive.puff`(SJYTodo 값 금지), 맥 폴더는 G2 전용, 기기·Team 값은 `~/.config/puff/iphone-deploy.env`(레포 밖)

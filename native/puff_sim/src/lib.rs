@@ -19,6 +19,9 @@ pub mod tune;
 pub use table::{BlowArgs, Table, V3};
 pub use tune::Tune;
 
+use rng::Mulberry32;
+use rules::{Resolved, Shot};
+
 /// FNV-1a 64 (상태 해시·TUNE 지문)
 #[derive(Clone, Copy, Debug)]
 pub struct Fnv64(u64);
@@ -64,4 +67,24 @@ pub fn aim_point(center: (f64, f64), dir: (f64, f64), lat: f64, h: f64) -> V3 {
     let back = libm::sqrt(1.0 - lat * lat);
     let side = (-dir.1, dir.0);
     V3::new(center.0 - dir.0 * back + side.0 * lat, h, center.1 - dir.1 * back + side.1 * lat)
+}
+
+/// 한 턴 쏘기 — turn.js `ShotRun.fire` 와 같은 순서·같은 난수 소비:
+///   rng = mulberry32(puff_seed) → resolveShot(숨 넘치면 gauss 2개 소비) → table.rng = 그 줄기(blow 의 jitter·텀블이 이어 씀)
+///   → 조준 기하(lat 은 ±0.95·R 로 자름, 표적 = c − D·√(1−lat²) + side·lat) → blow.
+/// 앱(Dart)은 같은 일을 Dart resolveShot + `puff_set_rng_state` + `puff_blow_v` 로 한다 — 둘이 같은 해시를 내야 한다(app/test/native_sim_ffi_test.dart).
+pub fn fire_turn(t: &mut Table, shot: Shot, dir: (f64, f64), mouth_y: Option<f64>, puff_seed: u32) -> (Resolved, V3) {
+    let live = t.live_ids().len();
+    let top = t.column_top();
+    let mut rng = Mulberry32::new(puff_seed);
+    let r = rules::resolve_shot(shot, live, top, &mut rng, 1.0);
+    t.rng = rng;
+    let dl = libm::sqrt(dir.0 * dir.0 + dir.1 * dir.1);
+    let d = if dl > 0.0 { (dir.0 / dl, dir.1 / dl) } else { (0.0, -1.0) };
+    let lat = rules::jclamp(r.lat, -0.95, 0.95);
+    let aim = aim_point(t.pile_center(), d, lat, r.h);
+    let mut b = BlowArgs::new(aim, d.0, d.1, r.power, r.blast);
+    b.mouth_y = mouth_y;
+    t.blow(&b);
+    (r, aim)
 }

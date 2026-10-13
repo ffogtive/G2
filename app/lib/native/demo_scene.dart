@@ -1,7 +1,8 @@
 // 네이티브 3D 장면(flutter_scene, Flutter GPU/Impeller) — 웹 main.js buildScene 의 생김새를 옮김:
 // 책상(나뭇결) + 두툼한 테두리 + 분필 원 + 교실 벽 + 딱지 20장(그림 앞면 · 마분지 뒷면 · 희귀도 옆띠) + 해/역광/하늘빛.
-// 물리는 없다: applyPoses(자세) 로 바깥(녹화 궤적, 나중엔 Rust 물리)이 매 프레임 딱지를 꽂는다.
+// 물리는 바깥에 있다: applyFrame(Rust 물리 자세 버퍼, live_sim.dart) 또는 applyPoses(녹화 궤적)가 매 프레임 딱지를 꽂는다.
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter_scene/scene.dart';
@@ -163,8 +164,56 @@ class PuffScene {
   void applyPoses(Map<int, Pose> poses) {
     for (final e in poses.entries) {
       if (e.key < 0 || e.key >= discs.length) continue;
+      discs[e.key].visible = true;
       discs[e.key].localTransform = poseMatrix(e.value);
     }
+  }
+
+  /// Rust 물리 자세 버퍼 → 딱지 노드 (applyFrameTo)
+  void applyFrame(Float32List prev, Float32List cur, double alpha) => applyFrameTo(discs, prev, cur, alpha);
+}
+
+final vm.Vector3 _tp = vm.Vector3.zero();
+final vm.Quaternion _tq = vm.Quaternion.identity();
+
+/// Rust 물리 자세 버퍼(오른손, 딱지마다 f32 8개 [p, q, flags]) → 노드. prev→cur 를 alpha 로 보간(위치 lerp · 회전 nlerp).
+/// 가져간 딱지(flags & 1)는 숨긴다. 프레임마다 할당 없음(노드 행렬을 그 자리에서 고침) — 120Hz 루프용.
+/// PuffScene 밖의 함수인 까닭: Scene() 은 GPU 문맥이 있어야 만들어져서, 시험(test/native_apply_frame_test.dart)은 노드 목록에 바로 쓴다
+void applyFrameTo(List<Node> discs, Float32List prev, Float32List cur, double alpha) {
+  final n = math.min(discs.length, cur.length ~/ 8);
+  final b = 1 - alpha;
+  for (var i = 0; i < n; i++) {
+    final o = i * 8;
+    final node = discs[i];
+    if (cur[o + 7].toInt() & 1 != 0) {
+      node.visible = false;
+      continue;
+    }
+    node.visible = true;
+    double px = cur[o], py = cur[o + 1], pz = cur[o + 2];
+    double qx = cur[o + 3], qy = cur[o + 4], qz = cur[o + 5], qw = cur[o + 6];
+    if (alpha < 1) {
+      px = prev[o] * b + px * alpha;
+      py = prev[o + 1] * b + py * alpha;
+      pz = prev[o + 2] * b + pz * alpha;
+      final s = prev[o + 3] * qx + prev[o + 4] * qy + prev[o + 5] * qz + prev[o + 6] * qw < 0 ? -alpha : alpha;
+      qx = prev[o + 3] * b + qx * s;
+      qy = prev[o + 4] * b + qy * s;
+      qz = prev[o + 5] * b + qz * s;
+      qw = prev[o + 6] * b + qw * s;
+      final l = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw);
+      if (l > 0) {
+        qx /= l;
+        qy /= l;
+        qz /= l;
+        qw /= l;
+      }
+    }
+    // 오른손(물리) → 왼손(flutter_scene): p' = (x, y, −z), q' = (−qx, −qy, qz, qw)  (coords.dart 와 같은 변환)
+    _tp.setValues(px, py, -pz);
+    _tq.setValues(-qx, -qy, qz, qw);
+    final m = node.localTransform..setFromTranslationRotation(_tp, _tq);
+    node.localTransform = m; // 같은 행렬을 다시 넣어 '바뀜' 표시(할당 없음)
   }
 }
 

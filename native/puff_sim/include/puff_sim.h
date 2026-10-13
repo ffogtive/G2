@@ -94,6 +94,26 @@ uint64_t puff_state_hash(PuffSim* s);
 double puff_sweet_hi_for(uint32_t n);
 uint32_t puff_version(char* buf, uint32_t cap);
 
+/* ── 앱(dart:ffi) 연결용: 구조체·malloc 없이. 결과 포인터는 핸들이 들고 있는 고정 버퍼(핸들이 살아 있는 동안 주소 고정) ── */
+#define PUFF_INFO_LEN 12 /* top cx cz live flipped outs puff_active max_speed judge_n steps time 0 */
+#define PUFF_RES_LEN 10  /* ratio power blast lat h over aim_x aim_y aim_z rng_state */
+/* 숨 해석을 밖(Dart)에서 했을 때: 물리 세기·돌풍·조준점만 넘긴다. dist 2.6 · pitch 0.1(게임 기본) */
+uint32_t puff_blow_v(PuffSim* s, double aim_x, double aim_y, double aim_z, double dir_x, double dir_z, double power, double blast, double mouth_y, uint32_t use_mouth_y);
+/* 한 턴 쏘기(turn.js ShotRun.fire 순서: puff_seed 줄기로 숨 해석 → 같은 줄기를 판 난수로 → 조준 → blow) */
+const double* puff_fire_v(PuffSim* s, double lat, double h, double breath, double dir_x, double dir_z, double mouth_y, uint32_t use_mouth_y, uint32_t puff_seed);
+/* 숨 해석만(물리 안 건드림) — Dart 포팅과 비트 대조용 */
+const double* puff_resolve_v(PuffSim* s, uint32_t n, double top, double lat, double h, double breath, uint32_t rng_state);
+uint32_t puff_rng_state(PuffSim* s);
+void puff_set_rng_state(PuffSim* s, uint32_t state);
+const double* puff_info(PuffSim* s);
+/* puff_settle 을 프레임마다 나눠서: begin 뒤 스텝마다 settle_step → 1 이면 끝 (puff_settle 과 같은 해시) */
+void puff_settle_begin(PuffSim* s);
+uint32_t puff_settle_step(PuffSim* s, uint32_t max_steps);
+/* 검증용: 순수 Rust libm (0 log, 1 cos, 2 sin, 3 sqrt, 4 pow(x,2)) */
+double puff_math_v(uint32_t f, double x);
+/* 엔진 버전(NUL 끝 정적 문자열, 해제 금지) */
+const char* puff_version_cstr(void);
+
 #ifdef __cplusplus
 }
 #endif

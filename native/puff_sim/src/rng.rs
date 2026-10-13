@@ -11,6 +11,12 @@ impl Mulberry32 {
         Self { a: seed }
     }
 
+    /// 지금 내부 상태(다음 수를 뽑기 전). `Mulberry32::new(state)` 로 같은 자리에서 이어 뽑는다
+    /// — Dart 가 숨 해석(resolveShot)에 쓴 난수 줄기를 물리(jitter·텀블)로 그대로 넘길 때 쓴다(turn.js ShotRun 과 같은 소비 순서).
+    pub fn state(&self) -> u32 {
+        self.a
+    }
+
     /// JS: a = (a + 0x6d2b79f5)|0; t = imul(a ^ a>>>15, 1|a); t = (t + imul(t ^ t>>>7, 61|t)) ^ t; ((t ^ t>>>14)>>>0) / 2^32
     #[inline]
     pub fn next_f64(&mut self) -> f64 {

@@ -3,9 +3,10 @@
 //   PW=$(npm root -g)/playwright node app/tool/web_check.mjs [출력 폴더]
 // ⚠ 여기서 재는 FPS 는 CPU 렌더라 의미 없다(실기기 Metal 과 무관). 보는 것: 장면이 뜨는가 · 좌우/그림이 거울로 안 뒤집혔나 ·
 //   조준 광선이 맞는 층을 고르나 · 볼 오버레이 · 녹화 재생 끝 판정이 웹 판정과 같은가(화면 아래 줄).
+//   웹에는 dart:ffi 가 없어 Rust 물리 대신 녹화 재생으로 돈다(sim_core_stub.dart) — 이 빌드가 되는 것 자체가 조건부 import 확인.
 // app/ 에 web 플랫폼 폴더를 만들지 않으려고 임시 폴더에 lib·assets·pubspec 만 복사해 `flutter create --platforms web` 한다.
 import { execSync, spawn } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -22,6 +23,10 @@ const flutter = existsSync('/opt/flutter-sdk/flutter/bin/flutter') ? '/opt/flutt
 
 console.log('작업 폴더', work);
 sh(`tar -C "${app}" --exclude=./assets/www -cf - lib assets pubspec.yaml pubspec.lock analysis_options.yaml | tar -xf -`);
+// path 의존성(Rust 물리 dart:ffi 바인딩, ../native/puff_sim/dart)은 임시 폴더에서 상대 경로가 깨진다 → 절대 경로로.
+// 웹 빌드는 조건부 import 로 sim_core_stub.dart 를 쓰므로 이 패키지(dart:ffi)는 컴파일되지 않는다 — 풀이만 되면 된다
+const pub = join(work, 'pubspec.yaml');
+writeFileSync(pub, readFileSync(pub, 'utf8').replace('path: ../native/puff_sim/dart', `path: ${resolve(app, '../native/puff_sim/dart')}`));
 mkdirSync(join(work, 'assets/www'), { recursive: true });
 writeFileSync(join(work, 'assets/www/index.html'), '<html></html>'); // 웹뷰 게임 묶음 자리(데모는 안 씀)
 sh(`${flutter} create . --platforms web --project-name puff >/dev/null`);

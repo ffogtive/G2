@@ -9,6 +9,7 @@
 //!   cargo run --release --bin puff_parity -- all [S=16]       → 다섯 도구 전부 (JSON=out.json 이면 시드별 값도 저장)
 //!   cargo run --release --bin puff_parity -- bench [Ns=1,5,10,20,30,40] [reps=5]
 //!   cargo run --release --bin puff_parity -- hash [seed=7] [n=20]
+//!   cargo run --release --bin puff_parity -- shots            → 앱 연결 대조 JSON (app/test/fixtures/sim_cli_shots.json)
 //! 공통 env: TUNE="push=22,lift=500" (sim.js 이름 또는 snake_case), PRESET=web (sim.js 값 글자 그대로), SEED_OFF=16, THREADS=4
 //! 출력 형식은 JS 도구와 같게(같은 줄 모양) → parity/compare.mjs 가 시드별 JSON 으로 잡음 안인지 판정
 
@@ -655,6 +656,90 @@ fn hashsweep(seeds: u32, ns: &[f64], t: &Tune) {
     println!("ALL {:016x} ({} hashes)", all.finish(), count);
 }
 
+/// 앱 연결 대조(app/test/native_sim_ffi_test.dart): 판(시드·장수) × 턴(층 k · lat · 숨 비율)을 turn.js 순서로 쏘고
+/// (puff_seed 줄기로 숨 해석 → 판 난수로 이어 씀) 판정까지 스텝 → 가져가기 → 다시 쌓기 → settle.
+/// Dart 는 같은 일을 FFI(Dart resolveShot + puff_blow_v, 화면 프레임마다 고정 스텝)로 하고 이 출력과 비트 단위로 대조한다.
+/// 실수는 Rust Debug 형식(최단 왕복 표기) → Dart double.parse 로 같은 비트. 해시는 16진수 문자열
+fn shots() {
+    #[allow(clippy::type_complexity)]
+    let cases: &[(u32, usize, &[(usize, f64, f64)])] = &[
+        (3, 20, &[(2, 0.0, 0.9), (2, 0.35, 0.95), (0, -0.2, 0.55)]),
+        (11, 20, &[(9, 0.0, 0.85), (2, 0.0, 1.15), (2, -0.4, 1.3)]),
+        (29, 12, &[(2, 0.5, 0.92), (1, 0.0, 1.08)]),
+        (41, 5, &[(1, 0.0, 0.9), (0, 0.0, 0.9)]),
+        (7, 1, &[(0, 0.0, 0.9)]),
+    ];
+    let hx = |h: u64| format!("\"{h:016x}\"");
+    let mut out = String::new();
+    write!(out, "{{\"version\":\"{}\",\"cases\":[", puff_sim::sim_version()).unwrap();
+    for (ci, &(seed, n, turns)) in cases.iter().enumerate() {
+        let mut t = Table::new(seed);
+        t.add_pile(n, 0.07, (0.0, 0.0), &[]);
+        t.settle(600);
+        let settle = t.steps; // 가라앉힘에 든 스텝 수(settle 의 반환값 = 멈춘 칸 번호가 아니라)
+        if ci > 0 {
+            out.push(',');
+        }
+        write!(out, "{{\"seed\":{seed},\"n\":{n},\"settle\":{settle},\"hash0\":{},\"turns\":[", hx(t.state_hash())).unwrap();
+        for (ti, &(k, lat, ratio)) in turns.iter().enumerate() {
+            let live = t.live_ids().len();
+            if live == 0 {
+                break;
+            }
+            let ys = t.layer_ys();
+            let h = ys[k.min(live - 1)];
+            let breath = ratio * sweet_hi_for(live);
+            let puff_seed = seed.wrapping_mul(1000).wrapping_add(ti as u32);
+            let (r, aim) = puff_sim::fire_turn(&mut t, Shot { lat, h, power: breath }, (0.0, -1.0), None, puff_seed);
+            let rng_after_blow = t.rng.state();
+            let mut j = puff_sim::table::JudgeState::default();
+            let mut steps = 0u32;
+            loop {
+                t.step();
+                steps += 1;
+                if t.step_judge(&mut j) {
+                    break;
+                }
+            }
+            let flipped = t.flipped_ids();
+            let outs = t.out_ids().len();
+            let hash_judge = t.state_hash();
+            for &id in &flipped {
+                t.remove(id);
+            }
+            t.restack((0.0, 0.0));
+            let s0 = t.steps;
+            t.settle(600);
+            let settle_steps = t.steps - s0;
+            if ti > 0 {
+                out.push(',');
+            }
+            write!(
+                out,
+                "{{\"k\":{k},\"lat\":{lat:?},\"ratio\":{ratio:?},\"live\":{live},\"h\":{h:?},\"breath\":{breath:?},\"puffSeed\":{puff_seed},\
+                 \"res\":{{\"ratio\":{:?},\"power\":{:?},\"blast\":{:?},\"lat\":{:?},\"h\":{:?},\"over\":{},\"aim\":[{:?},{:?},{:?}]}},\
+                 \"rngAfterBlow\":{rng_after_blow},\"steps\":{steps},\"flipped\":{},\"outs\":{outs},\"hashJudge\":{},\"settleSteps\":{settle_steps},\"hashRest\":{}}}",
+                r.ratio,
+                r.power,
+                r.blast,
+                r.lat,
+                r.h,
+                r.over,
+                aim.x,
+                aim.y,
+                aim.z,
+                flipped.len(),
+                hx(hash_judge),
+                hx(t.state_hash())
+            )
+            .unwrap();
+        }
+        out.push_str("]}");
+    }
+    out.push_str("]}");
+    println!("{out}");
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cmd = args.first().map(String::as_str).unwrap_or("help");
@@ -707,6 +792,7 @@ fn main() {
             println!("{}", puff_sim::sim_version());
             hashsweep(arg_num(&args, 1, 50.0) as u32, &arg_list(&args, 2, "1,5,12,20,30"), &t)
         }
+        "shots" => shots(),
         "hash" => {
             let seed = arg_num(&args, 1, 7.0) as u32;
             let n = arg_num(&args, 2, 20.0) as usize;
