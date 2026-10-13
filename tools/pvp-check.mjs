@@ -1,0 +1,151 @@
+// pvp-check.mjs — PvP P0.5a 게이트: 같은 브라우저 문맥의 두 페이지(= 두 탭)가 LocalNet 으로 3판 1세트를 끝까지 둔다.
+// docs/design/items-pvp.md §2.1 '시험 방법 2'
+//
+// 🧭 가설: 쏜 사람이 심판(ShotRun)이고 두 화면 모두 궤적을 꼭두각시 월드에 재생하면, 턴마다 두 탭의 지문
+//   (남은 판 id · 점수 · 화면 끝 자세 해시)과 판정(res)이 100% 같고 화면 끝 = 쏜 사람의 post 다. 받는 쪽의 뒤 검증(같은 입력·새 월드) 해시도 100% 같다.
+//
+// 사용: PW=$(npm root -g)/playwright node tools/pvp-check.mjs [판 크기 5|10|20 = 5]
+//   NOBUILD=1   빌드 생략(dist/puff.html 그대로)
+//   RELOAD=b    두 턴쯤 뒤에 B 를 새로고침 → 재접속(문서로 다시 계산 · 못 본 상대 숨은 db 궤적으로). RELOAD=a / ab 도 됨
+//   RELOADAT=recv  상대 숨을 재생하는 중에 새로고침(기본 any) / mine = 내 차례에
+//   DROP=K      B 가 받은 trk 조각을 K번째마다 버림 → 빈칸이면 db 샷 문서로 이어 받기
+//   LAG=ms      LocalNet room·db 알림 지연(두 탭 모두)
+//   CLOCK=s     샷 시계(기본 30). 짧게 주면 자동 헛숨 경로도 지난다(봇은 0.8~2.5초 안에 쏜다)
+//   LIMIT=ms    전체 제한 시간(기본 15분)
+// 통과(종료 코드 0): 모든 턴이 두 탭 로그에 있고 지문·res 100% 같음 · 화면 끝 해시 = 쏜 사람 qhash 100% · 뒤 검증 same 100%
+//   · 판·세트 결과 같음 · LocalNet 상한 위반 0(emit·presence 4KiB, 문서 256KiB, 선언 주제, 초당 40·버스트 80) · 콘솔 오류 0
+import { createRequire } from 'module';
+import { existsSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PW);
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const N = +(process.argv[2] || 5);
+const RELOADAT = process.env.RELOADAT || 'any'; // recv = 상대 숨 재생 중 / mine = 내 차례
+const RELOAD = (process.env.RELOAD || '').toLowerCase(), DROP = +(process.env.DROP || 0), LAG = +(process.env.LAG || 0), CLOCK = +(process.env.CLOCK || 0);
+const LIMIT = +(process.env.LIMIT || 15 * 60 * 1000);
+
+if (!process.env.NOBUILD) execFileSync('node', [join(root, 'tools/build.mjs')], { stdio: 'inherit' });
+const file = join(root, 'dist/puff.html');
+if (!existsSync(file)) throw new Error('dist/puff.html 없음 — npm run build');
+const q = (extra = '') => `file://${file}?pvplocal&pvpbot${LAG ? `&pvplag=${LAG}` : ''}${CLOCK ? `&pvpclock=${CLOCK}` : ''}${extra}`;
+
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const ctx = await browser.newContext();
+// 화면 크기를 다르게(세로 폰 · 가로) — 물리·판정은 카메라와 무관해야 한다
+const A = await ctx.newPage(), B = await ctx.newPage();
+// 헤드리스 소프트웨어 렌더(swiftshader)는 두 탭이면 fps 가 낮다 → 작게. 가로·세로는 다르게 둔다
+await A.setViewportSize({ width: +(process.env.AW || 360), height: +(process.env.AH || 720) });
+await B.setViewportSize({ width: +(process.env.BW || 640), height: +(process.env.BH || 400) });
+const errs = { a: [], b: [] };
+for (const [p, k] of [[A, 'a'], [B, 'b']]) {
+  p.on('pageerror', (e) => errs[k].push('[pageerror] ' + e.message));
+  p.on('console', (m) => { if (m.type() === 'error') errs[k].push('[console] ' + m.text()); });
+}
+const t0 = Date.now();
+const sec = () => ((Date.now() - t0) / 1000).toFixed(0) + 's';
+await A.goto(q());
+await B.goto(q(DROP ? `&pvpdrop=${DROP}` : ''));
+const homeOk = async (p) => p.waitForFunction(() => window.__puffBooted && !document.querySelector('#home').hidden, null, { timeout: 90000 }); // 다른 작업과 CPU 를 나눠 쓰면 부팅이 느리다
+await homeOk(A); await homeOk(B);
+console.log(`[${sec()}] 두 탭 부팅. PvP 버튼 보임: A ${await A.$eval('#pvpBtn', (e) => !e.hidden)} B ${await B.$eval('#pvpBtn', (e) => !e.hidden)}`);
+// 로비 버튼은 DOM click(작은 가로 화면에선 홈 아래 줄이 화면 밖 — 배치 시험이 아니라 흐름 시험)
+const tap = (p, sel) => p.$eval(sel, (e) => e.click());
+// A: 방 만들기
+await tap(A, '#pvpBtn');
+await tap(A, `#pvpChips button[data-n="${N}"]`);
+await tap(A, '#pvpCreate');
+await A.waitForFunction(() => /^[A-Z0-9]{4}$/.test(document.querySelector('#pvpCode')?.textContent || ''), null, { timeout: 10000 });
+const code = await A.$eval('#pvpCode', (e) => e.textContent);
+console.log(`[${sec()}] A 방 만들기 → 코드 ${code} (판 크기 각자 ${N})`);
+// B: 코드로 참가
+await tap(B, '#pvpBtn');
+await B.fill('#pvpCodeIn', code.toLowerCase());
+await tap(B, '#pvpJoin');
+
+const reloaded = new Set();
+const fps = { a: [], b: [] };
+const rafRate = (p) => p.evaluate(() => new Promise((r) => { let n = 0; const t1 = performance.now(); const f = () => { n++; if (performance.now() - t1 < 1000) requestAnimationFrame(f); else r({ n, hidden: document.hidden }); }; requestAnimationFrame(f); })).catch(() => null);
+let fpsAt = 0;
+let last = '';
+let doneA = null, doneB = null;
+while (Date.now() - t0 < LIMIT) {
+  await A.waitForTimeout(1500);
+  const sa = await A.evaluate(() => window.__pvp?.() ?? null).catch(() => null);
+  const sb = await B.evaluate(() => window.__pvp?.() ?? null).catch(() => null);
+  doneA = await A.evaluate(() => window.__pvpDone ?? null).catch(() => null);
+  doneB = await B.evaluate(() => window.__pvpDone ?? null).catch(() => null);
+  const line = `A ${sa ? `g${sa.g} t${sa.t} ${sa.score.a}-${sa.score.b} live${sa.live}${sa.mine ? ' 내차례' : ''}${sa.playing ? ' 재생' : ''}` : '-'} | B ${sb ? `g${sb.g} t${sb.t} ${sb.score.a}-${sb.score.b} live${sb.live}${sb.mine ? ' 내차례' : ''}${sb.playing ? ' 재생' : ''}` : '-'}`;
+  if (line !== last) { console.log(`[${sec()}] ${line}`); last = line; }
+  if (doneA && doneB) break;
+  if (Date.now() - fpsAt > 20000) { fpsAt = Date.now(); const [fa, fb] = await Promise.all([rafRate(A), rafRate(B)]); if (fa) fps.a.push(fa.n); if (fb) fps.b.push(fb.n); if (fa?.hidden || fb?.hidden) console.log('숨은 탭!', fa, fb); }
+  // 재접속 시험: 첫 판 3번째 턴쯤 한 번
+  for (const [p, k, s] of [[B, 'b', sb], [A, 'a', sa]]) {
+    if (RELOAD.includes(k) && !reloaded.has(k) && s && !s.ended && (s.g > 0 || s.t >= 2) && (RELOADAT === 'any' || (RELOADAT === 'recv' ? !s.mine && s.playing : s.mine))) {
+      reloaded.add(k);
+      console.log(`[${sec()}] ${k.toUpperCase()} 새로고침(재접속 시험) — ${s.mine ? '자기 차례' : '상대 차례'}, ${s.playing ? '재생 중' : '재생 아님'}`);
+      await p.reload();
+      await p.waitForFunction(() => window.__puffBooted, null, { timeout: 30000 }).catch(() => {}); // 부팅만 기다림(곧바로 대결 화면으로 간다)
+    }
+  }
+}
+await A.waitForTimeout(2500); // 뒤 검증(3ms/프레임)이 끝나도록
+const logA = (await A.evaluate(() => window.__pvpLog)).filter((e) => e.code === code);
+const logB = (await B.evaluate(() => window.__pvpLog)).filter((e) => e.code === code);
+const meterA = await A.evaluate(() => window.__pvpMeter());
+const meterB = await B.evaluate(() => window.__pvpMeter());
+doneA = await A.evaluate(() => window.__pvpDone ?? null);
+doneB = await B.evaluate(() => window.__pvpDone ?? null);
+writeFileSync(join(root, 'tools/scratch/pvp-last.json'), JSON.stringify({ code, logA, logB, meterA, meterB, doneA, doneB }, null, 1));
+await A.screenshot({ path: join(root, 'tools/scratch/pvp-a.png') });
+await B.screenshot({ path: join(root, 'tools/scratch/pvp-b.png') });
+await browser.close();
+
+// ── 비교 ──
+const isTurn = (k) => /^\d{3}$/.test(k);
+const keys = [...new Set([...logA, ...logB].map((e) => e.key))].sort();
+let turns = 0, both = 0, tagSame = 0, resSame = 0, shownOk = 0, shownN = 0, verSame = 0, verN = 0, beatOk = 0, beatN = 0, rebuilt = 0;
+const bad = [], lats = [], dels = [], srcs = {};
+for (const k of keys) {
+  const ea = logA.filter((e) => e.key === k), eb = logB.filter((e) => e.key === k);
+  if (!isTurn(k)) { if (!ea.length || !eb.length || ea.some((x) => eb.some((y) => y.tag !== x.tag))) bad.push(`${k}: A ${ea.map((e) => e.tag)} B ${eb.map((e) => e.tag)}`); continue; }
+  turns++;
+  if (!ea.length || !eb.length) { bad.push(`${k}: ${!ea.length ? 'A' : 'B'} 로그 없음`); continue; }
+  both++;
+  const all = [...ea, ...eb];
+  if (all.every((e) => e.tag === all[0].tag)) tagSame++; else bad.push(`${k}: 지문 다름 ${all.map((e) => `${e.role}:${e.tag}`).join(' / ')}`);
+  if (all.every((e) => e.res === all[0].res)) resSame++; else bad.push(`${k}: res 다름`);
+  for (const e of all) {
+    if (e.role === 'rebuild') { rebuilt++; continue; }
+    shownN++; if (e.qhash === e.expect) shownOk++; else bad.push(`${k}: ${e.role} 화면 끝 ${e.qhash} ≠ post ${e.expect}`);
+    if (e.role === 'recv') {
+      verN++; if (e.ver === 'same') verSame++; else bad.push(`${k}: 뒤 검증 ${e.ver}`);
+      if (e.beatOk != null) { beatN++; if (e.beatOk) beatOk++; }
+      if (e.plus != null) { lats.push(e.plus); const sh = all.find((x) => x.role === 'shoot' && x.plus != null); if (sh) dels.push(e.plus - sh.plus); }
+      srcs[e.src] = (srcs[e.src] || 0) + 1;
+      if (e.preMiss) bad.push(`${k}: pre 다름(같은 엔진인데)`);
+    }
+  }
+}
+const pct = (a, b) => (b ? ((100 * a) / b).toFixed(1) : '—') + `% (${a}/${b})`;
+const qt = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.floor(p * s.length))] : null; };
+const viol = [...(meterA?.violations || []), ...(meterB?.violations || [])];
+console.log('\n── 결과 ──');
+console.log(`세트: A ${JSON.stringify(doneA)}\n      B ${JSON.stringify(doneB)}`);
+console.log(`턴 ${turns} · 두 탭 다 기록 ${pct(both, turns)} · 지문 같음 ${pct(tagSame, both)} · res 같음 ${pct(resSame, both)}`);
+const autoN = new Set([...logA, ...logB].filter((e) => isTurn(e.key) && e.auto).map((e) => e.key)).size;
+console.log(`샷 시계 자동 헛숨 턴 ${autoN}`);
+console.log(`화면 끝 = 쏜 사람 post ${pct(shownOk, shownN)} · 뒤 검증 같음 ${pct(verSame, verN)} · 콩닥 다시 계산 ${pct(beatOk, beatN)} · 재접속으로 다시 계산한 턴 ${rebuilt}`);
+console.log(`받는 쪽 출처 ${JSON.stringify(srcs)} · 놓기 → 상대 화면 첫 '+1' ms p50 ${qt(lats, 0.5)} p90 ${qt(lats, 0.9)} (n ${lats.length}) · 쏜 쪽 자기 화면 대비 늦음 p50 ${qt(dels, 0.5)} p90 ${qt(dels, 0.9)}`);
+const avg = (a) => (a.length ? (a.reduce((x, y) => x + y, 0) / a.length).toFixed(0) : '—');
+console.log(`화면 fps(1초 rAF 표본) A 평균 ${avg(fps.a)} 최저 ${fps.a.length ? Math.min(...fps.a) : '—'} · B 평균 ${avg(fps.b)} 최저 ${fps.b.length ? Math.min(...fps.b) : '—'} — 재생은 프레임 dt 상한 50ms 라 20fps 밑이면 느려진다(솔로와 같음)`);
+for (const [k, m] of [['A', meterA], ['B', meterB]]) console.log(`${k} 계량: emit ${m.count.emit}(최대 ${m.max.emit}B) presence ${m.count.presence}(최대 ${m.max.presence}B) 문서 쓰기 ${m.count.docWrite}(최대 ${m.max.doc}B) 주제별 ${JSON.stringify(Object.fromEntries(Object.entries(m.byTopic).map(([t, o]) => [t, `${o.n}개 최대${o.max}B`])))}`);
+console.log(`상한 위반 ${viol.length}${viol.length ? ' ' + JSON.stringify(viol.slice(0, 5)) : ''}`);
+console.log(`콘솔 오류 A ${errs.a.length} B ${errs.b.length}${errs.a.length + errs.b.length ? '\n' + [...errs.a, ...errs.b].slice(0, 10).join('\n') : ''}`);
+if (bad.length) console.log('불일치:\n  ' + bad.slice(0, 20).join('\n  '));
+const sameSet = doneA && doneB && JSON.stringify(doneA.games) === JSON.stringify(doneB.games) && doneA.winner === doneB.winner;
+const pass = doneA && doneB && sameSet && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && !viol.length && !errs.a.length && !errs.b.length && !bad.length;
+console.log(`\n${pass ? 'PASS' : 'FAIL'} — ${sec()}`);
+process.exit(pass ? 0 : 1);

@@ -35,6 +35,9 @@ mockup/src/      목업 소스 (ES 모듈)
   cues.js   공략 단서 계산(숨 물결 = sweetHiFor 역함수, 2~4장째 창, 원인 분류) — 렌더러 독립
   audio.js  WebAudio 합성 효과음 / mic.js 마이크 불기 감지
   store.js  내 딱지 보관함(localStorage) / i18n.js 한·영
+  turn.js   PvP 한 턴: ShotRun(새 월드·턴별 시드·스텝 판정 → 30Hz 궤적·post·해시), TrackPlayer/Chunker(13B 코덱), BeatClock, 꼭두각시 월드 — 렌더러 독립
+  net.js    PvP 네트워크 한 겹: Net 인터페이스(아티팩트 db·room·user 모양) + LocalNet(같은 브라우저 두 탭, 상한을 실제처럼 강제)
+  pvp.js    친선 대결 규칙(3판·판마다 선공 교대·가위바위보 커밋-리빌·문서 경로·샷 문서로 상태 다시 계산)
 mockup/index.html  UI 마크업 + CSS (빌드 템플릿)
 tools/build.mjs    → dist/puff.html (오프라인 단일 파일), dist/puff-artifact.html (claude.ai 아티팩트용)
 tools/tune.mjs     바람 물리 파라미터 자동 탐색
@@ -47,6 +50,8 @@ tools/cuecheck.mjs    공략 단서가 규칙·실측과 맞는지 (단서·숨 
 tools/physics-spike.mjs  물리 안정성/분포 측정
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
 tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행
+tools/pvpsync.mjs  PvP 네트워크 없는 게이트: 궤적 크기·재생 끝=post·새 월드 재시뮬·판정 분포 (sim·rules·turn 바꾸면 필수)
+tools/pvp-check.mjs  PvP 두 탭(LocalNet) 3판 완주: 턴별 해시 100%·뒤 검증·상한 위반 0·콘솔 오류 0 (main.js PvP·net·pvp·turn 바꾸면 필수)
 tools/sims/coreloop/      기획 에이전트의 매치 시뮬레이션(선공 이점 등)
 ```
 
@@ -59,6 +64,9 @@ PW=$(npm root -g)/playwright node tools/artifact-check.mjs   # 공개 버전 부
 node tools/levelbot.mjs 1 60 16 learner                      # 레벨 클리어율 측정
 LIST=4,9 node tools/calibrate.mjs 0 0 20 out.json            # 특정 레벨 재보정
 node tools/tune.mjs 140   # 물리 재튜닝(수 분)
+node tools/pvpsync.mjs 40 8                                  # PvP 턴 기록 게이트(약 6분, PVP_D=0 이면 (d) 생략)
+PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5      # PvP 두 탭 게이트(약 4~6분). 변형: RELOAD=b(재접속) DROP=3(조각 빠짐→db) CLOCK=3(자동 헛숨) LAG=60
+# 손으로 두 탭: dist/puff.html?pvplocal 을 두 창으로 → 홈 'PvP (두 탭)' → 방 만들기 / 코드 참가. ?pvpbot 이면 자동으로 둔다
 ```
 
 ## 앱 (Flutter, iOS·Android) — 재윤님: '플로터로 만들어'

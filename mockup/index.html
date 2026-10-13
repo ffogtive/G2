@@ -75,6 +75,18 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 #chips button { font-family: var(--display); font-size: 1.3rem; width: 3.1em; height: 2.2em; border-radius: 12px; border: 3px solid var(--ink); background: var(--cream); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
 #chips button.on { background: linear-gradient(#fff07a, var(--gold)); transform: translateY(-2px); box-shadow: 0 5px 0 var(--ink); }
 #chips button:disabled { opacity: 0.35; cursor: not-allowed; }
+/* PvP (P0.5a 두 탭): 로비 · 샷 시계 · 상대 연결 */
+#pvpChips { display: flex; gap: 8px; }
+#pvpChips button { font-family: var(--display); font-size: 1.3rem; width: 3.1em; height: 2.2em; border-radius: 12px; border: 3px solid var(--ink); background: var(--cream); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
+#pvpChips button.on { background: linear-gradient(#fff07a, var(--gold)); transform: translateY(-2px); box-shadow: 0 5px 0 var(--ink); }
+.pvp-panel > * + * { margin-top: 12px; }
+.pvp-panel #pvpPick { display: grid; gap: 12px; justify-items: center; }
+#pvpCodeIn { font-family: var(--display); font-size: 1.6rem; width: 5.6em; text-align: center; text-transform: uppercase; letter-spacing: 0.18em; border: 3px solid var(--ink); border-radius: 12px; padding: 4px 8px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
+.pvp-err { color: var(--red); font-size: 1rem; margin: 8px 0 0; }
+.pvp-clock { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 62px); left: 50%; transform: translateX(-50%); min-width: 2.2em; text-align: center; font-family: var(--display); font-size: 1.35rem; color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; background: rgba(42,26,18,0.55); border: 3px solid var(--ink); border-radius: 14px; padding: 0 10px; pointer-events: none; }
+.pvp-clock.low { background: rgba(255,77,94,0.9); }
+.pvp-clock.ai { opacity: 0.75; }
+.pvp-conn { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 104px); left: 50%; transform: translateX(-50%); max-width: 86vw; background: rgba(42,26,18,0.85); color: #fff; padding: 6px 12px; border-radius: 12px; text-align: center; pointer-events: none; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
 /* HUD */
@@ -319,6 +331,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
         <button id="sheetBtn" class="btn gold" type="button" data-t="sheet">FREE SHEET</button>
         <button id="albumBtn" class="btn blue" type="button"><span data-t="collection">ALBUM</span> <small id="albumProg">0/24</small></button>
         <button id="micBtn" class="btn ghost" type="button">Mic: OFF</button>
+        <button id="pvpBtn" class="btn gold" type="button" data-t="pvpBtn" hidden>PvP (2 TABS)</button>
       </div>
     </div>
   </section>
@@ -339,6 +352,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <button id="quitBtn" class="btn ghost" type="button" data-t="home">HOME</button>
     <div id="lipRail" hidden><button type="button" data-pose="eye" class="notch"></button><button type="button" data-pose="low" class="notch"></button><div class="lipHandle" aria-hidden="true"></div><span class="lipLbl eye" data-t="poseEye"></span><span class="lipLbl low" data-t="poseLow"></span></div>
     <button id="goggles" type="button" hidden><span class="lens" aria-hidden="true"></span><b id="gogglesN">0</b></button>
+    <div id="pvpClock" class="pvp-clock" hidden aria-live="off"></div>
+    <div id="pvpConn" class="pvp-conn" hidden role="status"></div>
   </section>
 
   <section id="result" class="screen" hidden>
@@ -394,6 +409,18 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
   <div id="dailyCard" class="modal" hidden><div class="panel"><h2 class="disp"><span data-t="daily">DAILY STACK</span> <span id="dailyNum"></span></h2><div id="dailyScore" class="daily-score"></div><p id="dailyMeta" class="note"></p><textarea id="dailyShare" rows="3" readonly aria-label="share text"></textarea><div class="row"><button id="dailyCopy" class="btn gold" type="button" data-t="copy">COPY</button><button id="dailyAgain" class="btn" type="button" data-t="dailyAgain">TRY AGAIN</button><button id="dailyHome" class="btn blue" type="button" data-t="home">HOME</button></div></div></div>
   <div id="tune" class="modal" hidden><div class="panel"><h2 class="disp" data-t="tuneTitle">Feel tuning</h2><div id="tuneRows"></div><div class="row"><button id="tuneReset" class="btn blue" type="button" data-t="tuneReset">RESET</button><button id="tuneClose" class="btn" type="button" data-t="tuneClose">DONE</button></div></div></div>
   <div id="micOffer" class="modal" hidden><div class="panel"><p class="ask" data-t="micAsk"></p><div class="row"><button id="micYes" class="btn gold" type="button" data-t="micYes">YES</button><button id="micNo" class="btn blue" type="button" data-t="micNo">Later</button></div></div></div>
+  <div id="pvpLobby" class="modal" hidden><div class="panel pvp-panel">
+    <h2 class="disp" data-t="pvpTitle">Play a friend</h2>
+    <div id="pvpPick">
+      <div class="bet"><span class="lbl" data-t="pvpSize">Discs each</span><div id="pvpChips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
+      <button id="pvpCreate" class="btn xl" type="button" data-t="pvpCreate">CREATE</button>
+      <p class="note" data-t="pvpOr">or type a code</p>
+      <div class="row"><input id="pvpCodeIn" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="code" placeholder="CODE"><button id="pvpJoin" class="btn blue" type="button" data-t="pvpJoin">JOIN</button></div>
+    </div>
+    <div id="pvpWait" hidden><p data-t="pvpShare">Type this code in the other tab</p><div id="pvpCode" class="daily-score"></div><p id="pvpStatus" class="note"></p></div>
+    <p id="pvpErr" class="pvp-err" hidden></p>
+    <div class="row"><button id="pvpClose" class="btn blue" type="button" data-t="back">BACK</button></div>
+  </div></div>
   <div id="toast" hidden></div>
 </div>
 <!--APP-->

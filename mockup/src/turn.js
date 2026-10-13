@@ -300,19 +300,33 @@ function nlerp(a, b, k) {
 // ── 한 턴 시뮬 (쏜 사람 = 심판, 받는 쪽의 뒤 검증도 같은 코드) ─────────────
 // ids: 남은 판 id(오름차순), seeds: { puff, stack, beat } (sim.turnSeeds), input: { h, lat, power, mouthY?, ... } (power = 콩닥 반영한 유효 숨)
 // 미리 시뮬(simulate-ahead): advance(k) 로 프레임마다 조금씩 돌려도, 한 번에 돌려도 같은 결과(스텝 판정 + 고정 호출 순서).
+// 두 단계(P0.5a): new ShotRun({ ids, seeds }) = 턴 시작에 새 월드 쌓기·가라앉히기(조준 전, 20장 ≈70ms) → 놓을 때 fire(input).
+//   input 을 생성자에 주면 곧바로 fire (P0 와 같은 한 번 호출, 호출 순서·난수 소비가 같아 기록이 바이트 단위로 같다 — pvpsync 로 확인)
 export class ShotRun {
   constructor({ ids, seeds, input, cardOf, heavy, tune, overShake = 1, track }) {
     const t = (this.table = Table.fromTurnState([...ids].sort((a, b) => a - b), seeds.stack, { cardOf, heavy, tune }));
     this.ids = t.discs.map(pidOf);
     this.seeds = { ...seeds };
-    this.input = { ...input };
     this.n = t.liveDiscs().length;
-    this.rec = new TrackRecorder(t, track);
+    this.overShake = overShake;
+    this.trackOpts = track;
+    this.fired = false;
+    this.done = false;
+    this.record = null;
+    if (input) this.fire(input);
+  }
+  // 놓는 순간: 녹화 시작(pre) → 숨 해석(puffSeed) → 바람
+  fire(input) {
+    if (this.fired) throw new Error('ShotRun.fire: 이미 쐈다');
+    this.fired = true;
+    const t = this.table;
+    this.input = { ...input };
+    this.rec = new TrackRecorder(t, this.trackOpts);
     this.pre = this.rec.pre;
     const top = t.columnTop();
     // 숨 해석·떨림·텀블 난수는 모두 puffSeed 한 줄기 (솔로 match.rng 와 같은 소비 순서: resolveShot → blow 의 jitter → applyWind 텀블)
-    const rng = mulberry32(seeds.puff >>> 0);
-    const shot = (this.shot = Rules.resolveShot({ h: input.h, lat: input.lat || 0, power: input.power }, this.n, top, rng, overShake));
+    const rng = mulberry32(this.seeds.puff >>> 0);
+    const shot = (this.shot = Rules.resolveShot({ h: input.h, lat: input.lat || 0, power: input.power }, this.n, top, rng, this.overShake));
     t.rng = rng;
     // main.js shotGeometry 와 같은 기하(표적 = 곡면 위 c − D·√(1−lat²) + side·lat), D = 정규 좌표 −z
     const D = CANON_DIR, side = { x: -D.z, z: D.x }, c = t.pileCenter();
@@ -321,11 +335,11 @@ export class ShotRun {
     this.aim = aim;
     t.blow({ aim, dir: { x: D.x, z: D.z }, power: shot.power, blast: shot.blast || 0, ...(input.mouthY != null ? { mouthY: input.mouthY } : {}) });
     this.judge = { n: 0, quiet: 0 };
-    this.done = false;
-    this.record = null;
+    return this;
   }
   // 최대 maxSteps 스텝 진행. 판정되면 true
   advance(maxSteps = Infinity) {
+    if (!this.fired) return false;
     const t = this.table;
     for (let k = 0; k < maxSteps && !this.done; k++) {
       t.step();
@@ -335,7 +349,9 @@ export class ShotRun {
     }
     return this.done;
   }
-  get steps() { return this.judge.n; }
+  get steps() { return this.judge ? this.judge.n : 0; }
+  // WASM 메모리 돌려주기(턴마다 새 월드라 안 하면 쌓인다). 그 뒤로는 이 월드의 몸체를 만지면 안 된다
+  free() { if (!this.freed) { this.freed = true; this.table.world.free(); } }
   finish() {
     const t = this.table, r = t.judgeResult();
     const track = this.rec.trackBytes();
@@ -406,6 +422,46 @@ export function runShot(opts) {
 export function verifyShot(record, opts = {}) {
   const { record: mine } = runShot({ ids: record.ids, seeds: record.seeds, input: record.in, ...opts });
   return { hashVerifier: mine.hash, sameEngine: mine.simV === record.simV, same: mine.hash === record.hash && mine.post === record.post };
+}
+
+// ── 화면용 꼭두각시 월드 (P0.5a) ─────────────
+// 13B 자세들(pre 등)로 딱지를 그 자리에 놓기만 한 월드. 스텝을 돌리지 않는다 — 재생 중엔 궤적 자세를 그대로 꽂는다.
+// d.id = d.pid = 판 id → main.js 의 메시·판정·영수증 코드(d.id 기준)가 턴이 바뀌어도 같은 딱지를 가리킨다.
+// mirror = 받는 쪽 화면(y축 180°). faceUp·inCircle 은 y축 회전에 불변이라 판정 화면이 그대로 맞는다.
+export function puppetTable(pre, { cardOf, mirror = false } = {}) {
+  const u8 = typeof pre === 'string' ? fromB64(pre) : pre;
+  const rows = decodeState(u8);
+  const t = new Table(1);
+  t.addPile(rows.map((r) => (cardOf ? cardOf(r.id) : r.id)));
+  t.discs.forEach((d, i) => {
+    const r = rows[i];
+    d.id = d.pid = r.id;
+    setPose(d, mirror ? mirrorPose(r.p, r.q) : r);
+  });
+  t.puppet = true;
+  return t;
+}
+export function setPose(d, { p, q }) {
+  d.body.setTranslation(p, false);
+  d.body.setRotation(q, false);
+}
+// 꼭두각시 자세를 13B 자세들로 다시 맞춤(같은 판 id 집합)
+export function posePuppet(t, pre, mirror = false) {
+  const u8 = typeof pre === 'string' ? fromB64(pre) : pre;
+  const byId = new Map(t.liveDiscs().map((d) => [d.id, d]));
+  for (const r of decodeState(u8)) { const d = byId.get(r.id); if (d) setPose(d, mirror ? mirrorPose(r.p, r.q) : r); }
+}
+
+// 콩닥 trace(u12 배열) ↔ b64 (u16 LE). 샷 문서에만 싣는다(받는 쪽·나중 서버가 BeatClock.replay 로 유효 숨을 다시 계산)
+export function traceToB64(trace) {
+  const u8 = new Uint8Array(trace.length * 2);
+  trace.forEach((v, i) => { u8[2 * i] = v & 255; u8[2 * i + 1] = v >> 8; });
+  return toB64(u8);
+}
+export function traceFromB64(s) {
+  const u8 = fromB64(s), out = [];
+  for (let i = 0; i + 1 < u8.length; i += 2) out.push(u8[i] | (u8[i + 1] << 8));
+  return out;
 }
 
 export { JUDGE };

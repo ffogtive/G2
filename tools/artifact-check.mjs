@@ -29,7 +29,9 @@ await page.goto('file://' + tmp);
 await page.waitForTimeout(6000);
 const homeShown = await page.$eval('#home', (e) => !e.hidden).catch(() => false);
 const bootMsg = await page.$eval('#bootMsg', (e) => e.textContent).catch(() => '?');
-console.log('home shown:', homeShown, '| boot msg:', bootMsg);
+// PvP(P0.5a): ?pvplocal 이 없고 claude capability 도 아직 안 씀 → PvP 버튼은 숨어 있어야 한다(혼자서도 다 돈다)
+const pvpHidden = await page.$eval('#pvpBtn', (e) => e.hidden).catch(() => false);
+console.log('home shown:', homeShown, '| boot msg:', bootMsg, '| PvP button hidden:', pvpHidden);
 if (homeShown && process.env.PLAY) {
   await page.click('#playBtn');
   for (let i = 0; i < 40; i++) {
@@ -43,4 +45,4 @@ if (homeShown && process.env.PLAY) {
 console.log(logs.join('\n') || 'no errors');
 await page.screenshot({ path: join(root, 'tools/scratch/artifact-check.png') });
 await browser.close();
-process.exit(homeShown ? 0 : 1);
+process.exit(homeShown && pvpHidden ? 0 : 1);
