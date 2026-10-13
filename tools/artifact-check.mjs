@@ -2,6 +2,7 @@
 // 사용: PW=$(npm root -g)/playwright node tools/artifact-check.mjs [dist/puff-artifact.html]
 //   PLAY=1   솔로 자유 대전 첫 턴까지
 //   ONLY=0   첫 경우(claude 없음)만 — 빠른 부팅 확인
+// 문구: i18n 한·영에 GDD §11.7 금지어(bet·for keeps·jackpot·odds·luck… / 베팅·도박·내기·수익·확률…)가 있으면 FAIL(브라우저 띄우기 전에)
 // P0.5b 경우 4가지(docs/design/items-pvp.md §2.1 시험 방법 3 — 'claude 가 없을 때 PvP 버튼이 숨고 부팅되는가. 가짜 net 으로도 부팅되는가'):
 //   none    window.claude 없음(저장한 파일·다른 호스트)                → 부팅 · PvP 숨김
 //   null    claude.use() 가 모두 null(권한 없음·공개 링크·top-level)    → 부팅 · PvP 숨김
@@ -10,7 +11,35 @@
 import { createRequire } from 'module';
 import { join } from 'node:path';
 import { wrapArtifact, routeCdn, fakeClaude, root } from './artifact-host.mjs';
+import { STRINGS } from '../mockup/src/i18n.js';
 const require = createRequire(import.meta.url);
+
+// ── GDD §11.7 금지 언어 사전: i18n 한·영 화면 문구 검사(하나라도 걸리면 FAIL) ──
+// 허용(검사 전에 지움): 대체어(stack in · put in · 판 깔기 · 딱지 내기 · 낼 딱지 · clean sweep · free sheet …)와
+// 유지 어휘(For Fun · 따먹기 · 친선 · 싹쓸이 · 딱지왕 · Take-Home). 화면 라벨 POT/판돈은 무엇으로 바꿀지 재윤님 결정 대기라 허용.
+const BANNED_EN = [/\bbet(s|ting|ted|tor)?\b/i, /\bwager/i, /\bgambl/i, /\bfor keeps\b/i, /\bjackpot/i, /\bpay-?outs?\b/i, /\bcash(ing)? out\b/i,
+  /\bodds\b/i, /\bluck(y|ily|ier)?\b/i, /\ball[- ]in\b/i, /\bdouble or nothing\b/i, /\braise\b/i, /\bchips?\b/i, /\bcasinos?\b/i, /\bspin(s|ning)?\b/i,
+  /\bloot ?box/i, /\blotter(y|ies)\b/i, /\bgamble shot\b/i];
+const BANNED_KO = [/베팅/, /배팅/, /도박/, /(^|[^가-힣])내기/, /잭팟/, /배당/, /수익/, /순이익/, /확률/, /운빨/, /올인/, /따블/, /판\s*키우기/, /칩/, /카지노/, /돌리기/, /뽑기/, /복권/,
+  /걸\s*딱지/, /딱지를?\s*걸[고기어다]/];
+const ALLOWED = [/\bPOT\b/g, /판돈/g, /딱지\s*내기/g, /판\s*깔기/g, /\bstacks? in\b/gi, /\bput in\b/gi];
+function bannedHits() {
+  const hits = [];
+  const walk = (lang, key, v) => {
+    if (Array.isArray(v)) return v.forEach((x, i) => walk(lang, `${key}[${i}]`, x));
+    if (typeof v !== 'string') return;
+    let txt = v;
+    for (const a of ALLOWED) txt = txt.replace(a, ' ');
+    for (const re of [...BANNED_EN, ...BANNED_KO]) if (re.test(txt)) hits.push(`${lang}.${key}: "${v}" ← ${re}`);
+  };
+  for (const [lang, d] of Object.entries(STRINGS)) for (const [k, v] of Object.entries(d)) walk(lang, k, v);
+  return hits;
+}
+const i18nHits = bannedHits();
+const i18nKeys = Object.values(STRINGS).reduce((a, d) => a + Object.keys(d).length, 0);
+console.log(`[i18n §11.7] ${i18nKeys} strings (${Object.keys(STRINGS).join('·')}) | banned words: ${i18nHits.length} → ${i18nHits.length ? 'FAIL' : 'ok'}`);
+if (i18nHits.length) console.log('  ' + i18nHits.join('\n  '));
+
 const { chromium } = require(process.env.PW);
 const tmp = wrapArtifact(process.argv[2] || undefined);
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -34,7 +63,7 @@ async function boot(mode) {
   return { ctx, page, logs, homeShown, bootMsg, pvpHidden, pvpText, netKind };
 }
 
-const results = [];
+const results = [!i18nHits.length];
 const modes = process.env.ONLY === '0' ? ['none'] : ['none', 'null', 'viewer', 'full'];
 for (const mode of modes) {
   const r = await boot(mode);

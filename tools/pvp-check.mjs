@@ -15,6 +15,9 @@
 //   NET=artifact  아티팩트 빌드(dist/puff-artifact.html, CDN → node_modules) + 가짜 claude 호스트(tools/fake-claude.js: LocalNet 위에 db·room·user 모양)
 //                 → ArtifactNet 경로(claude.use · 6자 코드 · 로비 room 빠른 길 · 검증 기록)를 같은 게이트로. 상한 위반은 페이지 계량 + 가짜 호스트 계량 둘 다
 //   SNAPPOLL=ms   (NET=artifact) db onSnapshot 이 실시간을 잃고 폴링으로 떨어진 상태(실제 약 30000). room 빠른 길·3초 안전망 읽기로 버티는가
+//   RESIGN=a|b  그 탭이 RESIGNAT(기본 2) 턴쯤 뒤 HOME 을 두 번 눌러 기권 → 상대 화면이 2초 안에 '기권승'이고 '연결 끊김 — 기다리는 중'은 한 번도 안 뜬다.
+//               기권한 쪽은 홈 · 매치 문서 abandoned(result.by) · 자리 문서 resign. 기권 전 턴은 평소대로 비교(기권 때 날던 마지막 턴 하나는 빼고).
+//               매치 문서 구독이 폴링이면(NET=artifact SNAPPOLL=30000) presence 빠른 길만 남는다 — 옛 순서(문서 먼저 → presence → 곧바로 leave)는 여기서 걸렸다
 // 통과(종료 코드 0): 모든 턴이 두 탭 로그에 있고 지문·res 100% 같음 · 화면 끝 해시 = 쏜 사람 qhash 100% · 뒤 검증 same 100%
 //   · 판·세트 결과 같음 · LocalNet 상한 위반 0(emit·presence 4KiB, 문서 256KiB, 선언 주제, 초당 40·버스트 80) · 콘솔 오류 0
 import { createRequire } from 'module';
@@ -31,6 +34,7 @@ const RELOADAT = process.env.RELOADAT || 'any'; // recv = 상대 숨 재생 중 
 const RELOAD = (process.env.RELOAD || '').toLowerCase(), DROP = +(process.env.DROP || 0), LAG = +(process.env.LAG || 0), CLOCK = +(process.env.CLOCK || 0);
 const LIMIT = +(process.env.LIMIT || 15 * 60 * 1000);
 const ART = (process.env.NET || '').toLowerCase() === 'artifact';
+const RESIGN = { 1: 'a', a: 'a', b: 'b' }[(process.env.RESIGN || '').toLowerCase()] || '', RESIGNAT = +(process.env.RESIGNAT || 2);
 
 if (!process.env.NOBUILD) execFileSync('node', [join(root, 'tools/build.mjs')], { stdio: 'inherit' });
 const file = ART ? wrapArtifact() : join(root, 'dist/puff.html');
@@ -79,6 +83,8 @@ const rafRate = (p) => p.evaluate(() => new Promise((r) => { let n = 0; const t1
 let fpsAt = 0;
 let last = '';
 let doneA = null, doneB = null;
+const RP = RESIGN === 'b' ? B : A, OP = RESIGN === 'b' ? A : B; // 기권하는 탭 · 상대 탭
+let resignAt = 0, resignSeat = null;
 while (Date.now() - t0 < LIMIT) {
   await A.waitForTimeout(1500);
   const sa = await A.evaluate(() => window.__pvp?.() ?? null).catch(() => null);
@@ -88,6 +94,27 @@ while (Date.now() - t0 < LIMIT) {
   const line = `A ${sa ? `g${sa.g} t${sa.t} ${sa.score.a}-${sa.score.b} live${sa.live}${sa.mine ? ' 내차례' : ''}${sa.playing ? ' 재생' : ''}` : '-'} | B ${sb ? `g${sb.g} t${sb.t} ${sb.score.a}-${sb.score.b} live${sb.live}${sb.mine ? ' 내차례' : ''}${sb.playing ? ' 재생' : ''}` : '-'}`;
   if (line !== last) { console.log(`[${sec()}] ${line}`); last = line; }
   if (doneA && doneB) break;
+  // 기권 시험: 상대 화면을 25ms 마다 기록('연결 끊김' 표시 · 기권승 시각) → HOME 두 번
+  if (RESIGN) {
+    const s = RESIGN === 'b' ? sb : sa;
+    if (!resignAt && s && !s.ended && s.state === 'match' && s.first && s.g * 100 + s.t >= RESIGNAT) {
+      await OP.evaluate(() => {
+        const r = (window.__rsg = { awayAt: null, awayN: 0, doneAt: null });
+        const id = setInterval(() => {
+          const el = document.querySelector('#pvpConn');
+          if (el && !el.hidden && el.dataset.k === 'pvpOppAway') { r.awayN++; r.awayAt ??= Date.now(); }
+          if (window.__pvpDone) { r.doneAt = Date.now(); clearInterval(id); }
+        }, 25);
+      });
+      resignSeat = s.seat;
+      console.log(`[${sec()}] ${RESIGN.toUpperCase()} 기권(HOME 두 번) — ${s.mine ? '자기 차례' : '상대 차례'}, ${s.playing ? '재생 중' : '재생 아님'}`);
+      await tap(RP, '#quitBtn');
+      await RP.waitForTimeout(200);
+      resignAt = Date.now();
+      await tap(RP, '#quitBtn');
+    }
+    if (resignAt && ((RESIGN === 'b' ? doneA : doneB) || Date.now() - resignAt > 20000)) break;
+  }
   if (Date.now() - fpsAt > 20000) { fpsAt = Date.now(); const [fa, fb] = await Promise.all([rafRate(A), rafRate(B)]); if (fa) fps.a.push(fa.n); if (fb) fps.b.push(fb.n); if (fa?.hidden || fb?.hidden) console.log('숨은 탭!', fa, fb); }
   // 재접속 시험: 첫 판 3번째 턴쯤 한 번
   for (const [p, k, s] of [[B, 'b', sb], [A, 'a', sa]]) {
@@ -109,7 +136,16 @@ const hostB = ART ? await B.evaluate(() => window.__fakeMeter?.() ?? null) : nul
 const verifyDocs = await A.evaluate((c) => Object.keys(localStorage).filter((k) => k.startsWith('pn1:p/') && k.includes('/m/' + c + '-') && k.includes('/v/')).map((k) => JSON.parse(localStorage.getItem(k))), code);
 doneA = await A.evaluate(() => window.__pvpDone ?? null);
 doneB = await B.evaluate(() => window.__pvpDone ?? null);
-writeFileSync(join(root, 'tools/scratch/pvp-last.json'), JSON.stringify({ code, logA, logB, meterA, meterB, hostA, hostB, verifyDocs, doneA, doneB }, null, 1));
+let resign = null;
+if (RESIGN) {
+  const docs = await A.evaluate(([c, seat]) => {
+    const g = (k) => JSON.parse(localStorage.getItem(k) || 'null');
+    const sk = Object.keys(localStorage).find((k) => k.startsWith('pn1:p/') && k.endsWith(`/m/${c}-${seat}`));
+    return { matchDoc: g('pn1:matches/' + c), seatDoc: sk ? g(sk) : null };
+  }, [code, resignSeat]);
+  resign = { at: resignAt, seat: resignSeat, rec: await OP.evaluate(() => window.__rsg ?? null), home: await RP.evaluate(() => !document.querySelector('#home').hidden), ...docs };
+}
+writeFileSync(join(root, 'tools/scratch/pvp-last.json'), JSON.stringify({ code, logA, logB, meterA, meterB, hostA, hostB, verifyDocs, doneA, doneB, resign }, null, 1));
 await A.screenshot({ path: join(root, 'tools/scratch/pvp-a.png') });
 await B.screenshot({ path: join(root, 'tools/scratch/pvp-b.png') });
 await browser.close();
@@ -119,8 +155,12 @@ const isTurn = (k) => /^\d{3}$/.test(k);
 const keys = [...new Set([...logA, ...logB].map((e) => e.key))].sort();
 let turns = 0, both = 0, tagSame = 0, resSame = 0, shownOk = 0, shownN = 0, verSame = 0, verN = 0, beatOk = 0, beatN = 0, rebuilt = 0;
 const bad = [], lats = [], dels = [], srcs = {};
+const lastTurn = keys.filter(isTurn).at(-1);
+let inflight = null; // 기권 시험: 기권 때 날던 턴(한쪽만 끝냈을 수 있다)
 for (const k of keys) {
   const ea = logA.filter((e) => e.key === k), eb = logB.filter((e) => e.key === k);
+  if (RESIGN && k === 'set') continue; // 기권은 상대 쪽만 'resign:자리' 를 남긴다 — 아래에서 따로 본다
+  if (RESIGN && isTurn(k) && k === lastTurn && (!ea.length || !eb.length)) { inflight = k; continue; }
   if (!isTurn(k)) { if (!ea.length || !eb.length || ea.some((x) => eb.some((y) => y.tag !== x.tag))) bad.push(`${k}: A ${ea.map((e) => e.tag)} B ${eb.map((e) => e.tag)}`); continue; }
   turns++;
   if (!ea.length || !eb.length) { bad.push(`${k}: ${!ea.length ? 'A' : 'B'} 로그 없음`); continue; }
@@ -167,7 +207,19 @@ const recvKeys = new Set([...logA, ...logB].filter((e) => e.role === 'recv').map
 const docKeys = new Set(verifyDocs.map((d) => `${d.seat}|${d.key}`));
 const verDocsOk = [...recvKeys].every((k) => docKeys.has(k)) && vSame === verifyDocs.length;
 if (!verDocsOk) bad.push(`검증 기록: 받은 턴 ${recvKeys.size} · 기록 ${docKeys.size} · 같음 ${vSame}`);
+// 기권: 상대 화면 = 2초 안에 기권승, '연결 끊김' 한 번도 없음 · 기권한 쪽 = 홈 · 매치 문서 abandoned(result.by) · 자리 문서 resign
+let resignOk = true;
+if (RESIGN) {
+  const dO = RESIGN === 'b' ? doneA : doneB, logO = RESIGN === 'b' ? logA : logB, r = resign;
+  const ms = r?.rec?.doneAt && r.at ? r.rec.doneAt - r.at : null;
+  const setTag = logO.find((e) => e.key === 'set')?.tag;
+  console.log(`기권(${RESIGN.toUpperCase()} = ${r?.seat}): 상대 화면 ${dO ? `${dO.reason} 승자 ${dO.winner}` : '결과 없음'} · 두 번째 HOME → 기권승 ${ms ?? '—'}ms · '연결 끊김' 표시 ${r?.rec?.awayN ? `${r.rec.awayN}회(+${r.rec.awayAt - r.at}ms)` : '0'}` +
+    ` · 기권한 쪽 홈 ${r?.home} · 매치 문서 ${r?.matchDoc?.status}/${r?.matchDoc?.result?.reason}/by ${r?.matchDoc?.result?.by} · 자리 문서 resign ${r?.seatDoc?.resign}${inflight ? ` · 날던 턴 ${inflight} 뺌` : ''}`);
+  resignOk = !!(r?.at && dO && dO.reason === 'resign' && dO.winner === dO.seat && dO.seat !== r.seat && ms != null && ms < 2000 && !r.rec.awayN && r.home &&
+    r.matchDoc?.status === 'abandoned' && r.matchDoc?.result?.reason === 'resign' && r.matchDoc.result.by === r.seat && r.seatDoc?.resign === true && setTag === `resign:${dO.seat}`);
+  if (!resignOk) bad.push('기권 흐름 실패');
+}
 if (bad.length) console.log('불일치:\n  ' + bad.slice(0, 20).join('\n  '));
-const pass = doneA && doneB && sameSet && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && verDocsOk && !viol.length && !errs.a.length && !errs.b.length && !bad.length && !cdnLogs.length;
+const pass = (RESIGN ? resignOk : doneA && doneB && sameSet) && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && verDocsOk && !viol.length && !errs.a.length && !errs.b.length && !bad.length && !cdnLogs.length;
 console.log(`\n${pass ? 'PASS' : 'FAIL'} — ${sec()}`);
 process.exit(pass ? 0 : 1);

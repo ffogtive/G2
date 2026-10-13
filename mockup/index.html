@@ -80,7 +80,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 #pvpChips button { font-family: var(--display); font-size: 1.3rem; width: 3.1em; height: 2.2em; border-radius: 12px; border: 3px solid var(--ink); background: var(--cream); color: var(--ink); cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
 #pvpChips button.on { background: linear-gradient(#fff07a, var(--gold)); transform: translateY(-2px); box-shadow: 0 5px 0 var(--ink); }
 .pvp-panel > * + * { margin-top: 12px; }
-.pvp-panel #pvpPick { display: grid; gap: 12px; justify-items: center; }
+.pvp-panel #pvpPick, .free-pick { display: grid; gap: 12px; justify-items: center; }
 #pvpCodeIn { font-family: var(--display); font-size: 1.6rem; width: 5.6em; text-align: center; text-transform: uppercase; letter-spacing: 0.18em; border: 3px solid var(--ink); border-radius: 12px; padding: 4px 8px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
 .pvp-err { color: var(--red); font-size: 1rem; margin: 8px 0 0; }
 .pvp-clock { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 62px); left: 50%; transform: translateX(-50%); min-width: 2.2em; text-align: center; font-family: var(--display); font-size: 1.35rem; color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; background: rgba(42,26,18,0.55); border: 3px solid var(--ink); border-radius: 14px; padding: 0 10px; pointer-events: none; }
@@ -101,6 +101,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .pot { font-family: var(--display); text-align: center; background: rgba(42,26,18,0.6); border: 3px solid var(--ink); border-radius: 14px; padding: 2px 12px; color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
 .pot span { font-size: 0.8rem; display: block; line-height: 1; opacity: 0.85; }
 .pot b { font-size: 1.6rem; line-height: 1.1; }
+#hud.no-pot .pot { visibility: hidden; } /* 레벨 라이벌 판: 판돈 상자 없음(가운데 칸 자리는 유지) */
 #quitBtn { position: absolute; left: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
 /* 9차: 입술 높이 2단 레일(오른쪽 아래, HOME 과 거울 자리). 탭으로 칸 고르기. 누르는 동안·상대 차례엔 숨김 */
 #lipRail { position: absolute; right: 10px; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 4px); width: 56px; height: 120px; border-radius: 28px; background: rgba(42,26,18,0.55); border: 3px solid #2a1a12; box-shadow: 0 3px 0 #2a1a12; touch-action: none; }
@@ -270,6 +271,9 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .teaser { position: absolute; left: 50%; transform: translateX(-50%); width: min(86vw, 420px); text-align: center; font-family: var(--display); color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; text-shadow: 0 2px 0 var(--ink); }
 .teaser small { font-family: var(--body); -webkit-text-stroke: 0; text-shadow: none; color: var(--ink); background: rgba(255,255,255,0.7); border-radius: 8px; padding: 2px 6px; display: inline-block; margin-top: 4px; }
 .lv-panel { text-align: center; }
+.lr-cause { margin: 2px 0 6px; font-size: 1.05rem; font-weight: 700; }
+.lr-cause .ic { font-size: 1.4em; vertical-align: -0.15em; }
+.lr-cause small { opacity: 0.7; font-weight: 600; }
 .lv-head { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .lv-head h2 { margin: 0; font-family: var(--display); font-size: 2rem; }
 .tier-tag { font-family: var(--display); color: #fff; border: 3px solid var(--ink); border-radius: 10px; padding: 1px 8px; background: #e23b3b; }
@@ -322,8 +326,6 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     </div>
     <div class="logo"><h1 class="disp">PUFF<span>!</span></h1><p data-t="subtitle">Blow. Flip. Keep.</p></div>
     <div class="home-bottom">
-      <div id="modes" class="seg"><button type="button" data-m="keeps" data-t="modeKeeps">FOR KEEPS</button><button type="button" data-m="fun" data-t="modeFun">FOR FUN</button></div>
-      <div class="bet"><span class="lbl" data-t="stake">POT</span><div id="chips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
       <button id="playBtn" class="btn xl" type="button"><span data-t="play">PLAY</span> <small id="playLv"></small></button>
       <div class="row">
         <button id="freeBtn" class="btn" type="button" data-t="freeMatch">FREE MATCH</button>
@@ -403,11 +405,22 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <h2 id="lrTitle" class="res-title">CLEAR!</h2>
     <div id="lrStars" class="lr-stars"></div>
     <p id="lrDetail" class="li-goal"></p>
+    <p id="lrCause" class="lr-cause" hidden></p>
     <div id="lrCards" class="lr-cards"></div>
     <div class="row"><button id="lrMap" class="btn blue" type="button" data-t="map">MAP</button><button id="lrRetry" class="btn gold" type="button" data-t="retry">RETRY</button><button id="lrNext" class="btn" type="button" data-t="next">NEXT</button></div>
   </div></div>
   <div id="dailyCard" class="modal" hidden><div class="panel"><h2 class="disp"><span data-t="daily">DAILY STACK</span> <span id="dailyNum"></span></h2><div id="dailyScore" class="daily-score"></div><p id="dailyMeta" class="note"></p><textarea id="dailyShare" rows="3" readonly aria-label="share text"></textarea><div class="row"><button id="dailyCopy" class="btn gold" type="button" data-t="copy">COPY</button><button id="dailyAgain" class="btn" type="button" data-t="dailyAgain">TRY AGAIN</button><button id="dailyHome" class="btn blue" type="button" data-t="home">HOME</button></div></div></div>
   <div id="tune" class="modal" hidden><div class="panel"><h2 class="disp" data-t="tuneTitle">Feel tuning</h2><div id="tuneRows"></div><div class="row"><button id="tuneReset" class="btn blue" type="button" data-t="tuneReset">RESET</button><button id="tuneClose" class="btn" type="button" data-t="tuneClose">DONE</button></div></div></div>
+  <!-- 자유 대전 시트: 친선/따먹기·판 크기는 여기서만(홈 '시작 레벨' 옆에 두지 않는다 — GDD §9.9 P0-5). 기본은 친선 -->
+  <div id="freeSheet" class="modal" hidden><div class="panel pvp-panel">
+    <h2 class="disp" data-t="freeMatch">FREE MATCH</h2>
+    <div class="free-pick">
+      <div id="modes" class="seg"><button type="button" data-m="fun" data-t="modeFun">FOR FUN</button><button type="button" data-m="keeps" data-t="modeKeeps">TAKE-HOME</button></div>
+      <div class="bet"><span class="lbl" data-t="stake">POT</span><div id="chips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
+      <button id="freeGo" class="btn xl" type="button" data-t="play">PLAY</button>
+    </div>
+    <div class="row"><button id="freeClose" class="btn blue" type="button" data-t="back">BACK</button></div>
+  </div></div>
   <div id="micOffer" class="modal" hidden><div class="panel"><p class="ask" data-t="micAsk"></p><div class="row"><button id="micYes" class="btn gold" type="button" data-t="micYes">YES</button><button id="micNo" class="btn blue" type="button" data-t="micNo">Later</button></div></div></div>
   <div id="pvpLobby" class="modal" hidden><div class="panel pvp-panel">
     <h2 class="disp" data-t="pvpTitle">Play a friend</h2>

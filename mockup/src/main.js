@@ -110,7 +110,9 @@ let acc = 0;
 let lastT = performance.now();
 const tweens = [];
 let stakeN = 10;
-let mode = 'keeps'; // 'keeps' = 따먹기(딴 만큼 내 것) / 'fun' = 친선(끝나면 돌려받음)
+// 'fun' = 친선(끝나면 돌려받음, 기본) / 'keeps' = 따먹기(딴 만큼 내 것). 원칙(GDD §7.2·§9.9 P0-5): 따먹기는 기본 끔.
+// 자유 대전 시트에서 직접 고른 값만 profile.settings.mode 에 저장해 다음에도 유지한다(저장값 없음 = 새 설치·예전 판 → 친선)
+let mode = profile.settings.mode === 'keeps' ? 'keeps' : 'fun';
 let match = null;
 let runId = 0; // 매치 세대 번호: 중간에 홈으로 나가면 이전 매치의 비동기 흐름·입력을 끊는다
 let cancelInput = null;
@@ -574,38 +576,33 @@ function makeReceipt(flipped, outs) {
   const fl = new Set(flipped.map((d) => d.id)), ou = new Set(outs.map((d) => d.id));
   const g = table.liveDiscs().find((d) => d.cardId === 'golden');
   const pocketOk = sn.type === 'goldenSide' && !!g && fl.has(g.id) && inPocket(g);
-  const kind = Cues.classifyShot({ n: sn.n, k: sn.k, ratio: sn.ratio, lat: sn.lat, flips: flipped.length, outs: outs.length, type: sn.type, pocketLatSign: sn.pls, pocketOk });
+  // 이 숨으로 판 목표를 채웠나(장수 판: 누적 + 이번 ≥ 목표 / 황금 판: 황금을 뒤집음). 채웠으면 '좋은 결과' → 지적하지 않는다(match.flipped 는 react 뒤에 오른다)
+  const lv = match?.solo ? match.level : null;
+  const goalHit = !!lv && (lv.type === 'flip' ? (match.flipped || 0) + flipped.length >= lv.target : lv.type === 'golden' ? !!g && fl.has(g.id) : false);
+  // 숨 원인 코드는 여기서 한 번만(cues.js shotCause). 숨 글자·큰 글자(react)·이 카드·결과 제목이 모두 sn.verdict 로 문구를 고른다
+  const o = { n: sn.n, k: sn.k, ratio: sn.ratio, lat: sn.lat, flips: flipped.length, outs: outs.length, type: sn.type, pocketLatSign: sn.pls, pocketOk, goalHit, pose: sn.pose };
+  const v = Cues.shotVerdict(o);
+  sn.verdict = v;
+  if (match && v.cause) { match.causeCount = match.causeCount || {}; match.causeCount[v.cause] = (match.causeCount[v.cause] || 0) + 1; }
+  const kind = Cues.causeFamily(v.cause);
   const c = profile.cue;
   if (kind && kind === c.prev) { c.relapse[kind] = 2; c.prev = null; } else c.prev = kind;
   Store.save(profile);
   // 영수증은 높이·숨 단계가 낮을 때, 또는 꽝·원 밖 2장↑일 때, 또는 규칙이 다시 켜졌을 때만
   const show = sn.stH <= 1 || sn.stB <= 1 || flipped.length === 0 || outs.length >= 2 || (kind && c.relapse[kind] > 0);
-  cue.receipt = show ? { ...sn, fl, ou, kind, t0: performance.now() } : null;
-  window.__puffReceipt = cue.receipt ? { kind, flips: flipped.length, outs: outs.length, k: sn.k } : null; // 테스트용
+  let tip = null;
+  if (show) { // 한 줄 조언은 카드를 만들 때 한 번만 고른다(매 프레임 고르면 '입을 책상까지' 횟수가 프레임마다 올라 3프레임 뒤 문구가 바뀌었다)
+    const useLowOk = v.cause === 'low' && sn.pose !== 'low' && poseUnlocked() && sn.n >= 8 && (profile.settings.useLowTips || 0) < 3;
+    tip = Cues.receiptKey(v, { ...o, useLowOk });
+    if (tip === 'rcpUseLow') { profile.settings.useLowTips = (profile.settings.useLowTips || 0) + 1; Store.save(profile); }
+  }
+  cue.receipt = show ? { ...sn, fl, ou, kind, cause: v.cause, tip, t0: performance.now() } : null;
+  window.__puffReceipt = cue.receipt ? { kind, cause: v.cause, tip, flips: flipped.length, outs: outs.length, k: sn.k } : null; // 테스트용
+  window.__puffVerdict = { cause: v.cause, goalHit, ratio: sn.ratio, n: sn.n, flips: flipped.length, outs: outs.length }; // 테스트용(카드가 안 떠도)
   trailEnd(pocketOk);
 }
 // 더미 영수증 '방금 숨' (6차: 재윤님 "빨간 막대가 무슨 뜻인지 모르겠다 — 내가 불었다는 건가?" → 더 친절하게)
-// 쏘기 전 더미를 딱지 모양으로 그리고 범례(내 것·원 밖 무효·그대로) + '여기 불었음' 바람 화살표 + 숨 컵('딱 좋음' 눈금) + 한 줄 조언
-function receiptTip(R) {
-  const flips = R.fl.size, outs = R.ou.size;
-  if (R.type === 'goldenSide' && R.kind === 'side') return t('rcpSideStar');
-  if (R.kind === 'breath') return R.ratio < Rules.GREEN_LO ? t('rcpWeak') : t('rcpStrong');
-  if (R.pose === 'low' && R.k <= 1 && flips < Math.max(1, R.n * 0.5)) return t('rcpLowTop'); // 책상 입으로 맨 위: 약함
-  if (R.kind === 'height' && R.pose !== 'low') {
-    const low = !(R.win && R.k < R.win[0]);
-    if (low && poseUnlocked() && R.n >= 8 && (profile.settings.useLowTips || 0) < 3) { profile.settings.useLowTips = (profile.settings.useLowTips || 0) + 1; Store.save(profile); return t('rcpUseLow'); }
-    return low ? t('rcpLow') : t('rcpHigh');
-  }
-  if (R.kind === 'side') return t('rcpSide');
-  if (flips >= Math.max(1, R.n * 0.5) && outs < 2) return t('rcpGood');
-  if (outs >= 2) return t('rcpStrong');
-  if (!R.win) { // '위에서 3번째' 규칙이 없는 판(황금·작은 더미)
-    if (R.type === 'goldenSide') return t('rcpSideStar');
-    if (R.type === 'golden') return t('rcpGold');
-    return t('rcpLuck');
-  }
-  return flips ? t('rcpOk') : t('rcpLuck');
-}
+// 쏘기 전 더미를 딱지 모양으로 그리고 범례(내 것·원 밖 무효·그대로) + '여기 불었음' 바람 화살표 + 숨 컵('딱 좋음' 눈금) + 한 줄 조언(R.tip = cues.js receiptKey)
 function drawReceipt(now) {
   const R = cue.receipt;
   if (!R || state !== 'match') return;
@@ -682,8 +679,7 @@ function drawReceipt(now) {
   }
   // 한 줄 조언
   ctx.fillStyle = '#2a1a12'; ctx.font = '700 13px "Jua", sans-serif';
-  const tip = receiptTip(R);
-  wrapText(ctx, tip, x0 + 10, ly + 38, cardW - 20, 16);
+  wrapText(ctx, R.tip ? t(R.tip) : '', x0 + 10, ly + 38, cardW - 20, 16);
   ctx.restore();
 }
 function wrapText(ctx, txt, x, y, maxW, lh) {
@@ -1567,7 +1563,9 @@ function goHome() {
   $('#dailyCard').hidden = true;
   $('#lvResult').hidden = true;
   $('#lvIntro').hidden = true;
+  $('#freeSheet').hidden = true;
   $('#potLbl').textContent = t('pot');
+  $('#hud').classList.remove('no-pot');
   cancelInput?.();
   tension(false);
   simWatch.resolve = null;
@@ -1614,6 +1612,7 @@ function goHome() {
   });
   refreshTexts();
   show('#home');
+  maybeOfferMic(); // 판 결과를 닫고 돌아온 자리(홈, 또는 곧 지도)에서만 — 경기 도중엔 안 띄운다
 }
 
 // ── 매치 ───────────────────────────────────────────────
@@ -1637,6 +1636,7 @@ async function startMatch(opts = {}) {
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
   const lv = opts.level || null;
+  micOfferArmed = false; cue.receipt = null; // 지난 판의 마이크 제안 무장·'방금 숨' 카드를 새 판으로 끌고 오지 않는다
   lastBreath.aim = null; // 레벨의 라이벌 판: '레벨용 딱지'로 겨룸 → 내 컬렉션은 잃지 않음
   const seed = lv ? lv.seed >>> 0 : (Math.floor(performance.now() * 1000) ^ 0x5bd1e995) >>> 0;
   const rng = mulberry32(seed);
@@ -1671,6 +1671,8 @@ async function startMatch(opts = {}) {
   $('#aiScore').textContent = '0';
   $('#potN').textContent = String(pot.length);
   $('#potLbl').textContent = t('pot');
+  // 레벨의 라이벌 판엔 판돈(POT) 상자를 쓰지 않는다(GDD §9.9 P0-5: POT 은 자유 대전 안에서만). 라벨 단어는 그대로(결정 대기) — 상자만 숨김(자리는 유지)
+  $('#hud').classList.toggle('no-pot', !!lv);
   puffer.mode = 'idle';
   puffer.p = 0;
   show('#hud');
@@ -1762,7 +1764,7 @@ async function gameLoop(my) {
     await react(flipped, who);
     await collect(flipped, who);
     if (!alive()) return;
-    await maybeOfferMic(flipped.length, who);
+    if (who === 'me' && flipped.length >= 5) match.bigPuff = true; // 마이크 제안은 판 결과를 닫은 뒤에(maybeOfferMic) — 경기 도중엔 끊지 않는다
     if (table.liveDiscs().length === 0) break;
     await restack();
     if (!alive()) return;
@@ -2104,8 +2106,11 @@ function resolveShot(shot, rng) {
 }
 
 // 불고 난 뒤 '숨 결과' 피드백 — 게이지 없이 감을 익히게 하는 결과 지식(knowledge of results)
+// 초록 숨은 쏜 직후 '딱 좋은 숨!'(어떤 원인과도 반대말이 아니다). 초록이 아니면 결과를 본 뒤 react 가 원인 코드로 고른 키를 넘긴다
+// (cues.js breathKey: 결과가 좋으면 약했든 셌든 지적하지 않는다)
 function breathFeedback(ratio, who, forceKey) {
-  const key = forceKey || (ratio < 0.66 ? 'fbTooWeak' : ratio < Rules.GREEN_LO ? 'fbWeak' : ratio <= 1.0 ? 'fbPerfect' : ratio <= 1.12 ? 'fbStrong' : 'fbTooStrong');
+  const key = forceKey || (ratio >= Rules.GREEN_LO && ratio <= 1.0 ? 'fbPerfect' : null);
+  if (!key) return;
   if (who === 'me') {
     const st = guideStage();
     if (key === 'fbPerfect' && st >= 2) sfx.tone(1568, 0.25, 'sine', 0.12); // '칭' — 좋은 숨엔 소리
@@ -2196,17 +2201,21 @@ function simulate() {
   });
 }
 
+// 이번 숨의 판정(원인 코드). 내 숨은 makeReceipt 가 한 번 계산한 것을 그대로, 상대 숨은 숨·결과만으로(높이·옆은 모름 → 판정 안 함)
+function shotVerdictFor(flipped, who, R) {
+  if (who === 'me' && cue.snap?.verdict) return { v: cue.snap.verdict, ratio: cue.snap.ratio, n: cue.snap.n };
+  const ratio = breath.ratio ?? 1;
+  return { v: Cues.shotVerdict({ n: R, ratio, flips: flipped.length, outs: simWatch.outs }), ratio, n: R };
+}
+const BIG_CLS = { miss: 'r0', close: 'r0', blownOut: 'r0', nice: 'r1', great: 'r2', amazing: 'r3', perfect: 'r4' };
 async function react(flipped, who) {
   const n = flipped.length;
   const remainingBefore = table.liveDiscs().length;
-  let key = 'miss', cls = 'r0';
   const nearMiss = table.liveDiscs().some((d) => Math.abs(table.faceUp(d)) < 0.45);
-  const blown = simWatch.outs >= 2 && simWatch.outs >= n;
-  if (n === 0) { key = blown ? 'blownOut' : nearMiss ? 'close' : 'miss'; cls = 'r0'; }
-  else if ((n >= 2 && n === remainingBefore) || n >= 12) { key = 'perfect'; cls = 'r4'; }
-  else if (n >= Math.max(6, Math.ceil(remainingBefore * 0.5))) { key = 'amazing'; cls = 'r3'; }
-  else if (n >= 3) { key = 'great'; cls = 'r2'; }
-  else { key = 'nice'; cls = 'r1'; }
+  const sv = shotVerdictFor(flipped, who, remainingBefore);
+  const key = Cues.bigKey(sv.v, { flips: n, R: remainingBefore, outs: simWatch.outs, nearMiss }), cls = BIG_CLS[key];
+  const fk = Cues.breathKey(sv.v, sv.ratio, sv.n);
+  if (fk && fk !== 'fbPerfect') breathFeedback(sv.ratio, who, fk); // 초록은 쏜 직후에 이미 보였다
   if (who === 'me') {
     match.best = Math.max(match.best, n);
     match.flipsMe += n;
@@ -2217,8 +2226,9 @@ async function react(flipped, who) {
     sfx.big();
   }
   let label = n > 0 ? `${t(key)} <small>${n} ${t('flipped')}</small>` : t(key);
-  if (simWatch.outs > 0 && (blown || n > 0)) label += `<small class="outs">${fmt(t('outCount'), { k: simWatch.outs })}</small>`;
-  if (simWatch.outs > 0 && !profile.settings.outTipSeen) { profile.settings.outTipSeen = true; Store.save(profile); if (!cue.receipt) setTimeout(() => toast(t('outTip')), 900); }
+  if (simWatch.outs > 0 && (n > 0 || simWatch.outs >= 2 || key === 'blownOut')) label += `<small class="outs">${fmt(t('outCount'), { k: simWatch.outs })}</small>`;
+  // '너무 세게 불면 원 밖으로' 첫 안내는 셈일 때만(초록 숨에 '너무 세게'라고 하지 않는다)
+  if (Cues.outTipOk(sv.v, simWatch.outs) && !profile.settings.outTipSeen) { profile.settings.outTipSeen = true; Store.save(profile); if (!cue.receipt) setTimeout(() => toast(t('outTip')), 900); }
   const el = $('#big');
   el.innerHTML = label;
   el.className = 'big ' + cls + (who === 'ai' ? ' ai' : '');
@@ -2229,24 +2239,30 @@ async function react(flipped, who) {
   el.hidden = true;
 }
 
-// 첫 대박(5장↑) 직후에만 "진짜로 불어볼래?" — 마이크 권한은 첫 실행에 묻지 않는다(리서치)
-async function maybeOfferMic(n, who) {
-  if (who !== 'me' || n < 5 || micEnabled || profile.settings.micOffered || !navigator.mediaDevices?.getUserMedia) return;
+// "진짜로 불어볼래?" — 내가 대박(5장↑)을 낸 판이 끝나고, 결과 화면을 닫은 뒤(홈·지도로 돌아갈 때) 딱 한 번(GDD §9.9 P0-14).
+// 경기 도중(대박 직후)엔 띄우지 않는다: 손맛 흐름을 끊는다. 마이크 권한은 첫 실행에 묻지 않는다(리서치).
+// TODO(연령 확인, GDD §12.1·§13.8): 연령 확인 체계가 생기면 확인 뒤에만 띄우고 13세 미만(한국 14세 미만)은 기본 끔. 지금은 연령 체계가 없다
+// 무장은 결과 화면을 닫는 모든 출구에서 소비한다: 홈(goHome) · 지도(lrMap→goHome) · 다음 판/다시/한 판 더(then = 제안을 닫은 뒤 이어서 시작).
+// 그래서 무장이 다음 판으로 넘어가 엉뚱한 때(다음 판 도중 HOME, 두 레벨 뒤)에 뜨지 않는다. 판을 시작할 때도 꺼 둔다(startMatch·startLevel)
+let micOfferArmed = false; // endMatch 가 match.bigPuff 를 보고 켠다
+function maybeOfferMic(then) {
+  const go = () => { then?.(); };
+  if (!micOfferArmed) return go();
+  micOfferArmed = false;
+  if (micEnabled || profile.settings.micOffered || !navigator.mediaDevices?.getUserMedia) return go();
   profile.settings.micOffered = true;
   Store.save(profile);
   const el = $('#micOffer');
   el.hidden = false;
-  const choice = await new Promise((res) => {
-    $('#micYes').onclick = () => res(true);
-    $('#micNo').onclick = () => res(false);
-  });
-  el.hidden = true;
-  if (choice) {
+  $('#micNo').onclick = () => { el.hidden = true; go(); };
+  $('#micYes').onclick = async () => {
+    el.hidden = true;
     const ok = await mic.start();
     micEnabled = ok;
     toast(ok ? t('micOn') : t('micFail'));
     refreshTexts();
-  }
+    go();
+  };
 }
 
 async function collect(flipped, who) {
@@ -2312,6 +2328,7 @@ async function restack() {
 
 async function endMatch() {
   simOn = false;
+  if (match.bigPuff) micOfferArmed = true; // 판이 끝까지 갔을 때만(중간에 나가면 안 켬)
   if (match.level) { await finishLevel({ win: piles.me.length > piles.ai.length, me: piles.me.length, ai: piles.ai.length }); return; }
   // 턴 제한으로 남은 딱지는 원래 주인에게
   const leftover = table.liveDiscs();
@@ -2550,6 +2567,8 @@ async function startLevel(n) {
   const spec = levelSpec(n);
   if (spec.type === 'rival') return startMatch({ level: spec });
   lastBreath.aim = null;
+  micOfferArmed = false; cue.receipt = null;
+  $('#hud').classList.remove('no-pot'); // 솔로 판은 가운데 상자 = 목표
   const my = ++runId;
   for (const m of homeMeshes) scene.remove(m);
   homeMeshes = [];
@@ -2636,15 +2655,20 @@ async function finishLevel(res) {
   sfx.fanfare(res.win);
   if (res.win) fx.confetti({ x: 0, y: 0, z: 0 }, 120 + stars * 60);
   await wait(450);
-  $('#lrTitle').textContent = res.win ? t('clear') : t('failed');
+  // '아깝다…'는 목표까지 2장 이하로 모자랄 때만(GDD §8.3). 그 밖의 실패 = 중립 제목 + 이 판에 가장 많이 나온 원인 아이콘(cues.js)
+  const titleKey = Cues.resultTitleKey(spec, res);
+  $('#lrTitle').textContent = t(titleKey);
   $('#lrTitle').className = 'res-title ' + (res.win ? 'win' : 'lose');
+  const top = titleKey === 'notYet' ? Cues.topCause(match?.causeCount) : null;
+  $('#lrCause').hidden = !top;
+  if (top) $('#lrCause').innerHTML = `<span class="ic">${Cues.CAUSE_ICON[top]}</span> ${t(Cues.causeLabelKey(top))} <small>· ${fmt(t('causeTimes'), { k: match.causeCount[top] })}</small>`;
   $('#lrStars').innerHTML = [0, 1, 2].map((i) => `<span class="${i < stars ? 'on' : ''}" style="animation-delay:${0.25 + i * 0.25}s">★</span>`).join('');
   let detail = '';
   if (spec.type === 'flip') detail = `${res.flipped} / ${spec.target}`;
   else if (spec.type === 'golden') detail = res.win ? t('goldenGot') : t('goldenMiss');
   else if (spec.type === 'goldenSide') detail = res.win ? t('goldenGot') : t('goldenSideMiss');
   else detail = `${res.me} : ${res.ai}`;
-  if (!res.win && spec.type === 'flip' && spec.target - res.flipped <= 2) detail += ` — ${fmt(t('nearMiss'), { k: spec.target - res.flipped })}`;
+  if (spec.type === 'flip' && Cues.nearGoal(spec, res)) detail += ` — ${fmt(t('nearMiss'), { k: spec.target - res.flipped })}`; // 제목 '아깝다…'와 같은 규칙
   $('#lrDetail').textContent = detail;
   const grid = $('#lrCards');
   grid.innerHTML = '';
@@ -2657,8 +2681,10 @@ async function finishLevel(res) {
     grid.appendChild(div);
   });
   $('#lrNext').hidden = !res.win;
-  $('#lrNext').onclick = () => { $('#lvResult').hidden = true; clearMatchMeshes(); openLevelIntro(spec.n + 1); };
-  $('#lrRetry').onclick = () => { $('#lvResult').hidden = true; clearMatchMeshes(); startLevel(spec.n); };
+  // 다음 판 소개는 지도 위에 연다(지도에서 고를 때와 같은 자리): 지난 판 HUD('판돈 0'·점수)·카드가 소개 뒤에 남지 않고, '뒤로'를 눌러도 빈 HUD 에 갇히지 않는다
+  // 대박 판이었으면 마이크 제안을 먼저 닫고 이어 간다(maybeOfferMic(then))
+  $('#lrNext').onclick = () => maybeOfferMic(() => { goHome(); openMap(); openLevelIntro(spec.n + 1); });
+  $('#lrRetry').onclick = () => maybeOfferMic(() => { $('#lvResult').hidden = true; clearMatchMeshes(); startLevel(spec.n); });
   $('#lrMap').onclick = () => { $('#lvResult').hidden = true; goHome(); openMap(); };
   state = 'result';
   puffer.mode = 'hidden';
@@ -3293,10 +3319,11 @@ function netPump(M) {
   }
 }
 function netPresence(M, patch) {
-  if (!M.room) return;
+  if (!M.room) return null;
   let ch = false;
   for (const [k, v] of Object.entries(patch)) if (JSON.stringify(M.pres[k]) !== JSON.stringify(v)) { M.pres[k] = v; ch = true; }
-  if (ch) M.room.presence(patch).catch((e) => console.warn('[pvp] presence', e.code || e.message));
+  if (ch) return (M.presP = M.room.presence(patch).catch((e) => console.warn('[pvp] presence', e.code || e.message)));
+  return null;
 }
 // 내 조준 → presence(높이·좌우·볼 3단만. 실제 숨 값은 보내지 않는다 — 상대가 베끼지 못하게)
 function netAimPresence(a) {
@@ -3327,7 +3354,12 @@ function netPeers(M, ch) {
     M.oppPres = opp.presence;
     if (opp.presence.s) { M.oppSeatPres = opp.presence.s; netOppSeat(M); }
     netShowOppAim(M);
-  } else if (!M.oppGoneAt) M.oppGoneAt = performance.now();
+    return;
+  }
+  // 기권한 상대는 s.resign presence 바로 뒤에 방을 나간다 → 둘이 한 묶음으로 오면 peers 엔 없고 updated·left 에만 마지막 presence 가 있다
+  const gone = [...(ch.updated || []), ...(ch.left || [])].find((p) => !p.sameTab && p.presence?.seat === M.other && p.presence.s?.resign && (!M.oppUid || p.by === M.oppUid || p.presence.uid === M.oppUid));
+  if (gone) { M.oppSeatPres = gone.presence.s; netOppSeat(M); if (M.ended) return; }
+  if (!M.oppGoneAt) M.oppGoneAt = performance.now();
 }
 function netConnUi(M) {
   const el = $('#pvpConn'), nowT = performance.now();
@@ -3396,11 +3428,17 @@ async function netResign() {
   const M = match?.net;
   if (!M || M.ended) return;
   M.ended = true;
-  try {
-    await M.net.db.doc(Pvp.paths.match(M.code)).update({ status: 'abandoned', result: { winner: M.other, reason: 'resign', by: M.seat, at: Date.now() }, updatedAt: Date.now() });
-    await netSeat(M, (s) => { s.resign = true; });
-    await netSetActive(M.net, null);
-  } catch (e) { console.warn('[pvp] resign', e?.code || e); }
+  // 빠른 길(presence s.resign)을 먼저 보낸다. 매치 문서 쓰기를 기다린 뒤에 보내면 그동안(실제 db 수백 ms·재시도) 상대는 아무것도 모르고,
+  // 쓰기가 실패하면 영영 안 간다. 매치 문서·자리 문서·active 는 그다음에 각자(하나가 실패해도 나머지는 간다)
+  const seatP = netSeat(M, (s) => { s.resign = true; }); // presence 즉시 + 자리 문서
+  const presP = M.presP;
+  const docP = M.net.db.doc(Pvp.paths.match(M.code)).update({ status: 'abandoned', result: { winner: M.other, reason: 'resign', by: M.seat, at: Date.now() }, updatedAt: Date.now() });
+  const actP = netSetActive(M.net, null);
+  const rs = await Promise.race([Promise.allSettled([seatP, docP, actP, presP]), wait(4000)]);
+  for (const r of rs || []) if (r.status === 'rejected') console.warn('[pvp] resign', r.reason?.code || r.reason);
+  // presence 는 합쳐서 약 30Hz 로 나간다(room.d.ts). 곧바로 방을 나가면(goHome → leave) 아직 안 나간 patch 가 버려져
+  // 상대는 'bye' 만 보고 '연결 끊김 — 기다리는 중'(매치 문서가 폴링이면 6초 안전망 읽기까지). 한 번 나갈 틈(33ms)의 몇 배를 둔다
+  await wait(150);
 }
 // 홈으로: 방 나가기·구독 끊기·앞서 돌던 물리와 꼭두각시 월드 반납. 솔로면 아무것도 안 함
 function netStop() {
@@ -3735,7 +3773,16 @@ async function netApplyResult(M, g, ti, seat, P, o) {
 // ── 부트 ───────────────────────────────────────────────
 function wireUI() {
   $('#playBtn').addEventListener('click', () => { sfx.unlock(); openMap(); });
-  $('#freeBtn').addEventListener('click', () => { sfx.unlock(); sfx.pop(); startMatch(); });
+  // 자유 대전: 친선/따먹기·판 크기는 이 시트 안에서만 고른다(홈 첫 화면의 '시작 레벨' 옆에 두면 레벨에도 딱지를 거는 것처럼 읽힌다 — GDD §9.9 P0-5)
+  // 첫 판(연습 판)은 친선·5장 고정이라 고를 것이 없다 → 바로 시작
+  $('#freeBtn').addEventListener('click', () => {
+    sfx.unlock(); sfx.pop();
+    if (profile.stats.matches === 0) { startMatch(); return; }
+    refreshTexts();
+    $('#freeSheet').hidden = false;
+  });
+  $('#freeGo').addEventListener('click', () => { sfx.pop(); $('#freeSheet').hidden = true; startMatch(); });
+  $('#freeClose').addEventListener('click', () => { sfx.pop(); $('#freeSheet').hidden = true; });
   $('#mapBack').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#liClose').addEventListener('click', () => { $('#lvIntro').hidden = true; });
   $('#albumBtn').addEventListener('click', openAlbum);
@@ -3754,7 +3801,7 @@ function wireUI() {
   $('#sheetDone').addEventListener('click', () => { sfx.pop(); goHome(); });
   $('#albumBack').addEventListener('click', () => { sfx.pop(); goHome(); });
   document.querySelectorAll('#albumTabs button').forEach((b) => b.addEventListener('click', () => { sfx.pop(); if (b.dataset.tab === 'preview') openPreview(); else openAlbum(); }));
-  $('#againBtn').addEventListener('click', () => { sfx.pop(); clearMatchMeshes(); startMatch(); });
+  $('#againBtn').addEventListener('click', () => { sfx.pop(); maybeOfferMic(() => { clearMatchMeshes(); startMatch(); }); });
   $('#homeBtn').addEventListener('click', () => { sfx.pop(); goHome(); });
   // 9차: 입술 높이 레일(탭 = 칸 고르기, 레일 몸통 탭 = 바꾸기) · 키보드 ↑↓ · 물안경 칩
   $('#lipRail').addEventListener('pointerdown', (e) => {
@@ -3821,7 +3868,7 @@ function wireUI() {
     refreshTexts();
   });
   document.querySelectorAll('#chips button').forEach((b) => b.addEventListener('click', () => { sfx.unlock(); sfx.pop(); stakeN = +b.dataset.n; refreshTexts(); }));
-  document.querySelectorAll('#modes button').forEach((b) => b.addEventListener('click', () => { sfx.unlock(); sfx.pop(); mode = b.dataset.m; refreshTexts(); }));
+  document.querySelectorAll('#modes button').forEach((b) => b.addEventListener('click', () => { sfx.unlock(); sfx.pop(); mode = b.dataset.m; profile.settings.mode = mode; Store.save(profile); refreshTexts(); }));
   window.addEventListener('resize', layout);
 }
 
@@ -3880,7 +3927,7 @@ window.__puffLifecycle = {
 
 // 앱 '뒤로' 다리(안드로이드 뒤로 버튼): 맨 위에 열린 창의 닫기·돌아가기 버튼을 누른 것처럼 한다.
 // 처리했으면 true. 홈 화면에서만 false → 앱이 닫힌다(판 도중에 눌러 앱이 꺼지는 사고 방지)
-const BACK_ORDER = [['#tune', '#tuneClose'], ['#micOffer', '#micNo'], ['#pvpLobby', '#pvpClose'], ['#dailyCard', '#dailyHome'],
+const BACK_ORDER = [['#tune', '#tuneClose'], ['#micOffer', '#micNo'], ['#freeSheet', '#freeClose'], ['#pvpLobby', '#pvpClose'], ['#dailyCard', '#dailyHome'],
   ['#lvIntro', '#liClose'], ['#lvResult', '#lrMap'], ['#album', '#albumBack'], ['#map', '#mapBack'], ['#result', '#homeBtn'], ['#hud', '#quitBtn']];
 window.__puffBack = () => {
   for (const [box, btn] of BACK_ORDER) {
