@@ -1,0 +1,1 @@
+{"gate":"S6","verdict":{"median":0.0,"p_ge_10":0.000,"pass":false,"baseline":"P=30","shots":10,"audit_violations_total":0,"cpu_s":3.4,"seeds":2},"rows":[{"n":30,"shots":2,"mean_flipped":0.000},{"n":34,"shots":2,"mean_flipped":0.000},{"n":38,"shots":2,"mean_flipped":0.000},{"n":42,"shots":2,"mean_flipped":0.000},{"n":46,"shots":2,"mean_flipped":0.000}]}
