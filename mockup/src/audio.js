@@ -25,6 +25,7 @@ export class Sfx {
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.loadSamples();
   }
 
   get ok() {
@@ -130,22 +131,43 @@ export class Sfx {
     }
   }
 
-  // 퍽! — 바람 노이즈 스윕 + 저음 쿵
-  puff(power = 1) {
+  // 푸! — 입으로 부는 소리 (재윤님 6차: "쐈을 때 탁이 아니라 입으로 '푸' 하는 소리")
+  // 🧭 가설: 옛 소리는 노이즈 스윕 + 95Hz '쿵' + 180Hz 톤이라 '탁'으로 들렸다 → 저음 톤을 빼고
+  //   ① 입술이 터지는 짧은 'ㅍ'(6ms 광대역 + 아주 약한 저역 팝) ② 'ㅜ' 입 모양 숨소리(포먼트 320·780Hz + 숨결 1.6kHz)
+  //   ③ 세기에 따라 길이·거칠기 (약함 = 짧은 '프', 초록 = '푸우', 셈 = 거친 '푸화')
+  // 일레븐랩스 등 실제 녹음 샘플이 빌드에 들어 있으면(window.__PUFF_SFX__.puh) 그걸 먼저 쓴다.
+  puff(power = 1, ratio = 1) {
     if (!this.ok) return;
-    const t0 = this.ctx.currentTime;
-    const src = this.noise(0.6);
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.Q.value = 0.8;
-    bp.frequency.setValueAtTime(1800, t0);
-    bp.frequency.exponentialRampToValueAtTime(260, t0 + 0.35);
-    const g = this.ctx.createGain();
-    this.env(g, t0, 0.012, 0.5 + 0.4 * power, 0.32 + 0.2 * power);
-    src.connect(bp).connect(g).connect(this.master);
-    this.tone(95, 0.18, 'sine', 0.5 * power, 0, 45);
-    this.tone(180, 0.08, 'triangle', 0.18, 0, 90);
+    if (this.playSample('puh', 0.85 + 0.25 * Math.min(1.2, power), 0.55 + 0.45 * Math.min(1, power), ratio)) return;
+    renderPuh(this.ctx, this.master, this.ctx.currentTime, power, ratio, this.noiseBuf);
   }
+
+  // 빌드에 넣은 샘플(데이터 URL) → AudioBuffer. 없거나 디코딩 실패면 false (합성으로)
+  playSample(name, rate = 1, vol = 1, ratio = 1) {
+    const list = this.samples?.[name];
+    if (!list || !list.length) return false;
+    const buf = list[Math.floor(Math.random() * list.length)];
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate * (ratio > 1.05 ? 1.08 : ratio < 0.7 ? 1.12 : 1);
+    const g = this.ctx.createGain();
+    g.gain.value = vol;
+    src.connect(g).connect(this.master);
+    src.start();
+    return true;
+  }
+  async loadSamples() {
+    const src = (typeof window !== 'undefined' && window.__PUFF_SFX__) || null;
+    if (!src || !this.ctx) return;
+    this.samples = {};
+    for (const [name, urls] of Object.entries(src)) {
+      this.samples[name] = [];
+      for (const u of urls) {
+        try { const ab = await (await fetch(u)).arrayBuffer(); this.samples[name].push(await this.ctx.decodeAudioData(ab)); } catch (e) { /* 합성으로 */ }
+      }
+    }
+  }
+
 
   // 딱지가 책상에 '탁' 떨어지는 소리
   clack(intensity = 1) {
@@ -202,5 +224,55 @@ export class Sfx {
   big() {
     // 대박 연출: 드럼롤 비슷한 노이즈 + 상승 화음
     [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.5, 'triangle', 0.16, i * 0.06));
+  }
+}
+
+// '푸' 합성 (오프라인 렌더 검증용으로 컨텍스트를 받는다: tools/scratch/puhrender.mjs)
+export function renderPuh(ctx, dest, t0, power = 1, ratio = 1, noiseBuf = null) {
+  const p = Math.max(0.15, Math.min(1.25, power));
+  const weak = ratio < 0.7, over = ratio > 1.05;
+  const dur = (weak ? 0.14 : 0.26) + 0.3 * Math.min(1, p) + (over ? 0.12 : 0); // 숨 길이
+  if (!noiseBuf) {
+    const len = Math.ceil(ctx.sampleRate * 1.5);
+    noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const noise = (d) => { const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; s.start(t0, Math.random() * 1.2, d + 0.05); return s; };
+  const out = ctx.createGain();
+  out.gain.value = 0.9;
+  out.connect(dest);
+  // ① 입술 터짐 'ㅍ': 아주 짧은 광대역 + 약한 저역 팝(입술이 떨어지는 '뽁')
+  const b = noise(0.02);
+  const bhp = ctx.createBiquadFilter(); bhp.type = 'highpass'; bhp.frequency.value = 500;
+  const bg = ctx.createGain();
+  bg.gain.setValueAtTime(0.0001, t0); bg.gain.exponentialRampToValueAtTime(0.35 + 0.25 * p, t0 + 0.002); bg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.014);
+  b.connect(bhp).connect(bg).connect(out);
+  const pop = ctx.createOscillator(); pop.type = 'sine';
+  pop.frequency.setValueAtTime(140, t0); pop.frequency.exponentialRampToValueAtTime(70, t0 + 0.03);
+  const pg = ctx.createGain();
+  pg.gain.setValueAtTime(0.0001, t0); pg.gain.exponentialRampToValueAtTime(0.12, t0 + 0.003); pg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.04);
+  pop.connect(pg).connect(out); pop.start(t0); pop.stop(t0 + 0.06);
+  // ② 'ㅜ' 숨소리: 숨 노이즈를 입 모양 포먼트로 (조금씩 내려가며 숨이 빠짐)
+  const a = noise(dur + 0.1);
+  const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(over ? 5200 : 3200, t0); lp.frequency.exponentialRampToValueAtTime(over ? 2600 : 1500, t0 + dur);
+  const env = ctx.createGain();
+  const peak = (weak ? 0.35 : 0.6) + 0.35 * Math.min(1, p);
+  env.gain.setValueAtTime(0.0001, t0 + 0.004);
+  env.gain.exponentialRampToValueAtTime(peak, t0 + 0.025);
+  env.gain.setValueAtTime(peak * 0.85, t0 + 0.025 + dur * 0.25);
+  env.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.025 + dur);
+  a.connect(lp).connect(env);
+  const bands = [
+    { f: 320, q: 4.5, g: 1.0 }, // F1 'ㅜ'
+    { f: 780, q: 5, g: 0.7 }, // F2 'ㅜ'
+    { f: 1700, q: 0.9, g: over ? 0.9 : 0.45 }, // 숨결(쉬익)
+  ];
+  if (over) bands.push({ f: 3600, q: 1.2, g: 0.5 }); // 센 숨: 거친 '화'
+  for (const k of bands) {
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = k.q;
+    bp.frequency.setValueAtTime(k.f * 1.06, t0); bp.frequency.exponentialRampToValueAtTime(k.f * 0.9, t0 + dur);
+    const g = ctx.createGain(); g.gain.value = k.g * (k.f < 1000 ? 2.2 : 1); // 좁은 대역은 에너지가 작아 보정
+    env.connect(bp).connect(g).connect(out);
   }
 }

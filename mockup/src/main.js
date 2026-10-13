@@ -1946,7 +1946,7 @@ async function blow(rawShot, who) {
   hitStopUntil = performance.now() + hs;
   await wait(hs);
   hideGizmo();
-  sfx.puff(Math.min(1.2, rawShot.power));
+  sfx.puff(Math.min(1.2, rawShot.power), shot.ratio ?? 1); // '푸' — 약함·초록·셈에 따라 길이·거칠기
   navigator.vibrate?.(Math.round(20 + shot.power * 30));
   fx.wind(g.origin, g.aim, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
   if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 }); // 너무 낮게: 바닥 먼지
