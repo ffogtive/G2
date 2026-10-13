@@ -62,6 +62,21 @@ class GameServer {
   }
 
   static Future<void> stop() async => _server?.close(force: true);
+
+  /// 서버가 살아 있는지 보고, 죽었으면 같은 포트로 다시 연다(저장소 출처 유지)
+  static Future<Uri> ensure() async {
+    final s = _server;
+    if (s != null) {
+      try {
+        final c = await HttpClient().getUrl(Uri.parse('http://127.0.0.1:${s.port}/'));
+        final r = await c.close();
+        await r.drain<void>();
+        if (r.statusCode == 200) return Uri.parse('http://127.0.0.1:${s.port}/');
+      } catch (_) {/* 죽음 → 아래에서 다시 */}
+      await s.close(force: true);
+    }
+    return start();
+  }
 }
 
 class PuffApp extends StatelessWidget {
@@ -106,6 +121,12 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       onPermissionRequest: (request) => request.grant(),
     )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      // iOS 웹 콘텐츠 프로세스가 죽으면(메모리 압박) 빈 화면이 남는다 → 다시 연다
+      ..setNavigationDelegate(NavigationDelegate(
+        onWebResourceError: (e) {
+          if (e.errorType == WebResourceErrorType.webContentProcessTerminated) _reload();
+        },
+      ))
       ..setBackgroundColor(kBg)
       // 웹 쪽 navigator.vibrate(ms|패턴) → 다리 코드(mockup/app/bridge.js)가 여기로 보냄
       ..addJavaScriptChannel('PuffHaptic', onMessageReceived: (m) => playHaptic(parseHaptic(m.message)))
@@ -121,8 +142,14 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _reload() async {
+    final url = await GameServer.ensure(); // 백그라운드에서 듣기 소켓이 회수됐을 수 있다 → 다시 연다
+    await _web.loadRequest(url);
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) GameServer.ensure();
     // 앱이 뒤로 가면 게임에 '창 벗어남'을 알려 조준·들숨을 취소(게임은 blur·visibilitychange 를 듣는다)
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _web.runJavaScript("window.dispatchEvent(new Event('blur'))");

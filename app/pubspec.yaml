@@ -63,6 +63,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # 게임 한 파일(npm run app:www 가 만듦: dist/puff.html + 앱 다리 코드). git 에는 안 올라감.
+  # 빠지면 첫 실행이 검은 화면 → test/asset_test.dart 가 지킨다
+  assets:
+    - assets/www/
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
