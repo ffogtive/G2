@@ -142,18 +142,18 @@ export class Sfx {
     renderPuh(this.ctx, this.master, this.ctx.currentTime, power, ratio, this.noiseBuf);
   }
 
-  // 빌드에 넣은 샘플(데이터 URL) → AudioBuffer. 없거나 디코딩 실패면 false (합성으로)
+  // 빌드에 넣은 샘플(데이터 URL) → AudioBuffer + 소리 시작점(생성 샘플·mp3 앞 무음 수십 ms 를 건너뜀). 없거나 디코딩 실패면 false (합성으로)
   playSample(name, rate = 1, vol = 1, ratio = 1) {
     const list = this.samples?.[name];
     if (!list || !list.length) return false;
-    const buf = list[Math.floor(Math.random() * list.length)];
+    const { buf, off } = list[Math.floor(Math.random() * list.length)];
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
     src.playbackRate.value = rate * (ratio > 1.05 ? 1.08 : ratio < 0.7 ? 1.12 : 1);
     const g = this.ctx.createGain();
     g.gain.value = vol;
     src.connect(g).connect(this.master);
-    src.start();
+    src.start(this.ctx.currentTime, off); // 앞 무음을 건너뛰어 놓는 순간 바로 '푸'
     return true;
   }
   async loadSamples() {
@@ -163,7 +163,7 @@ export class Sfx {
     for (const [name, urls] of Object.entries(src)) {
       this.samples[name] = [];
       for (const u of urls) {
-        try { const ab = await (await fetch(u)).arrayBuffer(); this.samples[name].push(await this.ctx.decodeAudioData(ab)); } catch (e) { /* 합성으로 */ }
+        try { const ab = await (await fetch(u)).arrayBuffer(); const buf = await this.ctx.decodeAudioData(ab); this.samples[name].push({ buf, off: onsetOf(buf) }); } catch (e) { /* 합성으로 */ }
       }
     }
   }
@@ -275,4 +275,15 @@ export function renderPuh(ctx, dest, t0, power = 1, ratio = 1, noiseBuf = null) 
     const g = ctx.createGain(); g.gain.value = k.g * (k.f < 1000 ? 2.2 : 1); // 좁은 대역은 에너지가 작아 보정
     env.connect(bp).connect(g).connect(out);
   }
+}
+
+// 샘플의 소리 시작점(초): 최대 진폭의 6% 를 처음 넘는 곳에서 3ms 앞
+export function onsetOf(buf) {
+  const d = buf.getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i]));
+  if (!peak) return 0;
+  const th = peak * 0.06;
+  for (let i = 0; i < d.length; i++) if (Math.abs(d[i]) > th) return Math.max(0, i / buf.sampleRate - 0.003);
+  return 0;
 }

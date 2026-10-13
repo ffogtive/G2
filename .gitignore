@@ -3,3 +3,4 @@ node_modules/
 *.log
 /tmp/
 tools/scratch/
+mockup/assets/sfx/candidates/

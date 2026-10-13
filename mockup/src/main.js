@@ -818,12 +818,12 @@ function mixRGB(a, b, k) { return a.map((x, i) => Math.round(x + (b[i] - x) * cl
 
 // 첫 터치 가이드(6차: "처음엔 딱지 어디를 찍을지 가이드 — 찍으라고"): 위에서 3장째 가운데에 손가락이 꾹 → 아래로 쭉 당기는 시범.
 // 높이 단계 ≤ 1 이면 매 차례, 그 뒤엔 4초 동안 아무것도 안 누르면 다시.
+const TAP_GUIDE_PUFFS = 3;
 function drawTapGuide(now) {
   if (!myTurn.on || myTurn.pressed || !table || state !== 'match' || cue.receipt) return; // 카드가 떠 있으면 카드 먼저
-  const idle = now - myTurn.t0;
-  const hSt = cueStage('height');
-  if (!(hSt <= 1 || (idle > 4000 && (feel.cues ?? 1) >= 0.5))) return;
-  if (idle < 700) return; // 카메라가 내려앉은 뒤
+  // 손가락 시범은 맨 처음 튜토리얼(평생 첫 3숨)에만 (재윤님 7차). 그 뒤 '어디'는 금 띠·영수증이 맡는다
+  if ((profile.tutorialPuffs || 0) >= TAP_GUIDE_PUFFS) return;
+  if (now - myTurn.t0 < 700) return; // 카메라가 내려앉은 뒤
   const live = table.liveDiscs(), n = live.length;
   if (!n) return;
   const ys = live.map((d) => d.body.translation().y).sort((a, b) => b - a);
@@ -831,9 +831,8 @@ function drawTapGuide(now) {
   const dir = { x: c.x - camera.position.x, z: c.z - camera.position.z };
   const type = match?.level?.type || 'flip';
   const gd = type === 'golden' || type === 'goldenSide' ? live.find((d) => d.cardId === 'golden') : null;
-  // 노릴 자리: 보통 위에서 3장째(작은 더미는 가운데, 높이 단계 2↑ 의 재등장은 맨 위 — 답을 다시 주지 않게)
-  // 황금 판은 황금 딱지 높이, ★판은 ★ 반대쪽 옆
-  let h = ys[Math.min(n, n <= 4 ? Math.ceil(n / 2) : hSt >= 2 ? 1 : 3) - 1], lat = 0;
+  // 노릴 자리: 위에서 3장째(작은 더미는 가운데). 황금 판은 황금 딱지 높이, ★판은 ★ 반대쪽 옆
+  let h = ys[Math.min(n, n <= 4 ? Math.ceil(n / 2) : 3) - 1], lat = 0;
   if (gd) {
     h = Math.max(0.03, gd.body.translation().y - DISC_H * 0.3);
     if (type === 'goldenSide' && pocket) lat = -(pocketLatSign(shotGeometry({ dir, lat: 0, h })) || 1) * 0.6 * DISC_R;
@@ -872,8 +871,8 @@ function drawTapGuide(now) {
   ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.ellipse(-2, 7, 2.5, 1.6, 0, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = 'rgba(42,26,18,0.6)'; ctx.beginPath(); ctx.moveTo(-6, 30); ctx.quadraticCurveTo(0, 33, 6, 30); ctx.stroke();
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(dpr, dpr);
-  // 말풍선 (첫 몇 번만): 꾹 → 당겨서 숨 모으기 (마이크: 누른 채 후~)
-  if (hSt === 0) {
+  // 말풍선: 꾹 → 당겨서 숨 모으기 (마이크: 누른 채 후~)
+  {
     const txt = cyc < 0.3 ? t('tapHere') : micMode ? t('tapBlow') : t('tapPull');
     ctx.font = '700 15px "Jua", sans-serif';
     const tw = ctx.measureText(txt).width + 18, bx = clamp(x + 40, 8, W - tw - 8), by = y - 40;
@@ -1315,7 +1314,8 @@ function frame(now) {
   drawFPV(now);
   if (breath.mode === 'charge' && breath.aim && state === 'match') {
     const bc = $('#breath'), bctx = bc.getContext('2d'), bdpr = bc._dpr || 1;
-    if (breath.press && breath.who === 'me') drawThumbTick(bctx, bdpr);
+    // 거꾸로 T(꽉 눈금)는 1인칭에서는 그리지 않는다: 볼이 차오르고 꽉이면 납작해지는 것이 같은 '절대 자'다 (재윤님 7차 '이게 뭔지 모르겠다')
+    if (breath.press && breath.who === 'me' && !fpvOn()) drawThumbTick(bctx, bdpr);
     drawSlideArrow(bctx, bdpr);
   }
   drawTapGuide(now);
