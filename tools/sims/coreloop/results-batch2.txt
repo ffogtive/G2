@@ -1,0 +1,8 @@
+{"RULE":"12","pa":"expert","pb":"expert","fracA":"0.52","zeroA":"0.22","fracB":"0.61","zeroB":"0.25","M":150,"N":5,"aWin":106,"bWin":19,"draw":25,"avgShots":"3.65","avgAShare":"0.60","avgFirstShot":"5.71"}
+{"RULE":"alt","pa":"expert","pb":"expert","fracA":"0.48","zeroA":"0.15","fracB":"0.57","zeroB":"0.17","M":120,"N":10,"aWin":87,"bWin":18,"draw":15,"avgShots":"4.96","avgAShare":"0.57","avgFirstShot":"6.67"}
+{"RULE":"alt","pa":"gambler","pb":"gambler","fracA":"0.47","zeroA":"0.27","fracB":"0.51","zeroB":"0.26","M":120,"N":10,"aWin":65,"bWin":42,"draw":13,"avgShots":"4.72","avgAShare":"0.55","avgFirstShot":"5.03"}
+{"RULE":"alt","pa":"mid","pb":"mid","fracA":"0.37","zeroA":"0.37","fracB":"0.41","zeroB":"0.35","M":120,"N":10,"aWin":60,"bWin":42,"draw":18,"avgShots":"6.72","avgAShare":"0.53","avgFirstShot":"3.49"}
+{"RULE":"12","pa":"expert","pb":"expert","fracA":"0.50","zeroA":"0.17","fracB":"0.52","zeroB":"0.17","M":200,"N":10,"aWin":44,"bWin":123,"draw":33,"avgShots":"5.06","avgAShare":"0.44","avgFirstShot":"6.70"}
+{"RULE":"alt","pa":"novice","pb":"novice","fracA":"0.22","zeroA":"0.60","fracB":"0.21","zeroB":"0.61","M":100,"N":10,"aWin":54,"bWin":37,"draw":9,"avgShots":"11.85","avgAShare":"0.55","avgFirstShot":"2.26"}
+{"RULE":"12","pa":"mid","pb":"mid","fracA":"0.38","zeroA":"0.38","fracB":"0.39","zeroB":"0.34","M":200,"N":10,"aWin":75,"bWin":116,"draw":9,"avgShots":"6.75","avgAShare":"0.44","avgFirstShot":"3.53"}
+{"RULE":"12","pa":"expert","pb":"expert","fracA":"0.38","zeroA":"0.14","fracB":"0.36","zeroB":"0.14","M":150,"N":20,"aWin":45,"bWin":90,"draw":15,"avgShots":"8.56","avgAShare":"0.47","avgFirstShot":"5.99"}

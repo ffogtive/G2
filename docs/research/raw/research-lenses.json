@@ -1,0 +1,2289 @@
+[
+ {
+  "lens": "원천 문화: 한국 동그란 캐릭터 딱지(그림딱지/원형 딱지)의 역사, 실제 놀이 방식, 그리고 해외 유사 놀이(멘코·Pogs·Tazos·Teks)",
+  "summary": "사용자가 말한 '쌓아놓고 입으로 푹 불어 뒤집힌 만큼 가져가기'는 실제로 기록이 남아 있는 놀이입니다. 국립민속박물관 웹진과 루리웹 회고글에 '불어 먹기'라는 이름으로 나오며, 동그란 인쇄 딱지를 쌓은 뒤 입을 가까이 대고 '파~' 하고 짧게 붑니다. 그래서 핵심 메카닉의 정통성은 확보됩니다. 손바닥을 오목하게 오므려 쳐서 뒤집힌 수만큼 따먹는 변형도 같은 계열로 문서화되어 있습니다.\n동그란 딱지에는 원래 별 개수(별높/별낮), 군인 계급, 가위바위보 그림 같은 '능력치'가 인쇄돼 있었습니다. 그래서 등급·스탯 수집 시스템을 넣어도 원작 문화에서 벗어나지 않습니다.\n연대기는 다음과 같습니다. 원형 종이딱지는 대략 1964~1995년(나무위키 추정)에 유행했고, 이어 1995년 따조(과자 부록 플라스틱), 1999년경 짱딱지(고무), 2005년 메이플 딱지(원형 종이 재유행) 순으로 이어집니다. 사용자가 기억하는 1995~2005년은 이 전환기에 해당합니다.\n해외에서는 오징어게임(S1 28일 16.5억 시간) 덕분에 '딱지'라는 이름이 알려졌습니다. 다만 그 이미지는 네모로 접은 딱지입니다. 원형 더미를 뒤집어 따먹는 방식은 Pogs(1994~95 미국·캐나다·영국), Tazos(1994~ 멕시코·남미·스페인), 멘코(일본), Teks(필리핀)와 같은 구조라서, 세계 공통의 어린 시절 기억으로 내세울 수 있습니다.\n같은 계열의 놀이들이 '불기'가 아니라 '치기·튕기기'로 뒤집는 반면, 입으로 부는 방식은 한국에서만 확인됩니다. 이 점이 차별 포인트입니다. 한편 Pogs와 Tazos는 내기 성격 때문에 학교에서 금지된 전례가 있으므로, 내기 구조는 규제·평판 리스크로 관리해야 합니다.\n조사 환경 제약: WebFetch가 DNS 오류로, curl은 프록시 403으로 막혀 원문 페이지를 직접 열지 못했습니다. 모든 근거는 WebSearch 결과에 요약·인용된 본문에 기대고 있습니다.",
+  "findings": [
+   {
+    "claim": "딱지는 크게 두 계열로 나뉜다. 하나는 종이를 접어 만드는 네모 딱지이고, 다른 하나는 문방구에서 파는 인쇄된 동그란 딱지다. 동그란 딱지는 만화가 인쇄된 종이를 오려 쓰는 형태였고, 시판 딱지끼리는 크기가 거의 같고 그림만 달랐다.",
+    "evidence": "국립민속박물관 웹진 「드라마 속 민속놀이」(2021-11-04): '딱지는 크게 종이로 접어서 만드는 네모 딱지와 문방구에서 파는 인쇄된 동그란 딱지로 구분된다.' 경향신문(2006) '사라지는 추억낱장': '달력이나 우유팩 등 두꺼운 종이로 접은 딱지와 만화가 인쇄된 종이를 오려낸 동그란 딱지.' 영어 위키백과 Ddakji: 'pre-made round ddakji with cartoon characters printed on them have also been popular.'",
+    "sources": [
+     "https://webzine.nfm.go.kr/2021/11/04/%EB%93%9C%EB%9D%BC%EB%A7%88-%EC%86%8D-%EB%AF%BC%EC%86%8D%EB%86%80%EC%9D%B4/",
+     "https://www.khan.co.kr/article/200601121323351",
+     "https://en.wikipedia.org/wiki/Ddakji"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "동그란 딱지를 입으로 불어 뒤집는 놀이('불어 먹기')는 실제로 존재했다. 참가자들이 정해진 수량을 나눠 내 쌓은 뒤 번갈아 입을 가까이 대고 짧게 '파~' 하고 불었고, 뒤집힌 딱지를 가져갔다. 1970~80년대 남자아이들 사이에서 인기였다는 회고가 있다.",
+    "evidence": "국립민속박물관 웹진: '동그런 딱지는 입으로 바람을 불어 넘기거나 혹은 멀리 날리기와 같은 다양한 방식으로 놀 수 있었다.' 루리웹 추억의 게임 갤러리 「7080년대 추억의 놀이 동그란 딱지와 종이 놀이판」: '일정 수량을 각자 논의 및 분담해서 딱지를 쌓아 놓은 후, 한 사람씩 번갈아 가면서 진행', 바람 소리는 '파~'에 가깝다고 설명, 지역마다 규칙이 달랐다고 언급. 전통문화포털 계열 자료(검색 요약): 동그란 딱지는 휴대가 쉬워 실내에서 '손으로 두드려 넘기기, 불어서 넘기기'로 놀았다.",
+    "sources": [
+     "https://webzine.nfm.go.kr/2021/11/04/%EB%93%9C%EB%9D%BC%EB%A7%88-%EC%86%8D-%EB%AF%BC%EC%86%8D%EB%86%80%EC%9D%B4/",
+     "https://bbs.ruliweb.com/hobby/board/300431/read/30554256"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "손으로 하는 변형도 기록되어 있다. 동그란 딱지를 여러 장 쌓아 두고 손바닥을 오목하게 만들어 옆을 재빨리 쳐서 바람으로 뒤집고, 뒤집힌 수만큼 따먹는다. 승부를 따로 가리지 않고 상대 딱지를 많이 따면 끝나는 놀이였다.",
+    "evidence": "디지털서귀포문화대전 '딱지치기'(검색 요약): '동그란 딱지인 경우 쌓아놓고 손바닥을 오목하게 만들어 딱지를 치고는 뒤집힌 수만큼 따먹는 방법'. 상품으로 팔린 그림딱지는 그려진 군인 계급의 높낮이로 승패를 가리기도 했다. 루리웹: '약간 오므린 손바닥으로 딱지 옆부근을 재빨리 쳐(바람을 이용) 딱지를 뒤집는 방식'.",
+    "sources": [
+     "https://seogwipo.grandculture.net/seogwipo/toc/GC04601767",
+     "https://bbs.ruliweb.com/hobby/board/300431/read/30554256"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "동그란 인쇄 딱지에는 원래 '능력치'가 인쇄되어 있었다(별 개수, 군인 계급, 가위바위보 그림 등). 이것으로 별높/별낮, 전쟁높/전쟁낮 같은 비교 승부를 했다.",
+    "evidence": "루리웹: ''별높'은 딱지 외곽에 둘러 새겨진 별의 개수가 제일 많은 쪽이 승리, '별낮'은 별의 개수가 가장 적은 쪽이 승리.' 나무위키 '딱지'(검색 요약): 현대 딱지에는 가위바위보, 별, 기타 산술적 수치가 적혀 있어 대결에 쓸 수 있다. 디지털서귀포문화대전: 그림딱지의 군인 계급 높낮이로 승부.",
+    "sources": [
+     "https://bbs.ruliweb.com/hobby/board/300431/read/30554256",
+     "https://namu.wiki/w/%EB%94%B1%EC%A7%80",
+     "https://seogwipo.grandculture.net/seogwipo/toc/GC04601767"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "연대기: 트레이딩카드형 원형 종이딱지(지름 3~5cm, 캐릭터·장면·대사 인쇄, 10~30장 묶음 판매)는 약 1964~1995년에 유행하고 거의 사라졌다(추정). 이후 1995년 오리온 '따조'(플라스틱 원형, 과자 부록), 1999년경 포켓몬 짱딱지(고무), 2005년 메이플스토리 원형 종이딱지(종이딱지 상업화 재점화), 2010년대 칸딱지·팡딱지 순으로 이어졌다. 고무딱지는 코로나 이후 인기가 급히 식었다.",
+    "evidence": "나무위키 '딱지' 여러 판 스니펫: '1964년부터 생겨서 1995년에 거의 사라진 것으로 보인다. 크기는 지름 3~5cm 정도의 원형에 각종 캐릭터들이나 장면, 대사 등이 인쇄', '종이 딱지의 상업화와 유행은 2005년부터 판매된 동그란 모양의 메이플 딱지로 본격화', '고무딱지... 코로나 팬데믹 이후로는 인기가 급격하게 식어'. 따조: '1995년부터 한국 오리온프리토레이가 치토스, 썬칩 등에 투입'. 번개장터 매물 제목에 '동그란 딱지 포켓몬 옛날 종이 딱지', '99~00년도 포켓몬스터 짱딱지'가 있다(판매자 주장, 검증 안 됨).",
+    "sources": [
+     "https://namu.wiki/w/%EB%94%B1%EC%A7%80",
+     "https://namu.wiki/w/%EB%94%B0%EC%A1%B0",
+     "https://ko.wikipedia.org/wiki/%EB%94%B0%EC%A1%B0",
+     "https://m.bunjang.co.kr/search/products?q=%EC%98%9B%EB%82%A0%EB%94%B1%EC%A7%80"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "원형 수집 딱지를 향한 수집욕은 본품보다 강했다. 따조 시절에는 과자는 버리고 따조만 챙기는 일이 사회 문제가 됐고, 오리온은 컬렉션북을 4000원에 팔았다. 2022년 포켓몬빵 재출시 때는 1주일 만에 150만 개가 팔렸고, 띠부씰 한 장이 정가의 약 7배인 1만 원에 리셀되었다.",
+    "evidence": "나무위키/위키백과 따조(검색 요약): '치토스를 구입한 뒤 따조만 가져가고 과자는 버리는 행위가 사회적 문제', '콜렉션 북을 4000원에 팔았을 정도'. 포켓몬빵: '2022년 2월 24일 재출시... 일주일 만에 판매량 150만개를 돌파', '정가의 7배에 달하는 1만원'에 중고 거래.",
+    "sources": [
+     "https://namu.wiki/w/%EB%94%B0%EC%A1%B0",
+     "https://ko.wikipedia.org/wiki/%EB%94%B0%EC%A1%B0",
+     "https://brunch.co.kr/@sunyou/24",
+     "https://gogumafarm.kr/?p=5769"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "직접적인 국내 선행작이 있다. 넥슨이 2024년 9월 메이플스토리 월드에 '메이플스토리 메모리즈 2005'를 냈다. 2005년 메이플 원형 종이딱지를 바탕으로 140여 종의 딱지를 모으고, 코스트에 맞춰 덱을 짜고, 상성·파워·등급이 있으며, 문방구 앞 가위바위보 미니게임으로 딱지팩을 얻는다. 승리 조건은 상대 딱지를 모두 뒤집는 것이다.",
+    "evidence": "YTN(2024-09-02), 게임인사이트, 게임톡 기사: '메이플 딱지는 실제 2005년 출시돼 인기를 끌었던 메이플스토리 원형 종이 딱지를 기반', '140여 종의 딱지를 모아 코스트에 맞춰 덱', '상성, 파워, 코스트, 등급이 존재', '문구점 앞에 있는 가위바위보 게임은 딱지 팩을 구매할 수 있는 가장 쉬운 방법'. 이용자 수와 평가는 확인하지 못했다.",
+    "sources": [
+     "https://www.ytn.co.kr/_ln/0135_202409021705142686",
+     "https://www.gameinsight.co.kr/news/articleView.html?idxno=33242",
+     "https://www.gametoc.co.kr/news/articleView.html?idxno=84059"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "뒤집힘의 물리는 2단계다. 내려칠 때 생긴 바람(충격파)이 대상을 띄우고, 이어지는 바람(팔로스루)이 뒤집는다. 대상 바로 위가 아니라 가장자리 옆(약 5cm)을 노리고, 비스듬한 위쪽에서 칠 때 바람이 밑으로 잘 들어간다. 일본 KURAFT 실험에서 손으로 쳤을 때는 100회 중 24회, 파리채로는 100회 중 5회 뒤집혔다.",
+    "evidence": "KURAFT 「めんこの力学～風を読め。地面を読め。相手を読め。」(검색 요약): 叩きつけの風が浮かせ、振り切りの風が裏返す; 手 24/100, はえたたき 5/100. めんこ図鑑·jpnculture.net: 裏返したいめんこの約5cm横を狙う、斜め上から叩きつける. 한국 국립민속박물관/문체부 자료: '상대 딱지의 옆을 힘껏 내리친다. 이때 딱지를 치는 바람의 힘으로 상대 딱지가 뒤집히면 따먹는다.' 딱지를 불어 뒤집는 동작을 직접 측정한 연구는 찾지 못했다.",
+    "sources": [
+     "https://kuraft.jp/columns/menko-japan/",
+     "https://menkozukan.blog.jp/archives/playkotsu",
+     "https://jpnculture.net/menko/",
+     "https://webzine.nfm.go.kr/2017/12/23/%EB%94%B1%EC%A7%80%EC%B9%98%EA%B8%B0-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EB%8A%94-%EB%AC%BC%EA%B1%B4%EC%9D%BC%EA%B9%8C/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "딱지를 '강화'하는 실제 꼼수가 있었다. 물에 적셔 얼리기, 깔고 앉아 납작하게 만들기, 테이프로 감기 등이다. 딱지를 무겁게 개조한 실험에서는 수비 성공률이 크게 올랐지만 공격 정확도는 떨어졌다(조준이 빗나가면 상대 딱지를 위에서 눌러버림). 원형 딱지는 Pogs보다 얇고 살짝 휘어 있다는 묘사도 있다. 침 바르기나 일부러 휘기 같은 꼼수는 출처로 확인하지 못했다.",
+    "evidence": "brunch @kimjogh 「그 시절, 딱지치기의 추억」: '물에 적셔서 냉장고에 넣어 얼리는 방법, 의자에 깔아뭉개서 납작하게... 테이프로 돌돌 말아서 강화'. brunch @reliquum 「놀이해부도감: ① 딱지치기」: '수비 성공률은 드라마틱하게 높아졌으나 공격 성공률은 기대만큼 크지 않았다... 위에서 눌러 버리는 역효과'. BoardGameGeek Ddakji: 'The disks resemble Pogs but are perhaps thinner and slightly curved.' 커뮤니티 팁으로 '45도 각도'가 있다.",
+    "sources": [
+     "https://brunch.co.kr/@kimjogh/114",
+     "https://brunch.co.kr/@reliquum/72",
+     "https://boardgamegeek.com/boardgame/38807/ddakji",
+     "https://m.cafe.daum.net/okdure/Afrf/102?q=D_YIMx1q3KX3M0"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "전통 딱지치기의 기본 턴 규칙은 가위바위보로 순서를 정하고, 뒤집기에 성공하면 계속 치며, 실패하면 순서가 넘어가는 것이다. 지역에 따라 원 밖으로 밀어내기, 상대 딱지 밑으로 들어가기 같은 추가 승리 조건도 있었다.",
+    "evidence": "검색 요약에 인용된 민속 자료: '가위바위보를 하여 진 아이가 딱지를 땅바닥에 놓으면, 이긴 아이가... 상대 딱지가 뒤집히면 이를 따먹는데, 그렇게 하여 이기면 계속하여 딱지를 칠 수 있다. 그러나 상대 딱지가 뒤집히지 않으면 치는 순서가 바뀐다.' '미리 일정한 원을 그어놓고 상대 딱지가 선 밖으로 나가거나... 밑으로 들어가면 따먹기도 한다.' 문체부 자료: 넘겨먹기, 날려먹기, 벽치기, 밀어내기.",
+    "sources": [
+     "https://gwangju.grandculture.net/gwangju/toc/GC60004447",
+     "https://www.mcst.go.kr/usr/child/enter/play/ddakjichigi.jsp",
+     "https://webzine.nfm.go.kr/2017/12/23/%EB%94%B1%EC%A7%80%EC%B9%98%EA%B8%B0-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EB%8A%94-%EB%AC%BC%EA%B1%B4%EC%9D%BC%EA%B9%8C/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "오징어게임 덕분에 '딱지'라는 이름은 세계적으로 알려졌다. 다만 글로벌 이미지는 지하철에서 정장 차림 모집원과 하는 네모 접는 딱지(돈 10만 원/뺨 때리기)다. 시즌1은 공개 후 28일간 16.5억 시청시간(1.42억 가구)을 기록했고, 시즌2는 첫 4일 6,800만 뷰를 냈다. 시즌3은 첫 3일 6,010만 뷰로 93개국 1위에 올랐다. 딱지는 시즌2 5종 경기(펜타슬론)에 다시 등장했다.",
+    "evidence": "Korea Times(2021-11-17): '1.65 billion hours in 28 days'. Variety/Forbes(2025-07): S3 '60.1M views... first three days', '#1 in all 93 countries'; S2 '68 million views over four days'. The Recruiter(Wikipedia): 100,000원을 걸고 지면 뺨. Den of Geek/TV Insider: S2 펜타슬론에 ddakji 포함. 말레이시아 RapidKL 패러디와 MRT 딱지 영상이 바이럴됐고, TikTok에서는 '접는 법' 튜토리얼이 주를 이룬다. 딱지 판매량이나 검색량 수치는 찾지 못했다.",
+    "sources": [
+     "https://www.koreatimes.co.kr/amp/entertainment/shows-dramas/20211117/squid-game-becomes-most-watched-netflix-show-with-record-165-billion-hours",
+     "https://variety.com/2025/tv/news/squid-game-3-ratings-netflix-record-views-1236445354/",
+     "https://www.forbes.com/sites/maryroeloffs/2025/07/08/squid-game-smashes-netflix-records-no-1-in-93-countries/",
+     "https://en.wikipedia.org/wiki/The_Recruiter_(Squid_Game)",
+     "https://www.denofgeek.com/tv/squid-game-season-2-new-and-returning-games/",
+     "https://www.malaymail.com/news/showbiz/2021/09/30/rapidkl-encourages-commuters-to-use-cards-for-train-rides-by-parodying-squi/2009644"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "원형 디스크를 쌓아 뒤집어 따먹는 구조는 세계 여러 곳에 동형 놀이가 있다. Pogs(하와이 → 1994~95 미국·캐나다·영국 대유행; 앞면이 아래로 가게 쌓고 슬래머로 쳐서 앞면이 위로 온 것을 가져감), Tazos(1994 멕시코 → 남미·스페인·네덜란드 Flippos; 디스크마다 점수 표기, 따먹기 게임), 멘코(일본), Teks(필리핀, 카드를 튕겨 앞뒤로 내기)가 있다. NBC는 딱지를 Pog에 직접 비유했다.",
+    "evidence": "Pogs 관련 다수(HowStuffWorks, Fast Company 등): 'Players stack the caps face down... throwing a slammer onto the stack, and whatever lands face up is kept', 1994~95 미국·캐나다·영국 유행, 많은 학교가 도박으로 보고 금지. Fast Company(2024): World POG Federation 부활, 디지털 부문이 수익을 냄. Tazos(Wikipedia/México Desconocido): 'launched in Mexico in 1994', 'Each Tazo contained a score value... played to win Tazos from other players', 'some schools prohibited them'. NBC News: 'similar to American Pog played in the 1990s'. Teks: 'make a bet on which side of the card will show after flicking'.",
+    "sources": [
+     "https://entertainment.howstuffworks.com/backyard-fun-games/pogs.htm",
+     "https://www.fastcompany.com/91228022/pogs-are-back-90s-craze",
+     "https://en.wikipedia.org/wiki/Tazos",
+     "https://www.mexicodesconocido.com.mx/tazos.html",
+     "https://www.nbcnews.com/news/asian-america/real-kids-games-squid-game-rcna2726",
+     "https://traditionalsportsgames.org/news/teks-preserving-filipino-card-flip-games-as-intangible-heritage-and-cultural-education"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "일본 멘코와의 관계: 멘코는 에도시대 흙 멘코에서 시작해 메이지 시대 종이 멘코로 이어졌다. 둥근 멘코(오사카 중심)와 사각 멘코(도쿄 중심)가 공존했고, 그림은 시대에 따라 무사 → 군국 → 전후 야구·스모·애니로 바뀌었다. 1980년대 말~90년대 초에는 홀로그램·반짝이가 도입됐고, 하와이 이민자를 거쳐 Pogs의 원류가 되었다. 한국 그림딱지는 일제강점기에 유입된 것으로 보이며, 국립민속박물관은 1924년 동아일보를 최초 기록으로 든다. 이 경로는 출처마다 서술이 다르다.",
+    "evidence": "Wikipedia Menko(검색 요약): 'Players flip an opponent's card by creating a gust of wind or by striking it', 'In the late 1980s to early 1990s, Menko cards were decorated with holographs and sparkles'. 기후시 역사박물관 PDF: 丸メンコ(明治)…武将, '東京（角めんこ）・大阪（丸めんこ）が中心'. 대전일보: 종이 멘코는 1898년 판매가 시작돼 1904년 일본 전국에 유행했고, 기사는 그림딱지가 한국에 들어온 시점을 1936년으로 본다. 해방 후 그림이 사무라이에서 국군으로 바뀌었다. 국립민속박물관 웹진: 딱지 놀이의 최초 기록은 1924년 동아일보.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Menko",
+     "https://www.rekihaku.gifu.gifu.jp/gmh/wp-content/uploads/2019/10/1-4asobiset.pdf",
+     "https://www.daejonilbo.com/news/articleView.html?idxno=1336168",
+     "https://webzine.nfm.go.kr/2021/11/04/%EB%93%9C%EB%9D%BC%EB%A7%88-%EC%86%8D-%EB%AF%BC%EC%86%8D%EB%86%80%EC%9D%B4/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "'입으로 불어서' 뒤집는 방식은 해외 동형 놀이(Pogs·Tazos·멘코·Teks)에서는 확인되지 않았다. 이들은 모두 치기·던지기·튕기기로 뒤집는다. 따라서 '불기'는 한국 원형 딱지에서 문서화된 고유한 동작이다.",
+    "evidence": "멘코 일본어 검색 결과: 「吹く」に関する記述は見つかりませんでした. Teks/Siklot 검색: 'I found no sources describing a blowing-based flip game'. Pogs는 slammer, Tazos는 Pogs와 유사한 방식이다. 반면 한국은 국립민속박물관과 루리웹에 불기 방식이 기록되어 있다. 부재를 근거로 한 판단이라 확신도를 낮췄다.",
+    "sources": [
+     "https://tomo3diary.com/entry/nonsense-nostalgic-memories-menko",
+     "https://traditionalsportsgames.org/news/teks-preserving-filipino-card-flip-games-as-intangible-heritage-and-cultural-education",
+     "https://webzine.nfm.go.kr/2021/11/04/%EB%93%9C%EB%9D%BC%EB%A7%88-%EC%86%8D-%EB%AF%BC%EC%86%8D%EB%86%80%EC%9D%B4/"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "사용자가 쓴 '동딱지/알딱지'라는 명칭은 공개 자료에서 확인되지 않았다. 문서상 명칭은 '동그란 딱지', '그림딱지', '원형 딱지', '메이플 딱지'다. 고무 계열은 '짱딱지/킹딱지/카딱지/고무딱지', 플라스틱 계열은 '따조'로 불렸다.",
+    "evidence": "'동딱지', '알딱지'로 검색했을 때 관련 결과가 없었다. 나무위키 스니펫: '킹딱지, 카딱지, 짱딱지라고도 불리는 고무 딱지... 종이 딱지도 원형 딱지, 칸딱지, 팡딱지'.",
+    "sources": [
+     "https://namu.wiki/w/%EB%94%B1%EC%A7%80",
+     "https://ko.wikipedia.org/wiki/%EB%94%B1%EC%A7%80_(%EC%9E%A5%EB%82%9C%EA%B0%90)"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "'입으로 불어 쌓인 더미를 뒤집는' 플레이는 한국 원형 딱지에서만 문서로 확인되는 동사다. 해외 동형 놀이(Pogs·Tazos·멘코)는 모두 '치기'로 뒤집는다.",
+    "why_it_matters": "글로벌 시장에는 Pogs류 '플립 앤 킵' 게임이 이미 익숙하다. 그 안에서 이 게임을 구분해 줄 정체성은 '숨(Breath)'이라는 동작 하나다. 동시에 손으로 오므려 치는 변형도 실제 기록이 있어서, 대체 조작을 넣어도 정통성을 해치지 않는다.",
+    "design_implication": "메인 동작은 'PUFF(불기)'로 브랜딩한다(효과음 '파~/푹', 볼이 부풀었다 터지는 캐릭터 연출, 화면 쪽으로 퍼지는 바람 VFX). 조작은 단계로 나눈다. 기본은 터치·스와이프 '바람 제스처'로 하고, 마이크 불기는 옵션 '진짜 숨 모드'로 둔다. 손바닥 치기(SLAP)는 별도 스킬이나 무기로 열어 둔다. 오징어게임 패러디나 하와이식 슬래머가 아니라 'Blow. Flip. Keep.'을 한 줄 정체성으로 쓴다."
+   },
+   {
+    "insight": "실제 뒤집힘은 2단계 바람(충격으로 띄우기 → 팔로스루로 뒤집기)으로 일어난다. 중심이 아니라 가장자리 옆을 노리고, 비스듬한 각도에서 칠 때 성공률이 올라간다(KURAFT 실험에서 손으로 쳤을 때 24%).",
+    "why_it_matters": "사용자가 말한 실력 요소(방향, 원기둥의 어느 지점, 세기)가 실제 물리와 정확히 맞물린다. 한 번에 터지는 '퍽'의 쾌감도 1단계 충격(볼륨·셰이크)과 2단계 연쇄 뒤집힘(카운트업)으로 나눠 연출할 수 있다.",
+    "design_implication": "제스처를 세 요소로 분해한다. ① 조준점: 더미 측면 링 위의 한 점을 터치하고, 가장자리 틈에 스위트 스팟을 둔다. ② 세기: 누르고 있는 동안 '숨 들이마시기' 게이지가 차고 놓으면 버스트한다. 과충전하면 '헛바람'으로 페널티를 준다. ③ 방향·팔로스루: 놓을 때 스와이프 방향과 길이로 바람의 벡터를 정한다. 판정은 충격 임펄스로 위층 디스크를 띄우고 측풍 토크로 뒤집는 2단계 물리로 구현하고, 결과는 슬로모션 + 한 장씩 '착착착' 카운트업 + 마지막 장이 뒤집힐 때 히트스톱으로 보여준다. 기본 성공률 목표는 실제 25% 안팎보다 높게 잡아 캐주얼 쾌감을 보장하고(가정), 높은 성공률은 스킬 상한에서만 나오게 한다."
+   },
+   {
+    "insight": "원조 원형 딱지에는 이미 '스탯'이 인쇄되어 있었다(테두리 별 개수, 군인 계급, 가위바위보 그림). Tazos에도 점수 값이 있었다.",
+    "why_it_matters": "등급과 능력치 시스템이 억지로 붙인 '모바일 게임식 장치'가 아니라 원작 문화의 일부라는 근거가 된다. 별 개수처럼 언어 없이 읽히는 표기는 글로벌·전연령 직관성에도 맞는다.",
+    "design_implication": "모든 딱지 테두리에 별 개수(★1~5)를 레어도로 실제 인쇄한 것처럼 그린다. 뒷면에는 가위바위보 아이콘을 넣어 '별높/별낮', '가위바위보 결판' 같은 짧은 결판 이벤트나 타이브레이커에 재활용한다. 반짝이 등급(홀로그램 셰이더)은 멘코의 80~90년대 홀로·반짝이 역사와도 맞물린다."
+   },
+   {
+    "insight": "향수의 실제 '강화' 꼼수(납작하게 깔고 앉기, 테이프 감기, 물 적셔 얼리기)는 무게가 늘면 수비는 강해지고 공격 정확도는 떨어지는 트레이드오프를 낳았다. 원형 딱지는 원래 살짝 휘어 있다.",
+    "why_it_matters": "'하면 할수록 자산이 쌓인다'는 요구를 업그레이드 시스템으로 풀 때, 단순히 숫자를 올리는 대신 문화적으로 공감되는 선택형 강화를 만들 수 있다. 더미에는 양쪽 딱지가 섞이므로 내가 건 딱지의 물성이 판 전체의 난이도를 바꾼다는 전략 층도 생긴다.",
+    "design_implication": "딱지마다 무게, 휨(curl), 표면(코팅·테이프)이라는 물리 속성을 두고, 강화는 '꾹 누르기(무게↑·휨↓)', '테이프 감기(내구↑)', '얼리기(일시적 무게↑)' 같은 향수 동작으로 표현한다. 무거운 딱지를 걸면 더미가 잘 안 넘어가 양쪽 모두에게 어려워지는 구조를 만들어, 어떤 딱지를 걸지 고르는 판단 자체가 심리전이 되게 한다. 사용자가 기억하는 '침 묻히기·휘기'는 출처로 확인되지 않았으므로 확정 기능으로 넣지 말고 이스터에그 후보로만 둔다."
+   },
+   {
+    "insight": "해외 소비자에게 '딱지'는 오징어게임의 네모 접이 딱지(파랑·빨강, 뺨 때리기)로 기억된다. 반면 '원형 디스크를 따먹는' 기억은 Pogs(북미·영국), Tazos(남미·스페인), Flippos(네덜란드), 멘코(일본), Teks(필리핀)로 이미 전 세계에 있다.",
+    "why_it_matters": "한국 문화라서 낯설 것이라는 우려를 뒤집는 근거다. 이 게임의 핵심 메카닉은 세계 각지의 90년대 어린이가 이미 해 본 것이다. 오징어게임은 인지 훅일 뿐이고, 진짜 진입 장벽 해소는 Pogs·Tazos 향수에서 나온다.",
+    "design_implication": "온보딩 카피와 스토어 문구는 시장별로 현지화한다(미국 'Like POGs—but you BLOW!', 멕시코·스페인 '¡Como los Tazos!'). 메타 진행을 '월드 플립 투어'로 짜서 서울 문방구 → 오사카 멘코 골목 → 하와이 → 멕시코시티 같은 무대를 순회하게 하면, 한국 원조성과 세계 보편성을 함께 보여줄 수 있다. 오징어게임 IP(정장 모집원, 뺨, 파랑·빨강 딱지 구도, 도형 카드)는 법무 리스크가 있으므로 직접 차용을 피하고, 네모 접이 딱지는 '클래식 딱지' 스킨으로만 일반화해 넣는다."
+   },
+   {
+    "insight": "따조와 띠부씰의 역사에서 보듯, 수집물이 본품(과자·빵)보다 더 강한 구매 동기가 되었다. 문방구 앞 가위바위보 기계로 딱지팩을 얻던 '일확천금' 경험도 넥슨이 이미 재현했다.",
+    "why_it_matters": "수집 루프가 이 게임의 장기 동기이자 수익 축이 될 수 있다는 강한 근거다. 동시에 넥슨 '메이플스토리 메모리즈 2005'가 같은 향수(딱지 수집 + 덱 배틀)를 선점했기 때문에 차별화가 필요하다.",
+    "design_implication": "팩 개봉은 '문방구 판딱지 뜯기' 연출(마분지 판에서 원형을 톡톡 뜯어내는 촉감)과 레어 반짝이 등장 연출로 만들고, 수집첩(컬렉션 북)을 핵심 UI로 둔다. 차별화는 덱·코스트 턴제 배틀이 아니라 '물리 기반 다장 더미 + 숨 제스처의 손맛'과 '한 번에 많이 넘어가는 대박 순간'에서 찾는다."
+   },
+   {
+    "insight": "원형 더미 내기는 사행성 이미지와 직결된다. Pogs와 Tazos는 승자가 가져가는 구조 때문에 여러 학교에서 '도박'으로 금지되었다.",
+    "why_it_matters": "남녀노소·글로벌 타깃과 '같은 수를 걸고 따먹기'라는 핵심 룰이 충돌할 수 있다. 연령 등급, 스토어 심사, 각국 규제(확률형 아이템·사행성)에 바로 걸리는 지점이다.",
+    "design_implication": "걸 수 있는 것은 게임 내에서 획득한 딱지로만 한정하고, 현금화·유료 스테이크·거래소를 배제한다. 진 쪽이 빈털터리가 되지 않도록 '기본 딱지 무한 지급', 판돈 상한, 패배 시 일부 보존 장치를 둔다. 표현도 '내기(Bet)'보다 '판돈(Pot)', '도전(Challenge)'을 써서 순화한다."
+   }
+  ],
+  "key_claims": [
+   "동그란 인쇄 딱지를 쌓아놓고 입으로 짧게 '파~' 불어 뒤집힌 만큼 가져가는 '불어 먹기'는 실재한 놀이 방식이다(국립민속박물관 웹진, 루리웹 70~80년대 회고). 따라서 사용자 원안의 핵심 메카닉은 문화적 정통성이 있고, 손바닥을 오므려 치는 변형도 같은 계열로 문서화되어 있다.",
+   "원조 원형 딱지에는 테두리 별 개수, 군인 계급, 가위바위보 그림 같은 '스탯'이 인쇄되어 있었고, 별높/별낮처럼 그 수치로 승부했다. 따라서 레어도·능력치 수집 시스템은 원작 문화와 정합한다.",
+   "실제 뒤집힘은 충격 바람이 띄우고 팔로스루 바람이 뒤집는 2단계이며, 대상 가장자리 옆을 비스듬히 노릴 때 성공률이 높다(멘코 실험에서 손으로 친 경우 약 24%). 따라서 제스처는 '조준점(가장자리) + 세기(버스트) + 방향(팔로스루)'의 3요소로 설계해야 한다.",
+   "원형 디스크를 쌓아 뒤집어 따먹는 구조는 Pogs(1994~95 북미·영국), Tazos(1994~ 남미·스페인), 멘코(일본), Teks(필리핀)와 동형이다. 그래서 글로벌 진입 장벽은 낮다. 다만 해외의 '딱지' 인지는 오징어게임의 네모 접이 딱지 중심이므로, 온보딩은 Pogs·Tazos 향수로 설명하고 오징어게임은 인지 훅으로만 써야 한다.",
+   "해외 동형 놀이에서는 '입으로 불어' 뒤집는 방식이 확인되지 않았다(모두 치기·튕기기). 따라서 '불기(PUFF)'가 이 게임의 차별적 정체성이다.",
+   "Pogs와 Tazos는 따먹기 구조 때문에 학교에서 도박으로 금지된 전례가 있다. 따라서 이 게임의 내기 룰은 현금화와 유료 판돈을 배제한 게임 내 재화 한정 구조로 설계해야 한다."
+  ],
+  "risks": [
+   "오징어게임 IP 침해 리스크: 정장 차림 모집원, 뺨 때리기, 파랑·빨강 딱지 구도, 도형 초대장 같은 상징을 직접 차용하면 법적 문제가 될 수 있다. 일반 명사 '딱지(Ddakji)'와 전통 놀이 요소만 쓸 것.",
+   "사행성·도박 규제: 동일 수량을 걸고 따먹는 구조는 Pogs와 Tazos처럼 '아이들 도박' 프레임에 걸릴 수 있다. 확률형 팩(가챠)과 결합되면 한국 확률 공시 의무와 각국 루트박스 규제의 대상이 될 수 있다(규제 세부는 본 렌즈에서 미검증).",
+   "선행작과의 겹침: 넥슨 '메이플스토리 메모리즈 2005'(2024.9)가 같은 향수(2005 원형 딱지, 140종 수집, 덱 배틀, 문방구 가위바위보 팩)를 이미 다뤘다. 차별점(물리 더미, 숨 제스처)이 흐려지면 아류로 보일 수 있다.",
+   "실제 성공률이 낮다(멘코 실험에서 손으로 쳤을 때 24%). 물리를 사실적으로 재현하면 실패가 잦아 캐주얼 쾌감이 무너진다. 반대로 성공률을 너무 보정하면 실력 차이가 사라진다.",
+   "'입으로 불기'를 마이크 입력으로 구현할 때 생기는 문제: 공공장소에서의 민망함, 기기별 마이크 편차, 바람 노이즈 오인식, 접근성(호흡기 질환) 문제. 대체 입력은 필수다.",
+   "사용자의 개인 기억(동딱지/알딱지, 1995~2005 종이 원형 딱지 불기, 침 묻히기·휘기 꼼수)이 공개 자료로 확인되지 않거나 연대와 어긋나는 부분이 있다(나무위키는 원형 종이딱지가 1995년경 거의 소멸했다가 2005년 메이플 딱지로 재유행했다고 기록). 마케팅에서 '정통'을 주장할 때 사실관계 검증이 필요하다.",
+   "조사 한계: WebFetch는 DNS 실패, curl은 프록시 403으로 원문 페이지를 직접 열람하지 못했다. 근거는 모두 WebSearch 결과에 인용된 본문 스니펫이며, 나무위키·커뮤니티 등 2차 출처 비중이 높다."
+  ],
+  "open_questions": [
+   "사용자가 쓴 '동딱지/알딱지'는 지역 방언인가, 특정 제품명인가? 1995~2005년에 실제로 불던 딱지가 종이 원형 딱지였는지, 따조나 짱딱지였는지 사용자에게 확인이 필요하다(아트 레퍼런스와 물성 설정에 영향).",
+   "원작 룰의 턴 구조: '불어 먹기'는 한 번 불고 무조건 교대인가, 아니면 전통 딱지치기처럼 뒤집기에 성공하면 연속 턴인가? 연속 턴을 넣으면 콤보·스트릭 쾌감이 생기지만 PvP 밸런스가 흔들린다.",
+   "더미를 쌓는 방식: 모두 앞면이 위로 오게 쌓는가(Pogs는 앞면이 아래)? 섞어 쌓는가? '뒤집힘'의 판정 기준(앞→뒤만 인정할지, 양방향 모두 인정할지)을 정해야 한다.",
+   "해외 타깃 국가별로 Pogs·Tazos·Flippos 향수의 실제 강도와 연령대(현재 35~45세)를 정량 데이터로 확인할 필요가 있다(Google Trends나 설문은 본 조사에서 얻지 못함).",
+   "'불기'를 실제 마이크 입력으로 할지, 제스처 은유로 할지 결정해야 한다. 웹 목업에서 마이크 권한 요청이 첫 경험의 직관성을 해치는지 테스트가 필요하다.",
+   "오징어게임 이후 실제 딱지 상품(접이 딱지 키트 등)의 해외 판매·검색량 데이터는 확인하지 못했다. 글로벌 인지도를 정량화하려면 추가 조사가 필요하다."
+  ]
+ },
+ {
+  "lens": "글로벌 유사 놀이와 그 디지털화 사례: 외국인이 \"아 그거!\" 할 수 있는 공통 기억 찾기 (POGs, Tazos, Flippos, Menko, bafo, 尪仔標, Squid Game ddakji, 기존 디지털판)",
+  "summary": "사용자 원안의 룰(같은 수를 걸고, 합친 더미를 치고, 뒤집힌 것은 내가 갖고, 남은 건 상대 턴)은 1990년대 미국 POGs의 표준 룰과 구조가 거의 같다. 같은 계열의 놀이가 Tazos(멕시코·스페인·남미·중동), Flippos(네덜란드·벨기에), Menko(일본), bafo(브라질, 지금도 월드컵 스티커로 함), 尪仔標(대만)로 이어진다. 그래서 글로벌 무설명 온보딩의 토대는 이미 갖춰져 있다.\n서구·중남미 미디어는 이미 'ddakji = Pogs/Tazos'로 비유하고 있다. 다만 오징어게임의 ddakji는 '사각 딱지 + 따귀 + 데스게임' 이미지다. 사용자의 '원형 더미 + 입김' 버전은 오히려 POGs 쪽에 더 가깝다.\n원조 붐은 대체로 1~3년 만에 꺼졌다. 공급 과잉으로 가치가 무너졌고, \"for keeps\" 도박 논란과 학교 금지가 겹쳤다. 2026년 6월부터 PEGI는 유료 랜덤팩이 있는 게임에 최소 16세 등급을 주므로, 남녀노소 타깃이면 수익 모델과 내기 연출을 같이 설계해야 한다.\n스택을 뒤집는 장르에서 성공한 디지털 타이틀은 찾지 못했다(POGs AR 2018 출시 불확실, Ddakji Side 10K+/2.4~2.8점). 빈자리이지만, 손맛 검증이 성패를 가른다.\n※ 이번 세션에서는 WebFetch와 직접 접속이 프록시/DNS에서 막혔다. 그래서 모든 근거는 WebSearch 결과 요약에서 나왔고, 단일 출처 수치는 med/low로 표시했다.",
+  "findings": [
+   {
+    "claim": "POGs 표준 룰은 사용자 원안의 동딱지 룰과 구조가 거의 같다. 각자 같은 수를 공동 더미에 내놓고, 친 뒤 뒤집힌(앞면이 나온) 것을 가져가며, 남은 것은 다시 쌓아 다음 사람이 친다. 시작 전에 '따먹기(for keeps)'인지 '돌려받기'인지 합의한다.",
+    "evidence": "Milkcap Mania 가이드: 각 플레이어가 같은 수의 캡을 스택에 기부해 공정성을 맞추고, 앞면으로 떨어진 캡은 친 사람이 갖고 나머지는 다음 사람을 위해 다시 쌓는다. 시작 전 'keep 여부'를 합의한다. Tampa Bay Times(1994)와 BuzzFeed도 같은 내용이다. 차이점은 POGs는 '슬래머(무거운 원반)'로 치고, 원안은 입김이나 손바닥이라는 점뿐이다.",
+    "sources": [
+     "https://milkcapmania.co.uk/how-to-play-pogs.html",
+     "https://www.tampabay.com/archive/1994/11/07/it-s-slammer-time/",
+     "https://www.buzzfeed.com/leonoraepstein/how-the-fck-do-you-play-pogs-anyhow"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "POGs의 기원·붐·규모: 1991년 하와이 교사 Blossom Galbiso가 재유행시켰고, 1993년 미국 본토로 퍼졌다. Alan Rypinski의 World POG Federation(WPF)이 상표를 독점했다. WPF 매출은 1994년 4~12월 2,200만 달러에서 이듬해 약 1억 7,500만 달러(추정)로 뛰었다.",
+    "evidence": "Mental Floss와 Wikipedia가 기원과 확산을 설명한다. 이름 POG는 Passion fruit·Orange·Guava 주스 상표에서 왔다. 1994년 Universal Pogs와의 소송이 합의되면서 'Pog'은 WPF의 독점 용어가 됐다. ProQuest 기사에 따르면 WPF 매출은 $22M(1994.4~12)에서 추정 $175M(2년차)로 늘었고, 목표는 3년 내 $500M이었다. 다만 $175M은 단일 당대 기사의 추정치다.",
+    "sources": [
+     "https://www.mentalfloss.com/fun/toys/weird-history-pogs",
+     "https://en.wikipedia.org/wiki/Milk_caps_(game)",
+     "https://www.proquest.com/docview/202684821"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "POGs 몰락에는 세 가지 원인이 겹쳤다. (1) 라이선스·짝퉁 남발로 공급이 넘쳐 가치가 무너졌고, (2) 'for keeps' 도박 논란, (3) 싸움·도난·수업 방해로 학교에서 금지됐다. 정점은 1994~95년이고, 1996~97년에 사실상 소멸했다.",
+    "evidence": "Christian Science Monitor(1994.12): 일부 캘리포니아 학교가 '방해되거나 도박과 비슷하다'는 이유로 금지했다. 11세 아이는 'for keeps로 하면… 도박 같다'고 말했다. Deseret News(1995.3): 학교 입장에서는 누가 이겼는지, for keeps였는지를 둘러싼 싸움을 중재하는 것보다 금지가 쉬웠고, 도난 대상이 됐다고 보도했다. Complex: 약 3년 만에 버블이 꺼져 과잉 공급으로 가치를 잃었다. 북미 외에 호주와 스웨덴에서도 학교 금지가 있었다(Wikipedia). 캡 인쇄업체 Canada Games는 1997년 폐업했다.",
+    "sources": [
+     "https://csmonitor.com/1994/1221/21014.html",
+     "https://www.deseret.com/1995/3/21/19165441/some-schools-putting-an-end-to-pog-frenzy/",
+     "https://www.tampabay.com/archive/1995/01/23/no-pogs-allowed/",
+     "https://www.complex.com/style/the-rarest-pogs-from-the-90s"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Tazos는 1994년 멕시코 Sabritas(펩시코 계열) 과자 경품으로 시작했다(Looney Tunes 100종과 Tiny Toons 124종). 이후 스페인, 남미(아르헨티나·우루과이·콜롬비아·베네수엘라·칠레·페루), 중동(튀르키예·이스라엘)으로 퍼졌다. 초기 놀이는 POGs처럼 점수가 적힌 디스크를 따먹는 방식이었고, 일부 학교는 금지했다.",
+    "evidence": "Wikipedia(Tazos): 이름은 멕시코 학교 놀이 'taconazo'(발뒤꿈치로 차기)에서 왔다. 원형에서 팔각형, 이후 카드형으로 변했다. Pokémon 세트는 1999년 51종, 2000년 100종이었다. Vanguardia(멕시코): 국가별 유통사와 일부 학교 금지를 다뤘다. Bulbapedia: Pokémon Tazos가 튀르키예·이스라엘 등에서 판매됐다. 2022년 월드컵 즈음에는 Sabritas가 'NFTazos'(JOY APP, 1,000+ 디자인)로 디지털 부활을 시도했다. Pokémon Tazos는 2024년 11월 재출시됐다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Tazos",
+     "https://vanguardia.com.mx/lahistoriadelostazosenmexicoyelmundo-1965613.html",
+     "https://bulbapedia.bulbagarden.net/wiki/Tazos",
+     "https://www.xataka.com.mx/criptomonedas/renovacion-tazos-llega-forma-nftazos-sus-tokens-no-se-pueden-comprar-criptomonedas-vender-linea",
+     "https://www.nintenderos.com/2024/11/los-tazos-de-pokemon-estan-de-vuelta-el-regreso-de-un-clasico-del-2000/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Flippos(네덜란드·벨기에)는 1995년 4월 Smiths 감자칩 경품으로 등장해 곧 약 100종으로 늘었다. Smiths 네덜란드 매출은 약 15% 오르고 경쟁사 Croky는 약 10% 떨어졌다. 교장들은 쉬는 시간 운동장을 '진짜 카지노'라고 불렀다.",
+    "evidence": "VRT NWS(2015 회고 기사): 벨기에 출시는 파업으로 1995년 여름까지 늦어졌고, 그 사이 Croky가 'Topshots'를 먼저 냈다. 앞면은 캐릭터, 뒷면은 이름·번호·점수였다. 열풍은 약 3년 갔고 2001년 Lay's로 리브랜딩됐다(Wikipedia Smiths). 'Tazo' 등의 후보명을 소비자 테스트해 'Flippo'로 정했다는 설은 globrands.com 단일 출처라 검증되지 않았다.",
+    "sources": [
+     "https://www.vrt.be/vrtnws/nl/2015/04/08/hoe_flippo_s_de_vlaamsespeelplaatsenoverspoelden-1-2292595/",
+     "https://en.wikipedia.org/wiki/Smiths_(snack_foods)",
+     "https://globrands.com/our-work/flippo",
+     "https://www.omroepbrabant.nl/nieuws/6010472/verzamelaar-hannie-over-de-flippotijd-zakken-chips-werden-opengetrokken"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "일본 Menko는 상대 카드를 '바람(gust of wind)'이나 타격으로 뒤집으면 둘 다 가져가는 놀이다. 기술이 힘만큼 중요해서 어린아이도 큰 아이와 대등하게 겨룬다고 설명된다. 한국 딱지의 계보는 Menko와 연결된다는 서술이 있다.",
+    "evidence": "Wikipedia/Web Japan(Nipponia No.26): 바닥에 놓인 카드를 바람이나 타격으로 뒤집는다. 원 밖으로 쳐내기, 숫자 비교(Fighting Numbers) 같은 변형이 있다. 'technique matters as much as strength'라는 설명도 있다. 경향신문(2016)은 식민지기 '한국판 멘코 딱지' 사진을 실었고, analog.games는 현대 ddakji를 일본 놀이에서 들어온 것의 후손으로 설명한다. 다만 기원 확정 근거는 부족하다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Menko",
+     "https://web-japan.org/nipponia/nipponia26/en/topic/topic02.html",
+     "https://www.khan.co.kr/article/201610282050005",
+     "https://analog.games/gameItem/show/419cd83f9689639c01968b3c8df71d46/ddakji?lang=PT"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "브라질 'bafo'는 두 손을 오목하게 모아 '공기 변위'를 일으켜 바닥의 스티커 더미를 뒤집고, 뒤집힌 것을 가져가는 놀이다. 월드컵 Panini 시즌마다 지금도 학교에서 성행한다. 일부 학교는 '손 큰 고학년에게 유리하다'는 공정성 문제와 스티커 훼손 때문에 금지했다.",
+    "evidence": "Magazine Luiza 블로그: 바닥에 엎어둔 스티커를 번갈아 치고, 뒤집은 사람이 가져간다. '조개(concha)' 손으로 공기를 밀어 올린다. DGABC: 산투안드레의 한 학교가 bafo를 허용 목록에서 뺐는데, 스티커가 구겨지고 손 큰 아이에게 유리하다는 이유였다. Bem Paraná: 일부 학교는 '친선인지 내기인지'를 미리 합의하게 하는 규칙을 만들었다. 브라질은 2010 월드컵 Panini 판매 1위 국가였다.",
+    "sources": [
+     "https://www.magazineluiza.com.br/blog-da-lu/c/li/lven/como-jogar-bafo-com-figurinhas-regras-e-dicas-para-ganhar/14226/",
+     "https://www.dgabc.com.br/Noticia/4321836/em-santo-andre-trocas-de-figurinhas-da-copa-do-mundo-mudam-rotina-de-estudantes",
+     "https://www.bemparana.com.br/noticias/brasil/em-tempo-de-copa-do-mundo-escolas-criam-regras-para-a-troca-de-figurinhas/",
+     "https://www.itv.com/news/2014-06-09/brazil-panini-world-cup-stickers/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "한국 동그란 딱지는 들고 다니기 편해 실내에서 '손으로 두드려 넘기기'나 '불어서 넘기기'로 놀았고, 쌓아놓고 손바닥을 오목하게 해 치는 방식도 있었다. 문방구에서 20~30원짜리 큰 종이판에 붙은 채로 팔렸고, '골목 타짜들의 배팅' 수단으로 회상된다.",
+    "evidence": "WebSearch 요약에서 국내 전통문화 자료(문화포털·국립민속박물관 웹진 계열)의 문장을 인용했다: '동그란 딱지는 휴대가 용이해서 실내에 모여 손으로 두드려 넘기기, 불어서 넘기기 등으로 놀이했습니다' / '동그란 딱지인 경우 쌓아놓고 손바닥을 오목하게 만들어 딱지를 치고…'. 정확한 출처 페이지는 직접 열어 확인하지 못했다. 브런치 @killm3 연재에는 문방구 벽 집게에 걸린 전지 크기 종이판(20~30원)이 남자아이들에게 '일확천금의 카지노'였다는 회고가 있다. 사용자가 말한 '입으로 불어 뒤집힌 만큼 가져가기' 룰을 명시한 1차 자료는 찾지 못했다.",
+    "sources": [
+     "https://www.kculture.or.kr/brd/board/682/L/menu/704?brdType=R&thisPage=1&bbIdx=13762&searchField=&searchText=&recordCnt=10",
+     "https://webzine.nfm.go.kr/2017/12/23/%EB%94%B1%EC%A7%80%EC%B9%98%EA%B8%B0-%EC%96%B4%EB%96%BB%EA%B2%8C-%ED%95%98%EB%8A%94-%EB%AC%BC%EA%B1%B4%EC%9D%BC%EA%B9%8C/",
+     "https://brunch.co.kr/@killm3/193",
+     "https://www.mcst.go.kr/usr/child/enter/play/ddakjichigi.jsp"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "대만 尪仔標(Ang-a-phiau)는 원형 판지 'battle cards'로, 상대 카드를 뒤집는 놀이다. 1950년대에 유행했다는 서술이 있고, 하와이를 통해 들어왔다는 설도 있다. 필리핀에는 teks(카드를 튕겨 앞뒷면으로 내기)와 병뚜껑 놀이 tatsing이 있다.",
+    "evidence": "Taiwan Review: 기본 놀이는 상대 카드를 뒤집는 것이고, 장기·포커 기호가 인쇄돼 다른 게임도 가능했다. Taiwan Scene: 미국 pogs와 같은 것이고, 하와이의 아시아계 디아스포라를 통해 들어왔을 것으로 본다. OCAC(2026)은 1950년대 인기 놀이로 소개한다. Traditional Sports Games는 teks를 엄지·검지로 튕겨 앞면이 나오면 판돈을 가져가는 놀이로 설명한다.",
+    "sources": [
+     "https://taiwan-scene.com/2020/08/18/the-traditional-the-imported-and-the-homemade-taiwans-traditional-toys-teach-us-about-the-past",
+     "https://ocacnews.net/article/420841",
+     "https://traditionalsportsgames.org/news/teks-preserving-filipino-card-flip-games-as-intangible-heritage-and-cultural-education"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "오징어게임 덕분에 'ddakji'라는 단어는 세계적으로 알려졌다. 다만 그 이미지는 '접은 사각 딱지(파랑/빨강), 따귀, 데스게임'이고, 원형·더미·입김 방식과는 다르다.",
+    "evidence": "NME/The Times(2021.10): TikTok #Ddakji 영상이 몇 달 만에 1,760만 뷰를 기록했다고 TikTok이 밝혔고, 영국에 종이접기 붐이 일었다. 토론토 지하철과 말레이시아 RapidKL에서 재연 영상이 화제가 됐다. 시즌2(2024.12)에서 공유가 딱지 장면으로 복귀했고, 5종 경기 첫 종목도 ddakji였다. Garena Free Fire는 2025년 7월 미국 댈러스·휴스턴·마이애미 쇼핑몰에서 'Ddakji Master Challenge'(상금 $4,560)를 열었다. Fortnite에는 'Ddakji Box' 백블링(300 V-Bucks)이 있다. Wikipedia는 이를 neomgyeomeokgi(넘겨먹기) 변형으로 분류한다.",
+    "sources": [
+     "https://www.nme.com/news/tv/squid-game-leads-to-uk-origami-boom-3090196",
+     "https://media.blogto.com/film/2021/10/people-now-playing-squid-game-card-flip-challenge-toronto-subway-stations",
+     "https://www.aol.com/surprise-squid-game-season-2-210500188.html",
+     "https://www.pocketgamer.biz/garena-free-fire-celebrates-8th-anniversary-with-squid-game-crossover",
+     "https://www.aol.com/fortnite-meets-squid-game-heres-222600867.html",
+     "https://en.wikipedia.org/wiki/Ddakji"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "해외 미디어는 이미 'ddakji = Pogs(미국) / Tazos(멕시코)'로 비유한다. 'Pogs의 한국 사촌'이라는 프레이밍은 시장에서 자연스럽게 생겨난 셈이다.",
+    "evidence": "Marie Claire는 ddakji(ttakji)를 미국 90년대 Pog와 비슷하다고 썼고, Netzwelt(독일)도 'Pogs'와 닮았다고 했다. Netflix Philippines는 SNS에 'Ddakji = Pogs' 매칭을 올렸다. LOS40 México(2024.12.30)는 'Ddakji는 90년대 tazos와 비슷하다'는 기사를 냈다. BoardGameMatcher는 'Pogs와 닮았지만 슬래머가 없고, 디스크 곡률 때문에 섬세함이 중요하다'고 차이를 짚었다.",
+    "sources": [
+     "https://www.marieclaire.com/culture/a37824981/squid-game-games-real-life-netflix",
+     "https://www.netzwelt.de/serien/squid-game/195132-squid-game-spiele-reihenfolge-bedeutung-herkunft-erklaert.html",
+     "https://interaksyon.philstar.com/?p=201105",
+     "https://los40.com.mx/2024/12/30/ddakji-el-juego-coreano-de-el-juego-del-calamar-es-similar-a-los-tazos-de-los-anos-90/",
+     "https://boardgamematcher.com/game/ddakji"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "더미를 뒤집는 장르나 ddakji를 디지털로 옮긴 사례 중 성공작은 확인되지 않았다. Squid Game: Unleashed는 크게 흥행했지만 ddakji 모드는 확인되지 않았다.",
+    "evidence": "Squid Game: Unleashed(2024.12.17 출시): Appfigures 기준 2주 미만에 300만 다운로드, Naavik/Sensor Tower 기준 1,900만+ 다운로드와 첫 주 DAU 190만 피크 이후 점진 하락했다. 공식 게임 목록에는 Red Light Green Light, Glass Bridge, Dalgona, Mingle, Jump Rope, Hide and Seek, Sky Squid Game만 보이고 ddakji는 없다. 'Ddakji Side'(Google Play)는 10K+ 다운로드에 별점 2.4~2.8(약 76~78개 리뷰)이며, 리뷰에 '찾을 수 있는 유일한 ddakji 게임'이라는 글이 있다. 'POGs: The Mobile Game'(2018, WPF 라이선스, Compton Technology)은 AR 스캔과 컬렉션을 건 PvP를 내세웠고 Indiegogo 목표는 $50K였다. 이후 출시·성과 보도는 찾지 못했다(프랑스 DB에는 출시일 '미공개'). Steam의 'POG'는 무관한 퍼즐 게임이고, 'Power of Golden Slammer'는 개발 중 데모다.",
+    "sources": [
+     "https://appfigures.com/resources/insights/20241227/1-squid-game-unleashed-hits-3m-downloads-in-under-two-weeks",
+     "https://naavik.co/digest/games-as-a-brand-marketing-channel/",
+     "https://about.netflix.com/en/news/squid-game-unleashed-celebrate-the-epic-series-finale-with-new-games",
+     "https://play.google.com/store/apps/details?id=com.SpyrosNas.DdakjiSide&hl=en_US",
+     "https://www.pocketgamer.biz/90s-fad-pogs-set-for-comeback-with-new-ar-mobile-game-in-the-works",
+     "https://gamewave.fr/pogs-the-mobile-game/",
+     "https://powerofgoldenslammer.itch.io/pogs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "종이 수집품 향수를 디지털로 옮긴 사례 중에는 초대형 성공작이 있다. Pokémon TCG Pocket은 1년 만에 1.5억 다운로드와 약 12~13억 달러 매출을 냈다. 반면 POG 브랜드 자체의 부활은 소규모 콜렉터 시장에 머물러 있다.",
+    "evidence": "PocketGamer.biz: 첫 1주년까지 1.5억 다운로드. AppMagic 추정 $1.3B, Sensor Tower 추정 $1.2B+. 12시간마다 팩을 여는 루프가 핵심이다. POG Unlimited는 2025년 시리얼 넘버 POG Hobby Box($119, 약 5,100개 한정)를 냈지만, POG Digital NFT는 '비활성'으로 표시돼 있다.",
+    "sources": [
+     "https://www.pocketgamer.biz/pokmon-tcg-pocket-surpasses-150m-downloads-in-under-a-year",
+     "https://sensortower.com/blog/pokemon-tcg-pocket-100-million-downloads",
+     "https://retrododo.com/pog-hobby-box-review/",
+     "https://pogunlimited.com/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "규제 환경: PEGI는 2026년 6월 이후 신규 심의작 중 유료 랜덤 아이템(카드팩·가챠·루트박스)이 있는 게임에 최소 PEGI 16을 주고, 소셜 카지노는 PEGI 18로 정했다. Apple은 2019년부터 빈번하거나 강도 높은 시뮬레이션 도박 앱을 17+로 등급화한다.",
+    "evidence": "Reed Smith, Osborne Clarke, Greenberg Traurig, Nintendo Life(2026.3): 2026년 3월 12일 발표. 시간·수량 한정 판매는 PEGI 12, NFT는 18, 차단·신고 기능이 없는 커뮤니케이션은 18이다. 독일 USK는 2023년부터 유사 규칙을 적용 중이다. Apple 기준은 AppleInsider와 casino.org가 보도했다(2019.8.20부터 시행).",
+    "sources": [
+     "https://www.reedsmith.com/articles/pegi-launches-interactive-risk-categories-overhauls-age-ratings-for-loot-boxes-in-game-spending-and-communication-features/",
+     "https://www.osborneclarke.com/insights/games-loot-boxes-get-16-plus-age-rating-europe-under-pegi-overhaul",
+     "https://www.nintendolife.com/news/2026/03/pegi-targets-loot-boxes-with-its-new-overhauled-ratings-system",
+     "https://forums.appleinsider.com/discussion/212525",
+     "https://www.casino.org/news/apple-is-requiring-gambling-apps-to-come-with-17-ratings/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "이름 문제: 'POG'는 WPF 상표로 지금도 쓰이고 있다(2025 Hobby Box). 젊은 세대에게 'pog'은 Twitch 이모트 PogChamp에서 온 '와 대박'이라는 슬랭이다(이모트 이름 자체는 90년대 Pogs에서 유래했다는 설이 유력). 'Ddakji'는 로마자 표기가 ddakji/ttakji/ttakchi로 갈리고, 첫 자음이 된소리(ㄸ)라 영어권 화자는 보통 'dak-jee'로 발음한다.",
+    "evidence": "Wikipedia(Milk caps): 1994년 소송 합의로 'Pog'은 WPF 독점 용어가 됐다. 그 외 업체들은 'milkcaps'라는 이름을 썼다. KnowYourMeme과 Eklipse: PogChamp는 2012~13년 Twitch 이모트이고, 이름은 'Pog Championship' 영상에서 왔다는 설명이 있다. Wikipedia(Ddakji): 개정 로마자는 ttakji, 매큔-라이샤워는 ttakchi다. 발음 가이드('dak-jee')는 검색 요약의 일반 설명이라 1차 출처가 없다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Milk_caps_(game)",
+     "https://knowyourmeme.com/editorials/what-does-poggers-mean-on-twitch-the-gen-z-slang-term-pog-explained",
+     "https://en.wikipedia.org/wiki/Ddakji",
+     "https://pogunlimited.com/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "마이크에 '입으로 부는' 입력은 DS 시절부터 감지가 부정확하고, 공공장소에서 민망하며, 접근성(호흡·알레르기)이 나쁘다는 불만이 반복됐다. 보통은 버튼이나 탭 대체 입력으로 해결한다.",
+    "evidence": "Game Developer 칼럼: 운동기능 장애와 알레르기가 있는 리뷰어가 Spirit Tracks의 불기 입력을 2시간 동안 인식시키지 못했다. TouchArcade 포럼: 밖에서 폰에 대고 부는 건 부끄럽다. Whistle Blow 앱은 민감도 조절, 탭·흔들기 대체 입력을 두고 VoiceOver 사용 중에는 자동으로 끈다. Playdate 게임에는 '버튼으로 대체' 숨은 옵션이 있다. 모두 일화 수준이라 정량 데이터는 아니다.",
+    "sources": [
+     "https://www.gamedeveloper.com/design/the-inaccessible-nature-of-accessibility-in-game-design-",
+     "https://toucharcade.com/community/threads/should-i-use-microphone-in-my-app.101821/",
+     "https://apps.apple.com/sa/app/id492003219",
+     "https://giantbomb.com/wiki/Concepts/Blowing_into_Microphone"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "유사 수집 붐은 전부 강력한 캐릭터 IP와 '점수/능력치' 표기에 기대 있었다. Tazos는 Looney Tunes·Pokémon·Dragon Ball, Flippos는 카툰 캐릭터와 점수, Menko는 사무라이·야구선수·애니였다. Crazy Bones는 피규어마다 bounce/balance 수치를 매겼다. Crazy Bones는 스페인에서 1996~97년에 3.5억 팩이 팔렸다.",
+    "evidence": "Wikipedia(Tazos, Menko, Gogo's Crazy Bones), VRT(Flippo 뒷면에 이름·번호·점수). Crazy Bones의 스페인 3.5억 팩은 Wikipedia 인용이며, Mishpacha는 '2년간 3,100만 패키지'로 다르게 보도해 수치가 엇갈린다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Tazos",
+     "https://en.wikipedia.org/wiki/Gogo%27s_Crazy_Bones",
+     "https://mishpacha.com/?p=33449",
+     "https://en.wikipedia.org/wiki/Menko"
+    ],
+    "confidence": "med"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "사용자의 동딱지 룰은 '한국에만 있는 낯선 놀이'가 아니다. 미국 POGs, 멕시코·스페인 Tazos, 베네룩스 Flippos, 일본 Menko, 브라질 bafo, 대만 尪仔標의 공통 문법(같은 수를 걸고, 공동 더미를 치고, 뒤집힌 건 내 것)과 같다.",
+    "why_it_matters": "사용자가 요구한 '설명 없이 바로 시작'과 '외국인도 쉽게'를 이미 전 세계 30~45세 세대가 학습한 규칙으로 해결할 수 있다. 새로 가르칠 필요 없이 기억을 꺼내기만 하면 된다.",
+    "design_implication": "첫 화면은 텍스트 없이 의식 3단계로 보여준다. ① 양쪽 손이 같은 수의 딱지를 가운데로 '탁탁' 던져 더미를 쌓는다(앤티 연출로 베팅 개념을 보여줌). ② 플레이어 1회 입력. ③ 뒤집힌 딱지가 내 쪽으로 날아오고 남은 더미가 상대 쪽으로 미끄러진다. 첫 판은 앤티 5장 고정 튜토리얼 매치로 하고, 대부분이 뒤집히게 보정해 성공 경험을 준다. 로컬라이즈 로딩 팁에는 'In the US you called it Pogs / En México eran Tazos / Bij ons heetten ze Flippo's'처럼 지역별 공통 기억을 한 줄씩 넣는다."
+   },
+   {
+    "insight": "모든 지역 변형에 공통된 물리 원리는 디스크를 '맞추는' 것이 아니라 '공기로 들어 올리는' 것이다. Menko의 'gust of wind', bafo의 '조개손 공기 변위', 동딱지의 '불어서 넘기기'가 모두 그렇다. 입김은 이 원리를 가장 순수하게 드러낸 한국식 표현이다.",
+    "why_it_matters": "'푹/퍽' 하고 부는 순간의 쾌감을 그럴듯하게 만들려면 바람이 핵심 비주얼이어야 한다. 이 원리는 외국인도 직관적으로 이해한다(bafo 자체가 포르투갈어로 '입김'이다).",
+    "design_implication": "바람을 보이게 만든다. 입력하면 방사형 충격파 링, 테이블 먼지, 딱지 가장자리가 들리는 '들썩' 프레임, 0.3초 슬로모션 공중 회전, 착지 순간 '팟팟팟' 연쇄 사운드와 카운터 업 순서로 연출한다. 기본 입력은 '손가락으로 조준점 지정 → 홀드로 숨 들이쉬기(볼 부풀리는 캐릭터) → 놓으면 퍽' 제스처로 하고, 마이크로 불기는 선택형 시그니처 모드로 둔다. 마이크 불기는 감지 오류, 공공장소에서의 민망함, 접근성 문제가 있어 기본값으로 쓰면 위험하다. 이 입력 체계라면 'PUFF!/퍽!' 의성어를 기술 이름이자 브랜드 사운드로 쓸 수 있다."
+   },
+   {
+    "insight": "실물 놀이의 불공정(bafo는 손 큰 고학년이 유리해 금지됨)과 공정성(Menko는 '기술이 힘만큼 중요해 어린아이도 이긴다')이 둘 다 기록돼 있다.",
+    "why_it_matters": "남녀노소 PvP가 되려면 신체 조건이 아니라 판단과 타이밍이 승부를 갈라야 한다.",
+    "design_implication": "파워는 '최대치'가 아니라 '스윗 스팟' 구조로 만든다. 너무 세면 더미가 흩어져 뒤집히지 않고 날아가 버리고, 너무 약하면 들리지 않는다. 실력 요소는 사용자 원안의 세 가지(조준 위치: 더미 가장자리와 중심, 각도: 바람 방향, 세기: 스윗 스팟)로 한정하고, 매 턴 더미 상태를 바꿔(기울어짐, 이미 반쯤 뒤집힌 딱지, 딱지 휨) 읽는 재미를 준다. 디바이스 마이크 감도 차이가 승패에 영향을 주면 안 되므로 PvP 랭크전에서는 제스처 입력으로 통일한다."
+   },
+   {
+    "insight": "POGs, Flippos, Tazos 붐은 모두 1~3년 만에 끝났다. 원인은 공통적으로 (1) 공급 과잉으로 인한 희소성 붕괴, (2) 'for keeps' 도박 낙인('진짜 카지노', '도박 같다'), (3) '이게 내기였냐'를 둘러싼 분쟁과 도난이었다.",
+    "why_it_matters": "수집욕과 '하면 할수록 자산이 쌓이는' 구조는 이 게임의 핵심 동력이지만, 원조들은 바로 이 지점에서 무너졌다. 디지털판은 경제 설계로 이 붕괴를 막을 수 있다.",
+    "design_implication": "① 시즌·세트별 발행량 상한, 중복 딱지를 녹여 강화하거나 진열하는 싱크를 둬서 인플레이션을 막는다. ② 매치 전에 '친선전(돌려받기)'과 '따먹기전(for keeps)'을 UI로 명확히 고르게 한다. 원조 놀이에서 학교들이 결국 도입한 규칙과 같다. ③ 따먹기전은 '배틀 더미'에 등록한 딱지만 걸 수 있게 하고, 아끼는 레어는 '앨범 보호 슬롯'에 둬서 잃지 않게 한다. 손실 회피로 인한 이탈을 막기 위해서다. ④ 진 쪽에도 '아깝다' 리플레이와 소량 보상을 줘서 재도전을 유도한다."
+   },
+   {
+    "insight": "규제 시점이 나쁘다. 2026년 6월부터 PEGI는 유료 랜덤 팩이 있으면 최소 16세 등급이고, Apple은 시뮬레이션 도박을 17+로 등급화한다. 딱지 '랜덤 봉지 판매'와 '딱지를 건 내기'를 합치면 남녀노소 포지셔닝이 무너질 수 있다.",
+    "why_it_matters": "사용자가 원하는 '남녀노소, 글로벌'과 기획에 녹아 있는 '내기·수집' 심리가 규제 차원에서 충돌한다.",
+    "design_implication": "유료로 랜덤 딱지 팩을 팔지 않는다. 대신 확정형 세트 구매, 시즌 패스, 바람·입김 이펙트와 테이블 스킨 같은 코스메틱으로 수익화한다. 랜덤 획득은 플레이 보상(무료)으로만 둔다. 내기 대상은 게임에서 번 딱지로만 한정하고, 현금 환전이나 유저 간 거래는 하지 않는다. 칩, 슬롯, 룰렛 같은 카지노 연출은 쓰지 않고 '운동장, 문방구, 책상' 톤을 유지한다. 승패가 RNG가 아니라 입력 실력으로 결정된다는 것을 리플레이로 보여주면, '시뮬레이션 도박'이 아니라 '스킬 게임'이라는 근거가 된다."
+   },
+   {
+    "insight": "'ddakji'라는 단어의 인지도는 오징어게임 덕에 이미 있다(TikTok 1,760만 뷰, Free Fire와 Fortnite 콜라보). 그런데 그 이미지는 사각 딱지와 따귀와 데스게임이고, 사용자의 원형 더미와 입김 방식은 시각적으로 POGs에 더 가깝다. 미디어도 이미 'Ddakji = Pogs/Tazos'라고 비유한다.",
+    "why_it_matters": "이름과 프레이밍을 잘못 잡으면 오징어게임 아류(그리고 Netflix IP 리스크)나 POG 상표 침해로 읽힌다. 잘 잡으면 두 공통 기억을 한 번에 소환할 수 있다.",
+    "design_implication": "게임 타이틀은 발음이 쉬운 의성어나 글로벌 단어(예: 'PUFF!', 'Flip Puff' 계열)로 하고, 'POG'와 'Squid Game' 요소(초록 트레이닝복, 파랑/빨강 사각 딱지, 따귀)는 쓰지 않는다. 스토어 부제와 ASO 키워드에는 'ddakji', 'pogs', 'tazos', 'milk caps', 'flippos', 'menko'를 지역별로 넣는다. 게임 안에서는 딱지를 'Ddakji'(발음 'dak-jee')라는 고유명사로 부르고, 첫 등장 때 'Korean flip discs' 같은 짧은 설명을 붙인다. 원형 딱지라는 시각 정체성을 강하게 밀어서 오징어게임 사각 딱지와 구분한다."
+   },
+   {
+    "insight": "원조 수집 붐은 모두 강력한 캐릭터 IP와 능력치·점수 표기(Tazos 점수, Flippo 점수, Menko 숫자, Crazy Bones의 bounce/balance)에 기대 있었다. 그리고 각 나라마다 자기만의 버전이 있다.",
+    "why_it_matters": "라이선스 IP가 없는 상태에서 수집욕을 만들려면 Angry Birds처럼 독자 캐릭터 세계관과 '세트 완성' 구조가 필요하다.",
+    "design_implication": "오리지널 캐릭터로 'World Playground' 세트를 구성한다. 예를 들어 하와이 밀크캡 세트, 멕시코 타코나소 세트, 네덜란드 감자칩 세트, 일본 사무라이 멘코 세트, 브라질 축구 스티커 세트, 한국 문방구 세트처럼 지역 세트 자체가 그 나라 플레이어에게 '아 그거!'를 터뜨리는 장치가 되게 한다. 딱지마다 가벼운 물리 스탯(무게, 휨·곡률, 표면 마찰)을 붙이면 '어떤 딱지를 더미에 거느냐'라는 전략과 수집 동기가 이어진다. 홀로·포일·넘버링 같은 레어 등급은 '전시용'으로 두고 실력 우위로 이어지지 않게 해서 P2W 논란을 피한다."
+   },
+   {
+    "insight": "더미를 뒤집는 장르는 디지털에서 아직 제대로 된 작품이 없다. 반면 종이 수집품 향수의 디지털화는 Pokémon TCG Pocket(1.5억 다운로드)이 시장 규모를 증명했다.",
+    "why_it_matters": "경쟁작이 없는 빈자리이지만, 2018년 POGs 모바일(AR, 컬렉션을 건 PvP)이 흐지부지된 것으로 보이듯 '향수만으로는 안 된다'는 신호이기도 하다.",
+    "design_implication": "목업 단계의 성공 기준은 향수가 아니라 '손맛 1회'로 잡는다. 향수 없는 10대가 30초 안에 '한 판 더'를 누르는지를 본다. 팩 개봉 의식(찢기, 흔들기, 홀로 반짝임)은 TCG Pocket처럼 촉각적으로 만들되 무료 보상 루프에 붙인다. PvP 이전에 AI 대전과 '오늘의 더미 챌린지'(모두 같은 더미 배치로 최다 뒤집기 기록 경쟁)로 비동기 경쟁부터 검증한다."
+   },
+   {
+    "insight": "딱지의 기원은 일본 Menko 계보와 얽혀 있다는 서술이 있다(식민지기 '한국판 멘코 딱지'). '한국 고유 전통 놀이'라는 단정적 마케팅은 한일 양쪽에서 논쟁을 부를 수 있다.",
+    "why_it_matters": "글로벌 런칭에서 문화 기원 논쟁은 불필요한 리스크이고, 오히려 '어디에나 있던 놀이'라는 포지셔닝이 더 넓게 먹힌다.",
+    "design_implication": "카피는 '전 세계 운동장 놀이를, 한국식 입김으로'처럼 쓴다. 한국 정체성(문방구, 1990년대 골목, '퍽!' 의성어, 원형 캐릭터 딱지)은 미학과 톤으로 표현하고, 기원 주장은 하지 않는다."
+   }
+  ],
+  "key_claims": [
+   "사용자 원안의 핵심 룰(같은 수를 걸고, 공동 더미를 치고, 뒤집힌 것을 가져가고, 남은 건 상대 턴)은 1990년대 POGs 표준 룰(각자 같은 수를 내고, 앞면이 나온 것은 친 사람이 갖고, 나머지는 재스택)과 사실상 같다. 같은 계열 놀이가 Tazos·Flippos·Menko·bafo·尪仔標로 퍼져 있어 글로벌 무설명 온보딩이 가능하다.",
+   "해외 미디어는 이미 'Ddakji = Pogs'(Marie Claire, Netzwelt, Netflix PH)와 'Ddakji ≈ Tazos'(LOS40 México)로 프레이밍하고 있다. 다만 오징어게임의 ddakji는 사각 딱지와 따귀 이미지라, 원형 더미에 입김을 부는 이 게임은 시각적으로 POGs에 더 가깝다. 따라서 'ddakji'는 키워드로 쓰고, 타이틀은 의성어나 글로벌 이름으로 가는 것이 유리하다.",
+   "POGs·Flippos 등 원조 붐은 공급 과잉에 따른 가치 붕괴와 'for keeps' 도박 논란·학교 금지로 1~3년 만에 꺼졌다. 디지털판은 발행량 통제와 '친선/따먹기' 명시적 분리, 레어 보호 슬롯이 필수다.",
+   "PEGI는 2026년 6월 이후 유료 랜덤 아이템(카드팩·가챠)이 있는 신규 게임에 최소 PEGI 16을 부여하고, Apple은 빈번한 시뮬레이션 도박을 17+로 등급화한다. 남녀노소 타깃이면 유료 랜덤 딱지팩과 카지노형 내기 연출을 배제해야 한다.",
+   "더미를 뒤집는 장르나 ddakji의 성공한 디지털 타이틀은 확인되지 않았다(POGs Mobile 2018 출시·성과 불명, Ddakji Side 10K+·2.4~2.8점, Squid Game: Unleashed에 ddakji 모드 미확인). 빈자리이지만, 향수가 아닌 손맛으로 검증해야 한다.",
+   "지역 변형 모두의 물리 핵심은 '공기압으로 들어 올리기'다(Menko의 바람, bafo의 조개손 공기, 동딱지의 불기). 실물에서도 '기술 > 힘'(Menko)과 '손 큰 아이가 유리하다는 불공정'(bafo 금지 사유)이 함께 기록돼 있다. 바람을 시각화하고 파워를 스윗 스팟 구조로 만들면 남녀노소 공정 PvP가 된다."
+  ],
+  "risks": [
+   "리서치 방법 한계: 이번 세션에서는 WebFetch(DNS ENOTFOUND)와 직접 HTTPS(프록시 403)가 막혀 핵심 페이지를 직접 열지 못했다. 모든 근거는 WebSearch 결과 요약에서 나왔다. WPF $175M, Smiths +15%, Flippo 작명 테스트, 동딱지 '불어서 넘기기' 문장의 원 출처 등 단일 출처 수치나 문장은 검증 단계에서 재확인이 필요하다.",
+   "오징어게임 연상 리스크: ddakji 인지도가 데스게임·따귀 이미지와 붙어 있다. Netflix는 'Squid Game' 상표를 20개 이상 지역에 출원했다. 사각 파랑/빨강 딱지나 트레이닝복 같은 시각 요소를 쓰면 IP 분쟁과 아류작 인식 위험이 있다.",
+   "'POG' 상표는 WPF와 POG Unlimited 계열이 지금도 활발히 쓰고 있다(2025 Hobby Box). 타이틀이나 마케팅 문구에 'POG'를 쓰면 상표 리스크가 있으므로, 'milk caps'나 일반 서술로 대체해야 한다.",
+   "도박 낙인 리스크: 원조 놀이 모두가 '카지노', '도박' 비판으로 학교에서 금지됐다. 디지털 내기와 유료 랜덤팩이 합쳐지면 PEGI 16~18, Apple 17+ 등급으로 남녀노소 포지셔닝과 키즈 마케팅이 막힐 수 있다. 한국 게임물관리위원회의 사행성 기준은 이번에 조사하지 못했다.",
+   "향수 의존 리스크: POGs·Tazos·Flippos의 공통 기억은 주로 1980~90년대생(현재 30~45세)의 것이다. 10대와 Gen Z에게 'pog'은 Twitch 슬랭일 뿐이라 향수 후크가 통하지 않는다. 내재적 손맛이 없으면 2018년 POGs AR 게임처럼 흐지부지될 수 있다.",
+   "마이크 불기 입력 리스크: 감지 부정확, 공공장소 민망함, 접근성 문제, 기기별 감도 차이로 PvP 공정성이 깨질 수 있다.",
+   "기원 논쟁 리스크: 딱지와 Menko의 계보가 연결돼 있다는 서술이 있어, '한국 고유 전통'이라고 단정하는 마케팅은 한일 커뮤니티에서 논쟁을 부를 수 있다.",
+   "유행형 수명 리스크: 원조들은 1~3년 내 소멸했다. 장기 메타(시즌·세트·랭크)가 없으면 같은 곡선을 그릴 수 있다."
+  ],
+  "open_questions": [
+   "Squid Game: Unleashed(2026년 10월 시즌3 업데이트 포함)에 ddakji 미니게임이 실제로 들어 있는가? 있다면 어떤 입력 방식이고 반응은 어땠는가? (이번 검색에서는 확인되지 않음)",
+   "POGs: The Mobile Game(2018, Compton Technology)은 Indiegogo $50K 목표를 달성했는가, 출시됐는가? 실패했다면 원인은 손맛이었나, 마케팅이었나, AR 의존이었나?",
+   "한국 동딱지의 '입으로 불어 더미 뒤집기' 룰의 지역별 변형과 명칭(동딱지/알딱지/때기 등)을 1차 자료(나무위키, 국립민속박물관)로 확정할 수 있는가? 이번에는 접속이 차단됐다.",
+   "게임에서 번 딱지만 거는 PvP '따먹기'가 PEGI·ESRB·Apple·한국 게임물관리위원회 기준에서 '시뮬레이션 도박'이나 '사행성'으로 분류되는가? 친선/따먹기 분리와 스킬 기반 결정을 입증하면 등급을 낮출 수 있는가?",
+   "외국인 플레이테스트에서 '폰에 대고 불기'는 쾌감 요소인가, 민망함 요소인가? 지역(동아시아, 북미, 남미)별 반응 차이는 있는가?",
+   "'Pogs의 한국 사촌' 프레이밍과 독자 브랜드(의성어 타이틀) 중 어느 쪽이 스토어 CTR과 설치 전환이 높은가? 지역별 A/B(US: pogs, MX: tazos, BR: bafo) 검증이 필요하다.",
+   "Flippo 작명 과정에서 'Tazo'가 '스페인/멕시코 과자 같고 재미없다'는 이유로 탈락했다는 설은 사실인가? 사실이라면 지역별 현지명 전략의 근거가 된다."
+  ]
+ },
+ {
+  "lens": "게임 필(game feel) & 쾌감 설계 — \"퍽! 하고 한 번에 우수수 뒤집히는 순간\"의 카타르시스 극대화",
+  "summary": "결론: 딱지 게임의 쾌감은 한 번 불 때마다 4막으로 연출해야 한다. ①모으기(충전 중 긴장, 볼 부풀리기, 바람 범위 미리보기) ②\"퍽!\" 임팩트(히트스톱 + 섬광 + trauma 방식 흔들림 + 의성어 큰 글자) ③연쇄(한 장 뒤집힐 때마다 Peggle처럼 음이 한 칸씩 올라가는 소리와 카운터) ④보상(뒤집힌 장수 단계별 연출, 크게 성공하면 슬로모·줌, 딴 딱지가 내 더미로 날아오기).\n연구를 보면 연출은 '최대'가 아니라 '중~고' 수준에서 성과가 가장 좋다(Kao 2020: medium·high가 none·extreme보다 우세). 성과에 비례하는 피드백은 동기를 높이고, 성과와 무관하게 부풀린 연출은 오히려 동기를 떨어뜨렸다(Kao CHI 2024, 1,699명). 그래서 뒤집힌 장수에 맞춰 연출 강도를 계단식으로 올려야 한다.\n입으로 부는 마이크 입력을 기본 조작으로 두면 위험하다. 닌텐도 DS의 '불기' 조작은 공공장소에서 민망하고 어지럽다는 혹평을 받았다. 기본은 한 손가락으로 당겼다 놓기로 하고, '입김'은 캐릭터 연출(볼 부풀리기, 바람 이펙트)로 보여준다. 마이크는 파티·방송용 선택 모드로 둔다.\n아깝게 안 넘어간 딱지(near-miss)는 플레이어가 스스로 조절한다고 느낄 때만 '한 번 더'를 부른다(Clark 2009). 따라서 진짜 물리 결과만 보여주고, 원인을 알려주는 피드백으로 써야 한다. 조작해서 만든 아까운 결과는 금지한다.\n베팅 판돈은 양쪽이 같은 장수를 거는 제로섬이다. 콤보·배수 보너스는 판돈 밖(XP, 별, 이름 붙은 기술 배지, 도감 도장)으로 지급해야 PvP 공정성과 '도박 같다'는 인식 문제를 함께 피할 수 있다.\n조사 한계: WebFetch가 모든 도메인에서 DNS 오류(ENOTFOUND)로 실패해 원문 페이지는 하나도 직접 열지 못했고, 모든 근거는 WebSearch 결과 요약이다. 검색은 약 31회 수행했고, 턴 한도에 걸려 '불어서 원판이 뒤집히는 물리'는 조사하지 못했다.",
+  "findings": [
+   {
+    "claim": "'Juice It or Lose It'(Martin Jonasson & Petri Purho)은 GDC Europe 2012 인디게임 서밋에서 열린 라이브 데모다. 밋밋한 Breakout 게임에 색, 트위닝·이징, 늘이고 찌그러뜨리기(squash & stretch), 효과음, 음악, 파티클, 화면 흔들림, 화면 번쩍임을 하나씩 더해 '같은 규칙인데 손맛이 완전히 달라지는' 과정을 보여줬다.",
+    "evidence": "Game Developer의 GDC Europe 2012 세션 안내와 2014년 기사가 'tween, stretch, or squeeze objects'를 언급한다. RPG Playground 정리글에는 색, 이징, squash & stretch, 사운드, 음악, 파티클(개수 제한, 연기·파편·잔상), 흔들림, 번쩍임이 나열돼 있다. 첫 발표 장소를 Nordic Game Jam 2012로 적은 자료도 있으나 확인되지 않았다. 원문은 fetch 실패로 보지 못했다.",
+    "sources": [
+     "https://www.gamedeveloper.com/business/gdc-europe-2012-details-the-top-sessions-for-next-week-s-show",
+     "https://rpgplayground.com/research-making-a-juicy-game/",
+     "https://gamedeveloper.com/design/video-indies-resist-the-urge-to-juice-it-or-lose-it-",
+     "https://crcdng.itch.io/juicy-break"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Jan Willem Nijman(Vlambeer)의 'The Art of Screenshake'(2013)은 Nuclear Throne을 묵직하게 만든 약 30가지 기법을 빠르게 나열한 강연이다. 총구 섬광, 히트스톱, 카메라 킥이 포함된다. Nuclear Throne은 화면 흔들림과 프리즈프레임 세기를 옵션 슬라이더로 조절하게 하는데, 흔들림 때문에 조준이 안 된다며 끄는 플레이어도 있다.",
+    "evidence": "검색 요약(egmatic)은 '약 30가지 트릭, 총구 섬광부터 히트스톱, 카메라 킥까지'라고 소개한다. Steam 토론에는 'slider in the options menu to adjust screenshake and freeze frames'와 흔들림이 싫다는 의견이 있다. '권총 1발에 카메라 6px 킥, 흔들림 +4'라는 수치는 한 검색 요약에만 나오고 다른 검색에서는 확인되지 않아 신뢰도가 낮다.",
+    "sources": [
+     "https://egmatic.com/blog/how-to-make-your-game-feel-good",
+     "https://steamcommunity.com/app/242680/discussions/0/490125737474217932/",
+     "https://www.killscreen.com/nuclear-throne-is-hotter-than-a-smoking-gun/",
+     "https://infovore.org/?p=5275"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Steve Swink(『Game Feel』, 2008)는 게임 필을 '시뮬레이션된 공간에서 가상 물체를 실시간으로 조작하되, 상호작용을 폴리시(polish)로 강조한 것'으로 정의한다. 여기서 '실시간'은 입력에서 반응까지 약 100ms 안에 피드백이 닫히는 수준을 뜻한다. 폴리시는 장식이 아니며, 입력에 따른 움직임과 애니메이션·사운드·이펙트가 맞물려 생기는 물리감이다.",
+    "evidence": "Wikipedia의 Game feel 문서와 Liz England의 서평이 'real-time = 100ms 미만 피드백 루프'와 '폴리시가 없으면 지각적으로 덜 설득력 있다'는 Swink의 주장을 인용한다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Game_feel",
+     "https://lizengland.com/blog/review-game-feel-by-steve-swink/",
+     "https://arxiv.org/pdf/2011.09201"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "히트스톱(타격 순간 잠깐 멈춤)은 강한 타격일수록 길게 준다. 스매시브라더스에서 같은 15% 기술의 히트랙은 작품별로 8~15프레임(60fps 기준 약 133~250ms)이다. 튜토리얼들의 경험칙은 '무거운 타격 50~100ms'이며, Godot 예시는 0.08초 동안 timescale 0.05를 쓴다.",
+    "evidence": "SSBWiki 요약: 15% 기술의 히트랙은 Smash 64 10f, Melee 8f, Brawl·4 9f, Ultimate 15f이고 데미지에 비례한다. wayline·uhiyama-lab 튜토리얼은 50~100ms와 '공격자와 대상만 멈추고 UI·사운드는 unscaled time으로'를 권한다. Godot 수치는 비공식 스킬 파일 출처다.",
+    "sources": [
+     "https://www.ssbwiki.com/Hitlag",
+     "https://www.wayline.io/learn/game-feel/1",
+     "https://uhiyama-lab.com/en/notes/unity/unity-game-feel-hit-feedback/",
+     "https://claudeskills.info/ko/skills/gamedev-skills/awesome-gamedev-agent-skills/game-feel/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "사쿠라이 마사히로(Famitsu 칼럼 490~491호)는 히트스톱을 '작은 개선을 하나씩 쌓아 임팩트를 조금씩 더 세게 느끼게 하는' 장치로 설명했다. 여러 적을 한꺼번에 치는 무쌍 시리즈는 히트스톱을 거의 쓰지 않는다는 분석도 있다. 즉 다수 대상 연쇄에서는 대상마다 정지를 넣지 않는다.",
+    "evidence": "Source Gaming의 팬 번역과 Nintenderos의 2차 기사다. 'Dynasty Warriors series don't employ much hitstop… because you attack large groups of enemies at once'라는 문장이 있다.",
+    "sources": [
+     "https://sourcegaming.info/2015/11/11/thoughts-on-hitstop-sakurais-famitsu-column-vol-490-1/",
+     "https://www.nintenderos.com/2015/11/sakurai-nos-explica-que-es-la-mecanica-hitstop-usada-en-los-juegos-de-lucha/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "화면 흔들림의 정석은 Squirrel Eiserloh의 GDC 2016 강연 'Juicing Your Cameras With Math'의 trauma 모델이다. 0~1 사이 trauma 값을 사건마다 더하고, 시간이 지나며 줄인다. 실제 흔들림은 trauma의 거듭제곱(보통 제곱)에 비례시키고, 무작위 값 대신 Perlin noise로 부드럽게 만든다. Bevy 예제는 최대 이동을 20px로 잡았고, npm screen-shake 기본값은 최대 오프셋 30, 최대 각도 10이다.",
+    "evidence": "Bevy 공식 예제와 npm 패키지 설명이 trauma, 노이즈, 상한값을 언급한다. 강연의 정확한 공식(trauma²)은 원문을 확인하지 못했다.",
+    "sources": [
+     "https://bevy.org/examples/camera/2d-screen-shake/",
+     "https://www.npmjs.com/package/screen-shake",
+     "https://gamedeveloper.com/programming/video-sprucing-up-cameras-with-math",
+     "https://discourse.threejs.org/t/camera-shake-or-much-damage-such-wow/8963"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "연출(juice)은 많을수록 좋지 않다. Kao 외(Entertainment Computing, 2020)는 같은 액션 RPG를 none·medium·high·extreme 4단계로 만들어 비교했고, 모든 측정치에서 medium·high가 none·extreme보다 좋았다. Kao 외(CHI 2024, 사전등록, 1,699명)에서는 성공에 비례하는(success-dependent) 피드백이 모든 동기를 높였고, 증폭(amplification)만 한 조건은 오히려 동기를 낮췄다. 행위주체감(agency)을 해쳤을 가능성이 제기됐다.",
+    "evidence": "Improbable Research와 Goodreads 블로그의 연구 요약, 그리고 Imperial College 리포지토리의 CHI 2024 초록이다. 원 논문의 표본 수(2020)와 효과크기는 확인하지 못했다.",
+    "sources": [
+     "https://www.goodreads.com/author_blog_posts/19932694-the-effects-of-juiciness-in-an-action-rpg-new-study",
+     "https://improbable.com/tag/rpg/",
+     "https://spiral.imperial.ac.uk/entities/publication/253c32f5-d124-4a23-88b5-9aaaf114608d"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Hicks 외(CHI PLAY 2019, 2개 연구, 40명·32명)에 따르면 시각적 장식(juicy visuals)은 모든 게임에서 시각적 매력을 높였지만, 유능감(competence)은 일부 조건에서만 올렸다. 후속 연구에서는 진동 촉각(juicy haptics)이 즐거움·몰입·의미감을 높였고(CHI 2021), 'juicy' 원칙이 오디오에도 적용된다(CHI PLAY 2024).",
+    "evidence": "unpaywall DOI 10.1145/3311350.3347171 초록 요약, Waterloo Haptic Experience Lab 프로젝트 페이지, Staffordshire 리포지토리다.",
+    "sources": [
+     "https://unpaywall.org/10.1145%2F3311350.3347171",
+     "https://uwaterloo.ca/haptic-experience-lab/projects/juicy-haptic-design-vibrotactile-embellishments-can-improve",
+     "https://eprints.staffs.ac.uk/8527"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Peggle의 Extreme Fever 연출: 마지막 주황 페그가 사정권에 들어오면 화면이 줌인하고 슬로모션이 걸린다. 그 페그를 맞히면 베토벤 '환희의 송가'가 흐르고, 남은 페그 점수가 크게 올라가며, 공은 바닥 보너스 버킷으로 들어간다. 반대로 아깝게 놓치면 합창이 실망하는 소리를 낸다. 한편 이 축하 연출이 반복되면 '기쁨이 아니라 안도'로 변한다는 비평도 있다.",
+    "evidence": "Game Informer(Peggle 2 리뷰)의 'zooming in and slowing the action down to see if your silver ball will hit its mark', Wikipedia 요약, TV Tropes, 그리고 Medium의 10주년 회고('Victory… becomes a moment of relief')다.",
+    "sources": [
+     "https://gameinformer.com/games/peggle_2/b/xboxone/archive/2013/12/10/ode-to-joy.aspx",
+     "https://en.wikipedia.org/wiki/Peggle",
+     "https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/Peggle",
+     "https://medium.com/@hernique/peggles-10th-anniversary-439941ae5773"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Peggle은 한 샷에서 페그를 맞힐 때마다 음이 한 칸씩 올라가는 음계를 연주한다. 특허(US 8,128,476)는 이를 '접촉한 페그가 늘수록 피치를 올리는 피드백'으로 명시한다. Peggle Blast!는 wav 5개를 MIDI 기반 피치 시프트로 전체 음계로 만들었고, 배경음악 구간의 키와 스케일을 따라간다.",
+    "evidence": "Audiokinetic 블로그 'Peggle Blast! Peg Hits and the Music System', patentarcade의 특허 요약, GameSpot과 Destructoid 리뷰다.",
+    "sources": [
+     "https://audiokinetic.com/ko/blog/peggle-blast-peg-hits-and-the-music-system",
+     "https://www.patentarcade.com/video-game-patent/US8128476/electronic-game-such-as-a-computer-game-involving-removing-pegs",
+     "https://www.gamespot.com/reviews/peggle-2-review/1900-6415588/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Peggle은 기술에 이름을 붙여 보너스를 준다(Style Shots). 예: Long Shot(화면 폭 1/3 이동 후 타격), Off the Wall, Free Ball Skillz, Mad Skillz(5연속 버킷). 이름 붙은 묘기는 실력의 어휘를 가르치고 자랑할 거리를 만든다.",
+    "evidence": "Twinfinite, TrueAchievements, Engadget의 Peggle 2 가이드 요약이다.",
+    "sources": [
+     "https://twinfinite.net/?p=198340",
+     "https://www.engadget.com/2013-12-09-stiq-tips-peggle-2-guide.html"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Angry Birds에서 플레이어가 조절하는 것은 발사 세기와 각도 두 가지뿐이다(발사 후 개입 없음, 일부 새의 탭 능력 제외). 물리는 단순화한 뉴턴 역학이고, 블록은 체력이 0이 되면 사라진다. 당기는 동안 점선 궤적이 보인다. 한편 '맞게 쐈는데 주사위처럼 결과가 달라진다'는 무작위성 불만도 있었다. 프랜차이즈는 2012년 5월 누적 10억 다운로드를 기록했다.",
+    "evidence": "arXiv의 Angry Birds 계산복잡도 논문, TouchArcade의 AB2 무작위성 기사, noobfeed 리뷰, GameSpot·TNW의 10억 다운로드 기사(2012년 5월 9일, 2011년 말 6억4,800만)다.",
+    "sources": [
+     "https://arxiv.org/pdf/1812.07793",
+     "https://toucharcade.com/2015/08/03/angry-birds-2-randomness/",
+     "https://www.noobfeed.com/reviews/angry-birds",
+     "https://thenextweb.com/mobile/2012/05/09/rovios-angry-birds-titles-hit-1-billion-cumulative-downloads/",
+     "https://forum.babylonjs.com/t/angry-birds-style-path-prediction/6372"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Rovio의 사운드 디자이너(Angry Birds Journey)는 파괴와 충돌 소리를 '장난감 같고(toyish) 덜 공격적으로' 설계했다고 밝혔다. 폭발음도 둥글고 장난스럽게 만들었다. 피드백은 강하되 폭력적이지 않게 해서 전 연령이 즐길 수 있게 한 것이다.",
+    "evidence": "A Sound Effect의 Angry Birds Journey 인터뷰: 'making the destruction and collision of physical objects in the game sound less aggressive… Angry Birds never sounds violent – even the explosions.'",
+    "sources": [
+     "https://asoundeffect.com/angry-birds-journey-game-audio/",
+     "https://designingsound.org/2011/09/22/the-sound-of-angry-birds/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "near-miss(아깝게 실패)는 완전 실패보다 기분은 더 나쁘지만 계속하고 싶은 욕구를 키운다. 이때 승리 보상과 같은 뇌 회로(선조체·섬엽)가 활성화된다. 단, 이 효과는 플레이어가 자기가 조절한다고 느낄 때만 나타났고, 컴퓨터가 결과를 정하면 약해졌다. 실험은 Clark 외(Neuron, 2009, fMRI, 15명)다.",
+    "evidence": "PMC 원문 요약: 'near-misses were experienced as less pleasant, but increased desire to play'. 효과는 플레이어가 아이콘을 직접 고를 때 더 강했다. 2010년 후속 연구에서는 도박 심각도가 높을수록 중뇌 반응이 컸다.",
+    "sources": [
+     "https://pmc.ncbi.nlm.nih.gov/articles/PMC2658737/",
+     "https://pmc.ncbi.nlm.nih.gov/articles/PMC2929454",
+     "https://discovermagazine.com/mind/slot-machine-near-misses-are-perfectly-tuned-to-stoke-the-addiction"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "닌텐도 DS의 '마이크에 불기' 조작은 출시 당시 대체로 혹평을 받았다. 지하철에서 숨을 몰아쉬는 게 민망하다, 어지럽다(Diddy Kong Racing DS)는 반응이 나왔고, 아이들이 30분 만에 흥미를 잃었다는 일화도 있다. 다만 파티 미니게임(Mario Party DS)에서는 웃음 요소로 쓰였다.",
+    "evidence": "Engadget 2007 'Blowing on the DS sucks (or: the huff-and-puff games)'(MTV Stephen Totilo: 'first video game innovation he had ever hated'), Mario Wiki의 Short Fuse·Big Blowout 항목, Unity 포럼 일화다.",
+    "sources": [
+     "https://www.engadget.com/2007-04-11-blowing-on-the-ds-sucks-or-the-huff-and-puff-games.html",
+     "https://www.mariowiki.com/Short_Fuse_(Mario_Party_DS)",
+     "https://discussions.unity.com/t/mobile-app-game-that-needs-users-to-blow-onto-screen/590628"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "웹 환경에서 입김 감지와 햅틱은 불안정하다. 브라우저에는 표준 '불기 감지'가 없어 AnalyserNode로 RMS·대역 에너지를 구하고 적응형 노이즈 기준선을 따로 만들어야 하며, 소음에 약하다. 진동은 iOS Safari가 navigator.vibrate를 지원하지 않는다. 숨긴 <input type=checkbox switch>를 클릭하는 우회법이 있지만(17.4 또는 18 이후), iOS 26.5에서 막혔다는 미확인 주장이 있다. Android의 vibrate는 사용자 제스처 안에서만 동작한다.",
+    "evidence": "whistlerr(500~5000Hz 휘파람 감지, 소음 취약), MacRumors·B4X 포럼, azukiazusa의 iOS Safari web haptics 글, Ionic 이슈 #29942, rapidtoolset의 haptics tester다.",
+    "sources": [
+     "https://www.npmjs.com/package/whistlerr",
+     "https://forums.macrumors.com/threads/detect-blowing-into-mic.707691",
+     "https://azukiazusa.dev/en/blog/ios-safari-web-haptics",
+     "https://github.com/ionic-team/ionic-framework/issues/29942",
+     "https://rapidtoolset.com/en/tool/ios-haptics-tester"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "동딱지 불기와 구조가 거의 같은 놀이가 해외에도 있다. 미국 90년대 POG/Milk caps는 양쪽이 같은 수를 걸어 쌓고 → 슬래머로 내리쳐 → 뒤집힌 것을 갖고 → 나머지를 다시 쌓는다. 이 유행 때 여러 학군이 '도박'으로 보고 금지했다. 일본 멘코는 '입김(puff of air)이나 내리치기'로 뒤집으며, 힘보다 기술이 중요해 어린 아이도 겨룰 수 있다.",
+    "evidence": "Wikipedia Milk caps 항목('Each player keeps any face-up caps and is to restack…', 'many school districts considered Pogs a form of gambling'), Kalamazoo Museum, Wikipedia Menko 항목('flip it, either with a puff of air or by striking', 'technique is just as important as power… smaller children can compete')이다.",
+    "sources": [
+     "https://www.wikipedia.org/wiki/Pogs",
+     "https://kalamazoomuseum.org/blog/the-history-of-pogs-a-fun-childhood-game",
+     "https://en.wikipedia.org/wiki/Menko",
+     "https://www.fastcompany.com/91228022/pogs-are-back-90s-craze"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "오징어게임 이후 '딱지(ddakji)를 뒤집는 동작'은 이미 전 세계에 알려졌다. TikTok #Ddakji는 몇 달 만에 1,760만 뷰를 넘었고, 서울 행사에서는 33개국 82명이 첫 종목으로 딱지를 했다. 나무위키에는 내리칠 때 생기는 바람으로 넘기는 '바람 뒤집기' 변형이 기록돼 있다.",
+    "evidence": "Business Recorder·Himalayan Times(TikTok 1,760만 뷰), AOL(33개국 82명), 나무위키 '딱지치기'(바람으로 넘기는 변형, 공격 딱지가 크고 수비 딱지가 얇을 때 잘 됨)다. 단, 오징어게임 딱지는 접은 사각 딱지라 원형 동딱지와는 다르다.",
+    "sources": [
+     "https://www.brecorder.com/news/amp/40123838",
+     "https://www.aol.com/articles/squid-game-comes-life-korea-080518788.html",
+     "https://namu.wiki/w/%EB%94%B1%EC%A7%80%EC%B9%98%EA%B8%B0",
+     "https://en.wikipedia.org/wiki/Ddakji"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "결정적 순간 슬로모는 '드물게, 확실할 때만' 쓰는 것이 관례다. Half Sword의 킬캠은 결정타에만 timescale 8%로 떨어지고, 연속 발동을 막는 쿨다운이 있다. Skyrim 킬캠 모드는 약 50% 확률로만 발동하고, 다수 교전 중에는 억제되며, 멀티플레이에서는 꺼진다. Unity 문서는 timeScale을 낮출 때 fixedDeltaTime도 같이 낮추라고 권한다.",
+    "evidence": "Nexus Mods(Half Sword #503), CurseForge·moddex(Skyrim killcam), Unity 문서의 Time.timeScale 항목이다.",
+    "sources": [
+     "https://www.nexusmods.com/halfsword/mods/503",
+     "https://moddex.gg/mod/skyrim-killcam",
+     "https://docs.unity3d.com/500/Documentation/ScriptReference/Time-timeScale.html"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Fruit Ninja의 핵심 쾌감은 한 번 긋기로 여러 과일을 베는 콤보 보너스다. 리뷰어들은 '여러 개를 한 번에 베면 무술 고수가 된 기분'이라고 썼다. 반면 무작위 크리티컬에는 '실력이 아니라 운'이라는 비판이 있었다. 보상 증폭은 실력에 연동될 때 호평받는다.",
+    "evidence": "Pocket Gamer 리뷰 2건과 Macworld 리뷰다.",
+    "sources": [
+     "https://www.pocketgamer.com/fruit-ninja/review-9534/",
+     "https://www.macworld.com/article/207030/fruitninjareview.html"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Wii Sports 볼링은 버튼 조합을 '실제 팔 스윙'으로 바꿔 복잡한 컨트롤을 꺼리던 사람과 노인 시설까지 퍼졌다. 현실의 몸동작을 그대로 옮긴 입력이 설명 없이도 통하는 직관성을 만든다.",
+    "evidence": "The Strong Museum of Play의 'Pins and Pixels' 기사다.",
+    "sources": [
+     "https://www.museumofplay.org/blog/pins-and-pixels-a-brief-history-of-home-video-game-bowling/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "플릭(짧고 빠른 튕기기) 입력은 시작점과 끝점이 아니라 손을 떼기 직전 N개 터치 지점의 속도와 방향으로 해석해야 의도와 맞는다. 속도를 힘으로 바꾸는 곡선(선형, 2차, 로그, 로지스틱)은 손 크기와 방향에 따라 체감이 달라 따로 조율해야 한다.",
+    "evidence": "USPTO 특허(9507512 등)와 POSTECH의 한 손 플릭 매핑 함수 연구다.",
+    "sources": [
+     "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9507512",
+     "https://remotecenter.postech.ac.kr/handle/2014.oak/1032"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "동전밀기(coin pusher)의 매력은 가장자리에 걸려 떨어질 듯 말 듯한 더미와, 동전 하나가 연쇄로 여러 개를 떨어뜨리는 '눈사태'에서 나온다.",
+    "evidence": "Aftermath 기사 등 비학술 서술뿐이고 연구 근거는 없다.",
+    "sources": [
+     "https://aftermath.site/raccoin-is-a-coin-pusher-where-its-ok-to-shake-the-machine/",
+     "https://easy.vegas:443/games/flipit"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "'퍽' 한 번은 4막 구조로 설계해야 한다. 1막 모으기(약 0.3~1.2초) → 2막 임팩트(약 0.1초) → 3막 연쇄(약 0.8~2초) → 4막 보상(약 0.5~2.5초, 탭으로 건너뛰기).",
+    "why_it_matters": "Juice it or lose it와 Art of Screenshake가 공통으로 보여주듯, 손맛은 개별 효과가 아니라 '예고 → 타격 → 여운'의 리듬에서 생긴다. Swink도 입력에 따른 움직임과 연출이 맞물리는 것을 핵심으로 본다. 딱지 게임에는 결과(몇 장 넘어갔나)가 몇 초 뒤에 확정되는 지연이 있으므로, 그 사이를 긴장과 연쇄 연출로 채워야 한다.",
+    "design_implication": "1막: 홀드하는 동안 캐릭터 볼이 squash & stretch로 부풀고, 바람 범위(콘)와 조준점이 원기둥 더미 위에 표시되며, 더미 가장자리 딱지가 바르르 떨리고, '흐읍' 소리가 상승한다. 2막: 손을 떼는 순간 히트스톱 60~90ms(크게 터질 판이면 120~180ms), 흰 섬광 1~2프레임, trauma +0.3~0.8, 거대한 의성어 텍스트 'PUK!/퍽!'. 3막: 뒤집힐 때마다 '탁' 소리와 음이 한 칸 상승, 카운터가 1.0→1.3→1.0으로 튀어 오른다. 4막: 장수 등급 배너와 함께 딴 딱지가 포물선을 그리며 내 더미와 도감으로 날아온다. 일반 샷의 총 연출은 2.5초를 넘기지 않는다."
+   },
+   {
+    "insight": "연출 강도는 뒤집힌 장수에 비례해 계단식으로 올리고, 실패는 조용하고 짧게 처리한다.",
+    "why_it_matters": "Kao 2020에서 extreme 연출은 none과 함께 최하위였다. CHI 2024에서는 성공에 비례하는 피드백이 동기를 높인 반면, 무조건 부풀린 연출은 동기를 떨어뜨렸다. Peggle 비평이 지적하듯 큰 축하가 반복되면 '안도'로 식는다.",
+    "design_implication": "판돈 대비 비율로 5단계를 만든다. 0장 '휘익…', 1~2장 Nice, 3~5장 Great, 판돈의 50% 이상 Amazing, 전부 '싹쓸이 / CLEAN SWEEP'. 단계마다 흔들림·파티클·음악 레이어를 추가한다. 슬로모와 줌은 Amazing 이상이나 마지막 1장 상황에서만 쓰고, 연속 발동을 막는 쿨다운을 둔다(Half Sword처럼 결정타 전용). 화면 흔들림과 모션은 설정에서 줄일 수 있게 한다(Nuclear Throne의 슬라이더 선례)."
+   },
+   {
+    "insight": "물리를 먼저 계산하고 연출은 나중에 보여준다(simulate-first, present-second).",
+    "why_it_matters": "Peggle의 Extreme Fever는 결과가 보장된 상태에서 슬로모를 걸기 때문에 헛방이 없다. 딱지는 물리 결과가 확정돼야 '어느 딱지가 마지막에 넘어가는지', '어느 딱지가 모서리로 섰는지'를 알 수 있다. Skyrim 킬캠이 멀티플레이에서 꺼지는 것처럼, 실시간으로 공유하는 시계에 슬로모를 거는 방식은 PvP와 충돌한다.",
+    "design_implication": "three.js 목업에서는 입력이 들어오면 물리 엔진을 화면 없이(headless) 고정 timestep으로 끝까지 돌려 결과와 궤적을 기록하고, 그 기록을 재생하면서 timescale, 카메라 컷, 슬로모 대상을 정한다. 덕분에 '마지막 한 장'에 정확히 줌인할 수 있다. 같은 입력과 시드면 같은 결과가 나오게 해서, PvP에서 서버 검증, 리플레이 공유, 'Play of the Game' 클립을 만들 수 있는 기반으로 삼는다. 슬로모는 각 클라이언트의 연출로만 처리한다(턴제라 가능)."
+   },
+   {
+    "insight": "뒤집힐 때마다 음이 한 칸씩 올라가는 연쇄음(Peggle 특허 방식)을 핵심 사운드 장치로 쓴다.",
+    "why_it_matters": "여러 장이 우수수 넘어가는 장면을 귀가 '세는' 경험으로 바꿔 준다. 많이 넘어갈수록 음이 높이 올라가 그 자체가 보상이 된다. 화면을 보지 않아도 성과가 전달되고, 짧은 영상에 그대로 실려도 전달된다.",
+    "design_implication": "딱지 '탁' 샘플 3~5개를 오음계(5음계)로 피치 시프트한다. 오음계는 순서가 어떻든 불협화음이 나지 않고, 국악 느낌과 글로벌 범용성을 함께 갖는다. 2옥타브를 넘으면 최고음을 유지하고 마지막에 화음 스팅어로 마무리한다. 샘플 순환과 피치 미세 랜덤으로 반복감을 없앤다. 히트스톱은 첫 '퍽'에만 넣고 장마다 넣지 않는다(사쿠라이와 무쌍의 다수 대상 원칙). 장별 피드백은 소리, 작은 팝, 가벼운 햅틱 틱으로 처리한다."
+   },
+   {
+    "insight": "'마지막 한 장'과 '모서리로 선 딱지'가 이 게임의 Extreme Fever 순간이자 진짜 near-miss다.",
+    "why_it_matters": "Clark 2009에 따르면 near-miss는 플레이어가 스스로 조절한다고 느낄 때만 '한 번 더'를 부른다. 이 게임은 진짜 실력 게임이므로 정당하게 활용할 수 있다. 반대로 결과를 조작해 아깝게 만들면 슬롯머신과 같은 다크패턴이 되고, POG 사례처럼 '도박'으로 낙인찍힐 위험이 커진다.",
+    "design_implication": "판에 1~3장이 남았거나 딱지가 모서리로 서서 흔들리면 tension cam(줌, 0.1~0.25배속, 심장박동 SFX)을 켠다. 넘어가면 환희의 팡파르, 안 넘어가면 코믹한 '아이고~' 합창(Peggle의 실망 합창 선례)을 튼다. 결과는 반드시 진짜 물리 시뮬레이션 그대로 보여준다. 대신 '바람이 위로 2cm 높았음' 같은 정보형 리플레이(바람 화살표, 조준점 비교)를 붙여 아깝게 진 순간을 '다음엔 이렇게'로 바꾼다. 'Edge Stand'(모서리 서기)는 실패해도 이름 붙은 진기록으로 기록해 보상한다."
+   },
+   {
+    "insight": "입김은 '조작 방식'이 아니라 '세계관과 연출'로 구현하고, 기본 입력은 한 손가락 당겼다 놓기로 한다.",
+    "why_it_matters": "사용자는 '입으로 불어야 임팩트가 있다'고 했지만, DS 사례는 마이크 불기가 공공장소에서 민망하고 어지러우며 금방 질린다는 것을 보여준다. 웹 마이크 감지는 소음에 약하고, iOS 웹에서는 진동도 막혀 있다. Wii 볼링과 Angry Birds처럼 현실 동작을 닮은 단순한 입력이 설명 없이도 통한다.",
+    "design_implication": "기본 조작: 더미 옆을 터치해 '바람을 넣을 지점(원기둥의 높이와 측면)'을 고르고 → 뒤로 끌어 세기와 방향을 정한 뒤 → 놓으면 '퍽'. Angry Birds의 짧은 점선처럼 바람 콘은 방향만 보여주고 결과는 숨긴다. 과충전 구간에서는 조준이 흔들리게 해서 위험과 보상의 트레이드오프를 만든다(Golf Clash의 '더 세게 칠 수 있지만 망칠 위험'). 연출: 내 캐릭터가 볼을 부풀렸다가 '퍽!' 하고 바람 덩어리를 쏘는 만화 이펙트. 선택 모드: '진짜 불기(마이크)'는 파티·방송·SNS 챌린지용으로 두고 감도 보정 단계를 넣는다. '손바닥 치기(탭 슬램)'도 대체 모드로 제공한다(POG 슬래머·오징어게임 딱지와 같은 동작이라 글로벌하게 익숙함)."
+   },
+   {
+    "insight": "뒤집기 자체를 '공개(reveal)'로 만든다. 뒷면은 공통 무늬, 앞면은 캐릭터로 해서, 뒤집히는 순간 무엇을 땄는지 드러나게 한다.",
+    "why_it_matters": "쾌감(장수)과 수집욕(무엇을 땄나)이 한 프레임에서 겹친다. Angry Birds에서 블록이 무너지는 연쇄를 지켜보듯, 우수수 뒤집히는 동안 캐릭터 얼굴이 연달아 나타나는 것은 작은 가챠 연출과 같은 효과를 낸다.",
+    "design_implication": "더미는 뒷면이 위로 오게 쌓는다. 뒤집혀 앞면이 나오면 희귀도에 따라 테두리가 빛나고(홀로그램 셰이더, 반짝임 파티클, 별 등급 SFX), 처음 얻은 캐릭터에는 NEW 배지와 도감 도장 애니메이션을 붙인다. 희귀 딱지가 넘어갈 때는 짧은 줌과 '희귀!' 콜아웃을 넣는다. 단, PvP에서 남의 희귀 딱지를 빼앗는 구조는 이탈 위험이 있으므로 판돈용 사본과 원본(도감) 분리를 메타 기획에서 검토해야 한다."
+   },
+   {
+    "insight": "콤보·배수 보상은 판돈 밖에서 지급한다.",
+    "why_it_matters": "판돈은 양쪽이 같은 장수를 거는 제로섬이다. '5장 이상이면 2배' 같은 보너스를 판돈에서 지급하면 상대가 낸 것 이상을 가져가게 되어 규칙이 깨지고 PvP 공정성이 무너진다. Fruit Ninja 사례처럼 무작위 보너스는 비판받고, 실력 연동 보너스가 호평받는다.",
+    "design_implication": "판돈은 항상 '뒤집힌 만큼 가져간다'는 원칙을 유지한다. 대신 실력 연동 보너스는 은행에서 별도로 지급한다. 이름 붙은 기술(Peggle의 Style Shot처럼): '싹쓸이', '원샷 원킬(첫 턴 전부)', '탑 토플(꼭대기만 정확히)', 'Edge Stand', '역전승(마지막 한 장)'. 보상은 XP, 별, 코인, 도감 도장, 프로필 배지다. 연속 성공 턴에는 '연속 퍽 ×N' 콤보 미터를 둬서 다음 판의 표현 등급만 올리고 판돈 규칙은 건드리지 않는다. 이름 붙은 기술은 PvP 매치 결과 화면과 공유 클립의 태그가 된다."
+   },
+   {
+    "insight": "글로벌 접근성은 '장난감 같은 물리감 + 의성어 브랜드 + 이미 알려진 뒤집기 동작'에서 나온다.",
+    "why_it_matters": "POG(미국), 멘코(일본, 입김으로도 뒤집음), 오징어게임 딱지(TikTok #Ddakji 1,760만 뷰) 덕분에 '뒤집으면 내 것'이라는 규칙은 이미 세계가 안다. 설명 없이 시작하려면 문화 해설보다 물리 피드백이 즉시 읽혀야 한다. Rovio도 파괴음을 장난감처럼 만들어 전 연령에 맞췄다.",
+    "design_implication": "사운드는 종이와 판지의 '팔락·탁·촤르륵' + 둥근 만화 효과음으로 하고, 폭력적인 타격음은 쓰지 않는다. 의성어 'PUK!/퍽!'은 로고와 화면 텍스트로 쓰는 브랜드 자산으로 삼는다(한글과 라틴 표기를 함께 쓰는 만화 말풍선). 첫 판은 텍스트 없이 손가락 고스트 애니메이션 하나만 보여주고, 첫 샷이 최소 2~3장은 넘어가게 레벨을 설계해 첫 쾌감을 보장한다(물리 조작이 아니라 첫 더미 구성으로 조절). 'POG를 불어서 한다'는 한 줄 피치를 글로벌 마케팅 문구 후보로 넘긴다."
+   },
+   {
+    "insight": "웹 목업의 기술 제약은 처음부터 설계에 반영해야 한다.",
+    "why_it_matters": "iOS 웹 진동은 비표준 우회법에 의존하고 막힐 가능성이 있다. 슬로모 중 물리 timestep을 잘못 다루면 지터가 생긴다. 마이크 권한과 소음은 첫 경험을 망칠 수 있다.",
+    "design_implication": "햅틱은 점진적 향상으로 둔다(Android의 vibrate, iOS의 switch 우회, 실패하면 시각과 사운드로 대체). 기록·재생 방식(insight 3)을 쓰면 슬로모가 물리 안정성과 분리된다. AudioContext와 마이크는 첫 사용자 제스처 안에서 시작한다. 나중에 네이티브로 가면 Core Haptics로 '퍽'은 강도 높은 transient, 장별 틱은 sharpness 높고 강도 낮은 transient로 매핑한다."
+   }
+  ],
+  "key_claims": [
+   "연출은 최대가 아니라 '중~고' 수준에서 플레이 경험이 가장 좋고(Kao 2020), 성공에 비례하지 않는 증폭은 동기를 떨어뜨린다(Kao CHI 2024, 1,699명). 따라서 연출 강도는 뒤집힌 장수에 따라 계단식으로 올리고, 슬로모·줌은 큰 성공이나 마지막 한 장에서만 쿨다운을 두고 쓴다.",
+   "마이크로 입으로 부는 입력은 기본 조작으로 부적합하다(DS 불기 조작이 공공장소 민망함, 어지러움, 빠른 싫증으로 혹평받음). 기본은 한 손가락 당겼다 놓기로 하고, 입김은 캐릭터와 이펙트로 연출하며, 마이크는 선택적 파티 모드로 둔다.",
+   "한 장 뒤집힐 때마다 음이 오르는 연쇄음(Peggle 특허 US 8,128,476)과, 마지막 한 장·모서리로 선 딱지를 노리는 Extreme Fever식 tension cam이 '우수수' 쾌감의 핵심이다. 이를 정확히 연출하려면 물리를 먼저 끝까지 계산하고 기록을 재생하는 구조가 필요하다.",
+   "near-miss는 플레이어가 조절한다고 느낄 때만 재도전 동기를 높인다(Clark 2009). 따라서 진짜 물리 결과와 정보형 리플레이로만 보여주고 결과 조작은 금지해야 한다. 비슷한 놀이였던 POG가 학교에서 도박으로 금지된 전례가 있어 이 원칙은 브랜드 리스크와 직결된다.",
+   "판돈은 같은 장수를 거는 제로섬이므로, 콤보·배수·이름 붙은 기술 보너스는 판돈 밖(XP, 별, 배지, 도감)으로 지급해야 PvP 공정성과 핵심 규칙이 유지된다."
+  ],
+  "risks": [
+   "연출 과잉으로 피로하거나 멀미가 날 수 있다(extreme 조건이 최하위였던 Kao 2020, Nuclear Throne 흔들림을 끄는 유저들). 모션 줄이기 옵션과 탭으로 건너뛰기가 필수다.",
+   "near-miss 연출이 결과 조작으로 의심받거나 실제로 조작으로 흐르면 슬롯머신식 다크패턴이 된다. 내기 구조와 겹치면 앱스토어 도박·루트박스 규제 리스크가 있다(POG 학교 금지 전례).",
+   "물리 결과의 변동이 '실력'이 아니라 '주사위'로 느껴질 수 있다(Angry Birds 무작위성 불만). 바람 콘·조준점 시각화와 결정론적 시뮬레이션이 없으면 실력 게임으로 인식되지 않는다.",
+   "마이크 모드는 소음 오인식, 권한 거부, 위생, 민망함 문제가 있고, DS 사례처럼 새로움이 빨리 사라진다. 사용자 원안의 '입으로'에 대한 감성과 충돌할 수 있다.",
+   "iOS 웹 햅틱 우회법은 비표준이라 언제든 막힐 수 있다(26.5 패치 주장, 미확인).",
+   "PvP에서 남의 희귀 딱지를 빼앗는 구조는 패배자의 강한 손실감과 이탈을 부를 수 있다.",
+   "조사 한계: WebFetch가 모든 도메인에서 DNS 오류로 실패해 원문(GDC 강연, 논문 본문)을 직접 확인하지 못했다. 수치(Kao 2020 표본, Nijman의 6px, trauma² 공식, Godot 0.08s)는 검색 요약에 기반하므로 재검증이 필요하다. 검색 한도(턴당) 소진으로 '입김으로 원판이 뒤집히는 실제 물리' 조사가 누락됐다."
+  ],
+  "open_questions": [
+   "실제 동딱지 불기의 물리: 바람이 더미 아래 틈과 모서리로 들어가 원판을 들어 올리는 조건(입사각, 높이, 세기)은 무엇인가? 목업 물리 모델(바람을 힘장으로 쓸지 임펄스로 쓸지)을 정하려면 영상 분석이나 추가 조사가 필요하다(검색 한도로 미조사).",
+   "장수 등급 기준(예: 판돈의 몇 %부터 Amazing인가)과 히트스톱·슬로모 수치는 플레이테스트로 정해야 한다. 판돈 5장과 100장일 때 같은 기준이 통하는가?",
+   "사용자에게 '입으로 부는' 감각이 얼마나 중요한가? 터치 기본에 입김 연출만으로 만족하는지, 마이크 모드를 1차 목업에 넣을지 확인해야 한다.",
+   "첫 판의 쾌감 보장(첫 샷 2~3장 이상)을 더미 구성으로 조절할 때, 나중에 '조작' 논란이 생기지 않는 투명한 방식은 무엇인가?",
+   "PvP에서 상대 턴 연출(상대가 크게 성공하는 장면)을 얼마나 보여줄 것인가? 감정 반응(이모트, 캐릭터 리액션)과 건너뛰기 사이의 균형은?",
+   "판돈용 딱지와 도감 원본을 분리할 것인가? 희귀 딱지를 잃는 손실 회피를 쾌감 요소로 쓸지, 이탈 요인으로 보고 차단할지?",
+   "three.js에서 어떤 물리 엔진(cannon-es 또는 Rapier)이 결정론적 재현과 성능(더미 100장)을 만족하는가? 이 정보는 기억 기반이라 확인이 필요하다."
+  ]
+ },
+ {
+  "lens": "입력/제스처 설계: \"입으로 푹 분다\"를 모바일·웹에서 직관적이고 쾌감 있게 옮기는 방법",
+  "summary": "입으로 불기가 대중적으로 먹힌 사례는 실제로 있다. Smule Ocarina는 2009년 6월 사용자 100만 명을 넘겼고, 생일 촛불 끄기 앱도 많다. 다만 메인 반복 입력으로 쓴 경우(DS 젤다 대지의 기적 피리)는 '인식이 변덕스럽다', '주변 소음이 들어간다', '공공장소에서 민망하다', '화면에 침이 튄다'는 혹평을 받았다. 접근성 가이드도 음성(호흡) 입력은 반드시 보조여야 한다고 권고한다.\n그래서 추천 조합은 이렇다. 기본 입력은 터치 한 동작인 '딱지 가장자리를 짚고 당겼다 놓기'로 하고, 앵그리버드의 당김, 8볼풀의 조준과 파워 분리, 골프클래시의 퍼펙트 타이밍을 하나로 합친다. 옵션 입력은 '진짜 불기 모드'로 두고, 조준은 손가락이 하고 마이크는 파워만 맡는 하이브리드로 만든다.\n기술적으로는 웹 마이크로 불기를 꽤 잘 잡을 수 있다(저주파 광대역 에너지, 급격한 상승, 피치 없음). 대신 브라우저 기본 음성처리(노이즈 억제·자동 볼륨 보정)를 꺼야 하고, 터치로 '무장'한 시간창 안에서만 판정해서 오인식을 막아야 한다.\n쾌감은 입력보다 출력 연출(히트스톱, 연쇄로 뒤집히는 카운트, 음정이 올라가는 효과음)에서 결정된다. iOS 웹은 진동 API가 없고 무음 스위치를 켜면 웹 오디오가 꺼질 수 있어서, 화면 연출만으로도 쾌감이 완성되도록 만들어야 한다.\n(참고: 이번 조사 환경에서 WebFetch는 github.com 말고는 DNS 오류로 실패했고, 검색 예산도 중간에 다 썼다. 그래서 대부분의 근거는 검색 결과 요약에서 가져왔고, confidence는 최대 med로 매겼다.)",
+  "findings": [
+   {
+    "claim": "Smule Ocarina(2008.11 출시, $0.99)는 아이폰 마이크에 부는 입력으로 크게 성공했다. 초기에 50만~60만 다운로드, 2009년 6월 WWDC 시점에 '사용자 100만 명'을 기록했다.",
+    "evidence": "Stanford Magazine: 출시 후 50만 명 이상 다운로드, Time지 2008 아이폰 앱 Top10 중 4위. Vator: 2009.06 'iPhone Ocarina played by one million users'. 불면 마이크가 감지해 플루트 소리를 내고, 손가락 위치가 음정을 정한다. David Pogue(NYT)는 'one of the most magical programs'라고 평했다. 수치는 출처마다 조금씩 다르다.",
+    "sources": [
+     "https://stanfordmag.org/contents/rock-out-with-your-iphone",
+     "https://vator.tv/2009-06-10-iphone-ocarina-played-by-one-million-users/",
+     "https://spectrum.ieee.org/ge-wang-the-iphones-music-man",
+     "https://www.scientificamerican.com/article/iphone-ocarina-music/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Smule Sonic Lighter(2008.09, $0.99)는 불면 불꽃이 흔들리거나 꺼지는 앱이었다. 사용자는 불꽃이 아니라 마이크(기기 하단)를 겨냥해서 불어야 했다. 사용자가 '자연스럽게 불고 싶은 곳'과 '마이크 위치'가 어긋나는 UX 문제가 있었다는 뜻이다.",
+    "evidence": "Vator 리뷰: 숨으로 불꽃이 깜빡이거나 꺼지는데, 불꽃이 아니라 마이크를 향해 불어야 한다. InternetNews: 진짜 성냥처럼 마이크에 불면 불꽃이 움직이거나 꺼진다. 여러 저품질 사이트지만 공통적으로 아이폰 메인 마이크는 하단 충전 포트 옆에 있다.",
+    "sources": [
+     "https://vator.tv/2019/news/2009-01-30-light-your-iphone-flame-up-on-superbowl",
+     "https://internetnews.com/blog/hey-iphone-gotta-light",
+     "https://techcrunch.com/2008/09/26/what-is-the-deal-with-this-stupid-lighter-iphone-app",
+     "https://www.igeeksblog.com/how-to-clean-iphone-speakers-microphone/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "DS 젤다 대지의 기적(Spirit Tracks)은 마이크 불기를 반복 핵심 입력(마법 피리)으로 썼다가 게임에서 가장 짜증나는 요소로 꼽혔다. 문제는 인식이 변덕스러움(두 번 인식되거나 아예 안 됨), 주변 소음 오인식, 너무 세게 불다 화면에 침이 튐, 공공장소 민망함이었다. 몽환의 모래시계의 불기 퍼즐은 짧은 일회성 장치라서 그럭저럭 받아들여졌다.",
+    "evidence": "리뷰들: 'incredibly fickle', 마이크가 두 번 또는 0번 인식, 조용한 방 밖에서는 배경음이 불기로 인식됨, 너무 세게 불어 화면에 뿌림, 한 유저는 마이크 때문에 포기하고 유튜브로 엔딩을 봄. 반면 RPGamer는 대부분 잘 된다고 평했고, 한 Backloggd 유저는 살살 '후' 불어도 인식됐다고 함. 몽환의 모래시계의 마이크 장면은 'short, sweet little gimmicks'로 묘사. 공공장소에서 'awkward situations'를 지적한 평도 있음.",
+    "sources": [
+     "https://www.giantbomb.com/the-legend-of-zelda-spirit-tracks/3030-25657/user-reviews/2200-12217/",
+     "https://worthplaying.com/article/2009/12/10/reviews/70853-nds-review-the-legend-of-zelda-spirit-tracks/",
+     "https://archive.rpgamer.com/games/zelda/zeldast/reviews/zeldaststrev1.html",
+     "https://nintendowire.com/features/phantom-hourglass-spirit-tracks-dual-experiments/",
+     "https://honestgamers.com/6661/ds/the-legend-of-zelda-phantom-hourglass/review.html"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "WarioWare Touched!에서 마이크는 일부 미니게임에만 쓰였고, 주로 '정확한 순간에 불거나 소리치기'였다. 반대로 '불면 안 되는' 미니게임(Tread Carefully)도 있었다.",
+    "evidence": "리뷰: 대부분 터치스크린 전용이고, 일부가 마이크를 써서 적절한 타이밍에 불거나 소리쳐 이벤트를 일으킨다. Mike 스테이지는 마이크에 불어야 한다. Tread Carefully는 불지 않아야 성공한다.",
+    "sources": [
+     "https://nintendoworldreport.com/review/4318/warioware-touched-nintendo-ds",
+     "https://mariowiki.com/Tread_Carefully_(microgame)",
+     "https://en.wikipedia.org/wiki/WarioWare:_Touched!"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "생일 촛불 끄기 앱이 앱스토어에 여러 개 꾸준히 출시돼 있다. '폰에 불어서 무언가를 끈다/날린다'는 행동은 세계적으로 이미 익숙한 메타포다.",
+    "evidence": "Candle Simulation($4.99, 마이크에 불어 끄기), Blow out the Birthday Candles(무료, 0~99세 선택 후 마이크에 불기), Happy Birthday Virtual Candles, Happy Birthday appy-now 등. 실제로 잘 작동하는지는 독립적으로 검증되지 않았다(마케팅 문구).",
+    "sources": [
+     "https://apps.apple.com/us/app/id6754613056",
+     "https://apps.apple.com/app/id6745166909",
+     "https://apps.apple.com/app/id1006108590",
+     "https://laughingsquid.com/?p=881595"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "음성 크기로 조작하는 게임 Yasuhati(八分音符ちゃん, 2017)는 PC판 50만 다운로드를 넘겼고, Chicken Scream 같은 아류작이 바이럴됐다. '소리를 내야 하는 민망한 입력'이 오히려 방송·숏폼 콘텐츠가 됐다.",
+    "evidence": "App Store 공식 설명: PC version exceeded 500,000 DL, 작은 소리는 전진, 큰 소리는 점프. 2017년 음악교육 블로그는 Chicken Scream이 'going viral'이라고 씀. 모바일판 다운로드 수는 신뢰할 출처가 없다.",
+    "sources": [
+     "https://apps.apple.com/us/app/yasuhati-official-lets-play-with-your-voice/id1215691000",
+     "https://musiceducatorresources.com/2017/04/28/review-chicken-scream-app/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "BreathVR(CHI 2018, N=16)에서 호흡 동작으로 조작한 참가자들은 존재감(presence)이 더 높았고, 게임을 더 재미있고 도전적이라고 평가했다. 호흡 동작은 'Gust(짧고 강한 한 번)'와 'Gale(강하게 지속)' 등 4가지로 정의됐다.",
+    "evidence": "MIT Media Lab 논문 페이지와 초록: 'participants report a higher sense of presence and find the gameplay more fun and challenging when using our breathing actions'. 4가지 breath control action 중 Gust와 Gale이 포함된다.",
+    "sources": [
+     "https://www.media.mit.edu/publications/breathvr-leveraging-breathing-as-a-directly-controlled-interface-for-virtual-reality-games/",
+     "https://sites.cs.ucsb.edu/~sra/breathvr.html",
+     "https://dblp.dagstuhl.de/rec/conf/chi/SraXM18.html"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "불기 감지 연구들에 따르면 단순 음량 임계값 방식은 오탐(false positive)이 많다. 분류기를 쓰고 즉각적인 피드백을 붙이면 신뢰할 만한 트리거가 된다. 스마트워치 마이크로 불기·빨기 등 10종 이벤트를 구분한 Whoosh는 최대 90.5% 정확도를 냈다.",
+    "evidence": "BlowClick 2.0(Zielasko 외, IEEE 3DUI 2017): 기존 감지 방식은 오탐에 취약했고, 가우시안 커널 SVM이 같은 지연에 더 높은 정밀도를 냈으며, 음향 피드백이 사용자 확신을 높였다(N=33). Whoosh(ISWC 2016): 8명, 10개 이벤트, 10-fold 교차검증 최대 90.5%. Unity 포럼: 마이크는 음량만 재므로 불기와 소리치기를 구분하지 못하고, 실용적인 신호는 '짧은 시간 안의 급격한 음량 상승'이라는 의견.",
+    "sources": [
+     "https://paper.nweon.com/?p=8380",
+     "https://graphics.rwth-aachen.de/publication/028",
+     "https://faculty.cc.gatech.edu/~keith/pubs/iswc2016-whoosh.pdf",
+     "https://discussions.unity.com/t/mobile-app-game-that-needs-users-to-blow-onto-screen/590628"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "바람(입김) 잡음은 주로 약 0~600Hz(넓게 보면 1kHz 미만) 저주파에 몰린 광대역·비정상 잡음이다. 반면 말소리는 고주파 성분이 더 많고 시간에 따라 변하는 하모닉 구조를 가진다. 그래서 저주파 에너지 비율과 500~1000Hz 스펙트럼 기울기 같은 특징으로 둘을 구분할 수 있다. 다만 유성음 말소리도 저주파가 강해서 단순 비율만 보면 오탐이 생긴다.",
+    "evidence": "풍잡음 감지 특허들: 'Wind buffet noise is generally localized in the low frequency range, between about 0-600 Hz', 'wind noise is typically concentrated at the low frequency bands (<1000 Hz), while human speech has more high frequency powers'. vocal.com: 풍잡음은 유성음과 스펙트럼이 비슷해서 저주파 에너지 비율 테스트는 오탐 경향이 있다. 근거는 입김이 아니라 바람 잡음 연구이므로 간접 근거다.",
+    "sources": [
+     "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9330684",
+     "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9906882",
+     "https://vocal.com/noise-reduction/single-channel-wind-noise-detection/",
+     "https://acousticstoday.org/wp-content/uploads/2021/11/As-the-Wind-Blows-Turbulent-Noise-on-Outdoor-Microphones-Gregory-W.-Lyons-Carl-R.-Hart-and-Richard-Raspet.pdf"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "웹 불기 감지의 표준 파이프라인은 getUserMedia → AnalyserNode → getByteFrequencyData 또는 RMS→dBFS다. getUserMedia에는 echoCancellation, noiseSuppression, autoGainControl(, voiceIsolation) 제약을 false로 끄는 옵션이 있다.",
+    "evidence": "addpipe 가이드(AnalyserNode, getByteFrequencyData), rapidevelopers(RMS→dBFS 20*log10(rms)). 'Raw Mic Input' 유저스크립트가 위 제약들을 false로 설정해 WebRTC 오디오 처리를 끈다. 이 처리들이 입김 신호를 얼마나 깎는지는 직접 근거를 찾지 못했다(추론).",
+    "sources": [
+     "https://blog.addpipe.com/understanding-audio-frequency-analysis-in-javascript-a-guide-to-using-analysernode-and-getbytefrequencydata.md",
+     "https://www.rapidevelopers.com/md/app-features/noise-level-detection",
+     "https://greasyfork.org/ko/scripts/520484-raw-mic-input/code"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "iOS 웹의 제약은 이렇다. (1) AudioContext는 사용자 제스처로 resume해야 한다. (2) 벨소리 스위치가 진동(무음)이면 Safari iOS가 웹 오디오 재생을 막을 수 있다. (3) WKWebView(카톡·인스타 등 인앱 브라우저)는 iOS 14.3부터 getUserMedia를 지원한다. (4) 홈 화면 PWA에서는 권한 팝업이 반복되는 버그 보고가 있다. (5) Safari는 사용자가 거부해도 getUserMedia를 호출하기 전까지 permissions.query가 'prompt'를 반환한다.",
+    "evidence": "mattmontag: 사용자 상호작용이 있어야 AudioContext가 풀리고, 'Safari iOS will prevent Web Audio playback if the ringer is set to vibrate'. Kiosk Pro: iOS/iPadOS 14.3부터 WKWebView에서 WebRTC/getUserMedia 지원, 시스템 레벨 권한 팝업. WebKit bug 215884: PWA에서 라우트가 바뀔 때마다 권한 팝업. W3C webrtc 로그(2025.06): Safari는 영구 거부여도 getUserMedia를 호출하기 전까지 'prompt'를 반환.",
+    "sources": [
+     "https://www.mattmontag.com/web/unlock-web-audio-in-safari-for-ios-and-macos",
+     "https://support.kioskgroup.com/article/920-webrtc-getusermedia-not-supported",
+     "https://bugs.webkit.org/show_bug.cgi?id=215884",
+     "https://lists.w3.org/Archives/Public/public-webrtc-logs/2025Jun/0089.html"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "getUserMedia는 보안 컨텍스트(HTTPS 또는 localhost)에서만 쓸 수 있고, iframe 안에서는 Permissions-Policy(allow=\"microphone\")가 필요하다.",
+    "evidence": "MDN 문서를 직접 확인하려 했으나 fetch가 실패해서 기억에 의존한 주장이다. Apple 포럼에서 HTTPS 여부를 문제 해결 질문으로 확인하는 사례는 있었다.",
+    "sources": [
+     "https://developer.apple.com/forums/thread/711073"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Vibration API는 iOS Safari에서 지원되지 않는다. Android Chrome에서는 sticky user activation(먼저 탭)이 있어야 하고(Chrome 60+), 교차 출처 iframe에서는 막혀 있다(Chrome 55+). iOS에서는 숨긴 <input type=checkbox switch>를 클릭해 Taptic을 울리는 우회법(web-haptics 등)이 있었지만, iOS 26.5에서 막혔다는 단일 출처 보고가 있다.",
+    "evidence": "검색 요약: 'Chrome stopped supporting the call in cross-origin iframes starting in Chrome 55, and from Chrome 60 it requires a user gesture'. Chromium 코드리뷰: 'calls will return false if user hasn't tapped on the frame'. 'as of 2026, Apple has not indicated plans to support the W3C Vibration API in Safari'. rapidtoolset: iOS 17.4~26.4에서 작동했고 26.5에서 패치됐다는 단일 출처. github web-haptics README(직접 fetch): 'isSupported — true if the device supports the Vibration API'.",
+    "sources": [
+     "https://docs.w3cub.com/dom/navigator/vibrate",
+     "https://codereview.chromium.org/2778693004",
+     "https://azukiazusa.dev/en/blog/ios-safari-web-haptics",
+     "https://rapidtoolset.com/en/tool/ios-haptics-tester",
+     "https://github.com/lochie/web-haptics/blob/main/packages/web-haptics/README.md",
+     "https://github.com/ionic-team/ionic-framework/issues/29942"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "MediaPipe Face Landmarker(웹 JS 지원)의 블렌드셰이프 52개(_neutral 제외 시 51개)에는 cheekPuff(볼 부풀리기), mouthPucker, mouthFunnel(입 오므리기)이 들어 있다. 카메라만으로 소리 없이 '볼 빵빵 → 입 오므려 후' 제스처를 인식할 수 있다는 뜻이다.",
+    "evidence": "github mediapipe 소스(face_blendshapes_graph.cc)를 직접 fetch해서 kBlendshapeNames 52개 안에 cheekPuff, mouthPucker, mouthFunnel이 있는 것을 확인했다. 구글 웹 가이드: outputFaceBlendshapes 옵션, @mediapipe/tasks-vision NPM 패키지.",
+    "sources": [
+     "https://github.com/google-ai-edge/mediapipe/blob/master/mediapipe/tasks/cc/vision/face_landmarker/face_blendshapes_graph.cc",
+     "https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/web_js"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "터치 선례들은 각자 다른 방식으로 스킬을 표현한다. Angry Birds는 당기는 한 번의 드래그로 조준과 힘을 동시에 정한다. Paper Toss는 플릭 한 번에 바람 보정이라는 스킬을 얹었고 iOS 5천만 다운로드, 한때 '앱스토어 역사상 가장 많이 다운로드된 게임'이었다. Flick Soccer는 찬 뒤에 스와이프(after-touch)로 휘게 한다. 8 Ball Pool은 조준(큐 드래그·조준 휠)과 파워(파워바를 당겼다 놓기)를 분리한다. Golf Clash는 당겨서 파워를 정하고, 놓는 순간 바늘 타이밍으로 '퍼펙트'를 판정한다(퍼펙트일 때만 바람 보정이 적용됨).",
+    "evidence": "Pocket Gamer: 슬링샷 조작은 'tangibility and satisfaction'. 출판업계 칼럼: 개발자가 슬링샷 '느낌'을 수개월 튜닝했다(근거 약함). Pocket Gamer: Paper Toss가 iOS 5천만 다운로드, Apple 선정 최다 다운로드 게임(시점 불명확). 리뷰: Flick Soccer의 after-touch 스와이프로 공의 궤적을 휨. Miniclip 공식 지원 문서: 큐 드래그 또는 Aiming Wheel로 조준, 파워바를 당겼다 놓아 발사. Golf Clash 팬 가이드: 공을 파란 원까지 당긴 뒤 바늘이 중앙에 닿기 직전에 놓기, 퍼펙트일 때만 바람 보정 적용(비공식).",
+    "sources": [
+     "https://www.pocketgamer.com/flick-shot-rogues/first-impressions/",
+     "https://www.pocketgamer.com/articles/028274/r/",
+     "https://www.pocketgamer.com/flick-soccer/review/",
+     "https://support.miniclip.com/hc/en-us/articles/35451942766865-Basic-Controls-Improving-your-skills-8-Ball-Pool",
+     "https://west-games.com/golf-clash-perfect-shot-every-time/",
+     "https://west-games.com/golf-clash-accuracy/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "게임 '손맛(juice)' 연구와 실무에서 타격감의 핵심은 짧은 히트스톱(약 50~100ms), 작은 화면 흔들림, 절제된 파티클이다. 큰 화면 흔들림은 멀미를 부른다.",
+    "evidence": "Jonasson & Purho 'Juice it or lose it'(GDC 2012) 2차 정리글: 히트스톱 0.05~0.1초가 적절(한 저자의 테스트), 큰 흔들림은 멀미, 파티클 수 제한. 2차 출처라 수치는 출발점으로만 볼 것.",
+    "sources": [
+     "https://eastondev.com/blog/en/posts/dev/20260521-game-feedback-feel/",
+     "https://www.wayline.io/learn/game-feel/1",
+     "https://rpgplayground.com/research-making-a-juicy-game/"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "접근성 가이드는 음성 입력이 절대 필수여서는 안 되고 보조 수단이어야 하며, 모든 핵심 동작을 디지털 조작(탭 등)으로 할 수 있어야 한다고 권고한다. 호흡 입력도 같은 원칙으로 다뤄야 한다.",
+    "evidence": "Game Accessibility Guidelines: 'ensure that speech input is not required and included only as a supplementary alternative input method'. 중급 단계에서는 아날로그·음성·제스처 같은 복잡한 입력은 보조로 두라고 함. 호흡 전용 가이드는 찾지 못했다.",
+    "sources": [
+     "https://gameaccessibilityguidelines.com/ensure-that-speech-input-is-not-required-and-included-only-as-a-supplementary-alternative-input-method/",
+     "https://devdocs.xbox.com/build/game-principles/accessibility/xag-deep-dives/xag-107-input.md"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "권한 팝업의 수락률은 낮다. Chrome 알림 권한은 데스크톱 10%, Android 21%만 허용된다. 마이크 권한 수락률을 공개한 통계는 찾지 못했다. 맥락 안에서 묻기·사전 설명(priming)으로 수락률이 2~3배 오른다는 수치는 이해관계가 있는 벤더 주장이라 검증되지 않았다.",
+    "evidence": "Google 연구(USENIX Security 2021): 전체 권한 팝업의 74%가 알림이고 grant rate는 데스크톱 10%, Android 21%. Appcues/벤더 블로그: Babbel은 첫 레슨에서 마이크를 묻지 않고 가치를 먼저 보여줌. priming 2~3배는 방법론이 공개되지 않음.",
+    "sources": [
+     "https://research.google/pubs/pub49767/",
+     "https://www.appcues.com/product-adoption-academy/mobile-app-onboarding-101/priming-users-to-grant-mobile-apps-permission",
+     "https://www.plotline.so/blog/how-to-improve-push-notification-opt-in-rates"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "한국 딱지 문화에 '파!' 해서 입김으로 뒤집어 따먹는 방식이 실제로 있었다는 당대 기록이 있다(2001). 바닥을 칠 때 생기는 바람으로 넘기는 변형도 기록돼 있다.",
+    "evidence": "경향신문 2001 기사 요약: '날리고, 침 바르고, 아니면 '파!'해서 뒤집어먹고' 하던 시절 회상, 인터넷 딱지 사이트 언급. 나무위키: '딱지가 바닥에 부딪힐 때 생기는 바람으로 넘기는 스타일'. 원문은 fetch에 실패해서 검색 요약 기준이다.",
+    "sources": [
+     "https://www.khan.co.kr/article/200102051629131",
+     "https://namu.wiki/w/%EB%94%B1%EC%A7%80%EC%B9%98%EA%B8%B0",
+     "https://www.mcst.go.kr/usr/child/enter/play/ddakjichigi.jsp"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "마이크 불기만으로 된 캐주얼 게임은 아이들도 30분쯤 지나면 신기함이 떨어지고, 반복해서 세게 내쉬는 데 따른 피로·과호흡 우려가 제기된다.",
+    "evidence": "Unity 포럼: 한 개발자의 아이들이 30분쯤 하다가 새로움이 사라졌다는 사례, 얼마나 세게·자주 내쉬어야 하는지에 대한 우려. 일화 수준이다.",
+    "sources": [
+     "https://discussions.unity.com/t/mobile-app-game-that-needs-users-to-blow-onto-screen/590628"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "추천 기본 입력은 '퍽 슬링샷'이다. 딱지 더미 가장자리를 손가락으로 짚고(=노릴 지점), 반대 방향으로 당기고(=바람 방향·세기), 놓으면 '퍽!'. 한 동작 안에 사용자 원안의 실력 요소 3개(방향, 원기둥 중 노릴 지점, 파워)가 모두 자연스럽게 들어간다.",
+    "why_it_matters": "앵그리버드처럼 당겼다 놓는 동작은 설명 없이도 이해되고, 조준과 힘이 한 드래그에 담긴다. 8볼풀과 골프클래시는 같은 계열이면서 숙련도 차이를 크게 만든다. 사용자가 요구한 '설명 없이 바로 시작'과 '실력 차이'를 동시에 만족하는 형태는 이것이 유일하게 검증된 패턴이다.",
+    "design_implication": "터치 시작점은 원기둥 옆면의 타격점으로 스냅한다(아래쪽 가장자리를 치면 뜨는 힘이 커지고, 위를 치면 미끄러짐). 드래그 벡터의 반대 방향이 바람 방향, 드래그 길이가 파워다. 당기는 동안 조준 가이드(바람 화살표와 넘어갈 예상 범위)를 짧게만 보여준다(앵그리버드 첫 탄의 점선 궤적처럼). 놓는 순간이 곧 '퍽'이다. 별도 버튼이나 UI 바는 만들지 않는다."
+   },
+   {
+    "insight": "파워 게이지는 UI 바가 아니라 캐릭터의 '빵빵해지는 볼'로 표시해야 한다. 당길수록 볼이 부풀고, 최대치 근처에서 떨리다가 너무 오래 끌면 '푸시시' 바람이 새며 파워가 떨어진다. 골프클래시 바늘 타이밍을 몸짓으로 바꾼 것이다.",
+    "why_it_matters": "골프클래시는 '퍼펙트' 타이밍으로 스킬 상한과 축하 순간을 만든다. 볼 부풀리기는 언어와 상관없이 전 세계 누구나 '불기 직전'으로 읽는 신호여서, 한국 놀이를 모르는 외국인도 '아, 부는 거구나'를 바로 이해한다. 클래시 오브 클랜이나 앵그리버드의 과장된 캐릭터 표정 톤과도 맞는다.",
+    "design_implication": "볼 부풀림을 0~100%로 정의하고, 85~95% 구간을 '퍼펙트 퍽'으로 둔다(테두리가 반짝이고 버프 +보너스 뒤집힘 확률). 100%를 넘겨 2초 이상 끌면 숨이 새서 감쇠시킨다(과욕 리스크). 상대 턴이나 관전 화면에서도 이 볼이 보이게 해서 PvP 긴장감('저거 퍼펙트 나온다!')을 만든다."
+   },
+   {
+    "insight": "쾌감의 80%는 입력이 아니라 출력 연출에서 나온다. 그리고 iOS 웹에서는 진동이 불가능하고, 무음 스위치를 켜면 소리까지 꺼질 수 있다. 그래서 '많이 넘어가는 순간'은 화면만으로도 완성돼야 한다.",
+    "why_it_matters": "사용자가 가장 중요하다고 한 것이 '퍽 해서 많이 넘어가는 쾌감'이다. Vibration API는 iOS Safari에서 지원되지 않고, Android에서도 탭 이후에만, 교차 출처 iframe에서는 아예 막혀 있다. 그래서 claude.ai 아티팩트 같은 iframe 목업에서는 진동이 안 될 가능성이 크다.",
+    "design_implication": "'퍽' 순간에 60~80ms 히트스톱을 걸고, 더미 중심에서 바깥으로 충격파 링을 퍼뜨린다. 그다음 딱지가 0.04~0.06초 간격으로 연쇄적으로 뒤집히게 하고(동시가 아니라 도미노처럼), 뒤집힐 때마다 '탁·탁·탁' 효과음을 반음씩 올리고 카운터를 +1씩 튀긴다. 10장을 넘으면 'GREAT', 15장이면 'AMAZING', 전부 뒤집으면 'PERFECT SWEEP'과 슬로모션을 넣는다. 화면 흔들림은 작게 한다. 진동은 Android에서만 보너스로 붙이고(뒤집힐 때마다 10ms 펄스), 효과음은 HTML audio로 오디오 세션을 여는 등 iOS 무음 대응을 테스트한다."
+   },
+   {
+    "insight": "마이크 불기는 기본이 아니라 '진짜 불기 모드(REAL BLOW)'라는 옵션이어야 한다. 이때도 조준은 손가락, 파워만 숨으로 하는 하이브리드가 맞다.",
+    "why_it_matters": "단일 폰 마이크로는 바람 방향을 알 수 없다(BLUI의 위치 추정은 노트북 전용 연구다). 젤다 피리 사례는 숨을 메인으로 반복 입력하면 오인식, 소음, 민망함, 피로 때문에 이탈이 생긴다는 것을 보여준다. 접근성 가이드는 음성 입력이 필수여서는 안 된다고 말한다. 반면 Ocarina와 BreathVR은 '진짜로 부는 것'이 마법 같은 몰입과 재미를 준다는 것을 보여준다. 이 둘을 같이 얻으려면 옵션 모드가 맞다.",
+    "design_implication": "흐름은 이렇다. ① 손가락을 대고 당겨 조준한다(볼이 부풀며 '무장'). ② 손가락을 누르고 있는 동안(최대 3초)만 마이크로 판정한다. ③ '후' 하고 불면 그 숨의 세기가 파워가 된다(BreathVR의 Gust). ④ 3초 안에 감지가 안 되면 턴을 잃지 않고 터치 파워로 자동 전환한다. 무장 시간창 밖의 소리는 전부 무시하므로 옆 사람 말소리나 TV 소리로 오발이 나지 않는다. 짧게 '파!/퍽!' 외치는 것도 입김 파열음이라서 인정하면 방송용 재미가 생긴다(Yasuhati 사례)."
+   },
+   {
+    "insight": "웹 불기 감지는 '음량 임계값'이 아니라 '저주파 광대역 + 급상승 + 피치 없음'의 조합으로 해야 한다. 그리고 브라우저 기본 음성처리를 반드시 꺼야 한다.",
+    "why_it_matters": "입김/바람은 0~600Hz에 몰린 광대역 잡음이고, 말소리는 하모닉 구조와 고주파 성분이 있다. 단순 임계값은 BlowClick 초기 버전처럼 오탐이 많다. AGC(자동 볼륨 보정)는 세기를 평준화해서 '파워' 측정을 망가뜨리고, 노이즈 억제는 입김 같은 비음성 잡음을 줄이도록 설계돼 있다(추론).",
+    "design_implication": "getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:false}})로 연다. AnalyserNode는 fftSize 1024~2048으로 하고 프레임마다 다음을 계산한다. (a) RMS dBFS, (b) 50~600Hz 에너지 비율, (c) 스펙트럼 평탄도(높으면 숨, 낮으면 목소리), (d) 상승 시간(바닥 대비 +20dB에 60ms 안에 도달). 무장 시간창 안에서 a~c가 기준을 넘으면 트리거한다. 파워는 onset 후 300ms 동안의 엔벨로프 피크를 '본인 캘리브레이션 최댓값'으로 정규화해서 쓴다. 첫 진입 때 '촛불 끄듯 후~' 화면에서 1초 동안 소음 바닥값과 1회 최대 불기를 측정한다(튜토리얼 겸용). 사용자가 너무 세게 불 필요가 없게 상대값으로 판정하면, 침 튐 같은 위생 문제와 과호흡 위험이 줄어든다."
+   },
+   {
+    "insight": "폰 마이크는 하단 가장자리에 있다. 그래서 딱지 더미를 세로 화면 아래쪽 1/3에 두면 '딱지에 부는 자연스러운 방향'과 '마이크 위치'가 겹친다.",
+    "why_it_matters": "Sonic Lighter에서는 불꽃이 아니라 마이크를 겨냥해야 했다. 시각적 목표와 센서 위치가 어긋나면 '왜 안 돼?'가 생긴다. 반대로 둘이 겹치면 별도 안내 없이도 잘 된다.",
+    "design_implication": "세로(portrait) 레이아웃에서 테이블과 딱지 더미를 화면 하단 쪽에 배치하고, 카메라는 위에서 비스듬히 내려다보게 한다. 상대(AI/PvP) 캐릭터는 화면 상단에 둔다. REAL BLOW 모드에서는 하단 가장자리에서 작은 바람 아이콘이 '여기에 후~' 하고 숨쉬듯 깜박이게 한다. 가로 모드는 지원하지 않거나 마이크 안내를 바꿔야 한다."
+   },
+   {
+    "insight": "마이크 권한은 첫 실행 때 절대 묻지 않는다. 첫 '퍽' 성공 직후에 '진짜로 불어볼래?'로 가치를 먼저 보여주고 묻는다. 거절해도 게임의 100%를 즐길 수 있어야 한다.",
+    "why_it_matters": "권한 팝업 수락률은 낮다(알림 10~21%). Safari는 거부 상태를 permissions.query로 알려주지 않는다. 카카오톡이나 인스타 인앱 브라우저(WKWebView)는 iOS 14.3 이전에는 마이크가 없었고, 권한 팝업이 시스템 레벨이라 낯설다. 글로벌 바이럴 공유는 대부분 인앱 브라우저로 열린다.",
+    "design_implication": "1판은 터치로만 한다. 터치로 큰 뒤집기(예: 7장 이상)에 성공하는 순간 '할아버지 세대는 진짜 입으로 불었대! 해볼래? 🎂(촛불 끄기처럼)' 카드를 띄운다. 수락하면 그때 getUserMedia를 호출한다. 결과(granted/denied)는 localStorage에 저장하고, 거부했다면 다시 묻지 않고 설정 메뉴에만 토글을 둔다. 인앱 브라우저로 감지되면 마이크 옵션을 숨기거나 '브라우저에서 열기'를 안내한다."
+   },
+   {
+    "insight": "'생일 촛불 끄기'는 한국 딱지 문화를 모르는 외국인에게 '불어서 무언가를 날린다'를 즉시 이해시키는 전 세계 공통 다리다.",
+    "why_it_matters": "촛불 끄기 앱이 앱스토어에 장르처럼 존재할 만큼 '폰에 후 불기'는 이미 익숙한 행동이다. 딱지(ddakji)는 오징어게임 덕분에 이름은 알려졌지만, 오징어게임 속 딱지는 '내리치기'라서 '불기' 방식은 낯설다.",
+    "design_implication": "온보딩 첫 장면 하나만 둔다. 화면에 촛불 하나와 딱지 한 장이 있고, 슬링샷(또는 실제로 불기)으로 촛불을 끄면 딱지가 뒤집힌다. 텍스트 없이 손가락 고스트 애니메이션만 보여준다. 이후 지역마다 '생일 이벤트 딱지' 같은 수집 테마로 이어갈 수 있다."
+   },
+   {
+    "insight": "PvP에서는 마이크 입력이 기기 간 공정성을 깨뜨린다. 랭크전 파워는 입력 방식과 상관없이 같은 곡선으로 정규화하거나, 랭크전은 터치 전용으로 해야 한다.",
+    "why_it_matters": "기기마다 마이크 감도와 위치가 다르고 주변 소음도 다르다(풍잡음 연구, 젤다 리뷰). 숨으로 하는 파워가 터치보다 유리하거나 불리하면 랭크전 신뢰가 무너진다. 반대로 숨 모드의 재미(민망함, 웃음)는 친구전이나 방송용 파티 모드에서 가장 크다.",
+    "design_implication": "랭크전은 터치 슬링샷 + 퍼펙트 타이밍만 쓴다. 친구 초대, 로컬 핫시트(한 폰으로 번갈아), 방송 모드에서는 'REAL BLOW 허용'을 켤 수 있다. 숨 파워는 캘리브레이션 상대값을 같은 0~100 곡선으로 매핑하고 상한을 클램프한다. 리플레이와 숏폼 공유에는 볼 빵빵한 표정 + '퍽!' 사운드 + 뒤집힌 수를 자동으로 넣는다(Yasuhati식 바이럴)."
+   },
+   {
+    "insight": "향후 옵션으로 카메라 '볼 빵빵 → 입 오므려 후' 인식(무음 불기)도 가능하다. MediaPipe 웹에 cheekPuff, mouthPucker, mouthFunnel 블렌드셰이프가 있다.",
+    "why_it_matters": "마이크 모드의 약점인 공공장소 소음, 민망한 소리, 옆 사람 말소리를 카메라는 피해간다. 소리 없이도 '부는 시늉'만으로 되기 때문이다. 얼굴 캠 방송 콘텐츠와도 잘 맞는다. 다만 카메라 권한은 마이크보다 더 민감하고 성능 부담도 크다.",
+    "design_implication": "MVP와 1차 목업에서는 제외하고, 2~3차 루프에서 실험 기능으로 넣는다. cheekPuff 상승(무장)을 감지한 다음 cheekPuff가 급락하면서 mouthFunnel/mouthPucker가 올라가면 '퍽'으로 판정한다. 캐릭터 볼 부풀림을 실제 내 볼 값에 그대로 연동(미러링)하면 강력한 '내가 부는' 몰입을 준다."
+   },
+   {
+    "insight": "턴제 구조가 호흡 입력의 피로 문제를 자연스럽게 해결한다. 대신 한 판에서 내가 부는 횟수를 제한하는 템포 설계가 필요하다.",
+    "why_it_matters": "마이크 게임은 반복해서 내쉬는 데서 오는 피로와 신기함 감소(약 30분)가 문제로 제기됐다. 사용자 원안의 '남은 건 상대 턴'이라는 룰은 쉬는 시간을 기본으로 깔고 있다.",
+    "design_implication": "한 매치를 3~6턴(약 60~90초) 안에 끝나게 설계한다. 상대 턴에는 관전 연출(상대의 볼 부풀림, 결과 리액션)을 보여줘서 쉬는 시간을 즐길 거리로 만든다. REAL BLOW 모드에서는 연속 판 수에 따라 '숨 고르기' 연출을 넣어 과호흡을 막는다."
+   }
+  ],
+  "key_claims": [
+   "마이크 불기를 기본(필수) 입력으로 하면 실패한다. 오인식, 주변 소음, 공공장소 민망함, 권한 거부, 인앱 브라우저 미지원, 접근성 위반 때문이다. 기본은 터치 '당겨서 놓기(퍽 슬링샷)'로 하고, 불기는 옵션인 'REAL BLOW 모드'로 둬야 한다.",
+   "퍽 슬링샷 한 동작으로 사용자 원안의 실력 요소 3개를 모두 표현할 수 있다. 짚은 지점은 원기둥 타격점, 당긴 방향은 바람 방향, 당긴 길이는 파워다. 여기에 볼 부풀림 퍼펙트 타이밍 구간(골프클래시식)을 더하면 스킬 상한과 축하 순간이 생긴다.",
+   "REAL BLOW 모드는 '손가락으로 조준·무장 + 숨으로 파워'의 하이브리드여야 한다. 폰 마이크 하나로는 방향을 알 수 없고, 무장 시간창 밖의 소리를 무시해야 오발이 사라진다. 감지는 저주파(약 50~600Hz) 광대역 에너지, 급상승, 스펙트럼 평탄도(피치 없음)를 조합하고, AGC와 노이즈 억제는 끈다.",
+   "쾌감은 출력 연출로 완성해야 한다. 히트스톱 50~100ms, 도미노식 연쇄 뒤집기, 음정이 올라가는 카운트를 넣는다. iOS 웹은 진동 API가 없고 무음 스위치를 켜면 웹 오디오가 막힐 수 있어서, 화면만으로도 쾌감이 성립해야 한다. 진동은 Android 보너스로만 쓴다.",
+   "딱지 더미를 세로 화면 하단(마이크 근처)에 두면 '딱지에 부는 방향'과 '마이크 위치'가 겹친다. 그리고 '생일 촛불 끄기' 메타포로 온보딩하면 외국인도 설명 없이 불기를 이해한다.",
+   "PvP 랭크전은 기기별 마이크 차이 때문에 터치 전용(또는 정규화·클램프된 숨 파워)으로 해야 공정하다. 숨 모드는 친구전, 핫시트, 방송·숏폼용 파티 모드에서 바이럴 가치가 가장 크다."
+  ],
+  "risks": [
+   "터치 슬링샷만으로는 '입으로 푹'의 원초적 임팩트(사용자가 강조한 세대 경험)가 약해질 수 있다. 볼 부풀림, '퍽!' 보이스, 화면 쪽으로 불어오는 바람 이펙트 같은 연출로 보완하지 못하면 '그냥 앵그리버드 같다'는 인상이 남는다.",
+   "REAL BLOW 감지 임계값은 기기·브라우저·환경마다 크게 다르다. 실기기 녹음 데이터 없이 튜닝하면 오발이나 미감지가 생기고, 그러면 젤다 피리처럼 가장 짜증나는 요소가 될 수 있다. 특히 Android 저가폰의 마이크 하드웨어 AGC는 브라우저 제약으로 끌 수 없을 가능성이 있다(미검증).",
+   "목업을 claude.ai 아티팩트 같은 교차 출처 iframe에서 실행하면 마이크(allow=microphone 필요)와 진동(Chrome 55+ 차단)이 막힐 수 있다. 그러면 사용자가 목업에서 '불기'를 아예 체험하지 못할 수 있다.",
+   "iOS 무음 스위치나 오디오 세션 문제로 '퍽' 효과음이 안 나오면 쾌감이 크게 줄어든다. 첫인상 테스트를 iPhone 무음 상태에서 하면 기획 의도가 왜곡될 수 있다.",
+   "입김 시뮬레이션 물리(바람장 → 딱지 들림 → 뒤집힘)를 실제 물리엔진으로 하면, 결과가 너무 무작위거나 반대로 너무 결정적이 돼서 스킬과 운의 균형이 깨질 수 있다. 입력 설계와 물리 튜닝은 분리할 수 없다.",
+   "카메라 cheekPuff 모드는 권한 민감도, 프라이버시 인식, 저사양 기기 성능 때문에 글로벌 확장 시 역효과가 날 수 있다.",
+   "WebFetch가 github 외 도메인에서 DNS 실패로 동작하지 않았다. 그래서 대부분의 근거가 원문이 아닌 검색 요약 기반이고, 일부 수치(Paper Toss 5천만, Ocarina 100만)는 원문 대조를 하지 못했다."
+  ],
+  "open_questions": [
+   "사용자 세대의 실제 '입으로 불기' 방식은 무엇이었나? 딱지 더미 옆면 아래를 노려 불었는지, 위에서 내리꽂듯 불었는지. 실제 물리(어디를 불면 많이 넘어가는지)를 사용자 인터뷰나 영상으로 확인해야 슬링샷의 '타격점' 규칙을 정할 수 있다.",
+   "목업을 어디서 실행할 것인가? claude.ai 아티팩트(iframe)인지, 독립 HTTPS URL인지에 따라 마이크와 진동 체험 가능 여부가 갈린다. REAL BLOW를 1차 목업에서 체험시키려면 독립 HTTPS 호스팅이 필요할 수 있다.",
+   "마이크 권한 수락률(웹/모바일)의 공개 통계는 찾지 못했다. 실제 A/B로 측정해야 한다.",
+   "iOS 26.x에서 웹 햅틱 우회법(checkbox switch)이 실제로 막혔는지 단일 출처라 미확인이다. 그리고 iOS 무음 스위치 상태에서 Web Audio 재생 정책이 최신 iOS에서 어떤지(navigator.audioSession 등) 실기기 확인이 필요하다.",
+   "입김 감지에 대한 공개 데이터셋이나 임계값 수치(blow vs speech)를 찾지 못했다. 사내에서 실기기 10종 이상, 다양한 소음 환경으로 녹음해서 튜닝해야 한다.",
+   "'퍽/파!' 외침을 불기와 같은 입력으로 인정할 것인가? 방송용 재미는 커지지만, 정숙한 환경을 원하는 사용자와 오탐 위험이 있다.",
+   "검색 예산이 다 떨어져서 Nintendogs(음성 인식), 길게 눌러 차징형 하이퍼캐주얼 사례, Unicode 'Face Exhaling' 이모지 같은 보조 근거는 추가로 조사하지 못했다."
+  ]
+ },
+ {
+  "lens": "수집 & 자산 축적 메타: 하면 할수록 자산이 쌓이는 느낌과 수집욕, 그리고 잃을 수도 있는 수집품이라는 딱지의 이중성",
+  "summary": "[중요] 이번 실행에서는 웹 검증을 하지 못했습니다. WebSearch는 여러 에이전트가 함께 쓰는 턴당 검색 한도(200회)가 이미 소진되어 실행되지 않았고, WebFetch는 모든 도메인에서 DNS 오류(ENOTFOUND)가 났습니다. 그래서 아래 내용은 모두 기억에 의존했고 confidence는 전부 low입니다. 수치는 검증 단계에서 반드시 다시 확인해야 합니다.\n핵심 결론은 이렇습니다. 성공한 수집 게임(Clash Royale, Marvel Snap, 8 Ball Pool, Royal Match)은 잃을 수 있는 변동 자원(트로피·코인)과 절대 줄지 않는 영구 진척(카드 레벨·컬렉션 레벨·꾸미기)을 따로 둡니다. 딱지 게임도 '도감(영구)'과 '판돈 더미(변동)'를 나누는 이원 장부가 필요합니다.\n가장 강한 기회는 '뒤집기 = 공개'입니다. 그림면을 아래로 쌓아 두면, 뒤집히는 순간이 곧 TCG Pocket식 팩 개봉이 됩니다. 이렇게 물리 쾌감과 수집 쾌감을 한 동작에 겹칠 수 있습니다.\n리스크도 큽니다. 돈 주고 산 랜덤 딱지를 PvP 내기로 잃거나 딸 수 있으면 사행성·도박 규제 리스크가 생깁니다(MTG ante 폐지, 90년대 POG 학교 금지 사례). 따라서 '유료 = 내기 불가, 내기 = 게임 내 획득분'으로 분리하는 것이 안전합니다.\n해외 진입은 POG(미국)·Tazos(중남미/스페인)·Menko(일본)처럼 각국에 있는 같은 구조의 놀이 기억과 Squid Game의 ddakji 인지도에 기대는 방식이 유효합니다.",
+  "findings": [
+   {
+    "claim": "Pokémon TCG Pocket(2024-10-30 글로벌 출시, Creatures/DeNA)은 출시 약 2주 만에 3,000만 다운로드를 넘겼고, 2025년 초에 1억 다운로드를 넘긴 것으로 기억된다. 첫 달 매출은 AppMagic 추정치로 1.2억~2억 달러 이상 범위에서 보도되었다(정확한 값 미확인).",
+    "evidence": "기억 기반. The Pokémon Company 공식 발표(다운로드)와 AppMagic 추정치를 인용한 업계 매체 보도. 이번 세션에서 검색과 fetch 모두 실패해 원문을 대조하지 못함.",
+    "sources": [
+     "(미검증) https://en.wikipedia.org/wiki/Pokémon_Trading_Card_Game_Pocket",
+     "(미검증) AppMagic 추정치 인용 보도: mobilegamer.biz / pocketgamer.biz, 2024-11~12"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "TCG Pocket의 핵심 루프는 '하루 2팩 무료 개봉 의식'이다. 12시간마다 1팩(팩 파워)이 차고, 모래시계로 대기시간을 줄인다. 손가락으로 팩 윗부분을 쓸어 '찢는' 제스처, 카드를 한 장씩 넘기는 공개, 레어팩/갓팩 특수 연출, 3D로 '들어가는' 이머시브 카드, 자이로 홀로 효과로 개봉 자체를 쾌감 이벤트로 만들었다. 희귀도는 다이아 1~4, 별 1~3, 왕관으로 기호화했다.",
+    "evidence": "기억 기반(게임 직접 사양). 많은 이용자가 배틀 없이 개봉과 수집만 한다는 커뮤니티 평이 있었으나 정량 근거는 없음.",
+    "sources": [
+     "(미검증) https://en.wikipedia.org/wiki/Pokémon_Trading_Card_Game_Pocket"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "TCG Pocket에는 꼬리 구간 보정과 비동기 소셜 장치가 있다. 팩을 열 때마다 쌓이는 팩 포인트로 원하는 카드를 직접 교환할 수 있다(천장). 원더픽은 다른 유저(친구 포함)가 연 팩의 카드 5장 중 1장을 뒤섞인 상태에서 고르는 비동기 기능이다.",
+    "evidence": "기억 기반(게임 사양).",
+    "sources": [
+     "(미검증) 게임 내 사양 / Wikipedia 문서"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "TCG Pocket은 2025년 1월 교환(트레이드)을 도입하면서 고희귀 중복을 분해해야만 얻는 '트레이드 토큰'과 희귀도 제한을 걸었다. 이에 큰 반발이 일었고, 운영사가 사과하고 개선(토큰 완화 또는 폐지)을 약속했다.",
+    "evidence": "기억 기반. 교환 마찰이 지나치면 수집 커뮤니티의 신뢰를 잃는다는 사례.",
+    "sources": [
+     "(미검증) The Pokémon Company 공지, 2025-01~02 / 관련 매체 보도"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Clash Royale(2016)의 수집 메타는 다음과 같다. 희귀도는 Common/Rare/Epic/Legendary(+Champion)이다. 중복 카드는 레벨업 재료라서 버려지는 중복이 없다. 상자 타이머와 슬롯이 재방문 루프를 만들었다(2024년 무렵 Lucky Drop 계열로 개편된 것으로 기억). 클랜 카드 요청·기부가 소셜 접착제 역할을 한다. 트로피(잃음)와 카드 레벨(영구)이 분리되어 있다.",
+    "evidence": "기억 기반. 첫해 매출 약 10억 달러라는 Sensor Tower 추정 보도가 있었던 것으로 기억(미검증).",
+    "sources": [
+     "(미검증) Supercell 공식 사양 / Sensor Tower 추정 보도"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Monopoly GO(Scopely, 2023-04)는 약 7개월 만에 매출 10억 달러를 달성했다고 발표했고, 이후 20억·30억 달러 이상을 연이어 발표했다. 첫해 마케팅비가 약 5억 달러 수준이라는 보도도 있었다.",
+    "evidence": "기억 기반. 정확한 시점과 금액은 검증 필요.",
+    "sources": [
+     "(미검증) Scopely 보도자료 / mobilegamer.biz 등 보도"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Monopoly GO의 스티커 앨범 구조는 다음과 같다. 세트당 9장, 별 1~5 희귀도, 시즌마다 앨범이 리셋된다. 중복은 '별'로 바뀌어 금고 보상에 쓰인다. 골드 스티커는 'Golden Blitz' 같은 이벤트 기간에만 교환할 수 있다. 교환하려면 친구가 필요해 대형 Facebook 그룹과 Reddit 교환 커뮤니티가 생겼다. 동시에 스티커를 돈으로 파는 제3자 회색시장도 나타났다.",
+    "evidence": "기억 기반. 교환이 바이럴(친구 초대) 엔진 역할을 했다는 업계 해석이 있었으나 정량 수치는 미확인.",
+    "sources": [
+     "(미검증) Monopoly GO 게임 사양 / 커뮤니티(Facebook·Reddit) 관찰"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Coin Master(Moon Active)도 9장 세트 카드 컬렉션, 상자 드롭, 이벤트 기간 한정 골드카드 교환, Facebook 친구 기반 공격·약탈(복수 루프)을 바이럴 축으로 썼다. 슬롯머신식 스핀 때문에 영국 등지에서 도박성·아동 노출 비판을 받았다(2020년 전후).",
+    "evidence": "기억 기반.",
+    "sources": [
+     "(미검증) Coin Master 게임 사양 / 영국 언론 보도(2020년 전후)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Marvel Snap(2022-10)의 Collection Level은 카드 '외형' 업그레이드(테두리 깨짐, 3D, 애니메이션, 포일 등)로 오른다. 재료인 부스터는 그 카드를 실제로 플레이할 때 쌓인다. 카드의 전투력은 절대 변하지 않고, 숫자는 계속 오르기만 한다. 오르면서 신규 카드와 보상이 해금된다.",
+    "evidence": "기억 기반(게임 사양).",
+    "sources": [
+     "(미검증) Marvel Snap 게임 사양"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Royal Match(Dream Games, 2021)는 레벨마다 별을 주고, 별로 성 구역을 원탭 꾸미는 '손실 없는 메타'를 쓴다. 2023년 무렵 미국 퍼즐 매출 1위권에 올랐고 Dream Games는 Savvy Games에 약 50억 달러에 인수된 것으로 기억한다. Royal Kingdom은 꾸미기 대신 왕국 건설을 메타로 확장했다.",
+    "evidence": "기억 기반. 매출, 인수 시점, Royal Kingdom 세부 사양은 모두 검증 필요.",
+    "sources": [
+     "(미검증) Dream Games / Savvy Games 발표, 업계 보도"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "8 Ball Pool(Miniclip)은 '양쪽이 같은 판돈을 걸고 이긴 쪽이 다 가져가는' 구조를 도시별 테이블 티어로 단계화했다. 입장료가 점점 커지는 방식이다. 코인은 변동 자원이고, 큐(장비)와 레벨은 영구 자산이다.",
+    "evidence": "기억 기반. 사용자 원안의 '10장 걸면 상대도 10장'과 사실상 같은 구조의 대표적 성공 사례.",
+    "sources": [
+     "(미검증) 8 Ball Pool 게임 사양"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "해외에도 같은 구조의 놀이가 있다. 미국의 POG(90년대 초중반, 원형 판지 디스크를 쌓고 슬래머로 쳐서 뒤집힌 것을 'for keeps'로 가져감), 중남미·스페인의 Tazos(과자 봉지 경품 원형 디스크, 포켓몬 Tazos 등), 일본의 Menko(캐릭터 인쇄 딱지)다. POG는 '내기로 가져가기'가 도박이라는 이유와 다툼 때문에 미국 여러 학교에서 금지되었다.",
+    "evidence": "기억 기반.",
+    "sources": [
+     "(미검증) https://en.wikipedia.org/wiki/Pogs",
+     "(미검증) https://en.wikipedia.org/wiki/Tazos",
+     "(미검증) https://en.wikipedia.org/wiki/Menko"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Magic: The Gathering 초기 규칙의 ante(덱에서 1장씩 걸고 승자가 가져감)는 도박성 우려와 '귀한 카드를 잃기 싫다'는 플레이어 반응 때문에 공식 규칙에서 빠졌고, ante 관련 카드는 금지되었다.",
+    "evidence": "기억 기반. '수집품을 판돈으로 거는' 구조가 실제로 실패한 선례.",
+    "sources": [
+     "(미검증) https://en.wikipedia.org/wiki/Ante_(Magic:_The_Gathering)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Endowed progress effect(Nunes & Drèze 2006): 세차 적립카드 실험에서 '8칸 필요'와 '10칸 중 2칸 미리 찍어줌'은 실제 필요한 칸 수가 같다. 그런데도 완료율이 약 19% 대 약 34%로 갈렸다. Goal-gradient(Kivetz, Urminsky & Zheng 2006): 보상에 가까워질수록 구매 빈도가 빨라진다.",
+    "evidence": "기억 기반(학술 고전 연구). 수치는 대략적인 기억.",
+    "sources": [
+     "(미검증) Nunes & Drèze (2006), Journal of Consumer Research 32(4)",
+     "(미검증) Kivetz, Urminsky & Zheng (2006), Journal of Marketing Research 43(1)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Zeigarnik effect(미완료 과제를 더 잘 기억함, 1927)는 최근 메타분석에서 기억 우위가 일관되게 재현되지 않았다. 다만 '미완료 과제를 다시 하려는 경향'(Ovsiankina effect)은 지지되었다. 따라서 세트 완성 동기는 '기억'보다 '재개 욕구'로 설계하는 게 맞다.",
+    "evidence": "기억 기반. 2025년경 메타분석(Humanities and Social Sciences Communications 게재로 기억)이지만 서지는 미확인.",
+    "sources": [
+     "(미검증) Zeigarnik effect 메타분석, 2025년경"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "쿠폰 수집가 문제: n종을 무작위로 모을 때 기대 뽑기 횟수는 n·H_n이다. 30종이면 약 120회가 필요하고, 그중 마지막 1종에만 평균 약 30회가 든다. Panini 월드컵 앨범은 교환 없이 완성하면 수백 파운드가 든다는 추정(Paul Harper, 2018, 약 773파운드로 기억)이 있었고, 교환하면 비용이 크게 줄었다.",
+    "evidence": "수학 공식 자체는 확실하다. Panini 비용 수치는 기억 기반이라 미검증.",
+    "sources": [
+     "(미검증) https://en.wikipedia.org/wiki/Coupon_collector%27s_problem",
+     "(미검증) Paul Harper(Cardiff Univ.) 2018 Panini 비용 추정 보도"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "손실회피와 소유효과: 같은 크기라도 손실은 이득보다 약 2배 크게 느껴진다(Kahneman & Tversky). 머그컵 실험에서는 보유자의 판매희망가(WTA)가 구매희망가(WTP)의 약 2배였다(Kahneman, Knetsch & Thaler 1990). IKEA effect(Norton, Mochon & Ariely 2012)에 따르면 노력을 들인 대상일수록 더 높게 평가한다.",
+    "evidence": "기억 기반(행동경제학 고전).",
+    "sources": [
+     "(미검증) Kahneman & Tversky 1979; Kahneman, Knetsch & Thaler 1990, JPE",
+     "(미검증) Norton, Mochon & Ariely 2012, Journal of Consumer Psychology"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "규제 동향: 벨기에 게임위원회(2018)는 유료 랜덤박스를 도박으로 판단했다. 네덜란드 KSA(2018)는 '양도 가능해 시장가치가 있는 아이템'이 든 랜덤박스를 도박으로 봤으나, 2022년 최고행정법원이 EA 사건에서 이를 뒤집었다. 한국은 2024-03-22부터 확률형 아이템 확률 공개가 법적 의무다. 한국에는 '사행성' 심의 이슈도 있다.",
+    "evidence": "기억 기반.",
+    "sources": [
+     "(미검증) Belgian Gaming Commission 2018 보고서",
+     "(미검증) 게임산업진흥법 개정(확률형 아이템 정보공개), 2024-03-22 시행"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "한국 동딱지(알딱지)는 구멍이 뚫린 판(시트) 형태로 팔렸고, 원형을 하나씩 '떼어내서' 썼다. 그림에는 애니메이션 캐릭터(상당수 비공식)가 인쇄되었다. 상대 딱지를 뒤집어 가져가는 '따먹기' 문화가 있었다. 한편 Squid Game(2021)으로 접는 사각 'ddakji'가 세계적으로 알려졌다.",
+    "evidence": "기억 기반(나무위키 fetch 시도 실패). 시트 판매와 뒷면 인쇄 사양은 검증 필요.",
+    "sources": [
+     "(미검증) https://namu.wiki/w/딱지",
+     "(미검증) https://en.wikipedia.org/wiki/Ttakji"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "이원 장부: 도감(영구) vs 판돈 더미(변동). Clash Royale(트로피 대 카드 레벨), 8 Ball Pool(코인 대 큐·레벨), Marvel Snap(컬렉션 레벨은 줄지 않음), Royal Match(손실 없는 꾸미기)가 공통으로 쓰는 원칙이다.",
+    "why_it_matters": "딱지는 '판돈이자 수집품'이라 지면 수집품이 사라진다. 손실회피(약 2배)와 소유효과 때문에 진척이 줄어드는 경험은 이탈로 이어진다. MTG ante가 폐지된 것도 같은 이유였다.",
+    "design_implication": "각 디자인의 첫 1장은 획득 즉시 '도감에 찍히는 도장'이 되어 영구 보존된다(Collection Level은 오르기만 함). 판돈으로 걸 수 있는 것은 중복분과 '민딱지'(무지/기본 딱지, 칩 역할)뿐이다. UI에서도 '내 도감(Album)'과 '내 딱지 더미(Pile)'를 다른 색과 다른 아이콘의 자원으로 보여준다. 이렇게 하면 '지면 딱지는 잃지만 도감은 안 줄어든다'가 직관적으로 이해된다."
+   },
+   {
+    "insight": "뒤집기가 곧 팩 개봉이 되게 한다. TCG Pocket이 증명한 '공개 순간의 쾌감'을 핵심 물리 액션에 그대로 겹칠 수 있다.",
+    "why_it_matters": "사용자가 꼽은 1순위는 '퍽 해서 많이 넘어가는 쾌감'이고, 수집 게임의 1순위 쾌감은 '공개'다. 두 쾌감을 따로 만들면 메타가 무거워지고, 하나로 합치면 설명 없이도 이해된다.",
+    "design_implication": "더미를 그림면이 아래(무지 뒷면이 위)로 쌓는다. 바람에 뒤집힌 딱지만 캐릭터 그림이 드러나며 '+7!' 카운트업이 뜬다. 도감에 없는 디자인이 드러나면 'NEW!' 도장과 희귀도별 섬광(포일→홀로→금테 왕딱지)이 터진다. 결과 화면 순서는 '뒤집힌 장수 → NEW 몇 장 → 도감 진척 바'로 이어진다. 희귀도는 물리값(무게·크기)이 아니라 재질과 테두리 색으로만 표현해 P2W 논란을 막는다."
+   },
+   {
+    "insight": "'딱지 한 판 떼기'를 개봉 의식으로 쓴다. TCG Pocket의 '팩 찢기 + 하루 2팩 타이머'를 한국 동딱지 판(시트) 문화로 바꾸는 것이다.",
+    "why_it_matters": "매일 돌아올 이유와 가벼운 개봉 쾌감이 필요하다. 또 '한국적인 것'을 설명 없이 체험시키는 장치가 된다. 해외 유저에게는 새롭고, 한국 3040에게는 향수를 준다.",
+    "design_implication": "무료 '딱지 판'을 12시간마다 1장 준다(최대 2장까지 쌓임). 판의 동그라미를 톡톡 눌러 떼어내는 제스처에 햅틱과 '톡' 사운드를 붙인다. 레어는 판 뒤에서 은은히 빛이 새고, 마지막 하나를 뗄 때 연출을 키운다. 판에서 나온 딱지는 무료 획득이므로 판돈으로 걸 수 있다(규제상 안전)."
+   },
+   {
+    "insight": "현상금 딱지: 상대(초기에는 AI)가 '내가 아직 없는 디자인'을 판돈에 섞어 건다. 쿠폰 수집 꼬리 문제를 실력으로 푸는 장치이자, 판돈을 키우고 싶게 만드는 미끼다.",
+    "why_it_matters": "쿠폰 수집 문제상 세트의 마지막 1~2장이 가장 큰 이탈 지점이다. TCG Pocket은 팩 포인트, Monopoly GO는 교환으로 이를 풀었다. 이 게임은 '따먹기'라는 고유 판타지로 풀 수 있다.",
+    "design_implication": "매치 전 '판돈 공개' 화면에서 상대 더미 중 '현상금(내 도감에 없음)' 딱지를 강조한다. 판돈 티어가 높을수록 현상금이 나올 확률을 올린다. 그래도 안 나오는 경우를 대비해, 중복을 분해해 얻는 '딱지 가루'(포인트)로 특정 딱지를 직접 교환하는 천장을 함께 둔다."
+   },
+   {
+    "insight": "같은 판돈 테이블 티어(8 Ball Pool 방식)를 쓰면 판돈의 크기가 곧 쌓인 더미의 높이, 즉 연출의 스케일이 된다.",
+    "why_it_matters": "사용자 원안(5/10/20/50/100장)은 그대로 테이블 티어가 된다. 높은 판돈 = 더 높은 탑 = '싹쓸이' 잠재력 = 더 큰 쾌감으로 이어져, 자연스럽게 위로 올라가고 싶어진다.",
+    "design_implication": "테이블별로 판돈 장수와 희귀도 상한을 정한다(동네 골목 5장 커먼 전용 → 문방구 앞 20장 → … 100장 왕딱지 테이블). 같은 테이블 안에서는 장수가 같으면 가치도 대략 맞도록 매칭한다. 빈털터리가 되지 않게 매일 무료 판, 구제 딱지, 최하 테이블 무제한 입장을 보장한다."
+   },
+   {
+    "insight": "내가 애착을 들인 딱지는 보호해야 한다. 손실회피, 소유효과, IKEA 효과 때문이고, POG 'for keeps' 학교 금지와 MTG ante 폐지 선례도 같은 방향이다.",
+    "why_it_matters": "'남녀노소, 글로벌' 타깃에서 아끼는 걸 잃는 경험은 치명적이다. 부모와 학교의 인식에도 영향을 준다.",
+    "design_implication": "즐겨찾기 잠금, 그리고 절대 걸 수 없는 대표 '왕딱지'(프로필 겸 에이스, Clash Royale 킹 타워 스킨처럼 과시용)를 둔다. Marvel Snap처럼 '그 딱지로 플레이할수록 외형이 업그레이드'되는 딱지는 도감 귀속으로 묶는다. 모드는 'For Fun(돌려줌)'과 'For Keeps(따먹기)' 두 가지다. 해외에서 POG 용어로 즉시 이해되고, 키즈와 지역 규제 대응 스위치로도 쓸 수 있다."
+   },
+   {
+    "insight": "자산은 보여야 쌓인다. 실물 수집(바인더, 스티커북, 딱지통)의 진열 욕구와 Royal Match의 '눈에 보이는 꾸미기 진척'을 3D 공간으로 옮긴다.",
+    "why_it_matters": "'하면 할수록 자산이 쌓인다'는 숫자만으로는 약하다. 딱지는 실물 더미라서 높이로 직관화할 수 있다는 고유 이점이 있다.",
+    "design_implication": "홈 화면 책상 위에 내 딱지 더미가 실제 높이로 쌓이고(1,000장이면 눈에 띄는 탑), 딱지통·바인더 진열장에서 3D로 돌려볼 수 있게 한다. PvP 입장 연출에서 서로의 탑과 왕딱지를 보여줘 과시욕을 건드린다. 원탭 메타로는 '90년대 골목 문방구 재건'을 하고, 이를 월드투어로 확장한다(하와이 POG, 멕시코 Tazos, 도쿄 Menko, 서울 딱지). 지역마다 앨범, 테이블, 꾸미기를 하나씩 붙인다."
+   },
+   {
+    "insight": "작은 세트, 사전 채움, '1장 남음' 노출, 완성 보상은 파워가 아닌 영구 외형으로 한다(Endowed progress, Goal-gradient, Ovsiankina).",
+    "why_it_matters": "'설명 없이 바로'를 지키면서 수집 동기를 즉시 켜야 한다. 큰 세트는 초반 이탈을 부르고, 파워 보상은 PvP 공정성을 깬다.",
+    "design_implication": "첫 세트는 6장이고 시작할 때 2장을 채워준다. 첫 세션 3~5분 안에 첫 세트를 완성시킨다. 이후 세트는 9장(Monopoly GO·Coin Master 표준)으로 한다. 홈에는 '이 세트 1장 남음' 카드를 상시 노출한다. 완성 보상은 바람 이펙트, 테이블 스킨, 사운드팩 같은 영구 외형과 Collection Level 점프로 준다. 시즌 앨범은 리셋하고 기본 도감은 영구로 둔다."
+   },
+   {
+    "insight": "중복은 곧 탄약이다. Monopoly GO에서 중복은 '별'로 환전될 뿐이지만, 이 게임에서는 중복 자체가 PvP 판돈(통화)이 되어 수집과 플레이 루프가 하나로 맞물린다.",
+    "why_it_matters": "수집 게임의 고질병인 '중복 실망'을 '판돈이 늘었다'는 긍정으로 바꿀 수 있다.",
+    "design_implication": "중복 획득 연출에서 '+1 판돈'을 직접 보여준다. 쓰임새는 세 갈래다. (1) 판돈으로 걸기 (2) 딱지 가루로 분해해 천장 교환 (3) 친구와 교환. 중복이 많은 딱지일수록 '이건 걸어도 되는 딱지'라는 신호를 UI로 준다."
+   },
+   {
+    "insight": "교환은 바이럴 엔진이지만 마찰을 조절해야 한다. Monopoly GO와 Coin Master는 친구 교환으로 초대와 커뮤니티를 키웠고, TCG Pocket은 교환 마찰 때문에 역풍을 맞았다.",
+    "why_it_matters": "PvP 이전 단계의 소셜과 해외 확산 수단이 필요하다. 동시에 PvP 내기 자체가 '일부러 져서 넘겨주는' 거래 통로(RMT·회색시장)가 될 수 있다.",
+    "design_implication": "친구 간 같은 희귀도 중복 교환은 저마찰(하루 N회)로 연다. 최고 희귀도는 이벤트 기간에만 교환한다(Golden Blitz처럼 이벤트 스파이크용). 내기 이동량에는 일일 상한을 두고, 같은 상대 반복 매칭을 제한하며, 비정상 패배 패턴을 탐지한다. 잭팟 뒤집기(예: 20/20 싹쓸이)는 자동 리플레이 클립으로 공유하게 해 '갓팩 자랑' 같은 바이럴을 노린다."
+   },
+   {
+    "insight": "돈으로 산 랜덤과 PvP 내기를 분리한다. 유료 랜덤 아이템을 다른 사람과의 내기로 잃거나 딸 수 있으면 도박 판단 기준(가치 있는 걸 걸고 결과로 이전)에 근접한다.",
+    "why_it_matters": "전연령·글로벌 출시를 노리는데 한국 사행성 심의, 벨기에·네덜란드 랜덤박스 판단, 스토어 연령등급(시뮬레이션 도박 표기) 리스크가 겹친다. 소재 자체(내기)가 이미 민감하다.",
+    "design_implication": "유료로 산 딱지는 '도감 귀속(걸 수 없음)'으로 하거나, 랜덤이 아닌 직접 구매로 판다. 판돈 딱지는 게임 내 획득분만 쓴다. 수익화는 외형(바람 VFX, 테이블, 왕딱지 스킨), 시즌 패스, 앨범 확장 같은 비랜덤 상품을 중심으로 한다. 용어도 bet/gamble 대신 'for keeps / pot / 따먹기'를 쓰고, 실력(조준·세기) 요소를 전면에 드러낸다."
+   }
+  ],
+  "key_claims": [
+   "딱지의 '판돈이자 수집품' 이중성은 '각 디자인 첫 1장은 도감에 영구 등록(절대 안 잃음), 중복분과 민딱지만 판돈 가능'이라는 이원 장부로 풀어야 한다. 성공작(Clash Royale·8 Ball Pool·Marvel Snap·Royal Match)은 모두 변동 자원과 영구 진척을 분리했고, 수집품을 판돈으로 건 MTG ante는 폐지되었다.",
+   "더미를 그림면이 아래로 쌓아 '뒤집히는 순간 = 캐릭터 공개(NEW 도장)'로 만들면, 핵심 물리 액션 하나가 TCG Pocket식 개봉 쾌감과 수집 진척을 동시에 준다. 이것이 이 게임 고유의 핵심 차별점이다.",
+   "돈으로 산 랜덤 딱지를 PvP 내기로 잃거나 딸 수 있게 하면 사행성·도박 판정과 연령등급 리스크가 크다. 따라서 '유료 = 비랜덤 또는 내기 불가, 판돈 = 게임 내 획득분'으로 분리해야 전연령·글로벌 목표와 양립한다.",
+   "세트 완성 동기는 작은 세트(6~9장), 사전 채움(endowed progress), '1장 남음' 상시 노출, 꼬리 보정이 있어야 유지된다. 쿠폰 수집 문제 때문에 마지막 1~2장이 최대 이탈 지점이고, 꼬리 보정은 '현상금 딱지'(상대가 내 미보유 딱지를 판돈에 섞음)와 가루 천장이 맡는다.",
+   "해외 접근성은 '한국 딱지'를 설명하기보다 각국의 같은 구조 놀이 기억(미국 POG 'for keeps', 중남미 Tazos, 일본 Menko)과 Squid Game ddakji 인지도에 기대는 편이 효과적이다. 이는 지역별 앨범·테이블 월드투어 메타로 구조화할 수 있다.",
+   "교환은 친구 초대와 커뮤니티를 키우는 바이럴 엔진이다(Monopoly GO·Coin Master). 다만 TCG Pocket의 트레이드 토큰 역풍처럼 마찰이 크면 신뢰를 잃는다. 그래서 '같은 희귀도 중복·친구 간·저마찰, 최고 희귀는 이벤트 한정' 구조가 적합하다."
+  ],
+  "risks": [
+   "[검증 한계] 이번 세션은 WebSearch 한도 소진과 WebFetch DNS 실패로 출처를 하나도 대조하지 못했다. 매출·다운로드·연도·규제 시점 등 모든 수치는 기억 기반이므로 검증 단계 전에 기획 문서의 근거로 쓰면 안 된다.",
+   "규제와 인식: 내기, 수집품 이전, 수익화가 결합되면 한국 사행성 심의, 벨기에 등의 랜덤박스 규제, 스토어의 시뮬레이션 도박 연령등급에 걸릴 수 있다. 90년대 POG의 학교 금지처럼 학부모 인식이 '남녀노소' 포지셔닝을 훼손할 수 있다.",
+   "경제 붕괴: 판돈 경제는 부익부(고수가 딱지를 독점)와 파산 이탈이 생기기 쉽다. 무료 공급원, 구제, 테이블 상한, AI 상대의 판돈 조절이 정교하지 않으면 인플레이션이나 디플레이션으로 무너진다.",
+   "초반 판돈 부족: 첫 1장이 영구 등록되면 초반 유저는 중복이 거의 없어 걸 딱지가 없다. 민딱지(기본 칩) 공급과 튜토리얼 판돈 설계가 반드시 필요하다.",
+   "RMT와 회색시장: PvP 내기는 일부러 져서 넘겨주는 아이템 이전 통로가 된다. Monopoly GO에서 스티커 판매 회색시장이 생긴 것과 같은 위험이다.",
+   "IP: 원조 동딱지의 매력은 유명 애니메이션 캐릭터(상당수 비공식)였다. 오리지널 캐릭터만으로 수집 애착을 만들 수 있을지 불확실하다.",
+   "메타가 과해지면 '설명 없이 바로 시작'이라는 원칙이 깨진다. 도감, 판돈, 교환, 꾸미기를 한꺼번에 보여주면 안 되고 단계적으로 열어야 한다.",
+   "'그림면 아래로 쌓기'가 사용자가 의도한 원래 규칙 감각(어느 면이 위였는지)과 다를 수 있다."
+  ],
+  "open_questions": [
+   "사용자 원안의 '따먹기' 긴장감(아끼는 걸 잃을 수 있음)을 어디까지 살릴 것인가? 고위험 '진검승부' 모드에서는 도감 원본도 걸 수 있게 할지, 아니면 완전 보호할지.",
+   "PvP 판돈은 '장수 동일'(원안)로 할지 '가치 동일'(희귀도 가중)로 할지? 아니면 테이블별 희귀도 상한으로 장수 동일을 유지할지.",
+   "AI 상대를 유한한 자기 컬렉션을 가진 지속 NPC 라이벌(동네 형, 문방구 주인 등)로 만들어, 그들의 레어를 따먹는 것을 실감나게 할지.",
+   "실제 90년대 동딱지는 어느 면을 위로 쌓았고, 뒷면에 무엇(숫자, 별, 텍스트)이 인쇄되었는지? 진정성 있는 연출을 위해 사용자 확인이 필요하다.",
+   "유료 랜덤 팩을 아예 없앨지, 아니면 '도감 귀속(걸 수 없음)'으로만 팔지? 목표 연령등급(전체이용가 대 12세 등)에 따라 결정된다.",
+   "런칭 시 디자인 수(예: 6장 세트 1개 + 9장 세트 5~6개 + 희귀 변형)와 시즌 앨범 주기.",
+   "월드투어(POG, Tazos, Menko) 콘셉트가 저작권과 상표 측면에서 안전한가? 'POG'는 상표이므로 일반 명칭(milk caps 등)을 써야 할 수 있다."
+  ]
+ },
+ {
+  "lens": "PvP·내기·경쟁 심리 + 규제 리스크 (딱지 걸기 구조의 안전성과 긴장감)",
+  "summary": "[조사 한계] 이 턴에서 WebSearch 한도(에이전트 전체 공유 200회)가 이미 소진되어 검색은 한 번도 실행되지 않았습니다. WebFetch도 대부분 도메인에서 DNS 오류가 났습니다(wikipedia, namu.wiki, play.google.com, esrb.org, pegi.info, fandom 등). 직접 확인한 출처는 Apple 개발자 문서 3개뿐이고, 나머지는 기억에 기댄 내용이라 confidence=low로 표시했습니다.\n핵심 결론: Apple의 현행 연령등급 기준에서 '시뮬레이션 도박'이 빈번하면 18+, 드물면 13+입니다. 호주는 한 번만 등장해도 R18이고, 한국 GRAC는 KR-15/19를 줄 수 있습니다. 따라서 매 판마다 '딱지를 건다'를 베팅 의미로 구현하면 남녀노소 타겟과 정면으로 부딪힙니다.\n해법: '내기'를 '같은 수를 내고 뒤집은 만큼 가져가는 실력 경기(contest)'로 설계합니다. 그리고 돈 → 판돈 → 현실가치로 이어지는 연결 고리를 끊습니다(유료 딱지는 걸 수 없음, 거래·환전 없음, 랜덤팩 확률 공개). 앨범(보호)과 판돈 스택(중복분)을 분리하고, 8 Ball Pool식 '동네 판 사다리'와 숨은 MMR·언더독 완충을 붙이면 긴장감과 안전을 함께 얻을 수 있습니다.",
+  "findings": [
+   {
+    "claim": "Apple 현행 연령등급에서 '시뮬레이션 도박'의 정의는 '현실 돈이나 현금 교환 가능한 게임 재화를 쓰지 않는 베팅·내기'이다. 빈번하면 18+, 드물면 13+이다. 반면 '콘테스트(순위·보상을 두고 겨루는 실력 경쟁)'는 드물면 4+, 빈번하면 13+이다. 루트박스는 9+이다.",
+    "evidence": "Apple App Store Connect 'Age ratings values and definitions' 페이지를 직접 fetch했다. Simulated Gambling: \"Betting or wagering without using real money or in-game currency that can be exchanged for real money.\" 18+ 항목에 'gambling, and frequent simulated gambling', 13+ 항목에 'infrequent simulated gambling, and frequent contests', 4+ 항목에 'infrequent contests', 9+ 항목에 'loot boxes'가 명시되어 있다. 정의상 현금화가 안 되는 게임 딱지를 거는 것도 '시뮬레이션 도박'에 해당할 수 있다.",
+    "sources": [
+     "https://developer.apple.com/help/app-store-connect/reference/age-ratings-values-and-definitions/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "지역별 등급 매핑에서 호주는 시뮬레이션 도박이 한 번이라도 있으면 R18, 유료 루트박스가 있으면 15로 표시한다. 한국(GRAC)은 게임·엔터 카테고리이거나 시뮬레이션 도박이 빈번·강한 앱에 KR-15 또는 KR-19를 별도로 부여할 수 있다.",
+    "evidence": "같은 Apple 페이지의 offset 100000 이후 부분이다. Australia: 'App with any instances of simulated gambling' → R18 pictogram, 'purchasable loot boxes' → 15. Korea: 'The GRAC may issue a KR-15 regional rating ... or text that indicates KR-19 regional age rating for some apps.' 베트남도 빈번한 시뮬레이션 도박을 18+로 둔다.",
+    "sources": [
+     "https://developer.apple.com/help/app-store-connect/reference/age-ratings-values-and-definitions/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "App Store 가이드라인이 요구하는 것: 랜덤 아이템을 파는 루트박스는 구매 전에 확률을 공개해야 한다(3.1.1). IAP로 산 재화를 현실 돈 게임에 쓸 수 없다(5.3.3). 현실 돈 게임은 라이선스와 지역 제한이 필요하다(5.3.4). 게임 재화는 만료되면 안 된다(3.1.1).",
+    "evidence": "Apple App Store Review Guidelines 원문 인용: 3.1.1 \"Apps offering 'loot boxes'... must disclose the odds of receiving each type of item to customers prior to purchase.\" 5.3.3 \"Apps may not use in-app purchase to purchase credit or currency for use in conjunction with real money gaming of any kind.\" 5.3.4 real money gaming은 licensing·geo-restrict 대상. 3.1.1 \"credits or in-game currencies purchased via in-app purchase may not expire\".",
+    "sources": [
+     "https://developer.apple.com/app-store/review/guidelines/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Game Center는 OS 차원에서 턴제 비동기 대전을 지원한다. 매치 데이터 저장, '네 차례' 알림, 친구·연락처·iMessage 그룹 초대, 자동 매칭이 가능하고, 실력(skill level)과 파티 코드 기반 매칭 규칙도 제공한다.",
+    "evidence": "developer.apple.com/game-center 인용: \"Game Center can store and send match data between multiple players in a turn-based game, notifying each player when it's their turn next.\" 초대 경로로 'Game Center friends, contacts, iMessage groups, and nearby players, or automatch'를, 매칭 규칙 파라미터로 'skill level and party codes'를 든다.",
+    "sources": [
+     "https://developer.apple.com/game-center/"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "8 Ball Pool(Miniclip)의 1:1 매치는 두 사람이 같은 입장료(코인)를 내고 승자가 판돈을 가져가는 구조다. 테이블은 런던 → 시드니 → 모스크바 → 도쿄 → 라스베이거스 … 식의 도시 사다리로 판돈이 커지고, 레벨과 보유 코인이 있어야 입장할 수 있다. 같은 공식이 Miniclip의 Soccer Stars·Carrom Pool 같은 'Stars' 계열과 Golf Clash(Playdemic)에서도 반복된다.",
+    "evidence": "기억에 의존했다. 웹판은 2010년경, 모바일판은 2013년경 출시된 것으로 알고 있다. Tencent가 2015년경 Miniclip 지분을 인수했다. 큐 판매(능력치 차등)를 둘러싼 페이투윈 논란, 일일 무료 코인·광고 코인 같은 파산 방지 장치가 있다. Golf Clash는 투어별 입장료와 승자 독식 구조이며, EA가 2021년 Playdemic을 약 14억 달러에 인수했다. 다운로드·매출 수치는 확인하지 못했다.",
+    "sources": [
+     "미검증(기억) — 검색 한도 소진. 검증 후보: https://en.wikipedia.org/wiki/8_Ball_Pool , https://en.wikipedia.org/wiki/Golf_Clash"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Clash Royale(2016.3 글로벌 출시)은 '트로피 = 공개 MMR' 구조다. 승리하면 약 +30, 패배하면 비슷하게 차감되고, 아레나마다 트로피 하한선(gate)이 있어 일정 아레나 아래로는 떨어지지 않는다. 트로피 로드 보상과 별도 랭크 모드(Path of Legends)를 운영한다. Brawl Stars(2018.12 글로벌 출시)는 브롤러별 트로피, 승리 연속 보너스, 약팀이 지면 트로피를 덜 잃는 'Underdog' 표기를 두고, 낮은 트로피 구간에서는 봇이 매치를 채운다.",
+    "evidence": "기억에 의존했다. 하한선, 언더독 완충, 연승 보너스는 손실회피를 줄이면서 경쟁 긴장을 유지하는 대표적 장치로 알려져 있다. 봇 사용은 커뮤니티에서 널리 지적되었다. 구체적 수치와 공식 발표 시점은 확인하지 못했다.",
+    "sources": [
+     "미검증(기억). 검증 후보: https://clashroyale.fandom.com/wiki/Trophies , https://brawlstars.fandom.com/wiki/Trophies"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "대전 레이팅 체계에는 Elo(체스, 1960년대 채택), Glicko(1995)와 Glicko-2(2001, 레이팅 편차·변동성 반영), TrueSkill(Microsoft, 2006, 팀전용)이 있다. 신작처럼 표본이 적은 환경에서는 신뢰도(RD)를 함께 다루는 Glicko-2가 1:1 경기에 적합하다.",
+    "evidence": "기억에 의존했다(널리 알려진 사실이지만 출처를 fetch하지 못함). Glicko-2는 경기 수가 적은 신규 유저의 불확실성을 크게 잡아 빠르게 수렴시킨다.",
+    "sources": [
+     "미검증(기억). 검증 후보: http://www.glicko.net/glicko/glicko2.pdf"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "비동기 턴제 PvP 사례: Words With Friends(Newtoy, 2009, 2010년 Zynga가 인수)는 동시접속이 적어도 매칭이 성립하고, '네 차례' 푸시가 재방문 동기가 된다는 것을 보여주었다. Draw Something(2012)은 폭발적으로 성장했다가 진행 구조와 깊이가 부족해 급락한 사례로 자주 인용된다.",
+    "evidence": "기억에 의존했다. 딱지 불기는 한 턴이 '한 번 불기(약 3~5초)'로 끝나므로 비동기 진행에 구조적으로 잘 맞는다. 다만 더미 상태(딱지 위치)를 서버에 저장하고, 결정론적 물리나 서버 권위 시뮬레이션이 필요하다.",
+    "sources": [
+     "미검증(기억). 검증 후보: https://en.wikipedia.org/wiki/Words_with_Friends , https://en.wikipedia.org/wiki/Draw_Something"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "봇·고스트로 매칭 유동성을 메우는 관행에 대한 공정성 논란: Fortnite는 2019년 챕터 2에서 신규 유저용 봇을 공개적으로 도입했다. 반면 현금 대전 앱 AviaGames(Pocket7Games)는 사람으로 위장한 봇을 썼다는 혐의로 Skillz와 소송, 이용자 집단소송을 겪었다. 매칭을 과금이나 이탈 방지에 이용하는 설계도 신뢰 이슈를 낳았다(EA의 EOMM 논문 2017, Activision의 '마이크로트랜잭션 유도 매칭' 특허 2017).",
+    "evidence": "기억에 의존했다. 공통 교훈은 이렇다. 봇은 '공개하고 판돈이 없을 때' 수용되고, '숨기고 판돈이 걸릴 때' 기만이자 법적 리스크가 된다. Clash of Clans의 비동기 공격(상대 기지 스냅샷을 AI가 방어)은 '고스트 PvP'를 투명하게 운영한 성공 사례다.",
+    "sources": [
+     "미검증(기억). 검증 후보: https://en.wikipedia.org/wiki/Skillz_(company) , EOMM: Chen et al., WWW 2017"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "손실회피(Kahneman & Tversky 1979; 1992년 추정 손실가중 약 2.25배)와 보유효과(Kahneman·Knetsch·Thaler 1990, 머그컵 실험에서 판매 희망가가 구매 의사가의 약 2배) 때문에 '내 딱지를 건다'는 긴장이 생긴다. 그러나 아끼는 수집품을 잃는 고통은 같은 크기의 이득보다 훨씬 크게 느껴진다.",
+    "evidence": "기억에 의존했다(행동경제학 고전 문헌). 이 게임에서 걸리는 것은 '이름 있는 캐릭터 딱지'라서 숫자 코인보다 보유효과가 훨씬 강하다. 긴장의 원천이면서 동시에 분노 이탈의 원천이 된다.",
+    "sources": [
+     "미검증(기억). Kahneman & Tversky (1979) Econometrica; Kahneman, Knetsch & Thaler (1990) JPE"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "실물 POG(밀크캡) 붐(미국, 1993~1995년경)에서 '진짜로 따먹기(playing for keeps)'가 다툼·울음·사행성 논란을 낳아 많은 학교가 금지했다. 놀이 자체에 'for fun(돌려주기)'과 'for keeps(따먹기)'를 나누는 구분이 있었다.",
+    "evidence": "기억에 의존했다. 한국 딱지치기나 따먹기도 학교에서 제지받은 사례가 흔했다고 알고 있지만 출처는 확인하지 못했다. 원작 놀이에 이미 '친선/따먹기' 모드 구분이 존재했다는 점이 설계 근거가 된다.",
+    "sources": [
+     "미검증(기억). 검증 후보: https://en.wikipedia.org/wiki/Milk_caps_(game)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "루트박스 규제 연표: 벨기에 게임위원회가 2018년 4월 FIFA 18·Overwatch·CS:GO의 유료 루트박스를 불법 도박으로 판단했다(이후 2019년 Nintendo가 일부 게임의 벨기에 서비스를 철수). 네덜란드 KSA는 2018년 '외부 거래 가능 → 시장가치'를 기준으로 위반을 판단했고 EA에 1천만 유로 제재를 했으나, 국가위원회(Raad van State)가 2022년 3월 이를 뒤집었다. 그 밖에 중국 2017년 5월 확률 공개 의무, 일본 2012년 콤프가챠 금지, ESRB 2020년 'In-Game Purchases (Includes Random Items)' 표기 도입, 호주 2024년 9월 등급 개정(루트박스 M 이상, 시뮬레이션 도박 R18+)이 있다.",
+    "evidence": "기억에 의존했다. 호주의 '시뮬레이션 도박 R18'은 Apple 문서의 지역 매핑(F2)과 일치하므로 그 부분은 사실상 교차 확인되었다. 네덜란드 판단의 핵심은 아이템의 양도·현금화 가능성이었다.",
+    "sources": [
+     "미검증(기억). 검증 후보: https://en.wikipedia.org/wiki/Loot_box ; 호주 부분은 https://developer.apple.com/help/app-store-connect/reference/age-ratings-values-and-definitions/ 로 부분 확인"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "한국: 게임산업법 개정으로 2024년 3월 22일부터 확률형 아이템 정보 공개가 의무화되었다(게임 내, 홈페이지, 광고물에 표시, 위반 시 시정권고 → 시정명령 → 형사처벌). 이와 별개로 게임산업법은 게임 결과물(아이템·포인트)의 환전, 환전 알선, 재매입 영업을 금지하고, 경품 등으로 사행성을 조장하는 것도 금지한다.",
+    "evidence": "기억에 의존했다. 시행일 2024.3.22는 비교적 확실하게 기억한다. 확률 조작에 징벌적 손해배상을 도입하는 후속 입법은 진행 여부를 확인하지 못했다. 원작 동딱지는 '봉지 랜덤'으로 팔렸으므로 그대로 디지털화하면 곧바로 확률 공개 대상이 된다.",
+    "sources": [
+     "미검증(기억). 검증 후보: 국가법령정보센터 게임산업진흥에 관한 법률 제33조·제32조"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Kater v. Churchill Downs(미 9순회항소법원, 2018) 판결은 현금으로 살 수 있고 플레이를 연장해 주는 가상 칩을 워싱턴주 법상 '가치 있는 것(thing of value)'으로 보아 소셜 카지노를 불법 도박으로 판단했다. 이후 Big Fish Games 측이 약 1.55억 달러에 합의했다.",
+    "evidence": "기억에 의존했다. 도박 3요소(대가·우연·상품) 중 상품의 '가치'를 가상재화에도 인정한 선례다. 즉 '유료로 살 수 있는 딱지를 우연성이 큰 판에 거는 구조'는 일부 관할에서 소송 리스크가 있다.",
+    "sources": [
+     "미검증(기억). 검증 후보: Kater v. Churchill Downs Inc., 886 F.3d 784 (9th Cir. 2018)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "오징어 게임(2021.9)의 딱지치기 장면 덕분에 해외에서 'ddakji'의 인지도가 크게 높아졌다. 다만 그 장면은 '돈을 건 내기(지면 뺨)'로 연출되었다.",
+    "evidence": "기억에 의존했다. 해외 친숙도를 높이는 다리 역할은 하지만, 오징어 게임이 접는 딱지라는 점, 그리고 '내기·도박·폭력' 연상이 함께 따라온다는 점에 주의해야 한다.",
+    "sources": [
+     "미검증(기억)"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "'딱지 걸기'를 베팅으로 구현하면 Apple 기준으로 '빈번한 시뮬레이션 도박 = 18+'에 해당할 위험이 있다. 반면 '같은 수를 내고 겨루는 실력 경기'로 구현하면 '콘테스트(빈번 13+)'로 분류될 여지가 있다. 같은 놀이라도 구조와 언어에 따라 등급이 4~5단계 갈린다.",
+    "why_it_matters": "사용자 원안의 핵심 루프는 '매 판마다 건다'이므로 빈도가 '빈번'일 수밖에 없다. 18+나 호주 R18을 받으면 남녀노소·글로벌 타겟이 즉시 무너진다.",
+    "design_implication": "UI, 스토어 문구, 효과음에서 bet/wager/jackpot/casino/odds/double-or-nothing을 금지한다. 글로벌 명칭은 'Stack Match / Pile Up / Flip & Keep'처럼 쓰고, 한국어는 '판 깔기·따먹기' 같은 놀이 언어로 쓴다. 판돈은 '동일 수 참가(ante)'로만 받고, 판돈 올리기·더블다운·올인 기능은 영구적으로 넣지 않는다. 등급 설문은 '실력 기반 경쟁, 현금 가치 없음, 거래 불가'로 응답할 수 있도록 실제 시스템을 먼저 그렇게 만든다. 목표 등급은 현실적으로 9+~13+로 잡는다."
+   },
+   {
+    "insight": "이중 주머니 경제: 앨범(도감)에 한 번 등록된 '원본'은 절대 걸리지 않고, 판에는 '스택(중복분·플레이로 번 딱지)'만 건다.",
+    "why_it_matters": "보유효과와 손실회피 때문에 아끼는 캐릭터를 잃으면 이득보다 약 2배 아프다. 이는 POG 학교 금지 사태 때 나타난 다툼·울음과 같은 감정이고, 온라인에서는 곧 분노 이탈과 부모 민원으로 이어진다.",
+    "design_implication": "'내 딱지 탑(스택)'은 시각적으로 높게 쌓아 걸 때의 긴장을 보존한다. 반면 앨범 슬롯에는 자물쇠 아이콘을 붙여 '이건 안전하다'를 즉시 보여준다. 중복 5장을 합성해 승급하는 기능을 두어 스택을 소모(싱크)하고 인플레이션을 막는다."
+   },
+   {
+    "insight": "'따먹기 = 수집 채널': 상대가 건 딱지를 뒤집으면 내 것이 되므로, PvP 승리가 곧 '내게 없는 캐릭터를 얻는 길'이 된다.",
+    "why_it_matters": "수집욕(필수 요소)과 PvP 동기가 하나의 루프로 묶인다. 상대 판돈 미리보기에서 '저 레어를 따고 싶다'는 욕구가 매칭 수락률과 긴장을 함께 높인다.",
+    "design_implication": "매칭 직후 '상대가 건 딱지 10장'을 카드처럼 펼쳐 보여주고, 내 앨범에 없는 딱지에는 NEW 배지를 단다. 공정성을 위해 아레나별로 희귀도 밴드를 정하거나 '판돈 가치(희귀도 가중 합)'를 맞춘다. 예: 골목판은 노멀만, 운동장판부터 레어 허용."
+   },
+   {
+    "insight": "8 Ball Pool·Golf Clash식 '동일 입장료 → 판 크기별 도시 사다리'는 사용자 원안(5/10/20/50/100장)과 거의 1:1로 대응한다. 여기에 Clash Royale식 하한선과 보유량 조건을 더하면 파산을 막을 수 있다.",
+    "why_it_matters": "검증된 캐주얼 PvP 공식이다. 판돈이 커질수록 지위가 드러나고 긴장도 커지는 사다리가 자연스러운 진행 목표가 된다. 다만 올인과 파산은 이탈과 사행성 인상을 만든다.",
+    "design_implication": "동네 테마 사다리: 골목(5장) → 놀이터(10) → 문방구 앞(20) → 학교 운동장(50) → 동네 대회(100). 해외판 명칭은 Alley/Playground/Corner Shop/Schoolyard/Champion's Table로 하고, 한국 동네 정서를 배경 아트로 전달한다. 입장 조건은 랭크 + 판돈의 3~5배 이상 보유로 해서 올인을 차단한다. 스택이 바닥나면 '문방구 할머니 무료 딱지'(일일 지급)와 NPC 연습판으로 복구하게 한다. 수치는 설계 가설이며 텔레메트리로 튜닝한다."
+   },
+   {
+    "insight": "판돈 경제와 랭크(경쟁 지위)를 분리한다. 숨은 Glicko-2 MMR로 매칭하고, 공개 별/트로피에는 언더독 완충과 연승 보너스를 준다.",
+    "why_it_matters": "판돈 손실과 랭크 손실이 겹치면 패배의 고통이 두 배가 된다. MMR 없이 판돈만으로 매칭하면 고수가 초보를 사냥하게 되어 신규 유입이 붕괴한다.",
+    "design_implication": "판돈은 대칭으로 둔다(같은 수를 걸고 뒤집은 만큼 가져가는 원작 룰). 랭크 점수는 비대칭으로 둔다(약자가 지면 덜 잃음, Brawl Stars의 Underdog 방식). 선공은 가위바위보 미니게임으로 정하거나, MMR이 낮은 쪽이 선공한다. 가위바위보는 문화 체험이자 공정성 장치다. 선공 이점은 데이터로 측정해 바둑의 덤처럼 보정한다."
+   },
+   {
+    "insight": "원작 룰은 '뒤집은 만큼 가져가는 비례 배분'이라서 승자 독식(8 Ball Pool)보다 분산이 작다. 게다가 매 턴이 보상 순간이 된다.",
+    "why_it_matters": "쾌감('퍽 → 우르르 뒤집힘')이 매치 끝이 아니라 3~5초 턴마다 터진다. 패자도 일부를 지키므로 박탈감이 작아 아동과 초보 친화적이다.",
+    "design_implication": "원작 룰을 유지하되 긴장 장치를 시스템이 지급하는 보너스로만 추가한다. 예: 막타(마지막 딱지), 올킬(한 번에 전부), 연속 뒤집기 콤보. 이 보너스는 상대에게서 빼앗지 않고 시스템 보상(랭크 점수, 코스메틱 조각)으로만 준다. 판돈은 제로섬, 보너스는 포지티브섬으로 나누는 것이다."
+   },
+   {
+    "insight": "출시 초기 동시접속 부족은 '비동기 우선 + 공개된 NPC/고스트'로 푼다. 판돈이 걸린 매치에 숨은 봇을 넣는 것은 절대 금지한다.",
+    "why_it_matters": "한 판이 '한 번 불기 × 6~10턴'이라 비동기와 궁합이 좋다(Words With Friends 모델, Game Center 턴제 API 지원). 판돈 매치에 숨은 봇을 쓰면 기만으로 간주되어 Avia 사례 같은 소송·평판 리스크가 생긴다.",
+    "design_implication": "(1) 친구 도전장 딥링크: 내 최고의 '퍽' 리플레이와 '이거 이겨봐'를 함께 보내 비동기로 진행하고 차례가 오면 푸시한다. (2) '동네 라이벌' NPC(골목대장 등 한국 캐릭터)는 명시된 CPU로 PvE와 문화 소개를 맡는다. (3) 고스트 대전은 '기록 대전'으로 표기하고 판돈은 시스템이 대는 하우스 머니로 한다. (4) 실시간 매칭은 동시접속이 충분한 상위 판에서 먼저 연다. 매칭 원칙(구매 여부와 무관, 봇 표기)은 공개한다."
+   },
+   {
+    "insight": "'돈 → 판돈 → 현실가치' 연결 고리를 끊는 머니 방화벽을 둔다. 유료 딱지는 걸 수 없게 하고, P2P 거래·선물 시장과 환전을 없앤다. 랜덤 딱지 봉지는 확률을 공개하고 국가별로 끌 수 있게 만든다.",
+    "why_it_matters": "도박의 3요소(대가·우연·상품) 중 '현금 가치'와 '양도 가능성'을 끊으면 규제 위험이 급감한다. 근거는 네덜란드 KSA 2018의 양도성 기준, Kater 판결의 thing of value, 한국 게임산업법의 환전 금지다. 원작 동딱지의 '봉지 랜덤 구매'를 그대로 옮기면 한국 2024 확률 공개 의무, Apple 3.1.1, 벨기에 리스크에 그대로 노출된다.",
+    "design_implication": "수익화는 판에 걸 수 없는 코스메틱 중심으로 한다: 입김 이펙트, 책상·장판 스킨, 딱지 테두리 반짝이, 시즌 패스. 유료로 얻은 캐릭터 딱지는 '앨범 전용'으로 두고, 판에 거는 스택은 플레이로만 얻게 한다. 랜덤 봉지를 판다면 확률을 표기하고, 천장과 내용 미리보기를 두고, 벨기에 등에서는 직접 구매 상품으로 바꾼다. 상품명에서도 'lottery'를 피한다."
+   },
+   {
+    "insight": "원작 놀이에는 이미 친선판(돌려주기)과 따먹기판이 있었다. 이 구분이 연령별 안전장치 역할을 한다.",
+    "why_it_matters": "전연령 타겟과 '진짜로 잃는 긴장'은 충돌한다. 연령에 따라 모드를 나누는 것이 등급과 부모 신뢰를 지키는 가장 단순한 방법이다.",
+    "design_implication": "13세 미만이나 키즈 설정에서는 기본값을 '친선판'으로 둔다(딱지 반환, 랭크와 시스템 보상만 지급). 따먹기판은 연령 확인 후 활성화한다. 연패하면 쿨다운과 'NPC와 연습하기'를 안내하고, 하루 따먹기판 횟수에 소프트 상한을 둔다. 판돈 변화는 패배 화면에서 크게 강조하지 않고, 남은 딱지를 함께 보여준다."
+   },
+   {
+    "insight": "'실력 게임'임을 입증할 수 있어야 한다. 결정론적 물리, 서버 권위 판정, 실력 격차 텔레메트리가 필요하다.",
+    "why_it_matters": "결과가 운에 좌우되는 것처럼 보이면 법적으로는 '우연' 요소가 커지고 유저에게는 '조작' 의심이 커진다. 판돈이 걸린 물리 게임은 8 Ball Pool처럼 핵·치트의 표적이 된다.",
+    "design_implication": "입력(방향·지점·세기)이 같으면 결과도 같게 만들고(시드 고정 결정론), 숨은 랜덤을 최소화한다. 바람 흔들림 같은 우연 요소는 화면에 보이게 한다. 조준 콘과 노릴 지점 하이라이트로 실력이 개입하는 여지를 드러낸다. 상위 10% 대 중위 유저의 평균 뒤집기 비율 같은 실력 격차 지표를 대시보드로 관리하고, 초보 유입과 고수 유지를 위해 대략 '실력 70~80 : 운 20~30'을 목표로 튜닝한다(가설). 판정은 서버에서 재시뮬레이션해 검증한다."
+   },
+   {
+    "insight": "관전·리플레이는 경쟁 열망과 글로벌 확산 장치를 겸한다. 3초짜리 '퍽 → 우르르' 장면은 그 자체로 숏폼 콘텐츠다.",
+    "why_it_matters": "Clash Royale의 TV Royale류 기능은 고수 플레이를 보며 배우게 만들고 목표를 제시한다. 숏폼 공유는 '한국 딱지'를 설명 없이 이해시키는 가장 빠른 경로다(오징어 게임으로 생긴 ddakji 인지도도 활용 가능).",
+    "design_implication": "오늘의 '올킬 퍽' 하이라이트 피드를 두고, 리플레이 클립을 원탭으로 내보내며 워터마크와 도전 링크를 단다. 리매치('복수전') 버튼은 같은 판돈으로만 열고, 판돈 2배 제안은 금지한다. 오징어 게임은 직접 언급하지 않는다(IP 문제, 도박·폭력 연상)."
+   }
+  ],
+  "key_claims": [
+   "Apple 현행 연령등급은 '현금 가치 없는 재화로 하는 베팅·내기'도 시뮬레이션 도박으로 정의한다. 빈번하면 18+, 드물면 13+이고, 호주는 한 번이라도 있으면 R18이다. 따라서 매 판 '딱지를 건다'를 베팅 방식으로 구현하면 남녀노소 타겟이 무너진다. '동일 참가 → 뒤집은 만큼 가져가는 실력 콘테스트(빈번 13+)' 구조와 언어로 설계해야 한다. (Apple 문서 확인, high)",
+   "유료 재화와 판돈의 연결을 끊는 머니 방화벽이 규제 안전의 핵심이다. 유료로 얻은 딱지는 걸 수 없게 하고, P2P 거래와 환전을 없애고, 랜덤 봉지는 확률을 공개한다(한국 2024.3.22 시행, Apple 3.1.1). 이렇게 하면 도박 3요소 중 '현실가치'가 제거된다. (Apple 부분 high, 한국·판례 부분 low)",
+   "앨범(원본, 영구 보호)과 스택(중복분, 판돈)을 분리하면 '내 것을 건다'는 긴장을 유지하면서도 보유효과·손실회피 때문에 생기는 분노 이탈과 POG식 사회적 반발을 피할 수 있다. 상대 딱지를 따는 것이 수집 채널이 되어 PvP와 수집이 하나의 루프로 묶인다. (low, 설계 추론)",
+   "8 Ball Pool·Golf Clash의 '동일 입장료 + 도시/투어 판 사다리'는 원안(5~100장)과 1:1로 대응하는 검증된 공식이다. 여기에 보유량 조건(판돈의 3~5배), 무료 일일 딱지, 숨은 Glicko-2 MMR, 언더독 완충을 더해야 초보 사냥과 파산을 막을 수 있다. (low, 기억 기반)",
+   "출시 초기 매칭 유동성은 비동기 턴제(한 턴 = 한 번 불기, Game Center 턴제 API 지원)와 '명시된' NPC·기록 대전으로 해결해야 한다. 판돈이 걸린 매치에 숨은 봇을 쓰면 기만·소송 리스크가 생긴다. (Game Center 부분 high, 봇 논란 부분 low)"
+  ],
+  "risks": [
+   "등급 리스크: 스토어 설문에서 '빈번한 시뮬레이션 도박'으로 응답하거나 심사 측이 그렇게 판단하면 Apple 18+, 호주 R18, 한국 KR-19 가능성이 있다. 그러면 전연령·글로벌 타겟이 즉시 무력화된다.",
+   "Kater v. Churchill Downs 유형의 소송 리스크: 현금으로 산 딱지를 우연성이 큰 판에 걸 수 있으면, 미국 일부 주(워싱턴 등)에서 가상재화가 thing of value로 인정될 위험이 있다.",
+   "루트박스 리스크: 원작 동딱지의 '봉지 랜덤'을 유료로 재현하면 한국 확률 공개 의무, 벨기에의 사실상 금지, 호주 15(M) 등급, 중국 공개 의무를 동시에 적용받는다. 확률을 잘못 표기하면 한국에서 형사·행정 제재를 받을 수 있다.",
+   "숨은 봇·매칭 조작 의혹: 판돈이 걸린 게임에서 봇을 숨기거나 구매와 연동된 매칭을 쓰면 신뢰가 붕괴하고 허위광고·기만 소송에 노출된다(Avia, EOMM 논란).",
+   "아동 정서·사회적 반발: 아끼는 캐릭터를 잃는 경험은 울음·분노와 부모 민원으로 이어진다. POG처럼 학교 금지나 언론의 '어린이 도박게임' 프레이밍 위험이 있고, 오징어 게임 딱지 장면의 '돈 내기·뺨' 연상도 붙을 수 있다.",
+   "제로섬 판돈 경제의 인플레이션과 디플레이션: 유입(일일 지급)과 소모(합성)의 균형이 무너지면 상위 판이 공동화되거나 파산 유저가 대량 이탈한다.",
+   "치트 리스크: 판돈이 걸린 물리 게임은 클라이언트 물리 조작이나 에임 보조 핵의 표적이 된다. 서버 재시뮬레이션이 없으면 공정성 신뢰가 붕괴한다.",
+   "입으로 불기를 마이크 입력으로 구현할 경우: 아동 대상 음성 데이터 수집은 COPPA·GDPR-K 이슈가 된다. 로컬에서 진폭만 분석하고 녹음·전송은 금지하며 권한 거부 시 대체 입력이 필요하다(기억 기반, 미검증).",
+   "조사 신뢰도 리스크: 이번 결과의 대부분이 검색 한도 소진으로 기억에 기댄 내용이다. 특히 벨기에·네덜란드·한국 법 조항, 8 Ball Pool·Brawl Stars의 세부 수치와 봇 정책은 검증 단계에서 반드시 확인해야 한다."
+  ],
+  "open_questions": [
+   "8 Ball Pool, Golf Clash, Carrom Pool 같은 '입장료 PvP' 게임은 실제 App Store와 Google Play(IARC)에서 몇 세로, 어떤 서술어(Simulated Gambling인지 Contests인지)로 분류되어 있는가? 이것이 우리 구조의 등급을 가장 정확히 예측하는 기준이다.",
+   "'뒤집은 만큼 가져가는 비례 배분'은 승자 독식보다 도박 인상이 약하다. 등급 설문과 심사에서 실제로 다르게 취급되는가?",
+   "타겟에 13세 미만을 포함하는가? 포함한다면 COPPA·GDPR-K, 키즈 카테고리 제약, 따먹기판 연령 게이트를 어떻게 구현할 것인가?",
+   "수익 모델에서 '딱지 봉지(랜덤 팩)' 판매를 핵심으로 할 것인가, 아니면 코스메틱과 패스 중심으로 갈 것인가? 유료 딱지를 판돈에서 분리할 때 매출이 얼마나 손실되는가?",
+   "출시 시 실시간과 비동기 중 무엇을 기본 모드로 할 것인가? 비동기를 택하면 크로스 디바이스 결정론적 물리(three.js + 물리엔진)가 리플레이와 재시뮬레이션에서 재현성을 보장할 수 있는가?",
+   "선공 이점은 얼마나 큰가? 첫 블로우에 20장 더미 대부분이 뒤집힐 수 있다면 판 밸런스가 붕괴하므로 덤이나 블로우당 최대 뒤집기 제한이 필요한가?",
+   "아레나별 판돈 희귀도 매칭(노멀만 허용할지, 가치 합산으로 맞출지) 중 어느 쪽이 수집 동기와 공정성을 더 잘 양립시키는가?",
+   "한국 GRAC 기준에서 '실력 기반 + 현금 가치 없는 딱지 내기'가 사행성 내용정보로 표기되는가? 웹보드게임 규제(고스톱·포커류)와의 경계는 어디인가?"
+  ]
+ },
+ {
+  "lens": "아트 디렉션: Clash of Clans / Royal Kingdom / Angry Birds 톤앤매너 분석과 저예산 구현 경로 (three.js 목업, AI 3D/2D 생성, 무료 폰트, 홀로 딱지)",
+  "summary": "조사 환경에 큰 제약이 있었다. WebSearch는 첫 호출부터 세션 공유 한도(200회)가 이미 소진돼 3번 시도가 모두 막혔고, WebFetch도 github.com, raw.githubusercontent.com, fonts.googleapis.com만 열렸다(위키백과, supercell.com, namu.wiki, tripo3d.ai, threejs.org 등은 DNS 실패). 그래서 Supercell, Dream Games, Angry Birds 스타일에 관한 주장은 모두 기억에 의존했고 low로 표시했다. 대신 출처로 검증할 수 있는 영역은 깊게 팠다: 폰트 라이선스와 용량(직접 렌더링해 비교), three.js 소스(r160 셰이더 포함), AI 3D 도구 라이선스, 홀로 CSS 기법. 이미 있는 목업(/home/user/G2/mockup)도 수치로 감사했다.\n핵심 결론은 다섯 가지다. (1) 아트의 1순위는 디테일이 아니라 '뒤집혔나/누구 것인가'가 한눈에 보이는 것이다. 지금 목업은 일반 딱지 앞면 링과 뒷면 마분지의 대비가 1.19:1밖에 안 된다. (2) 흰 글자에 진한 외곽선을 두르는 Supercell식 처리는 장식이 아니라 필수다. 흰 글자를 채도 높은 버튼 위에 올리면 대비가 1.5~1.9:1에 그친다. (3) 무료 폰트로는 Lilita One(영문)과 Black Han Sans(한글) 조합이 가장 Supercell에 가깝다. (4) three.js에서 홀로/코팅 광택을 살리려면 환경맵이 꼭 있어야 하고, 채도를 지키려면 r162+의 NeutralToneMapping이 맞다. (5) Hunyuan3D는 라이선스상 한국에서 쓸 수 없다. Tripo API와 MIT 공개 모델(TripoSG, TripoSR, TRELLIS)을 쓰면 된다.",
+  "findings": [
+   {
+    "claim": "게임 팔레트의 채도 높은 버튼색 위에 흰 글자를 올리면 WCAG 대비가 기준에 크게 못 미친다. 흰 글자와 진한 잉크색 사이 대비는 16.7:1이다. 따라서 Supercell식 '흰 채움 + 진한 외곽선 + 딱딱한 드롭섀도'는 장식이 아니라 가독성을 위한 필수 장치다.",
+    "evidence": "WCAG 상대휘도 공식으로 직접 계산했다. 흰색 대비는 #5AD43B(초록 CTA) 1.92:1, #FFCF33(골드) 1.48:1, #7CC7FF(하늘) 1.83:1, #3A8FE0 3.4:1, #FF4D5E 3.24:1이다. 흰색 대 잉크 #2A1A12는 16.73:1이다. 색은 목업 index.html의 CSS 토큰(--go, --gold, --sky, --red, --ink)에서 가져왔다.",
+    "sources": [
+     "/home/user/G2/mockup/index.html (CSS 토큰 8~20행)",
+     "WCAG 2.x contrast ratio 공식(로컬 계산)"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "무료 폰트 중 Supercell 톤에 가장 가까운 조합은 Lilita One(영문 디스플레이)과 Black Han Sans(한글 디스플레이)다. Jua와 Do Hyeon은 획이 얇아 본문용으로만 쓰는 게 맞다. Titan One은 숫자와 보상 표시에, Luckiest Guy는 만화풍 대문자 연출에 어울린다. Bagel Fat One은 한·영을 모두 지원하지만 영문 글자꼴이 특이하다.",
+    "evidence": "Google Fonts METADATA에서 확인한 내용이다. Lilita One(Juan Montoreano, OFL, latin과 latin-ext만 지원), Black Han Sans(Zess Type, OFL, korean과 latin), Jua와 Do Hyeon(Woowahan Brothers, OFL, korean과 latin), Titan One(Rodrigo Fuenzalida, OFL), Luckiest Guy(Astigmatic, Apache 2.0, latin만), Bagel Fat One(Kyungwon Kim·JAMO, OFL, korean과 latin, 2023-05-18 추가), Dongle(OFL, korean, latin, vietnamese). 'FLIP! 퍽! 딱지 x10'을 흰 채움, 6px 잉크 외곽선, 오프셋 섀도로 직접 렌더링해 비교했다. Lilita One과 Black Han Sans는 굵기가 맞았고, Jua와 Do Hyeon은 눈에 띄게 얇았다. Lilita One은 키릴·그리스·CJK를 지원하지 않는다.",
+    "sources": [
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/lilitaone/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/blackhansans/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/dohyeon/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/titanone/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/apache/luckiestguy/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/bagelfatone/METADATA.pb",
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/dongle/METADATA.pb",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/fonts_sample.png"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "한글 폰트는 전체 TTF가 0.9~2.1MB로 영문 폰트(28~73KB)보다 30~70배 무겁다. 다만 Google Fonts CSS2 API는 최신 브라우저에 unicode-range로 잘게 쪼갠 woff2를 주기 때문에 실제로 내려받는 양은 적다.",
+    "evidence": "content-length 실측값은 BagelFatOne 1,585,984B, BlackHanSans 998,424B, Jua 2,119,352B, DoHyeon 879,764B, LilitaOne 28,092B, TitanOne 55,712B, LuckiestGuy 73,320B였다. Chrome UA로 css2?family=Bagel+Fat+One을 요청하니 @font-face 블록 92개가 왔고 모두 woff2 슬라이스였다. UA를 지정하지 않으면 단일 TTF가 왔다.",
+    "sources": [
+     "https://raw.githubusercontent.com/google/fonts/main/ofl/jua/Jua-Regular.ttf",
+     "https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "three.js의 툰과 외곽선 도구는 성격이 다르다. MeshToonMaterial은 gradientMap에 NearestFilter와 NoColorSpace가 필수다. OutlineEffect는 inverted hull 방식(BackSide에 법선 방향으로 밀어냄, 기본 두께 0.003, 검정, 재질별 userData.outlineParameters, WebGLRenderer 전용)이다. OutlinePass는 화면 공간 마스크에서 엣지를 검출한 뒤 블러하는 방식이다(edgeStrength 3, edgeThickness 1, hiddenEdgeColor 별도 지정 가능, pulsePeriod>0이면 깜빡임). MeshMatcapMaterial은 조명을 무시하는 베이크 룩이라 그림자를 받지 못한다.",
+    "evidence": "three.js dev 브랜치 소스의 JSDoc과 코드를 직접 확인했다. OutlinePass 기본값은 visibleEdgeColor 흰색, hiddenEdgeColor (0.1,0.04,0.02), downSampleRatio 2다. OutlineEffect는 캐시된 외곽선 재질을 60프레임 뒤 정리한다.",
+    "sources": [
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshToonMaterial.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/effects/OutlineEffect.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/postprocessing/OutlinePass.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshMatcapMaterial.js"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "기본 CylinderGeometry 딱지에 inverted hull 외곽선(OutlineEffect)을 씌우면 테두리 모서리에 틈이 생긴다. 윗면과 아랫면이 옆면과 정점을 공유하지 않고 법선이 (0,±1,0)으로 따로 잡혀 있기 때문이다.",
+    "evidence": "로컬 three r160의 CylinderGeometry.js에서 generateCap이 정점을 새로 만들고 normals.push(0, sign, 0)을 쓴다(157, 182, 216행). 옆면 법선은 방사 방향이다(102행). inverted hull은 정점을 법선 방향으로 밀어내므로 모서리에서 윗면과 옆면이 서로 다른 방향으로 갈라진다. 이 부분은 소스를 근거로 한 추론이고 렌더링으로 확인하지는 않았다.",
+    "sources": [
+     "/home/user/G2/node_modules/three/src/geometries/CylinderGeometry.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/effects/OutlineEffect.js"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "MeshPhysicalMaterial의 iridescence(홀로)와 clearcoat는 반사광 프레넬 항만 바꾼다. HemisphereLight는 그림자를 만들 수 없고 셰이더에서 확산 조도(irradiance)에만 기여한다. 그래서 scene.environment가 없는 현재 목업에서는 epic·legendary 딱지의 iridescence 0.9가 태양광 하이라이트 한 점에서만 보일 가능성이 크다.",
+    "evidence": "MeshPhysicalMaterial JSDoc에 따르면 iridescence 기본값은 0, iridescenceIOR 1.3(범위 1.0~2.333), iridescenceThicknessRange는 [100,400]이다. 'higher performance cost, per pixel'이라고 명시돼 있다. 로컬 r160 lights_fragment_begin 187행에서 hemisphere light가 irradiance에만 더해지고, lights_physical_pars_fragment 166행에서 F = mix(F, iridescenceFresnel, iridescence)로 반사광에만 섞인다. HemisphereLight JSDoc에는 'cannot be used to cast shadows'라고 적혀 있다. 목업 main.js 108행이 iridescence 0.9와 clearcoat 0.6을 쓰는데 environment, PMREM, RoomEnvironment 코드는 없다. 실제 화면 확인은 하지 않은 추론이다.",
+    "sources": [
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/materials/MeshPhysicalMaterial.js",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/lights/HemisphereLight.js",
+     "/home/user/G2/node_modules/three/src/renderers/shaders/ShaderChunk/lights_fragment_begin.glsl.js",
+     "/home/user/G2/mockup/src/main.js"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "목업의 three 버전(0.160.0)으로는 채도를 지키는 톤매핑과 권장 AO를 쓸 수 없다. NeutralToneMapping(Khronos PBR Neutral)은 r162에서 추가됐고, N8AO는 r161 이상을 권장한다.",
+    "evidence": "r162 릴리스 노트에 'Add support for Khronos Neutral Tone Mapping'이 있고, 현재 constants.js에 NeutralToneMapping=7이 있다. 로컬 r160에는 AgX(6)까지만 있다. Khronos는 PBR Neutral에 대해 'there are no hue shifts'와 특정 조건에서 'the base color will be exactly reproduced'를 명시한다. N8AO는 CC0, WebGL2 필수, halfRes에서 2~4배 빠르고, pmndrs/postprocessing용 N8AOPostPass를 제공하며 three r161 이상을 권장한다. pmndrs/postprocessing은 Zlib 라이선스이고 EffectPass가 여러 효과를 자동으로 합친다. r160에도 GTAOPass, UnrealBloomPass, OutlinePass는 있다.",
+    "sources": [
+     "https://github.com/mrdoob/three.js/releases/tag/r162",
+     "https://raw.githubusercontent.com/mrdoob/three.js/dev/src/constants.js",
+     "https://github.com/KhronosGroup/ToneMapping/tree/main/PBR_Neutral",
+     "https://github.com/N8python/n8ao",
+     "https://github.com/pmndrs/postprocessing",
+     "/home/user/G2/package.json"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Tencent Hunyuan3D 2.0과 2.1 커뮤니티 라이선스는 EU, 영국, 한국을 적용 지역에서 뺀다. 한국 개발자는 Hunyuan3D를 합법적으로 쓸 수 없다.",
+    "evidence": "2.0 라이선스(2025-01-21) 머리말에 'DOES NOT APPLY IN THE EUROPEAN UNION, UNITED KINGDOM AND SOUTH KOREA'라고 적혀 있다. 1.l조는 Territory를 정의하면서 'excluding the territory of the European Union, United Kingdom and South Korea'라고 한다. 2.1도 같은 조항이다. MAU가 100만을 넘으면 별도 허가가 필요하고, 출력물로 다른 AI 모델을 개선하는 것도 금지된다.",
+    "sources": [
+     "https://raw.githubusercontent.com/Tencent/Hunyuan3D-2/main/LICENSE",
+     "https://raw.githubusercontent.com/Tencent-Hunyuan/Hunyuan3D-2.1/main/LICENSE"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "합법적인 저예산 3D 생성 경로는 두 갈래다. 하나는 Tripo API로, 파라미터로 스타일, 폴리곤 수, 쿼드를 제어할 수 있다. 다른 하나는 MIT 라이선스 공개 모델(TripoSG, TripoSR, TRELLIS)을 로컬 GPU에서 돌리는 것이다.",
+    "evidence": "Tripo SDK API.md에 따르면 texture와 pbr의 기본값은 True이고, texture_quality는 standard 또는 detailed, face_limit, quad, smart_low_poly를 지원한다. style에는 'object:clay', 'person:person2cartoon' 등이 있고, stylize는 lego, voxel, voronoi, minecraft다. convert는 GLTF, USDZ, FBX, OBJ, STL, 3MF를 지원하며 face_limit 기본값은 10000이다. 기본 model_version은 v2.5-20250123이고 리깅·리타깃도 된다. TripoSG는 MIT, 1.5B 파라미터, 8GB VRAM 이상, GLB를 출력하지만 텍스처는 언급이 없다. TripoSR은 MIT, 약 6GB VRAM이며 기본은 버텍스 컬러이고 --bake-texture 옵션이 있다. TRELLIS는 MIT, 16GB 이상, GLB와 PLY를 출력하며 이미지 조건 입력을 권장한다.",
+    "sources": [
+     "https://raw.githubusercontent.com/VAST-AI-Research/tripo-python-sdk/master/docs/API.md",
+     "https://github.com/VAST-AI-Research/tripo-python-sdk",
+     "https://github.com/VAST-AI-Research/TripoSG",
+     "https://github.com/VAST-AI-Research/TripoSR",
+     "https://github.com/microsoft/TRELLIS"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "웹 홀로/포일 표현의 대표 레퍼런스인 pokemon-cards-css는 GPL-3.0이라 코드를 그대로 가져오면 안 된다. 기법은 문서화돼 있어 다시 구현할 수 있다: 포인터를 따라가는 CSS 변수, 무지개 repeating gradient, 블렌드 모드 레이어링. 희귀도별 포일 패턴도 23종 스타일로 이미 나뉘어 있다.",
+    "evidence": "regular-holo.css에서 확인한 구성은 이렇다. --pointer-x/y와 --background-x/y로 위치를 잡고, .card__shine에 110deg repeating-linear-gradient(보라→파랑→초록→노랑→빨강)와 90deg 스캔라인을 깔며 mix-blend-mode:color-dodge와 background-blend-mode:overlay를 쓴다. :before는 hard-light, :after는 luminosity, glare는 overlay이고 radial-gradient(farthest-corner circle at var(--pointer-x) var(--pointer-y))로 빛을 따라가게 한다. 필터 예시는 brightness(1.1) contrast(1.1) saturate(1.2)다. 파일 목록에는 regular-holo, reverse-holo, cosmos-holo, rainbow-holo, secret-rare, radiant-holo, amazing-rare, shiny-rare 등 23개가 있다. 라이선스는 GPL-3.0이다.",
+    "sources": [
+     "https://github.com/simeydotme/pokemon-cards-css",
+     "https://raw.githubusercontent.com/simeydotme/pokemon-cards-css/main/public/css/cards/regular-holo.css",
+     "https://github.com/simeydotme/pokemon-cards-css/tree/main/public/css/cards"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "현재 목업 캐릭터 24종 중 몸통이 거의 흰색인 캐릭터가 5종(dubu, durumi, mandu, gumiho, tokki)이라 작은 크기에서는 서로 구별되지 않는다. 일반 등급 앞면 링(#F4F1E8)과 뒷면 마분지(#F1DCAE)의 대비도 1.19:1뿐이라, 테두리만 보이는 각도에서는 뒤집혔는지 판별하기 어렵다.",
+    "evidence": "art.js의 body 색을 CIE Lab ΔE76로 계산했다. dubu와 durumi 1.5, mandu와 gumiho 2.6, dubu와 gumiho 5.3, mandu와 dubu 5.5, tokki와 durumi 5.5로 모두 ΔE<10이고, hotteok와 bungeo도 6.3이다. 앞면 링과 뒷면의 WCAG 대비는 #F4F1E8과 #F1DCAE가 1.19, #CFC6B0과 #D7B77A가 1.13이다. L*로는 앞면 링 95.1, 뒷면 중심 88.4로 차이가 6.7에 불과하다. 뒷면의 빨간 별과 파란 링이 일부를 보완한다.",
+    "sources": [
+     "/home/user/G2/mockup/src/art.js (15~38행 CARDS, 423~455행 drawBack)"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Supercell(Clash of Clans 2012, Clash Royale 2016) 아트의 원칙은 다음과 같다. 과장된 비율(큰 머리와 손), 두툼하고 둥근 형태, 따뜻한 키 라이트와 차가운 그림자, 높은 채도. 3/4 탑다운 시점의 폰 화면에서도 실루엣이 읽히도록 만들고, 팀 색은 아군 파랑과 적 빨강으로 구분한다. UI는 굵고 둥근 디스플레이 폰트에 외곽선과 섀도를 두르고, 버튼은 광택 띠와 아래쪽 두께감(립)을 준다. 색에는 의미가 있다(초록=진행, 노랑·주황=주요/구매, 빨강=취소, 파랑=정보).",
+    "evidence": "외부 소스를 열지 못해 기억에만 의존한 내용이다. GDC 발표와 아트팀 인터뷰 원문으로 확인하지 못했다. Brawl Stars UI가 Lilita One과 비슷한 폰트를 쓴다는 점, Clash of Clans가 3D로 만든 뒤 2D 스프라이트로 미리 렌더링했다는 점도 기억에 기반한 주장이다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "Dream Games(Royal Match 2021, Royal Kingdom)의 톤은 밝고 하이키인 3D 렌더 룩이다. 사탕처럼 광택 있는 재질을 쓰고, 보상 연출은 아이템이 카운터로 날아가 박히고 상자가 터지고 숫자가 올라가는 단계형 '주시(juicy)' 시퀀스다. King Robert 같은 마스코트가 감정의 축 역할을 한다.",
+    "evidence": "기억에 의존했다. 매출과 출시일 수치는 출처를 확인하지 못해 적지 않았다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "Angry Birds 캐릭터(2009, 디자이너 Jaakko Iisalo)는 원, 삼각형, 달걀 같은 기본 도형 몸통에 굵은 눈썹으로 감정을 표현하고, 색·크기·특징 하나로 각 캐릭터를 구별한다. 원형 딱지 안에 넣기에 가장 잘 맞는 캐릭터 문법이다.",
+    "evidence": "기억에 의존했다. 위키백과(en.wikipedia.org)는 DNS 실패로 확인하지 못했다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "한국의 동그란 딱지(동딱지, 알딱지)에는 캐릭터와 함께 별, 숫자 같은 등급 표시가 인쇄돼 있었고, 반짝이(홀로그램) 변종이 희귀품으로 통했다. 해외에서는 오징어게임(2021)의 사각 종이접기 딱지가 더 알려져 있다. 반면 미국의 POG(1990년대)와 일본의 멘코가 원형 수집 딱지와 직접 대응하는 놀이다.",
+    "evidence": "기억에 의존했다. namu.wiki와 네이버는 접근이 차단됐다.",
+    "sources": [],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "이 게임 아트의 1순위 KPI는 '뒤집힘 판독성'이다. 앞면인지 뒷면인지, 누구 것이 됐는지가 0.2초 안에 보여야 한다.",
+    "why_it_matters": "쾌감은 퍽 하고 부는 순간에 '몇 장이 넘어갔는지'를 즉시 세는 데서 나온다. Supercell의 실루엣·색 판독성 원칙을 이 게임에 옮기면, 캐릭터 디테일보다 앞뒷면 두 상태의 대비가 더 중요하다. 현재 목업은 일반 등급 앞면 링과 뒷면의 대비가 1.19:1이라 이 KPI를 만족하지 못한다.",
+    "design_implication": "뒷면은 모든 딱지에 공통으로 쓰고 진한 마분지색(#A8743F 근처, L*≈54)에 굵은 빨간 별(#E23B2E)과 잉크 링을 넣는다. 앞면은 흰 링(#FFFFFF, L*≈100)에 희귀도 색 띠를 두른다. 이렇게 하면 L* 차이가 40 이상 난다. 넘어간 딱지는 착지 순간 내 색(파랑 #3A8FE0)으로 테두리가 빛나고 내 쪽 트레이로 날아간다. 상대 것은 빨강 #FF4D5E로 처리한다. 판독성은 폰 화면에서 딱지 지름 48px로 테스트한다."
+   },
+   {
+    "insight": "원형 딱지에는 Angry Birds 문법이 정답이다. 원형 몸통이 원판을 70~80% 채우고, 실루엣을 깨는 돌출부 하나와 굵은 눈썹 표정, 캐릭터마다 고유한 몸통 색을 갖게 한다.",
+    "why_it_matters": "캐릭터는 원 안에 인쇄되므로 원형 몸통이어야 면적을 가장 크게 쓸 수 있다. 더미 위에서 딱지 하나는 수십 px에 불과해 색과 돌출부만 읽힌다. 수집욕은 '저게 뭔지 알아보는 것'에서 시작한다.",
+    "design_implication": "규칙은 세 가지다. (1) 같은 희귀도 안에서 몸통 색은 서로 ΔE 20 이상 떨어뜨린다. (2) 돌출부(귀, 뿔, 볏, 꼬리) 형태가 겹치지 않게 한다. (3) 눈썹은 잉크색이고 두께는 원판 지름의 4% 이상으로 한다. 흰 몸통 캐릭터 5종(dubu, durumi, mandu, gumiho, tokki)은 배경을 채도 높은 색으로 칠하거나(예: 두부는 #8FD3FF, 구미호는 #FF7A59) 몸통 색 자체를 옮긴다. 외곽선은 원판 지름의 4~6% 굵기로 잉크 #2A1A12를 쓴다. 명암은 3톤(밝음, 기본, 그림자)이고 그림자는 회색이 아니라 따뜻한 보라·갈색 쪽으로 기울인다."
+   },
+   {
+    "insight": "물성을 과장하자. 실제 딱지는 1mm 남짓 종이지만, 게임에서는 포커칩처럼 두툼하고 모서리가 둥근 원판이어야 Supercell의 '두툼하고 둥근' 톤이 나오고 뒤집히는 동작도 읽힌다.",
+    "why_it_matters": "얇은 원판은 회전할 때 옆에서 보면 선으로 사라져 뒤집힘이 덜 보인다. 기본 CylinderGeometry는 모서리가 각져서 inverted hull 외곽선에 틈이 생긴다(소스로 확인).",
+    "design_implication": "두께는 지름의 6~8%로 잡는다. LatheGeometry나 bevel을 준 ExtrudeGeometry로 둥근 모서리 프로파일을 만들면 법선이 연결돼 외곽선이 깨지지 않는다. 옆면에는 희귀도 색 줄무늬를 넣는다(일반 회청 #DDE6EE, 레어 #2F7FD6, 에픽 #8A3AD6, 전설 #FFB800+포일). 그러면 3/4 시점에서 판돈 더미 안에 전설이 몇 장 있는지 옆면만 보고 알 수 있어 긴장감이 생긴다."
+   },
+   {
+    "insight": "three.js로 저예산 'Royal/Clash 룩'을 내는 렌더 레시피가 있다. 툰 셰이딩이 아니라, 채도를 지키는 톤매핑, 따뜻한 3점 조명, 환경 반사, 접촉 AO, 선택적 외곽선과 블룸의 조합이다.",
+    "why_it_matters": "ACES는 채도 높은 원색의 색상과 채도를 틀어버리는 반면 Khronos Neutral은 'no hue shifts'를 표방한다(ACES에 대한 부분은 기억에 기반). 환경맵이 없으면 iridescence와 clearcoat가 거의 보이지 않는다(소스로 확인). 딱지 더미는 접촉 그림자가 있어야 '쌓여 있다'고 읽힌다.",
+    "design_implication": "three를 0.160에서 r162 이상으로 올린다. 구체적으로: renderer.toneMapping=NeutralToneMapping, exposure 1.0~1.1. HemisphereLight는 하늘 #FFF3DC, 땅 #7A5434. 키 DirectionalLight는 #FFE6C0에 PCFSoft 그림자. 림 라이트는 #9FD8FF. scene.environment는 PMREM(RoomEnvironment)으로 깔고, 종이에는 envMapIntensity 약 0.3, 포일에는 약 1.0을 준다. AO는 N8AO halfRes를 쓰거나 r160을 유지하면 GTAOPass, 저사양 기기에서는 딱지 아래 블롭 그림자 텍스처로 대체한다. 블룸은 전설 딱지와 VFX에만 선택적으로 건다. 조준 대상은 OutlinePass로 표시한다(pulsePeriod 약 1.2, visibleEdgeColor 흰색). 딱지 앞면은 MeshToon이 아니라 Standard(인쇄 카드 질감, roughness 약 0.55)로 하고, 툰은 3D 캐릭터나 소품을 넣을 때만 쓴다. MeshPhysical은 레어 이상에만 써서 픽셀 비용을 줄인다."
+   },
+   {
+    "insight": "홀로 딱지는 희귀도마다 '포일 패턴'을 다르게 하고, 그 반짝임이 뒤집히는 순간에 처음 드러나게 설계하면 수집욕과 공개의 쾌감이 겹친다.",
+    "why_it_matters": "레퍼런스(pokemon-cards-css)는 희귀도별로 23종 포일 스타일을 둘 만큼 '포일의 종류'가 수집 가치의 언어로 쓰이고 있음을 보여준다. 뒷면이 공통이라 뒤집기 전에는 정체를 모르므로, 뒤집힘 순간이 곧 공개 순간이다.",
+    "design_implication": "등급별 패턴: 레어는 리버스 홀로(배경만 포일, 캐릭터는 무광. iridescenceMap의 R 채널로 마스크), 에픽은 코스모스·글리터(반짝이 노이즈 텍스처에 iridescenceThicknessMap), 전설은 전면 레인보우에 애니메이션 시닝 스윕과 금색 옆면, 그리고 착지 순간 0.1초 hit-stop과 블룸 펄스. 컬렉션 화면(DOM)에서는 CSS 홀로를 직접 다시 구현한다(GPL이라 복사 금지). 포인터나 자이로 기울기에 반응하는 radial glare와 color-dodge 무지개 레이어를 쓴다. 포일은 앞면 링과 배경에만 두어 캐릭터 판독성을 해치지 않게 한다."
+   },
+   {
+    "insight": "UI 규칙은 'Supercell 텍스트 문법과 Royal식 보상 연출'로 고정하면 목업 단계부터 톤이 일관된다.",
+    "why_it_matters": "흰 글자를 채도 높은 배경에 올리면 대비가 1.5~1.9:1에 그쳐(계산) 외곽선 없이는 읽히지 않는다. 버튼 색에 의미를 일관되게 부여하면 설명 없이도 조작할 수 있다는 목표에 바로 기여한다.",
+    "design_implication": "폰트는 디스플레이에 Lilita One과 Black Han Sans, 본문에 Jua, 큰 숫자에 Titan One을 쓰고 Google Fonts CSS2 API로 슬라이스 로딩한다. 모든 디스플레이 텍스트는 흰 채움에 -webkit-text-stroke 2~4px 잉크(paint-order: stroke fill), text-shadow 0 3~8px 0 잉크로 처리한다. 버튼은 3px 잉크 테두리, radius 14~24px, 위쪽 40%에 밝은 광택 띠, 아래에 4~6px 진한 립(box-shadow 0 5px 0)을 두고, 누르면 translateY(4px)하고 립을 없앤다. 색의 의미: 초록 #5AD43B/#2F9A1A는 진행과 PUFF, 골드 #FFCF33/#E08A00은 보상과 구매, 파랑 #3A8FE0/#2457B0은 나와 정보, 빨강 #FF4D5E/#B8213A는 상대와 취소. 패널은 크림 #FFF3D6에 잉크 3px 테두리. 획득 수치는 1.3배에서 1.0배로 튀는 오버슈트와 함께 카운트업하고, 따낸 딱지는 아이콘이 상단 카운터로 날아가 박히게 한다."
+   },
+   {
+    "insight": "AI 에셋 파이프라인은 '2D 먼저, 3D는 소품만'이 맞다. 딱지 앞면은 인쇄물이라 2D 일러스트 품질과 일관성이 전부다.",
+    "why_it_matters": "AI 3D(Tripo 등)는 토폴로지와 일관성이 약하고, 딱지 자체는 원판이라 3D 생성이 필요 없다. 3D가 필요한 곳은 테이블, 손이나 입 마스코트, 로비 소품 정도다. Hunyuan3D는 한국에서 라이선스가 적용되지 않는다.",
+    "design_implication": "2D는 이미지 생성 모델에 고정된 스타일 프롬프트(예: 'chunky round mascot, thick dark brown outline, 3-tone cel shading, warm light, centered in circle, flat background')와 레퍼런스 시트를 함께 넣어 초안을 뽑는다. 최종본은 벡터로 다시 그리거나 직접 보정해 선 굵기와 팔레트를 통일한다. 3D는 Tripo API(style 'object:clay' 또는 'person:person2cartoon', smart_low_poly, face_limit 5k~10k, GLTF 변환)를 쓰거나, 로컬 GPU가 있으면 TripoSG(8GB, MIT)나 TRELLIS(16GB, MIT)를 쓴다. 출시용 에셋 프롬프트에는 Clash, Supercell, Angry Birds 같은 상표나 캐릭터 이름을 넣지 않는다. 참고로 이 세션에는 이미지 생성과 image→GLB(generate_3d) MCP 도구가 연결돼 있어 다음 루프에서 바로 시도해 볼 수 있다(크레딧 소모)."
+   },
+   {
+    "insight": "글로벌 진입을 위한 시각 전략: 형태는 전 세계가 아는 'POG형 원형 수집 디스크'로 가고, 한국은 장벽이 아니라 양념으로 쓴다.",
+    "why_it_matters": "해외에서는 '딱지'라고 하면 오징어게임의 사각 종이접기를 떠올리기 쉽다(기억 기반). 원형 수집 딱지는 POG나 멘코와 겹치므로, 형태는 익숙하게 하고 문화적 디테일로 차별화하는 편이 진입 장벽이 낮다.",
+    "design_implication": "로고와 아이콘은 둥근 디스크와 'POOF!' 같은 의성어(영문)를 중심에 둔다. 한국 요소는 단청 문양을 옆면 패턴으로, 한글 도장을 뒷면 로고로, 음식과 민속 캐릭터(만두, 호랑이, 도깨비)를 수집 테마로 녹인다. 첫 화면에는 한글 텍스트에 의존하는 정보가 없어야 한다."
+   }
+  ],
+  "key_claims": [
+   "아트의 최우선 기준은 '뒤집힘과 소유 판독성'이다. 앞면과 뒷면 사이 L* 차이를 40 이상 두고 소유자 색 글로우를 넣어야 한다. 현재 목업은 일반 앞면 링과 뒷면 대비가 1.19:1로 기준에 못 미친다.",
+   "Supercell식 흰 글자, 진한 외곽선, 하드 섀도는 장식이 아니라 필수다. 게임 팔레트(초록, 골드, 하늘색) 위의 흰 글자 대비는 1.5~1.9:1에 그친다.",
+   "무료로 쓸 수 있는 Supercell풍 최적 조합은 Lilita One(OFL, 영문)과 Black Han Sans(OFL, 한글)다. 한글 폰트는 TTF가 1~2MB이므로 Google Fonts CSS2 API의 unicode-range 슬라이스(Bagel Fat One 기준 92조각)로 불러야 한다.",
+   "three.js에서 홀로 딱지(iridescence, clearcoat)가 보이려면 환경맵이 필수다. 채도를 지키려면 three를 r162 이상으로 올려 NeutralToneMapping을 쓴다(현재 목업은 r160에 환경맵 없음).",
+   "Hunyuan3D 2.0과 2.1은 라이선스상 한국에서 쓸 수 없다. 3D 생성은 Tripo API(clay 스타일, smart_low_poly, face_limit)나 MIT 모델(TripoSG, TripoSR, TRELLIS)로 하고, 딱지 앞면은 2D 생성 후 사람이 보정하는 방식으로 한다.",
+   "원형 딱지 캐릭터는 Angry Birds 문법(원형 몸통, 굵은 눈썹, 돌출부 하나, 캐릭터마다 고유한 색)을 따라야 한다. 현재 목업 24종 중 흰 몸통 5종은 ΔE<10이라 구별되지 않는다."
+  ],
+  "risks": [
+   "조사 범위의 한계: WebSearch 한도가 이미 소진됐고 비 GitHub 도메인은 DNS 실패나 403으로 막혔다. 그래서 Supercell, Dream Games, Angry Birds의 스타일 원칙, 연도, 매출, 딱지 문화사는 모두 기억에 기반한 low 신뢰도다. 다음 루프에서 GDC Vault, 아트팀 인터뷰, 나무위키로 검증해야 한다.",
+   "스타일 모방 리스크: 화풍 자체는 보호 대상이 아니라고 알고 있지만(기억), Supercell 고유 UI(전용 폰트, 특정 버튼·아이콘 형태)를 그대로 따라 하면 트레이드 드레스나 앱스토어 copycat 심사에 걸릴 수 있다. 원칙만 가져오고 형태는 독자적으로 만들어야 한다.",
+   "AI 생성 에셋의 권리 리스크: 사람의 창작 기여가 없는 순수 AI 출력은 저작권 보호를 못 받을 수 있다(미국 저작권청 입장, 기억 기반). 일관성 문제도 있으므로 사람이 다시 그리거나 보정하는 단계가 필요하다. Hunyuan3D는 한국에서 라이선스가 적용되지 않는다(확인됨).",
+   "성능 리스크: 딱지 100~200장에 MeshPhysical, 2048 PCFSoft 그림자, 후처리 여러 개를 얹으면 저사양 모바일에서 프레임이 떨어진다. InstancedMesh, 레어 이상만 Physical 사용, AO halfRes나 블롭 그림자 대체, 기기 등급별 품질 프리셋이 필요하다.",
+   "포일과 블룸을 과하게 쓰면 캐릭터와 뒤집힘 판독성이 오히려 떨어진다. 포일은 링과 배경에만 마스크로 제한해야 한다.",
+   "CylinderGeometry에 inverted hull 외곽선을 쓰면 모서리에 틈이 생긴다. 둥근 bevel 프로파일로 지오메트리를 바꾸지 않으면 외곽선이 지저분해진다.",
+   "한글 웹폰트 용량(전체 TTF 0.9~2.1MB) 때문에 오프라인 단일 파일 빌드에서는 로딩이 크게 늘어난다. 서브셋 처리가 필요하다."
+  ],
+  "open_questions": [
+   "판정 규칙: 더미를 뒷면이 위로 오게 쌓고 앞면으로 뒤집히면 이기는가, 그 반대인가? 어느 면이 '보상 면'인지에 따라 화려하게 만들 면이 정해진다.",
+   "카메라: 탑다운인가 3/4 시점인가? 3/4라면 옆면 희귀도 줄무늬가 핵심 정보가 되고, 탑다운이라면 앞면과 뒷면 대비가 전부다.",
+   "캐릭터 IP: 한국 음식과 민속을 바탕으로 한 오리지널(현재 목업 방향)로 갈 것인가, 계절이나 콜라보 테마를 열어둘 것인가? 글로벌 첫인상용 대표 마스코트(Angry Birds의 Red 같은 존재)는 누구인가?",
+   "딱지 앞면 일러스트를 2D 페인팅(인쇄물 느낌)으로 할 것인가, 3D 렌더를 2D로 찍어낸 Royal Match 하이키 렌더 룩으로 할 것인가?",
+   "최저 지원 기기는 무엇인가(저사양 안드로이드 포함 여부)? 이에 따라 후처리(AO, 블룸, 외곽선) 예산과 품질 프리셋이 정해진다.",
+   "입으로 부는 제스처의 시각 피드백(바람 줄기, 입김 파티클, 마이크 입력 게이지)을 어떤 아트 언어로 표현할 것인가? 이 렌즈 범위 밖이라 별도 조사가 필요하다.",
+   "검증 필요: Supercell UI 폰트의 실제 정체(전용 서체인지, Brawl Stars가 Lilita One 계열인지), Royal Kingdom의 정확한 출시 시점과 아트 파이프라인(실시간 3D인지 프리렌더인지)."
+  ]
+ },
+ {
+  "lens": "시장 & 타겟 & 바이럴 (첫 출시 채널 / 타겟 우선순위 / 바이럴 구조 / 수익화 적합성)",
+  "summary": "[중요] 이번 세션에서는 웹 검증을 하지 못했다. WebSearch는 이 턴의 공용 한도(200회, 다른 에이전트와 공유)가 이미 소진돼 한 번도 실행되지 않았고, WebFetch는 모든 도메인에서 DNS 오류(ENOTFOUND)로 실패했다. 그래서 아래 주장은 전부 기억에 기반하며 confidence=low이고, 출처 URL은 검증 대상 후보일 뿐이다. 수치는 반드시 후속 검증이 필요하다.\n핵심 결론 1: 사용자의 '5/10/20/50/100장 내기'는 8 Ball Pool·Golf Clash가 쓰는 '같은 판돈을 걸고 이긴 사람이 다 가져가는 입장료 테이블' 구조와 같다. 이 구조는 전연령 1v1 PvP에서 오래 성공해 왔으므로, 판돈을 그대로 진행 단계(테이블 티어)로 설계하는 것이 정답에 가깝다.\n핵심 결론 2: 동그란 캐릭터 종이 딱지는 한국만의 것이 아니다. Pogs(미국), Tazos(중남미·이베리아), Menko(일본), 尪仔標(대만), teks(필리핀)로 이어지는 90년대 세계 공통 경험이다. 해외 진입은 한국 문화를 '설명'하기보다 '각자의 어린 시절 + 한국식 후~ 불기 변주'로 풀어야 한다.\n핵심 결론 3: 마이크 불기는 리액션 영상 바이럴에는 최강이다. 하지만 권한 요청, 공공장소, 포털 iframe 제약 때문에 기본 입력이 될 수는 없다. 터치를 기본으로 하고 마이크는 의식·파티·녹화용 보너스 모드로 둔다.\n첫 출시 제안: 앱스토어보다 먼저 웹 인스턴트(CrazyGames/Poki + 자체 URL을 카톡으로 보내는 1v1 도전장)로 낸다. 초기 바이럴 타겟은 한국 30~45세 향수층과 그 자녀(가족 플레이)이고, 물량 확보 타겟은 글로벌 10~24세 숏폼·웹포털 사용자다.",
+  "findings": [
+   {
+    "claim": "ATT(2021) 이후 광고 수익만으로 돌아가던 하이퍼캐주얼은 UA(유저 획득) 수익성이 무너졌다. 2023~2025년 주요 퍼블리셔(Voodoo, Homa, Rollic, Supersonic, SayGames 등)는 단순한 코어 게임에 수집·진행·IAP 메타를 얹는 하이브리드캐주얼로 이동했다.",
+    "evidence": "기억 기반. iOS 14.5 ATT 이후 IDFA 기반 타겟팅이 약해져 하이퍼캐주얼 CPI와 광고 eCPM 구조가 악화됐고, 업계 리포트(Sensor Tower, AppMagic, GameAnalytics)와 퍼블리셔 발표에서 'hybridcasual' 전환이 반복적으로 언급됐다. 하이브리드캐주얼 IAP 매출이 두 자릿수로 성장했다는 보도도 기억하지만 정확한 %는 검증하지 못했다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/App_Tracking_Transparency (미검증: 세션 내 웹 접근 실패)",
+     "https://sensortower.com/blog (hybridcasual 관련 리포트, 미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "'같은 판돈을 걸고 이긴 사람이 다 가져가는' 1v1 테이블 구조는 8 Ball Pool(Miniclip)과 Golf Clash(Playdemic, 2017)에서 오래 검증됐다. Golf Clash는 한 번의 스와이프에 조준·파워·바람 보정을 담은 1v1 구조이며, EA가 2021년 Playdemic을 약 14억 달러에 인수했다.",
+    "evidence": "기억 기반. 8 Ball Pool은 도시 테마 테이블(런던→시드니→모스크바 등)마다 입장 코인이 오르고 이긴 쪽이 팟을 가져간다. Golf Clash도 투어별 입장료와 상금 구조를 쓰고, 바람·조준·파워라는 실력 요소가 있어 사용자 원안의 '방향·위치·세기'와 구조가 같다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/8_Ball_Pool (미검증)",
+     "https://en.wikipedia.org/wiki/Golf_Clash (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "수집 앨범과 소셜 교환·약탈 메타는 30~50대까지 포함하는 넓은 캐주얼층에서 최상위 매출을 만든다. Monopoly GO!(Scopely, 2023)는 스티커 앨범과 교환 이벤트를 핵심으로 출시 1년이 안 돼 10억 달러대 매출을 냈다고 보도됐다. Coin Master도 카드 세트와 친구 마을 약탈 구조를 쓴다.",
+    "evidence": "기억 기반. Monopoly GO는 시즌제 스티커 앨범과 골드 스티커 교환 이벤트로 친구 초대·공유를 끌어냈다고 알려져 있다. '7개월 만에 10억 달러'라는 보도를 기억하지만 수치는 검증하지 못했다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Monopoly_Go! (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "사용자가 참고 톤으로 든 Royal Match·Royal Kingdom의 개발사 Dream Games는 연 10억 달러 이상을 버는 것으로 추정되며, 2025년 1월경 Savvy Games Group에 약 50억 달러 가치로 인수됐다. Angry Birds의 Rovio는 2023년 Sega에 인수됐다(약 7억 유로).",
+    "evidence": "기억 기반 보도. 시사점은 '고품질 캐주얼 아트 + 단순 입력' 조합이 장기 IP로 이어진다는 점이다. Angry Birds의 '당겼다 놓기(pull-back & release)'는 설명 없이도 통하는 대중적 물리 제스처의 원형이다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Dream_Games (미검증)",
+     "https://en.wikipedia.org/wiki/Angry_Birds (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "웹 인스턴트 플랫폼은 설치 없이 바로 출시할 수 있는 경로다. Poki(암스테르담, 회사 주장 수천만~1억 MAU 규모, 광고 수익 공유, 아동·10대 비중 높음), CrazyGames(회사 주장 3천만+ 월간 사용자, SDK로 빠른 론칭), YouTube Playables(2024년 5월경 일반 사용자 대상 확대, 75개+ 게임), Discord Activities(2024년 Embedded App SDK 공개, 친구 그룹 플레이), Telegram Mini Apps(2024년 Hamster Kombat 등 탭투언 바이럴 후 거품 붕괴)가 있다.",
+    "evidence": "기억 기반. 각 플랫폼 MAU와 수익 배분 비율은 회사 주장 수치이며 2026년 현재 값은 검증하지 못했다. Telegram 미니앱은 바이럴 추천 루프가 강력하지만, 크립토 토큰 경제와 묶인 인식이 있어 전연령 브랜드에는 맞지 않는다.",
+    "sources": [
+     "https://developers.poki.com/ (미검증)",
+     "https://developer.crazygames.com/ (미검증)",
+     "https://developers.google.com/youtube/gaming/playables (미검증)",
+     "https://discord.com/developers/docs/activities/overview (미검증)",
+     "https://core.telegram.org/bots/webapps (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "한국에는 메신저를 타고 전 연령으로 퍼진 캐주얼 게임 선례가 있다. 애니팡(2012, 카카오 게임하기)은 '하트 보내기' 소셜 루프로 수 주 만에 천만 단위 사용자를 모았고, 30~50대와 부모 세대까지 확산됐다.",
+    "evidence": "기억 기반. 2012년 애니팡 신드롬 보도. 정확한 다운로드 수와 도달 기간은 검증하지 못했다.",
+    "sources": [
+     "https://ko.wikipedia.org/wiki/애니팡 (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "오징어게임 시즌1(2021.9)은 공개 28일 동안 약 16.5억 시청시간으로 넷플릭스 최고 기록을 세웠다. 첫 장면 게임인 '딱지치기'(지하철역 공유-이정재 장면)로 'ddakji'라는 단어가 전 세계에 알려졌다. 시즌2(2024.12)와 시즌3(2025.6)도 공개 직후 주간 시청 기록을 세웠다고 보도됐다.",
+    "evidence": "기억 기반. 단, 오징어게임의 딱지는 '종이를 접은 사각 딱지를 내려쳐 뒤집는' 방식이다. 사용자 원안인 '동그란 인쇄 딱지를 불어서 뒤집는' 방식과는 다르다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Squid_Game (미검증)",
+     "https://en.wikipedia.org/wiki/Ddakji (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "Squid Game: Unleashed(Netflix Games, 2024.12.17, Boss Fight Entertainment 개발)는 넷플릭스 게임 중 처음으로 비구독자에게도 무료로 공개된 배틀로얄 파티게임이다. 출시 초기에는 화제가 됐지만 장기 성과(다운로드·리텐션)를 보여주는 공개 수치는 확인하지 못했다. 넷플릭스는 2024년 AAA 스튜디오(Team Blue)를 정리하는 등 게임 사업을 재편했다.",
+    "evidence": "기억 기반. 오징어게임 IP를 테마로 한 Roblox UGC 체험들이 아동·10대에게 막대한 방문을 기록했다는 점도 기억한다. 'IP 후광은 단기, 리텐션은 게임 루프'라는 해석은 추론이다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Squid_Game:_Unleashed (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "KPop Demon Hunters(넷플릭스, 2025.6.20)는 2025년 8월경 넷플릭스 역대 최다 시청 영화가 됐고, OST 'Golden'은 빌보드 핫100 1위에 올랐다. 호랑이(더피)·까치(서씨)·저승사자·갓 같은 한국 민속 모티프가 글로벌 굿즈와 밈이 됐다.",
+    "evidence": "기억 기반 보도. 2025년 하반기~2026년 최신 누적 수치는 검증하지 못했다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/KPop_Demon_Hunters (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "동그란 인쇄 종이 딱지를 뒤집어 따먹는 놀이는 90년대 세계 공통 경험이다. Pogs/milk caps(미국, 1993~95년 정점, 'playing for keeps'가 도박이라는 이유로 다수 학교에서 금지), Tazos(Frito-Lay 계열 과자 경품, 1990년대 후반~2000년대 초 중남미·스페인·포르투갈, 포켓몬 타조 열풍), Menko(일본), 尪仔標(대만), teks·pogs(필리핀)가 있다.",
+    "evidence": "기억 기반. Pogs 세대(1994년에 8~12세)는 2026년 현재 약 40~44세이고, Tazos 세대는 30대 중후반~40대 초반이다. 한국 동딱지 세대(1995~2005년 초등생)는 현재 약 28~42세다. 반면 '입으로 불어서 뒤집기'는 다른 나라 변형에서는 흔하지 않은 것으로 보여, 차별화 훅이 될 수 있다(검증 필요).",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Milk_caps_(game) (미검증)",
+     "https://en.wikipedia.org/wiki/Tazos (미검증)",
+     "https://en.wikipedia.org/wiki/Menko (미검증)",
+     "https://zh.wikipedia.org/wiki/尪仔標 (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "'불기' 입력에는 오래된 대중적 선례가 있다. Nintendo DS(2004~, 1.5억 대 이상 판매)의 마이크 불기 연출(젤다 몽환의 모래시계, 메이드 인 와리오 터치! 등), 아이폰 초기 히트 앱 Smule Ocarina(2008)가 대표적이다. 2017년 목소리로 조작하는 Yasuhati(Don't Stop! Eighth Note!)와 Chicken Scream류는 스트리머 리액션 영상으로 폭발했지만 수명은 짧았다.",
+    "evidence": "기억 기반. 25~35세는 DS 세대라 '마이크에 바람 불기'를 게임 입력으로 이미 경험했다. 목소리 조작 게임은 바이럴이 강한 반면 장기 리텐션 사례는 드물다는 패턴이 있다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Ocarina_(app) (미검증)",
+     "https://en.wikipedia.org/wiki/Nintendo_DS (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "'뒤집기·결과 숫자·얼굴 리액션' 조합은 숏폼 바이럴에서 반복 검증된 포맷이다. 보틀 플립 챌린지(2016), 달고나 챌린지(2021, 오징어게임), 코인 푸셔류 'oddly satisfying' 영상, Wordle(2022)의 이모지 결과 공유가 예다.",
+    "evidence": "기억 기반. Wordle은 영상 없이 결과 그리드 공유만으로 수 주 만에 수백만 명으로 성장해 NYT에 인수됐다. 보틀 플립은 '뒤집혀서 서는 순간'이라는 단일 쾌감 장면이 핵심이었다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Bottle_flipping (미검증)",
+     "https://en.wikipedia.org/wiki/Wordle (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "2022년 포켓몬빵 재출시(삼립, 2월)는 띠부씰 수집 오픈런과 중고거래 웃돈 신드롬을 일으켰고, 30대 성인이 주요 구매층에 포함됐다. 2023년 '더 퍼스트 슬램덩크'의 한국 흥행(약 470만 관객 내외, 30~40대 남성 중심)도 90년대 캐릭터 향수가 실구매로 이어지는 증거다.",
+    "evidence": "기억 기반. '출시 43일 만에 1천만 개'와 누적 1억 개 이상 판매라는 보도를 기억하지만 정확한 수치와 시점은 검증하지 못했다. 1999년 원조 포켓몬빵(띠부씰 151종)과 동딱지 유행 시기가 겹친다.",
+    "sources": [
+     "https://ko.wikipedia.org/wiki/포켓몬빵 (미검증)",
+     "https://en.wikipedia.org/wiki/The_First_Slam_Dunk (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "성인 대상 디지털·실물 수집 열풍이 2024~2025년에 다시 커졌다. Pokémon TCG Pocket(2024.10.30)은 첫 달 약 2억 달러 매출로 추정되며(AppMagic 보도 기억), 매일 무료 팩과 화려한 개봉 연출이 핵심이다. Pop Mart Labubu는 BLACKPINK 리사 효과로 2024~2025년 글로벌 블라인드박스 붐을 일으켰다.",
+    "evidence": "기억 기반. Pop Mart 2024년 매출이 전년 대비 2배 수준(100% 이상) 성장했다고 보도됐다. K-팝 아이돌이 수집 붐의 촉매가 된 사례다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Pok%C3%A9mon_Trading_Card_Game_Pocket (미검증)",
+     "https://en.wikipedia.org/wiki/Labubu (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "규제 환경이 있다. 한국은 2024년 3월 22일부터 확률형 아이템 정보공개를 의무화했고, 벨기에는 2018년 유료 루트박스를 사실상 금지했다. 유료 재화로 얻은 아이템을 우연적 결과로 타인과 주고받는 PvP 구조는 한국에서 '사행성' 판단 리스크가 있다. PEGI/IARC에도 'simulated gambling' 기준이 있다.",
+    "evidence": "기억 기반. Pogs가 미국 학교에서 금지된 사유도 '따먹기 = 도박'이었다. 딱지 '따먹기'를 그대로 디지털화하고 유료 결제와 연결하면 같은 프레임에 걸릴 수 있다는 판단은 추론이다.",
+    "sources": [
+     "https://en.wikipedia.org/wiki/Loot_box (미검증)",
+     "https://www.law.go.kr 게임산업진흥에 관한 법률 (미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "수익화 구조는 채널마다 다르다. 웹 포털은 광고 수익 공유라 ARPU가 매우 낮고, 모바일 하이브리드캐주얼은 보상형 광고 + IAP + 시즌패스 조합이 표준이다. 13세 미만을 명시적으로 타겟하면 COPPA와 Google Play Families 정책 때문에 맞춤형 광고와 SDK가 제한되고 eCPM이 떨어진다.",
+    "evidence": "기억 기반 업계 상식. 정확한 eCPM과 ARPDAU 수치는 검증하지 못했다.",
+    "sources": [
+     "https://support.google.com/googleplay/android-developer/answer/9893335 (Families policy, 미검증)"
+    ],
+    "confidence": "low"
+   },
+   {
+    "claim": "브라우저 마이크 입력(getUserMedia)은 HTTPS와 사용자 권한 프롬프트가 필요하다. 포털·Playables·Discord처럼 iframe에 임베드되는 환경에서는 상위 프레임이 microphone 권한을 위임(allow 속성)해야 해서, 플랫폼에 따라 아예 불가능할 수 있다.",
+    "evidence": "웹 표준 지식 기반 (Permissions Policy). 플랫폼별로 실제 허용하는지는 확인하지 못했다. Discord Activities는 음성 채널과 마이크 사용이 충돌할 가능성도 있다.",
+    "sources": [
+     "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy/microphone (미검증)"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "판돈 5/10/20/50/100장을 '같은 판돈을 걸고 이긴 사람이 다 가져가는 테이블 티어'(8 Ball Pool·Golf Clash 구조)로 해석한다.",
+    "why_it_matters": "사용자 원안의 내기 규칙이 이미 검증된 전연령 1v1 PvP 수익·진행 구조와 같다. 판돈이 곧 진행도, 실력 증명, 자산 증식 속도가 되어 '하면 할수록 쌓인다'를 자연스럽게 만든다.",
+    "design_implication": "테이블은 문방구 앞(5장) → 골목(10장) → 놀이터(20장) → 학교 운동장(50장) → 전국 딱지왕전(100장)으로 해금한다. 매칭은 같은 테이블끼리만 한다. 상위 테이블일수록 바람(실내 선풍기, 창문 바람), 테이블 재질(나무 책상, 시멘트 바닥)처럼 변수를 추가해 실력 차이를 키운다. 초기에는 AI 상대(목업의 Minsu, Jiwoo 등)를 '동네 라이벌 NPC'로 캐릭터화해 PvP가 비어 있는 문제를 덮는다."
+   },
+   {
+    "insight": "글로벌 진입 열쇠는 '한국 문화 설명'이 아니라 '네 어린 시절 딱지(Pogs/Tazos/Menko/尪仔標/teks) + 한국식 후~ 불기'라는 프레임이다.",
+    "why_it_matters": "동그란 캐릭터 종이 딱지는 미국, 중남미, 이베리아, 일본, 대만, 필리핀의 30~45세가 공유하는 경험이다. 한국 고유 요소는 '불어서 뒤집기'라는 변주이고, 이게 오히려 신기한 훅이 된다.",
+    "design_implication": "메타 맵을 '월드 플립 투어'로 만든다. 서울 문방구(시작점) → 도쿄 다가시야(menko) → 마닐라(teks) → 멕시코시티(tazos) → LA(pogs) 순서로, 도시 테이블마다 그 나라 딱지 모양과 크기 변형을 수집 세트로 넣는다. 스토어 문구는 'Blow. Flip. Keep.'처럼 언어 의존이 거의 없게 쓰고, 'ddakji'는 부제와 수집품 이름으로만 쓴다(오징어게임 인지 효과는 얻되 사각 딱지와의 혼동은 피함)."
+   },
+   {
+    "insight": "마이크 불기는 '바이럴 의식(ritual)'이지 '기본 입력'이 아니다.",
+    "why_it_matters": "목소리·불기 조작 게임(Yasuhati, Chicken Scream)은 리액션 영상으로 폭발했지만 수명이 짧았다. 웹 임베드의 권한 제약, 공공장소·무음 플레이도 생각해야 한다. 사용자가 말한 '입으로 하는 게 임팩트'는 영상과 파티 맥락에서 가장 크게 살아난다.",
+    "design_implication": "기본 입력은 터치로 '누르고 있으면 볼이 빵빵해지며 숨 모으기 게이지 → 놓으면 후~'로 하고, 불기 은유는 비주얼과 사운드로 유지한다. 마이크 모드는 옵트인 '진짜 후~ 모드'로 두고, 경쟁 우위 없이 코스메틱 보상(예: 특수 이펙트, 'Real Puff' 배지)만 준다. 마이크 모드에서는 자동으로 얼굴캠 + 슬로모 리플레이 9초 클립 저장을 제안한다. PvP 공정성을 위해 마이크 입력도 '세기 0~1'로 정규화해 터치와 같은 물리 파라미터로 변환한다."
+   },
+   {
+    "insight": "쾌감은 '9초 숏폼 한 컷' 단위로 설계해야 바이럴과 플레이 쾌감이 동시에 잡힌다.",
+    "why_it_matters": "보틀 플립, 달고나, 코인 푸셔 영상의 공통점은 단일 결정 순간 → 연쇄 결과 → 큰 숫자다. Wordle은 영상 없이 결과 카드 공유만으로 퍼졌다.",
+    "design_implication": "턴 하나를 0.5초 숨 모으기 → '퍽!'(한글 의성어 타이포 + 카메라 쉐이크) → 1.5초 슬로모 연쇄 플립(장마다 음 높이가 올라가는 카운트 사운드) → '17/20!' 큰 숫자 → 획득 딱지가 앨범으로 날아가는 흐름으로 고정한다. 결과 공유 카드는 '🟡🟡🟡⚫ 17/20 PUFF #128' 같은 데일리 시드 형태로 만든다. 같은 날 같은 더미 배치로 전 세계가 경쟁하는 '오늘의 더미'를 둔다."
+   },
+   {
+    "insight": "원작의 '따먹기 손실 고통'은 전연령·규제 환경에서 독이다. 손실은 중복본으로만 한정해야 한다.",
+    "why_it_matters": "Pogs의 학교 금지, 한국 사행성 규제, 확률형 아이템 공개 의무, 아이와 캐주얼 유저의 손실 회피 성향이 모두 '아끼는 딱지를 잃는 구조'와 충돌한다. 반면 '상대 것을 가져오는' 쾌감은 반드시 살려야 한다.",
+    "design_implication": "판돈은 중복본과 일반 등급만 허용하고, 각 딱지의 마지막 1장은 보호한다(목업에 이미 구현됨, 유지 권장). 희귀 등급은 판돈 대상에서 제외한다. 유료 재화로 판돈용 딱지를 직접 사는 경로는 막는다(판돈 재화 = 무료 획득 전용). 판돈 결과는 운보다 실력(조준점, 파워, 바람 보정) 비중이 높게 보이도록 결정론적 물리를 쓰고 리플레이를 공개한다. 랜덤 팩은 확률을 공개하고, 벨기에·네덜란드에서는 비활성화한다."
+   },
+   {
+    "insight": "'자산이 쌓인다'의 실체는 앨범 완성도와 시즌 세트다(Monopoly GO, 포켓몬빵 띠부씰, TCG Pocket 모델).",
+    "why_it_matters": "한국 30~40대는 띠부씰 세트를 완성하려고 오픈런을 할 정도로 반응했고, 글로벌 캐주얼층은 스티커 앨범 교환 이벤트에 반응했다. 수집 동기는 '세트 완성 직전'에서 가장 강하다.",
+    "design_implication": "앨범은 시즌(약 6~8주)마다 9~12장짜리 세트 여러 개로 구성하고, 세트를 완성하면 큰 보상(새 테이블 스킨, 캐릭터 3D 피규어)을 준다. 매일 무료 '문방구 뽑기' 1회와 개봉 연출(TCG Pocket식 반짝임)을 넣는다. 친구끼리 중복 딱지를 주고받는 교환 이벤트는 2단계(PvP와 소셜 기능 도입 후)로 미루고, 한국 법률 검토 후 도입한다."
+   },
+   {
+    "insight": "초기 바이럴 엔진은 한국 30~45세 향수층이고, 이들은 동시에 '아이와 같이 하는 부모'다.",
+    "why_it_matters": "포켓몬빵, 슬램덩크, 애니팡 사례를 보면 이 세대는 향수가 구매와 공유로 전환되고, 카톡으로 전 연령에 퍼뜨리는 확산력이 있다. 그들의 자녀(현 초등생)는 오징어게임과 Roblox로 딱지를 이미 안다.",
+    "design_implication": "카톡으로 보내는 '딱지 한 판 할래?' 도전장 링크(설치 없는 웹, 비동기 고스트 대전: 내 기록 더미를 친구가 깨기)를 첫 PvP 형태로 만든다. 같은 기기에서 번갈아 하는 '부모 vs 아이' 패스앤플레이 모드를 넣고, 설·추석 시즌 이벤트와 'X세대 vs 알파세대' 마케팅을 한다. 한국어 UI에는 '문방구', '딱지왕', '싹쓸이' 같은 90년대 어휘를 의도적으로 쓴다."
+   },
+   {
+    "insight": "첫 출시는 앱스토어가 아니라 웹 인스턴트로 한다. 앱은 지표 검증 후 하이브리드캐주얼로 낸다.",
+    "why_it_matters": "목업이 이미 HTML5/three.js라 포털 출시 비용이 거의 0이다. 웹 포털(CrazyGames, Poki)은 아동·10대 비중이 높아 '전연령 직관성'을 빠르게 검증하기 좋다. 링크 공유는 카톡과 숏폼 바이럴과 마찰이 없다. 반면 포털 광고 ARPU는 낮아 수익보다는 검증 채널이다.",
+    "design_implication": "1단계(0~2개월)는 자체 URL + CrazyGames 런칭 + 숏폼 영상 테스트로, 첫 판 완주율, 2판째 진입률, 평균 세션 판 수, 공유 클릭률을 측정한다. 2단계는 Poki 제출과 Discord Activity(친구 실시간 PvP, 마이크 충돌 때문에 터치 전용) 추가다. 3단계는 D1 35% 이상, D7 10% 이상 같은 하이브리드캐주얼 기준(검증 필요)을 넘기면 모바일 앱과 시즌패스로 간다. Telegram 미니앱은 크립토 인식 때문에 보류하고, YouTube Playables는 마이크 미지원을 전제로 터치 버전만 낸다."
+   },
+   {
+    "insight": "IP와 아트 방향 측면에서, 원조 동딱지는 라이선스 캐릭터(해적판 포함)로 성공했다. 지금은 오리지널 캐릭터가 필수이고, KPop Demon Hunters 이후 한국 민속 모티프가 글로벌 친화 소재가 됐다.",
+    "why_it_matters": "수집욕은 캐릭터의 매력에 달려 있다. 오징어게임 비주얼은 넷플릭스 IP이자 데스게임 연상이라 전연령 톤과 맞지 않는다. 호랑이, 까치, 도깨비, 해태는 IP가 안전하고, 2025년 이후 글로벌 인지도가 생겼다.",
+    "design_implication": "딱지 캐릭터 1시즌은 '동네 친구들 + 한국 민속 크리처'(예: 장난꾸러기 호랑이, 까치 우체부, 도깨비 문방구 사장)를 클래시 오브 클랜/앵그리버드식 두꺼운 실루엣과 과장된 표정으로 만든다. 딱지 원판 = 캐릭터 일러스트 캔버스이고, 레어 등급은 홀로·금박 테두리를 쓴다. 향후 Tripo 3D 피규어를 '세트 완성 보상'으로 연결해 Labubu식 소장 욕구를 겨냥한다. 오징어게임의 핑크 가드나 도형 표식 같은 연상 비주얼은 금지한다."
+   },
+   {
+    "insight": "바이럴 신기함만으로는 수명이 짧다. 메타 최소 세트를 1차 출시 때부터 넣어야 한다.",
+    "why_it_matters": "목소리 조작 게임과 하이퍼캐주얼의 공통 실패는 '첫 5분 이후 할 이유 없음'이다. 하이브리드캐주얼 전환의 교훈은 코어 + 메타를 출시 시점에 결합하는 것이다.",
+    "design_implication": "목업 단계에서도 '테이블 2개 + 앨범 1시즌(세트 3개) + 일일 무료 뽑기 + 데일리 더미'까지는 들어가야 지표를 해석할 수 있다. 랭크와 시즌패스는 앱 단계로 미룬다."
+   }
+  ],
+  "key_claims": [
+   "사용자 원안의 '같은 수 걸기 → 합친 더미 → 뒤집은 만큼 가져가기'는 8 Ball Pool·Golf Clash가 쓰는 '같은 판돈을 걸고 이긴 사람이 다 가져가는 입장료 테이블' 1v1 구조와 같다. 따라서 판돈 5/10/20/50/100장을 해금형 테이블 티어로 설계하는 것이 진행·수익·PvP를 한 번에 해결한다.",
+   "동그란 캐릭터 종이 딱지는 Pogs(미국), Tazos(중남미·이베리아), Menko(일본), 尪仔標(대만), teks(필리핀)로 이어지는 90년대 세계 공통 경험이다. 그래서 글로벌 진입은 한국 문화를 설명하는 방식이 아니라 '각자의 어린 시절 + 한국식 후~ 불기 변주'(월드 플립 투어)로 하는 것이 맞다.",
+   "마이크 불기는 리액션 숏폼 바이럴에는 최강이지만, 권한 프롬프트, iframe 임베드 제약(포털/Playables/Discord), 공공장소·무음 플레이 때문에 기본 입력이 될 수 없다. 터치('숨 모으기 → 놓기')를 기본으로 하고, 마이크는 경쟁 우위 없는 옵트인 의식·녹화 모드로 둬야 한다.",
+   "한국 30~45세(1995~2005년 초등생)는 포켓몬빵 띠부씰(2022)과 슬램덩크(2023)에서 보듯 90년대 캐릭터 수집 향수가 실구매와 카톡 확산으로 전환되는 집단이다. 초기 바이럴 1순위 타겟은 이들과 그 자녀(가족 패스앤플레이)다.",
+   "'따먹기(상대 딱지 가져오기)'를 유료 재화와 연결하면 한국 사행성 판단, 확률형 아이템 규제, Pogs 학교 금지와 같은 프레임에 걸린다. 판돈은 무료로 얻은 중복본 한정, 마지막 1장·희귀 등급 보호, 실력 비중 강화가 필수다.",
+   "첫 출시 채널은 앱스토어가 아니라 웹 인스턴트(자체 URL 카톡 도전장 + CrazyGames, 이후 Poki/Discord Activity)여야 마찰과 비용이 가장 낮고 전연령 직관성 검증이 빠르다. 앱(하이브리드캐주얼 + 시즌패스)은 리텐션 지표를 검증한 뒤 낸다."
+  ],
+  "risks": [
+   "이번 리서치 결과 전체가 미검증이다. WebSearch는 공용 한도(200회)가 이미 소진돼 실행되지 못했고, WebFetch는 모든 도메인이 DNS 실패(ENOTFOUND)였다. 모든 수치와 연도는 기억 기반이므로 기획 확정 전에 후속 검증 패스가 반드시 필요하다.",
+   "포털/플랫폼 마이크 정책 리스크: Poki, CrazyGames, YouTube Playables, Discord가 iframe에 마이크 권한을 위임하지 않으면 '입으로 후~'는 자체 URL과 앱에서만 가능하다. 핵심 USP가 주력 채널에서 사라질 수 있다.",
+   "사행성·등급 리스크: '내기/따먹기' 테마와 유료 결제가 결합되면 한국 게임물관리위원회 사행성 판단, PEGI·IARC simulated gambling 표기, 부모 반발(Pogs 금지 선례) 문제가 생길 수 있다.",
+   "용어 혼동 리스크: 해외에서 'ddakji'는 오징어게임의 '접은 사각 딱지 내려치기'로 인식된다. 동그란 딱지를 불기로 뒤집는 놀이를 ddakji로 부르면 기대가 어긋날 수 있다.",
+   "IP 리스크: 오징어게임 비주얼이나 원조 동딱지의 라이선스 캐릭터(드래곤볼, 포켓몬 등)를 연상시키면 권리 문제가 생긴다. 오리지널 캐릭터 품질이 낮으면 수집욕 자체가 성립하지 않는다.",
+   "신기함 소멸 리스크: 목소리·불기 조작 게임은 바이럴 후 급락한 선례가 많다. 메타 없이 출시하면 지표 해석이 불가능하다.",
+   "타겟 충돌: 웹 포털 주 사용자(아동·10대 글로벌)와 향수 타겟(한국 30~45세)은 감성 코드가 다르다. 둘 다 잡으려면 코어는 향수 없이도 재미있어야 하고, 향수는 마케팅·카피 레이어로 분리해야 한다.",
+   "13세 미만 사용자 유입 시 COPPA, GDPR-K, Google Families 정책 대응 비용이 들고 광고 eCPM이 하락한다.",
+   "PvP 유동성·치트 리스크: 초기 동시 접속자가 부족하면 매칭이 비고, 웹 물리 PvP는 클라이언트 조작 위험이 있다. 결정론 시뮬레이션과 서버 검증 또는 비동기 고스트 방식이 필요하다.",
+   "아트 바와 비용: CoC, Royal Kingdom, Angry Birds 수준의 아트는 대규모 팀 산출물이다. 목업과 출시 간 품질 격차가 커서 숏폼 크리에이티브 경쟁력이 떨어질 수 있다."
+  ],
+  "open_questions": [
+   "Poki, CrazyGames, YouTube Playables, Discord Activities가 2026년 현재 iframe 마이크 권한(getUserMedia)을 허용하는가? 플랫폼별 SDK 문서와 개발자 지원 문의로 확인이 필요하다.",
+   "Squid Game: Unleashed의 실제 다운로드, 리텐션 성과와 Boss Fight 스튜디오의 현황은? 넷플릭스 IP 게임의 장기 성과 근거로 쓸 수 있는가?",
+   "'입으로 불어서 딱지 뒤집기'가 한국 외 지역(일본 menko, 대만 尪仔標, 필리핀 teks 등)에도 존재했는가? 존재하지 않는다면 순수 한국 고유 훅으로 내세울 수 있다.",
+   "한국 게임물관리위원회는 '무료 재화로만 판돈을 걸고, 패배 시 상대에게 중복 딱지가 이동하는' PvP를 사행성으로 보는가? 유료 상점이 같은 게임 안에 있을 때 경계선은 어디인가?",
+   "목표 등급과 연령 타겟은 무엇인가? '전연령'을 표방하되 13세 이상 일반 이용가로 갈 것인지, 13세 미만 아동 정책까지 감당할 것인지 결정이 필요하다.",
+   "브랜드명은 무엇으로 할 것인가? 목업의 'PUFF!'(언어 중립)와 'Ddakji'(오징어게임 인지 효과 + 사각 딱지 혼동)를 숏폼 A/B 테스트로 결정할 것인가?",
+   "2025~2026년 하이브리드캐주얼 리텐션·CPI 벤치마크(D1/D7, 미국·한국·중남미 CPI)의 최신 수치는? 검증 패스에서 Sensor Tower, AppMagic, GameAnalytics 리포트를 확인해야 한다.",
+   "포켓몬빵 2022 누적 판매량, 더 퍼스트 슬램덩크 관객 수, KPop Demon Hunters 누적 시청 수 등 마케팅 근거 수치의 정확한 값은?",
+   "사용자 우선순위는 한국 우선 출시 후 글로벌인가, 동시 글로벌인가? 카톡 도전장 중심 설계와 포털 중심 설계 중 무엇을 먼저 할지 결정이 필요하다."
+  ]
+ },
+ {
+  "lens": "물리 & 기술 구현: 바람으로 얇은 원판(딱지)을 뒤집는 현상을 웹(three.js와 물리엔진)에서 그럴듯하고 재밌게 시뮬레이션하는 법",
+  "summary": "이번 조사의 근거는 대부분 직접 돌린 실험입니다. 웹검색 한도는 다른 에이전트와 공유돼 이미 소진됐고, WebFetch는 GitHub과 raw.githubusercontent만 연결됐습니다. 그래서 1차 문서(Rapier, Jolt, Box2D, cannon-es 문서와 npm 패키지)를 확인하고, Node 22에서 Rapier 0.21, cannon-es 0.20, Jolt 1.1로 얇은 원판 쌓기, 바람 모델, 결정론을 직접 실험했습니다.\n결론 1: 엔진은 Rapier입니다. 20장 더미가 1초 안에 잠들고 한 스텝에 0.05~0.2ms면 됩니다. cannon-es는 20장도 무너지고 30~70배 느립니다. Jolt는 기본 설정에서 원판끼리 크게 파고듭니다.\n결론 2: 실제 크기(두께 1mm)로는 엔진 허용 오차(slop) 때문에 쌓기가 무너집니다. 원판 반지름 1, 두께 0.08 정도로 '두툼하게' 키워야 하고, 이건 CoC나 앵그리버드식 두툼한 아트와도 맞습니다. 물리로 쌓는 딱지는 20~30장까지가 한계입니다.\n결론 3: 유체 시뮬레이션은 필요 없습니다. '원뿔 제트 + 가림(occlusion) + 가장자리 아래 공기 유입도 + 테두리 지점 임펄스'라는 단순한 모델만으로 '공기가 파고든 층 위가 덩어리째 뒤집히는' 현상과 '역U자 파워 곡선'이 저절로 생깁니다. 조준 높이와 파워 두 축으로 실력 차이가 나는 구조가 바로 나옵니다.\n결론 4: 뒤집힌 더미는 계속 미세하게 떨려서 잠들지 않습니다. 판정 타이머와 '고정(freeze)' 처리가 꼭 필요합니다. PvP는 턴제라서 입력만 보내고 서버가 deterministic 빌드로 다시 시뮬레이션하는 구조가 맞습니다.",
+  "findings": [
+   {
+    "claim": "얇은 원판 20장 쌓기 안정성과 속도 모두 Rapier(@dimforge/rapier3d-compat 0.21.0)가 세 엔진 중 확실히 가장 좋았다.",
+    "evidence": "자체 실험(Node 22, Xeon 2.1GHz). 원판 반지름 R=1, 두께 0.08(두께/지름 4%), 무작위 오프셋, 60Hz, solver 4회 조건. Rapier: 20장 0.98~1.5초 만에 전부 잠듦(sleep), 한 스텝 0.05~0.18ms, 꼭대기 처짐 약 1.65장 두께(8%), 기울어진 원판 0장. cannon-es(10회 반복): 20장 중 16장이 기울어지며 무너짐, 한 스텝 5ms(30~70배 느림), 잠들지 않음. Jolt(CylinderShape, 기본 설정): 기울어짐은 없지만 20장 처짐이 7~9장 두께(35~45%)에 이를 만큼 서로 파고듦. 바닥 원판 중심 y=0.009(정상 0.04).",
+    "sources": [
+     "https://www.npmjs.com/package/@dimforge/rapier3d-compat",
+     "https://www.npmjs.com/package/cannon-es",
+     "https://www.npmjs.com/package/jolt-physics",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_rapier.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_cannon.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_jolt.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Jolt 공식 문서는 실린더를 '가장 불안정한 형상'이라고 경고하고, 내 빠른 튜닝(penetration slop 축소, position step 증가)으로는 오히려 더 나빠졌다. 전문가 튜닝이면 나아질 여지는 있다.",
+    "evidence": "Jolt Architecture.md에 'cylinders are the least stable of all shapes, so use another shape if possible'이라고 적혀 있다. 기본값은 PenetrationSlop 0.02, SpeculativeContactDistance 0.02, Baumgarte 0.2, velocity step 10, position step 2. slop 0.002, posIt 6으로 바꾸자 20장 처짐이 11장 두께로 커졌다. 24각형 convex hull로 바꿔도 처짐 9.3장 두께였다. 이 결과는 내 설정 탓일 수도 있다.",
+    "sources": [
+     "https://github.com/jrouwe/JoltPhysics/blob/master/Docs/Architecture.md",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_jolt.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "cannon-es는 2022-08-12의 0.20.0 이후 npm 배포가 없어 사실상 유지보수가 멈췄고, 원판 30장 이상 쌓기에서 붕괴한다.",
+    "evidence": "npm view cannon-es time 결과 마지막 배포는 0.20.0(2022-08-12)이다. GitHub README에는 CCD와 결정론 언급이 없다. 실험: 30장은 21장이 기울어지고 처짐 18장 두께, 60장은 51장이 기울어짐. solver를 20회로 올리면 20장은 버티지만 잠들지 않는다.",
+    "sources": [
+     "https://www.npmjs.com/package/cannon-es",
+     "https://github.com/pmndrs/cannon-es",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack_cannon.mjs"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "실제 크기(지름 5cm, 두께 1mm, 미터 단위)로 만들면 엔진 허용 오차가 두께보다 커서 쌓기가 무너진다. 원판을 R=1 단위, 두께 0.06~0.1 정도로 키워 시뮬레이션해야 한다.",
+    "evidence": "Rapier 문서상 normalized_allowed_linear_error(geometric slop)는 0.005, prediction distance는 0.02이고, 둘 다 lengthUnit에 비례한다. Box2D 문서도 '움직이는 형상은 0.1~10m가 적정, 1cm보다 크게 유지하라'고 권한다. 실험: 미터 단위 두께 1mm 원판 20장은 접촉 관통이 두께의 72%이고 쌓인 높이가 기대치의 18%에 그침. lengthUnit이나 allowedLinearError만 바꿔서는 해결되지 않음. 반면 R=1, 두께 0.08이면 관통이 거의 없음.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/integration_parameters.mdx",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/overview.md",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/questions.md",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack2.mjs"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "동적 원판을 한 기둥에 30장 넘게 쌓으면 Rapier에서도 계속 압축되고 진동한다. 50장, 100장 판돈을 한 기둥으로 물리 시뮬레이션하는 것은 비현실적이다.",
+    "evidence": "실험(R=1, 두께 0.08, 기본 solver): 처짐이 10장 0.42, 20장 1.66, 30장 3.71, 60장 약 15장 두께로 늘고, 60장은 끝내 잠들지 않음. 100장은 53장이 기울어지며 무너짐. solver를 16~32회로 올리거나 서브스텝 4배, PGS 4회를 줘도 60장 처짐은 약 15장으로 그대로. 대신 아래 88장을 Fixed로 두고 위 12장만 동적으로 두면 처짐 0.59장, 1.43초 만에 잠듦.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack3.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack4.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Rapier는 접촉을 부드러운 스프링처럼 처리한다(고유진동수, natural frequency). 그래서 처짐은 대략 '하중 × g ÷ 고유진동수²'에 비례하고, 60Hz 스텝에서 고유진동수를 120Hz 이상으로 올리면 불안정해지거나 폭발한다.",
+    "evidence": "Rapier 문서: contact softness는 고유진동수(Hz)와 감쇠비로 정의되고, 단단할수록 떨림(jitter)이 생길 수 있음. 실험: contact_natural_frequency를 60으로 올리면 20장 처짐이 1.66에서 0.42장 두께로 약 4배 감소(진동수²에 비례). 120에서는 60장 기둥이 무너지고, 300에서는 꼭대기가 위로 튀어 폭발. 두께가 0.08이든 0.16이든 접촉 하나당 관통 절대량은 약 0.007로 비슷.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/integration_parameters.mdx",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack3.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/stack4.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "간단한 바람 모델(원뿔 제트, 테두리 샘플링, 레이캐스트 가림, 가장자리 아래 틈 비례 양력, applyImpulseAtPoint)만으로 '공기가 파고든 층 위쪽이 덩어리째 뒤집히는' 현상이 저절로 생긴다. 조준 높이가 몇 장이 뒤집힐지를 정한다.",
+    "evidence": "20장 더미(꼭대기 높이 약 1.55)에 파워 S=0.5로 분 결과를 아래→위 문자열로 기록함. 조준 높이 0.2는 0장(바닥층은 눌려서 안 뜸). 0.6은 거의 20장 전부. 1.0은 17~18장. 1.5는 위쪽 8~13장만 'FFFF' 블록으로 뒤집힘. 원판이 한 장씩 따로 노는 게 아니라 '분리 지점 위 블록'이 통째로 회전함.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/wind.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/probe.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/skillmap.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "같은 모델에서 파워와 결과는 역U자 곡선을 그린다(약하면 0장, 적당하면 최대, 너무 세면 테이블 밖으로 날아감). 입력이 조금 달라져도 결과가 크게 흔들리지 않아 실력으로 조절할 수 있다.",
+    "evidence": "조준 높이 1.2, 하향 10도, gain 3, 시드 8개 평균. S=0.30은 0장. 0.40은 12.0±1.6. 0.55는 16.0±0.9(최대). 0.65는 13.0, 날아감 4.5. 0.80은 3.0, 날아감 15.5. 0.90은 0.4, 날아감 18.3. 같은 시드에서 S를 0.50에서 0.51로 바꾸면 결과가 대부분 같음(16,16 / 13,13 / 16,16). 더 순한 설정(gain 2, cLift 0.6, 조준 1.45, K=8)은 S=0.4~1.0에서 0.8, 3.8, 9.0, 9.5, 11.0, 8.3(+날아감 5), 4.3(+10.8)으로 완만해짐.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/curve.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/tune.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "뒤집혀 착지한 더미(약 15도 기울어진 원판 덩어리)는 solver 반복 횟수, CCD, 형상, 마찰, 서브스텝을 바꿔도 10초 넘게 0.1~0.8 속도로 떨리고 미끄러지며 잠들지 않는다. 판정 타이머와 고정 처리가 필수다.",
+    "evidence": "블로우 후 10초 동안 테이블 위 원판 14~20장이 계속 깨어 있고 최대 속도 0.1~0.8. 비교한 설정: iters 8, PGS 4, 마찰 0.8, 서브스텝 2, 감쇠 2~4, roundCylinder, 20각형 hull, contact skin, CCD, soft-CCD. 모두 해결 못 함. 블로우 1.5초 후부터 '속도 0.5 미만이고 각속도 1.5 미만인 상태가 0.25초 지속되면 Fixed로 전환'하는 규칙을 쓰면 5회 중 4회가 2.3~3.45초에 확정, 1회는 6.35초 → 4초 강제 상한이 필요. 판정 애매(|upY|<0.5)한 원판은 시행당 0~1장.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/settle3.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/settle4.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/freeze.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "Rapier CCD는 원판끼리 관통하는 문제를 막아주지 않는다. 비행 중 관통을 줄이는 데는 서브스텝이 효과적이다.",
+    "evidence": "Rapier CCD 문서: 'Two CCD-enabled objects can still tunnel through each other'. 실험: 모든 원판에 CCD를 켜도 결과 해시가 끄고 돌린 것과 완전히 같음(효과 0). 반면 서브스텝 4배(240Hz)로 돌리면 비행 중 최대 관통이 두께의 84%에서 49%로 줄어듦.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/rigid_body_ccd.mdx",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/pen.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "플랫폼이 달라도 결과를 같게(cross-platform 결정론) 하려면 @dimforge/rapier3d-deterministic(-compat) 패키지를 써야 한다. 웹사이트의 결정론 문서는 'JS는 기본으로 결정론적'이라고 적혀 있지만 0.15.0 이후 내용과 맞지 않는 옛 문서다.",
+    "evidence": "npm 0.21.0 README: 기본 rapier3d는 'does not guarantee cross-platform determinism (but it is still locally deterministic)', -deterministic 빌드만 이를 보장. rapier.js CHANGELOG 0.15.0(2025-03-06): 'rapier2d/3d no longer enable enhanced-determinism', -deterministic(-compat) 추가. 반면 website determinism.mdx는 JS/WASM이 'fully cross-platform deterministic by default'라고 적혀 있음(구버전 내용).",
+    "sources": [
+     "https://www.npmjs.com/package/@dimforge/rapier3d-deterministic-compat",
+     "https://raw.githubusercontent.com/dimforge/rapier.js/master/CHANGELOG.md",
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/determinism.mdx"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "같은 빌드에 같은 입력이면 결과가 비트 단위로 같다. 하지만 compat 빌드와 deterministic 빌드는 서로 결과가 달라 섞어 쓸 수 없고, deterministic 빌드는 20~39% 느리다.",
+    "evidence": "실험: 같은 입력을 6번 돌려 takeSnapshot 해시가 모두 같음(빌드마다 각각). compat(4f9c84c4)와 deterministic-compat(1deba9c4)은 해시가 다르지만 뒤집힌 장수는 같음. 블로우 하나를 끝까지 판정하는 CPU 시간은 compat 120ms, deterministic 166ms(Xeon 2.1GHz 단일 스레드, 시뮬레이션 약 3.1초).",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/det.mjs",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/cost.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "결정론에는 엔진 밖의 게임 코드도 영향을 준다. Rapier 문서는 JS의 Math.sin/cos 결과가 플랫폼마다 다를 수 있다고 경고하고, Box2D도 결정론을 위해 sin/cos/atan2를 직접 구현했다. 바람 모델의 cos/exp/tan도 같은 위험이 있다.",
+    "evidence": "Rapier determinism.mdx(JS 항목): Math.sin, Math.cos 같은 초월함수를 초기값에 쓰면 플랫폼마다 다를 수 있음. 일정한 timestep 순서와 생성·삽입 순서도 같아야 함. Box2D simulation.md: 'custom atan2, cosine, and sine implementations', 그리고 'Box2D determinism does not mean your application will be deterministic'.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/determinism.mdx",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/simulation.md",
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/release_notes_v310.md"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Rapier 스냅샷으로 되감기와 리플레이를 할 수 있다. 저장했다가 복원해서 이어 돌리면 원래 실행과 해시가 같고, 20장 기준 스냅샷 크기는 약 58KB다.",
+    "evidence": "Rapier serialization 문서: world.takeSnapshot()은 Uint8Array를 반환하고 World.restoreSnapshot(snapshot)으로 복원. 실험: 블로우 5스텝째에 저장, 복원 후 200스텝을 더 돌리니 원래 실행과 해시가 같음(5e9ee23d). 스냅샷 58,374바이트. 참고로 Jolt SaveState는 엔진이 바꾸는 상태만 저장하고, 바디를 추가하거나 제거하면 RestoreState가 깨진다는 제약이 문서에 있음.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier/master/website/docs/user_guides/templates/serialization.mdx",
+     "https://github.com/jrouwe/JoltPhysics/blob/master/Docs/Architecture.md",
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/snap.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "번들 크기(실측): rapier3d-compat는 dist/rapier.mjs 4.34MB, gzip 1.65MB(WASM을 base64로 내장). deterministic-compat도 4.37MB, gzip 1.66MB. cannon-es는 346KB, gzip 75KB. jolt wasm-compat은 3.22MB, gzip 0.91MB.",
+    "evidence": "npm 0.21.0, 0.20.0, 1.1.0을 설치해 gzip -9로 측정. 별도 .wasm 파일 크기는 rapier 3.08MB(gzip 1.17MB), jolt 2.02MB(gzip 0.74MB). 목업은 jsDelivr ESM으로 compat 하나만 불러오면 됨(https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.21.0/dist/rapier.mjs, 쓰기 전 RAPIER.init() 호출 필요).",
+    "sources": [
+     "https://www.npmjs.com/package/@dimforge/rapier3d-compat",
+     "https://www.npmjs.com/package/cannon-es",
+     "https://www.npmjs.com/package/jolt-physics"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "Rapier JS는 API가 자주 바뀐다. 0.19.0에서 PGS 관련 메서드가 제거됐고, rapier.js 저장소는 2026-07-12에 보관(archived) 처리되어 dimforge/rapier/typescript로 합쳐졌다. 0.21.0은 2026-09-25 배포다. 옛 튜토리얼 코드는 그대로 돌지 않을 수 있다.",
+    "evidence": "CHANGELOG 0.19.0(2025-09-05): switchToStandardPgsSolver, numAdditionalFrictionIterations 등 제거. 0.13.0: contactSkin, softCcdPrediction 추가. 0.12.0: numSolverIterations 도입. GitHub의 rapier.js 페이지에 'archived Jul 12, 2026, merged into the main Rapier repository'. npm time: 0.20.0은 2026-08-08, 0.21.0은 2026-09-25.",
+    "sources": [
+     "https://raw.githubusercontent.com/dimforge/rapier.js/master/CHANGELOG.md",
+     "https://github.com/dimforge/rapier.js",
+     "https://www.npmjs.com/package/@dimforge/rapier3d-compat"
+    ],
+    "confidence": "high"
+   },
+   {
+    "claim": "바람 계산 비용의 대부분은 레이캐스트다. 테두리 샘플 16개면 스텝당 240개로 1.7~4.4ms, 8개로 줄이면 104개로 약 1.5ms이고 결과는 거의 같다(16장 대 15장).",
+    "evidence": "wind.mjs 계측(Node, Xeon). 블로우는 15스텝(0.25초)만 지속되므로 이 동안만 비용이 든다. 모바일에서는 몇 배 느릴 것으로 보지만 직접 재지는 못했다.",
+    "sources": [
+     "/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/physlab/det.mjs"
+    ],
+    "confidence": "med"
+   },
+   {
+    "claim": "실제 물리로 보면 종이 딱지 한 장은 아래로 공기만 들어가면 약 3~5m/s 바람에도 뜬다. 진짜 어려움은 바람의 세기가 아니라 '어느 층의 틈으로 공기를 밀어넣느냐'이고, 위에 k장이 얹혀 있으면 필요한 풍속은 대략 √k배로 커진다.",
+    "evidence": "직접 유도한 계산이다(가정값: 지름 5cm, 두께 0.9mm, 판지 밀도 0.8g/cm³ → 약 1.4g, 공기 밀도 1.2). 동압 ½ρv²가 무게/면적(약 7Pa)을 넘어야 하므로 면 전체에 받으면 약 3.4m/s, 절반 면적으로 토크를 걸면 약 4.9m/s. 동전을 불어 컵에 넣는 트릭(위쪽 흐름으로 생기는 베르누이 압력 강하와 앞 가장자리로 들어가는 공기)과 원형 제트의 거리 감쇠(약 1/x)는 기억에 의존한 내용이다. 이번 세션에서 1차 출처로 확인하지 못했다.",
+    "sources": [],
+    "confidence": "low"
+   },
+   {
+    "claim": "앵그리버드는 Box2D 기반으로 널리 알려져 있고, '결과가 한눈에 읽히는 과장된 물리'(묵직한 블록, 크게 연출하는 붕괴, 카메라 추적)로 재미를 만든 대표 사례다.",
+    "evidence": "기억에 의존했다. Box2D 1차 문서(questions.md, overview.md)에는 특정 게임 이름이 없고 'used in many games'라고만 되어 있다. 튜닝 방식(구조물을 잠든 상태로 시작하는지 등)은 이번 세션에서 확인하지 못했다.",
+    "sources": [
+     "https://raw.githubusercontent.com/erincatto/box2d/main/docs/questions.md"
+    ],
+    "confidence": "low"
+   }
+  ],
+  "insights": [
+   {
+    "insight": "'원기둥 중 어디를 치느냐'는 시뮬레이션에서 '공기가 파고드는 층(분리 지점)을 고르는 것'으로 그대로 재현된다. 분리 지점 위의 블록이 한 번에 뒤집힌다.",
+    "why_it_matters": "사용자가 말한 실력 요소(어디를, 얼마나 세게)가 따로 만든 규칙이 아니라 물리에서 저절로 나온다. 설명하지 않아도 '높이 치면 적게 그러나 안전하게, 낮게 치면 많이 그러나 센 힘과 위험이 필요'를 몸으로 배운다.",
+    "design_implication": "첫 번째 조작 축은 '더미 옆면에 조준 높이 찍기'로 한다. 드래그 시작점이 더미 옆면 높이가 되게 하고, 공기가 들어갈 층을 형광 띠로 미리 보여준다. 결과 연출은 '블록 단위로 넘어가는 순간'을 보여주는 데 맞춘다. 덩어리가 들려 회전할 때 0.2~0.4초 슬로모션과 '퍽' 사운드를 넣고, 넘어간 장수를 카운트업한다. 낮게 쳐서 전부 뒤집는 전략이 지배 전략이 되지 않도록 아래층일수록 공기가 덜 들어가게(공기 유입도 하한을 낮추거나 바닥 마찰을 높게) 조정한다."
+   },
+   {
+    "insight": "파워와 결과가 역U자 곡선을 그린다. 약하면 0장, 적당하면 최대, 너무 세면 날아가 버린다.",
+    "why_it_matters": "'퍽'의 쾌감은 적당히 세게 쳤을 때 극대화되고, 과하게 쳤을 때의 손실이 욕심과 긴장을 만든다. 이런 퍼펙트 존 구조는 남녀노소 누구나 바로 이해한다.",
+    "design_implication": "파워 입력은 짧고 강한 '퍽'(어택이 짧은 버스트)을 S(t) 시간 곡선으로 바꾼다. 스와이프 속도나 마이크 입력의 최고점을 S로, 지속시간을 T(0.15~0.3초)로 쓴다. 날아간 딱지에 대한 규칙(누구에게도 안 감, 더미로 복귀, 상대에게 감 중 택일)과 360도로 두 번 뒤집혀 앞면으로 착지한 경우의 규칙을 명문화해야 역U자의 오른쪽 경사가 의미를 가진다. 같은 이유로 sweet zone의 폭(S 기준 약 ±0.1)을 난이도와 레벨 디자인의 손잡이로 쓴다."
+   },
+   {
+    "insight": "물리가 안정되려면 딱지가 두꺼워야 하고(두께/지름 4% 이상, 엔진 스케일 R=1), 이는 목표 아트 톤(CoC, 로얄킹덤, 앵그리버드의 두툼하고 둥근 형태)과 정확히 맞아떨어진다.",
+    "why_it_matters": "실제 비율(약 2%, 1mm)로 만들면 원판끼리 파고들고 떨린다. 모바일 화면에서도 얇은 원판은 앞뒷면과 뒤집힘이 잘 안 보인다.",
+    "design_implication": "딱지 3D 모델은 두께/지름 6~8%의 '두툼한 토큰'으로 하고 가장자리를 둥글게 깎되(시각적 bevel), 충돌체는 일반 cylinder(halfH=0.04~0.05, R=1)를 쓴다. roundCylinder는 굴러서 날아가 버리는 문제가 실험에서 나왔다. 앞면(캐릭터)과 뒷면(단색, 패턴)의 색 대비를 극대화해 뒤집힘이 한눈에 보이게 한다. Tripo 같은 도구로 만든 메쉬는 렌더링에만 쓰고 충돌체는 단순 실린더로 따로 둔다."
+   },
+   {
+    "insight": "물리로 쌓을 수 있는 동적 딱지는 한 더미에 약 20~30장이 한계다. 50장, 100장 판돈은 구조를 다르게 짜야 한다.",
+    "why_it_matters": "사용자 원안의 5~100장 판돈을 그대로 한 기둥으로 쌓으면 떨림, 관통, 붕괴가 생기고 결과가 이상하게 보인다.",
+    "design_implication": "방법은 둘이다. (A) 판돈 20장마다 더미를 하나씩 원형으로 배치한다. '어느 더미를 노릴지'라는 결정이 하나 더 생겨 좋다. (B) 한 기둥이되 위쪽 12~20장만 동적으로 두고 나머지는 Fixed로 둔 뒤, 위가 비면 다음 장을 동적으로 올린다(실험상 안정). 목업은 (A)를 기본으로 하고, 판돈 단계는 5/10/20/40처럼 20장 단위로 묶어 관리한다."
+   },
+   {
+    "insight": "결과 판정은 물리가 완전히 멈추기를 기다리면 안 된다. 뒤집힌 더미는 10초가 지나도 잠들지 않는다.",
+    "why_it_matters": "턴제 게임에서 '아직 움직이는 중'이 이어지면 템포와 쾌감이 무너지고, PvP에서는 판정 시점을 둘러싼 분쟁이 생긴다.",
+    "design_implication": "판정 파이프라인은 블로우 → 1.5초 후부터 '조용한 원판'(속도 0.5 미만, 각속도 1.5 미만이 0.25초 지속)을 Fixed로 전환 → 4초에 전부 강제 확정 → 윗면 방향 벡터의 y 부호로 앞뒤 판정 순이다. |upY|<0.5로 애매한 원판은 '더미 쪽으로 떨어진다' 같은 규칙과 작은 정착 애니메이션으로 처리한다. 슬로모션은 dt를 바꾸지 말고 '프레임당 스텝 수'를 줄여서 만든다. dt는 1/60 고정을 유지해야 결정론이 보존된다."
+   },
+   {
+    "insight": "PvP는 턴제라서 실시간 lockstep이나 롤백 넷코드가 필요 없다. '입력만 보내고, 서버가 다시 시뮬레이션해 권위 있게 판정'하면 충분하다.",
+    "why_it_matters": "가장 어려운 네트워크 문제(지연 보상, 실시간 동기화)를 피하면서도 부정행위(클라이언트 물리 조작)를 막을 수 있다. 블로우 한 번의 서버 비용도 120~170ms(CPU 단일 코어)라 감당할 만하다.",
+    "design_implication": "클라이언트는 입력(조준 높이, 방향, 파워 곡선 S(t), 시작 스텝)을 보내고 동시에 자기 화면에서는 즉시 로컬로 시뮬레이션한다. 서버는 Node에서 같은 버전의 @dimforge/rapier3d-deterministic으로 다시 돌려 결과와 해시를 내려준다. 상대방은 입력을 받아 리플레이하거나 서버 결과로 바로잡는다. 더미 초기 배치는 서버가 준 시드에서 정수 또는 고정소수점으로 만든다. 바람 모델의 cos/sin은 미리 계산한 테이블, exp는 유리함수 근사로 바꾼다. Math.hypot 대신 sqrt(x*x+y*y+z*z)를 쓴다(이 점은 내 기억 기반이라 확신 낮음). 원판 처리 순서는 배열 순서로 고정한다. 재접속과 관전은 스냅샷(약 58KB)으로 처리한다."
+   },
+   {
+    "insight": "게임성 조율(밸런싱)은 사람이 손으로 하기보다 헤드리스 파라미터 스윕(조준 높이 × 파워 스킬맵)으로 해야 한다.",
+    "why_it_matters": "현재 초기 설정은 한 번 불면 20장 중 15~20장이 넘어가 너무 후하다. 낮게 조준하면 전부 뒤집히는 지배 전략도 있다. 물리 상수 하나만 바꿔도 곡선 모양이 크게 바뀐다(gain 3에서 2, cLift 1에서 0.6으로 바꾸자 완만해짐).",
+    "design_implication": "skillmap.mjs 같은 스크립트를 CI에 넣어 '스윗스팟에서 한 번에 25~40%, 잭팟(80% 이상)은 정밀 입력에서만'이라는 목표 분포를 검사한다. 목업에 디버그 패널(gain, cLift, cPush, alpha, 더미 오프셋, 원판 사이 마찰)을 노출해 사용자 피드백 루프에서 바로 손볼 수 있게 한다."
+   },
+   {
+    "insight": "입으로 부는 감각은 마이크 입력으로 재현할 수 있지만, 마이크로는 방향을 알 수 없다. 방향과 높이는 화면 조준으로 정하고, 마이크는 파워와 타이밍만 맡아야 한다.",
+    "why_it_matters": "'입으로 푹'이 사용자 원안의 핵심 감성이지만 권한 요청, 시끄러운 환경, 접근성 문제가 있다. 이 판단은 1차 출처를 확인하지 못한 경험칙이다(확신 낮음).",
+    "design_implication": "기본은 스와이프 또는 '꾹 눌렀다 튕기기'로 조작하고, 마이크 불기는 옵션 모드(파티, 오프라인 데모용)로 둔다. 둘 다 같은 S(t) 곡선으로 바꿔 물리 쪽은 하나의 경로만 유지한다. 손으로 치는 모드는 바람이 아니라 충격량 모델이므로 별도 설계가 필요하다."
+   },
+   {
+    "insight": "목업 구현 레시피(바로 쓸 수 있는 시작값)",
+    "why_it_matters": "1시간 목업 안에 엔진 선택과 파라미터 탐색에 시간을 쓰지 않도록 검증된 시작점이 필요하다.",
+    "design_implication": "엔진: @dimforge/rapier3d-compat@0.21.0을 jsDelivr ESM으로 불러와 await RAPIER.init() 호출(PvP 단계에서 -deterministic-compat으로 교체, API 동일). 월드: gravity -9.81(가볍고 느린 느낌), 더 빠른 느낌을 원하면 -20~-40으로 하고 바람 gain도 같은 비율로 올림. timestep 1/60 고정, numSolverIterations 4, lengthUnit 1, contact_natural_frequency 기본값(30) 또는 45. 바닥: cylinder(0.5, 12), 마찰 0.5. 원판: cylinder(halfH=0.04, R=1), density 1, 마찰 0.5, 반발 0.1, 선형 감쇠 0.1, 각 감쇠 0.3, 오프셋 ±0.125R로 무작위 적층. 바람 모델(스텝마다, 블로우 지속 T=0.25초): 원판마다 테두리 K=8 지점 p=c+R·m_k(m_k=cosθ·u+sinθ·v). facing f=max(0,−m_k·d)가 0.05 이하면 건너뜀. s=(p−O)·d, lat=|(p−O)−s·d|, rc=r0+s·tanα(α=0.30, r0=0.25)이고 s≤0이거나 lat>rc면 건너뜀. O에서 p로 레이캐스트해 다른 원판이 먼저 맞으면 가려진 것으로 보고 건너뜀. v=Vmax·S·env(t)/(1+s/L)·exp(−2(lat/rc)²)(Vmax=40, L=4). q=½v²·(2πR/K)·(2halfH)·gain(gain=2). 공기 유입도 expo=min(1, 0.08+gap/(2halfH))이고, gap은 테두리 아랫면에서 −n̂ 방향 레이 거리. 힘 F=q·(cPush·f·d + cLift·expo·f·n̂_up)(cPush 0.25, cLift 0.6)를 applyImpulseAtPoint(F·dt, p)로 가함. 맨 위 원판 윗면이 노출돼 있으면 중심에 cTop=0.15 비율의 흡입 양력 추가. 판정: 1.5초 후 조용한 원판 고정, 4초 상한, upY 부호로 판정. 테이블 밖으로 나간 원판은 별도 규칙으로 처리. 참고 코드는 scratchpad/physlab/wind.mjs와 freeze.mjs."
+   }
+  ],
+  "key_claims": [
+   "웹 목업과 PvP용 물리엔진은 Rapier(@dimforge/rapier3d-compat, PvP는 -deterministic-compat)로 정한다. 얇은 원판 20장 쌓기 실험에서 cannon-es(2022년 이후 배포 중단)는 무너지고 30~70배 느렸으며, Jolt는 기본 설정에서 처짐이 35~45%에 달했다.",
+   "물리 월드는 실제 크기가 아니라 R=1 단위, 두께 0.06~0.1(두께/지름 4% 이상)로 키워야 한다. 두께 1mm 실제 크기는 엔진 허용 오차(0.005×lengthUnit) 때문에 무너진다. 동적 딱지는 한 더미 20~30장이 한계이므로 50장, 100장 판돈은 여러 더미로 나누거나 아래층을 고정(Fixed)해야 한다.",
+   "유체 시뮬레이션 없이 '원뿔 제트 + 레이캐스트 가림 + 가장자리 아래 틈 비례 양력 + 테두리 지점 임펄스' 모델만으로 '분리 지점 위 블록 뒤집힘'과 '파워 역U자 곡선'이 저절로 생긴다. 그래서 조준 높이 × 파워라는 두 축의 실력 구조를 물리만으로 만들 수 있다.",
+   "뒤집힌 더미는 어떤 solver 설정에서도 10초 넘게 잠들지 않는다. 판정 타이머(1.5초 후 조용한 원판 고정, 4초 상한)가 없으면 턴이 끝나지 않고 결과가 읽히지 않는다.",
+   "PvP는 턴제이므로 lockstep 없이 '입력만 전송하고 서버가 다시 시뮬레이션해 권위 판정'으로 충분하다. 단, npm README상 cross-platform 결정론은 -deterministic 패키지만 보장하고(웹 문서는 구버전), 빌드가 다르면 결과 해시가 달라지며, 게임 코드의 Math.sin/cos/exp도 결정론을 깬다."
+  ],
+  "risks": [
+   "현재 바람 모델 설정은 너무 후하다(한 번에 15~20/20장). 낮게 조준하고 세게 불면 전부 뒤집히는 지배 전략이 있어 밸런싱이 필요하다. 실제 딱지 불기가 이런 블록 뒤집힘 양상인지도 실물이나 영상으로 확인하지 못했다.",
+   "모든 성능 수치는 Node와 Xeon 2.1GHz 기준이다. 모바일 브라우저(특히 저가 안드로이드, iOS Safari)의 스텝 비용과 레이캐스트 비용은 재지 않았다.",
+   "cross-platform 결정론은 문서로만 확인했고, 같은 기기 안의 재현성만 실험했다. 브라우저 간(Chrome과 Safari) 해시 일치는 아직 검증하지 않았다.",
+   "Jolt 결과는 내 튜닝 미숙 때문일 수 있다(Jolt 문서가 실린더 불안정을 경고하긴 함).",
+   "Rapier 0.21.0은 배포 17일 차인 새 버전이다. 0.19에서 API가 제거된 전례가 있으니 버전을 정확히 고정하고, 업데이트 때 결과 해시가 바뀌는지 검사해야 한다.",
+   "compat 빌드는 gzip 기준 약 1.65MB로, 첫 로딩 시간과 글로벌 저사양 환경에 부담이 된다.",
+   "뒤집힌 더미의 미세 떨림을 고정 처리로 덮으면 '갑자기 멈추는' 부자연스러움이 보일 수 있다. 연출(감쇠 애니메이션, 카메라 전환)로 가려야 한다.",
+   "조사 한계가 있다. 웹검색 예산(다른 에이전트와 공유)이 소진됐고 WebFetch는 GitHub 외 도메인(나무위키, 네이버, 위키백과, gafferongames, box2d.org 등)에서 DNS 오류가 났다. 그래서 한국어 출처, 실제 바람 물리 문헌, 앵그리버드 튜닝 사례는 1차 확인을 못 했다(confidence low로 표기)."
+  ],
+  "open_questions": [
+   "실제 동딱지(알딱지)의 지름, 두께, 무게는 얼마인가? 불기 놀이를 할 때 딱지를 한 기둥으로 쌓았나, 퍼뜨린 더미였나? 다 같은 면이 위로 오게 쌓았나? 사용자 기억이나 영상 레퍼런스가 필요하다.",
+   "테이블 밖으로 날아간 딱지, 360도 두 번 뒤집혀 원래 면으로 착지한 딱지, 다른 딱지에 기대 선 딱지는 각각 누구의 것이 되는가? 이 규칙이 파워 역U자 곡선의 의미를 정한다.",
+   "한 번 불 때 몇 장 정도 넘어가는 것을 목표로 하는가(예: 스윗스팟 25~40%)? 한 판은 몇 턴 정도여야 하는가?",
+   "중력과 시간 배율 같은 '느낌'을 어떻게 잡을까? g=9.81에 R=1이면 느리고 떠 있는 느낌이고, g=20~40이면 빠르고 경쾌하다. 슬로모션 연출은 어느 구간에 넣을까?",
+   "마이크 불기 입력을 기본으로 할지 옵션으로 할지, 스와이프와 마이크를 어떻게 하나의 파워 곡선 S(t)로 바꿀지 정해야 한다.",
+   "손으로 치기 모드도 같은 게임 안에 넣을지 정해야 한다. 넣는다면 충격량 기반 모델(손바닥 판으로 테이블을 치는 진동, 공기 압축)을 따로 설계해야 한다.",
+   "50장, 100장 판돈을 여러 더미로 나눌지, 한 기둥에 아래층을 고정할지는 게임 디자인 쪽에서 정해야 한다."
+  ]
+ }
+]
