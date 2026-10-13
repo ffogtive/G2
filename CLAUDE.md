@@ -37,6 +37,7 @@ mockup/src/      목업 소스 (ES 모듈)
   store.js  내 딱지 보관함(localStorage) / i18n.js 한·영
   turn.js   PvP 한 턴: ShotRun(새 월드·턴별 시드·스텝 판정 → 30Hz 궤적·post·해시), TrackPlayer/Chunker(13B 코덱), BeatClock, 꼭두각시 월드 — 렌더러 독립
   net.js    PvP 네트워크 한 겹: Net 인터페이스(아티팩트 db·room·user 모양) + LocalNet(같은 브라우저 두 탭, 상한을 실제처럼 강제)
+            + ArtifactNet(claude.use('db'|'room'|'user') 어댑터: 크기 계량·일시 오류 재시도·끝난 방/구독 다시 잇기). resolveNet() = 없으면 null → PvP 버튼 숨김
   pvp.js    친선 대결 규칙(3판·판마다 선공 교대·가위바위보 커밋-리빌·문서 경로·샷 문서로 상태 다시 계산)
 mockup/index.html  UI 마크업 + CSS (빌드 템플릿)
 tools/build.mjs    → dist/puff.html (오프라인 단일 파일), dist/puff-artifact.html (claude.ai 아티팩트용)
@@ -49,9 +50,10 @@ tools/goldenside.mjs  황금 딱지가 조준에 따라 어디로 떨어지나 (
 tools/cuecheck.mjs    공략 단서가 규칙·실측과 맞는지 (단서·숨 규칙 바꾸면 필수)
 tools/physics-spike.mjs  물리 안정성/분포 측정
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
-tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행
+tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행. claude 없음·use()=null·보기 전용 → PvP 숨김 / 가짜 호스트 → 'VS 친구'·방 만들기
+tools/fake-claude.js · artifact-host.mjs  가짜 claude.ai 호스트(LocalNet 위에 db·room·user 모양) · 아티팩트 빌드 감싸기·CDN→node_modules (시험 전용)
 tools/pvpsync.mjs  PvP 네트워크 없는 게이트: 궤적 크기·재생 끝=post·새 월드 재시뮬·판정 분포 (sim·rules·turn 바꾸면 필수)
-tools/pvp-check.mjs  PvP 두 탭(LocalNet) 3판 완주: 턴별 해시 100%·뒤 검증·상한 위반 0·콘솔 오류 0 (main.js PvP·net·pvp·turn 바꾸면 필수)
+tools/pvp-check.mjs  PvP 두 탭 3판 완주: 턴별 해시 100%·뒤 검증·검증 기록(E10)·상한 위반 0·콘솔 오류 0 (main.js PvP·net·pvp·turn 바꾸면 필수). NET=artifact = 아티팩트 빌드 + 가짜 호스트
 tools/sims/coreloop/      기획 에이전트의 매치 시뮬레이션(선공 이점 등)
 ```
 
@@ -66,7 +68,9 @@ LIST=4,9 node tools/calibrate.mjs 0 0 20 out.json            # 특정 레벨 재
 node tools/tune.mjs 140   # 물리 재튜닝(수 분)
 node tools/pvpsync.mjs 40 8                                  # PvP 턴 기록 게이트(약 6분, PVP_D=0 이면 (d) 생략)
 PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5      # PvP 두 탭 게이트(약 4~6분). 변형: RELOAD=b(재접속) DROP=3(조각 빠짐→db) CLOCK=3(자동 헛숨) LAG=60
+NET=artifact PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5   # 같은 게이트를 아티팩트 빌드(ArtifactNet)로 — 게시 전 필수
 # 손으로 두 탭: dist/puff.html?pvplocal 을 두 창으로 → 홈 'PvP (두 탭)' → 방 만들기 / 코드 참가. ?pvpbot 이면 자동으로 둔다
+# 아티팩트 PvP: 게시 때 capabilities 선언 필요(docs/design/items-pvp.md §2.1 선언 JSON). 홈 'VS 친구' → 6자 코드. 같은 계정 두 탭 시험 = 로비 제목 5번 탭(개발 토글)
 ```
 
 ## 앱 (Flutter, iOS·Android) — 재윤님: '플로터로 만들어'
@@ -75,6 +79,10 @@ PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5      # PvP 두 탭 게�
 - `npm run app:www` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + `mockup/app/bridge.js` 다리 코드 → `app/assets/www/index.html`)
 - 앱 쪽 검증: `cd app && flutter analyze && flutter test`. iOS 빌드·설치는 맥에서만 — **`docs/app/ios-local.md`**
 - 웹 진동(navigator.vibrate)은 iOS 웹뷰에 없다 → 다리 코드가 Flutter 채널 `PuffHaptic` 로 보내 햅틱으로
+- **아이폰 개발 설치는 `docs/app/iphone-deploy.md`**(재윤님 가이드 'claude-code-iphone-deployment.md' 의 G2 판)
+  - 0절로 현재 환경을 판별한다. 맥 로컬이면 직접, 맥 SSH가 되는 서버면 `tools/iphone/deploy-from-server.sh`, 맥에 닿지 못하는 클라우드면 설치하지 말고 '설치 준비 미완료'로 보고한다(클라우드는 `[iphone-deploy]` 커밋으로 서버 세션에 넘긴다)
+  - Bundle ID `com.ffogtive.puff`(SJYTodo 값 금지), 맥 폴더는 G2 전용, 기기·Team 값은 `~/.config/puff/iphone-deploy.env`(레포 밖)
+  - 테스트 → 기기용 서명 빌드 → 서명·Bundle ID 확인 → devicectl 설치 → 실행 → 기능 확인. 각 성공을 따로 보고한다. 키·비밀번호·토큰은 출력하거나 요구하지 않는다. 기존 앱을 삭제하지 않는다
 
 ## 물리에서 배운 것 (실측, 2026-10-12)
 
