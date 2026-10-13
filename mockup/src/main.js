@@ -47,8 +47,8 @@ const MAX_TURNS = 18;
 // ── 상태 ─────────────────────────────────────────────────
 let profile = Store.load();
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, coughCost: 0 };
-const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], coughCost: [0, 1, 1] };
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS };
+const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50] };
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
 if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
@@ -430,15 +430,19 @@ function shotGeometry(shot) {
   const c = table.pileCenter();
   const dir = new THREE.Vector3(shot.dir.x, 0, shot.dir.z).normalize();
   const side = new THREE.Vector3(-dir.z, 0, dir.x);
-  const aim = new THREE.Vector3(c.x, shot.h, c.z).addScaledVector(dir, -DISC_R).addScaledVector(side, shot.lat);
+  // 바람이 닿는 곳 = 원기둥 곡면 위의 점 (좌우 lat, 높이 h). 옆을 노리면 곡면을 따라 뒤로 돌아간 자리
+  const lat = clamp(shot.lat || 0, -0.95 * DISC_R, 0.95 * DISC_R);
+  const aim = new THREE.Vector3(c.x, shot.h, c.z).addScaledVector(dir, -Math.sqrt(DISC_R * DISC_R - lat * lat)).addScaledVector(side, lat);
+  const normal = aim.clone().sub(new THREE.Vector3(c.x, shot.h, c.z)).normalize(); // 곡면 바깥 방향
   const pitch = 0.1;
   const d3 = new THREE.Vector3(dir.x * Math.cos(pitch), -Math.sin(pitch), dir.z * Math.cos(pitch));
   const origin = aim.clone().addScaledVector(d3, -2.6);
-  return { aim, origin, dir, side, center: c };
+  return { aim, origin, dir, side, center: c, normal };
 }
 
 function showGizmo(shot, color = 0xffffff) {
   const g = shotGeometry(shot);
+  puffer.aimX = (shot.lat || 0) / DISC_R;
   if (breath.mode !== 'blow') {
     breath.aim = g.aim.clone();
     breath.p = (shot.power || 0) / Rules.POUCH_FULL; // 절대값(주머니 비율). 정답 대비로 그리면 숨겨진 정답 게이지가 된다
@@ -446,13 +450,13 @@ function showGizmo(shot, color = 0xffffff) {
   }
   reticle.visible = layerRing.visible = aimLine.visible = true;
   reticle.position.copy(g.aim).addScaledVector(g.dir, -0.02);
-  reticle.lookAt(g.aim.clone().addScaledVector(g.dir, -1));
+  reticle.lookAt(g.aim.clone().add(g.normal)); // 표적 고리가 원기둥 곡면에 붙어 보이게 (옆을 노리면 비스듬히 누움)
   reticle.material.color.setHex(color);
   // 지난 숨 고스트: 직전 조준 자리 (내 차례일 때만)
   if (lastBreath.aim && puffer.who === 'me' && breath.mode === 'charge') {
     ghostRing.visible = true;
     ghostRing.position.copy(lastBreath.aim).addScaledVector(g.dir, -0.03);
-    ghostRing.lookAt(lastBreath.aim.clone().addScaledVector(g.dir, -1));
+    ghostRing.lookAt(lastBreath.aim.clone().add(lastBreath.normal || g.normal));
   }
   const s = 0.8 + (shot.power || 0) * 0.6;
   reticle.scale.setScalar(s);
@@ -594,6 +598,7 @@ function drawPuffer() {
     p: blowing ? puffer.ratio : fill, fill: puffer.fill, t, who: puffer.who,
     strain: ai ? 0 : puffer.strain, full: !ai && puffer.full,
     windAng: ai ? Math.PI / 2 : -Math.PI / 2, // 상대는 화면 위에서 아래 더미로 분다
+    aimX: clamp((puffer.aimX || 0) * (ai ? -1 : 1), -1, 1), // 노리는 쪽으로 고개·눈동자·바람이 기운다 (상대는 마주 보므로 반대)
   });
   // 숨 주머니 고리: 내 얼굴엔 항상(절대 자). 상대 얼굴엔 가이드 단계에서만 (보이면 상대의 정답 숨을 베껴 쓸 수 있음)
   if (!blowing && (!ai || stage <= 1)) {
@@ -1170,10 +1175,12 @@ function pointerAim(ev) {
   const hit = new THREE.Vector3();
   if (!ray.ray.intersectPlane(plane, hit)) return null;
   const dir = toCam.clone().negate();
-  // 조준 = '몇 번째 층을 부나'(높이)만. 입은 언제나 더미 정면 한가운데를 향한다 (재윤님 3차: 좌우 동그라미가 비논리적)
+  const side = new THREE.Vector3(-dir.z, 0, dir.x);
+  // 누른 곳 = 바람이 닿는 곳 (재윤님 4차: 좌우·상하 모두). 표적은 손가락 바로 밑, 당기는 동안 움직이지 않는다
+  const lat = clamp(new THREE.Vector3(hit.x - c.x, 0, hit.z - c.z).dot(side), -0.9 * DISC_R, 0.9 * DISC_R);
   const top = table.columnTop();
   const h = clamp(hit.y, 0.03, Math.max(0.05, top - 0.02));
-  return { dir: { x: dir.x, z: dir.z }, lat: 0, h, power: 0 };
+  return { dir: { x: dir.x, z: dir.z }, lat, h, power: 0 };
 }
 
 function playerShot() {
@@ -1199,12 +1206,11 @@ function playerShot() {
       puffer.full = breath.full = aiming.full;
       breath.over = aiming.power > F + 0.01;
     };
-    // 콜록: 꽉에서 너무 오래 참음 → 숨이 터져 나가 취소 (기본: 숨·차례를 쓰지 않음. 튜닝 coughCost=1 이면 맥없는 숨으로 소모)
+    // 콜록: 꽉에서 너무 오래 참음 → 숨이 터져 나가 취소. 숨·차례는 쓰지 않는다 (재윤님 4차 결정)
     const cough = () => {
       profile.coughs = (profile.coughs || 0) + 1;
       sfx.cough();
       navigator.vibrate?.([40, 60, 40]);
-      if (feel.coughCost >= 0.5) { fire({ ...aiming, power: sweetHiFor(liveCount()) * 0.35, cough: true }); return; }
       aiming = null;
       inhale?.stop(); inhale = null;
       hideGizmo();
@@ -1336,10 +1342,11 @@ async function aiShot() {
   const c = table.pileCenter();
   const toCam = new THREE.Vector3(camera.position.x - c.x, 0, camera.position.z - c.z).normalize();
   const dir = toCam.clone(); // 상대는 맞은편에서 내 쪽으로 분다
+  const target = Rules.pickProtrusion(table, { x: -dir.x, z: -dir.z }, (match.aiSkill || 1) * feel.aiSkill, rng); // 고수는 삐져나온 곳을 노린다
   const shot = {
     dir: { x: dir.x, z: dir.z },
-    lat: 0,
-    h: clamp(top * clamp(0.68 + 0.18 * clamp(((match.aiSkill || 1) - 1) / 1.2, 0, 1) + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
+    lat: clamp((target ? target.lat : 0) + g() * 0.3 / feel.aiSkill, -0.9, 0.9),
+    h: target ? clamp(target.h + g() * 0.05, 0.03, top) : clamp(top * clamp(0.68 + 0.18 * clamp(((match.aiSkill || 1) - 1) / 1.2, 0, 1) + g() * 0.17 / feel.aiSkill, 0.05, 1), 0.03, top),
     power: clamp(sweetHiFor(table.liveDiscs().length) * (0.89 + g() * 0.14 / feel.aiSkill), 0.2, POWER_MAX),
   };
   puffer.mode = 'charge';
@@ -1348,10 +1355,10 @@ async function aiShot() {
   breath.press = null; breath.full = false; breath.over = false; breath.strain = 0;
   $('#puffWrap').classList.add('ai');
   // 조준 흔들기 연출
-  const startH = top * rng();
+  const startH = top * rng(), startLat = (rng() - 0.5) * 1.4;
   await addTween(0.9, (k) => {
     const e = easeInOut(k);
-    const s = { ...shot, h: lerp(startH, shot.h, e), power: shot.power * e };
+    const s = { ...shot, lat: lerp(startLat, shot.lat, e), h: lerp(startH, shot.h, e), power: shot.power * e };
     puffer.p = s.power;
     showGizmo(s, powerColor(s.power));
   });
@@ -1389,7 +1396,7 @@ async function blow(rawShot, who) {
   const g = shotGeometry(shot);
   if (who === 'me') {
     puffer.snapUntil = performance.now() + 900; puffer.snapP = rawShot.power; puffer.snapN = liveCount();
-    lastBreath.p = rawShot.power; lastBreath.aim = g.aim.clone();
+    lastBreath.p = rawShot.power; lastBreath.aim = g.aim.clone(); lastBreath.normal = g.normal.clone();
     profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile);
   }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);

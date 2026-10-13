@@ -43,6 +43,16 @@ export const TUNE = {
   blastPush: 15, // blast=1 일 때 가장자리 미는 힘 배수
   blastShove: 3, // blast=1 일 때 중심을 수평으로 미는 힘(미끄러져 날아감)
   circleR: 3.2, // 분필 원 반지름 (딱지 반지름 1 기준). 원 밖에 떨어진 딱지는 그림이 보여도 무효
+  // 4차(재윤님: 좌우·상하로 닿을 곳을 고르고 거기에 맞춰 실제로 반응): 바람은 '제트 축이 실제로 닿는 테두리 지점'에 작용
+  // (전에는 입에서 가장 가까운 테두리 → 옆으로 0.8 비켜 불어도 힘 받는 점이 12° 밖에 안 움직였음, tools/aimmap.mjs 로 확인)
+  rimHit: 1, // 1 = 제트-테두리 교점, 0 = 옛 모델(비교용)
+  sideLiftLoss: 0.5, // 비스듬히 맞을수록 가장자리 밑으로 덜 파고듦: 들기 × (1 − loss·(1 − cosθ))
+  deflect: 0.6, // 곡면에 맞고 꺾인 바람이 미는 방향: 진행 방향과 '맞은 면 안쪽' 사이 (옆을 불면 반대쪽 대각선으로)
+  spin: 8, // 옆을 스치는 바람이 테두리를 끌고 가는 회전(팽이처럼 돌며 넘어감)
+  // 다시 쌓을 때 원작처럼 몇 장이 삐져나옴 → '삐져나온 곳을 노리면 공기가 밑으로 파고든다' (좌우 조준의 이유)
+  protrudeP: 0.22,
+  protMin: 0.14,
+  protMax: 0.26,
 };
 
 export async function initPhysics() {
@@ -117,12 +127,23 @@ export class Table {
   // 딱지 더미 만들기. mode 'column' = 손으로 가지런히 쌓은 원기둥(기본, 원작 룰), 'heap' = 흩어진 무더기
   // 원기둥에서 "어느 높이·어느 쪽을 맞히느냐"가 조준 실력 요소가 된다.
   // heavy: 무거운(테이프 감은) 딱지로 만들 인덱스 집합 — 밀도 ×3 (원작 '테이프 감기' 꼼수, 레벨 기믹)
+  // 쌓을 때 한 장의 어긋남: 대부분 살짝(gauss), 가끔 확 삐져나옴(손으로 대충 쌓은 더미)
+  stackOffset(spread = 0.07) {
+    let x = gauss(this.rng) * spread, z = gauss(this.rng) * spread;
+    if (this.rng() < this.T.protrudeP) {
+      const a = this.rng() * Math.PI * 2, m = this.T.protMin + (this.T.protMax - this.T.protMin) * this.rng();
+      x += Math.cos(a) * m; z += Math.sin(a) * m;
+    }
+    return { x, z };
+  }
+
   addPile(cards, { mode = 'column', spread = 0.07, at = { x: 0, z: 0 }, heavy = new Set() } = {}) {
     const H = DISC_H;
     cards.forEach((cardId, i) => {
       const heap = mode === 'heap';
-      const x = at.x + gauss(this.rng) * (heap ? 0.42 : spread);
-      const z = at.z + gauss(this.rng) * (heap ? 0.42 : spread);
+      const off = heap ? { x: gauss(this.rng) * 0.42, z: gauss(this.rng) * 0.42 } : this.stackOffset(spread);
+      const x = at.x + off.x;
+      const z = at.z + off.z;
       const y = heap ? 0.2 + i * H * 1.6 : H / 2 + i * (H + 0.004);
       // 뒷면이 위: X축으로 180도 회전 + 약간의 기울기 + 임의 yaw
       let q = quatFromAxisAngle(1, 0, 0, Math.PI);
@@ -155,7 +176,8 @@ export class Table {
       let q = quatFromAxisAngle(1, 0, 0, Math.PI);
       q = quatMul(quatFromAxisAngle(0, 1, 0, this.rng() * Math.PI * 2), q);
       q = quatMul(quatFromAxisAngle(1, 0, 0, (this.rng() - 0.5) * 0.03), q);
-      return { d, p: { x: at.x + gauss(this.rng) * 0.07, y: H / 2 + i * (H + 0.004), z: at.z + gauss(this.rng) * 0.07 }, q };
+      const off = this.stackOffset(0.07);
+      return { d, p: { x: at.x + off.x, y: H / 2 + i * (H + 0.004), z: at.z + off.z }, q };
     });
   }
 
@@ -253,7 +275,31 @@ export class Table {
       const dn = vx * nrm.x + vy * nrm.y + vz * nrm.z;
       vx -= dn * nrm.x; vy -= dn * nrm.y; vz -= dn * nrm.z;
       const vl = Math.hypot(vx, vy, vz) || 1;
-      const e = { x: c.x + (vx / vl) * DISC_R, y: c.y + (vy / vl) * DISC_R, z: c.z + (vz / vl) * DISC_R };
+      let e = { x: c.x + (vx / vl) * DISC_R, y: c.y + (vy / vl) * DISC_R, z: c.z + (vz / vl) * DISC_R };
+      // 제트 축을 원판 평면에 투영해 테두리와 만나는 점(가까운 쪽) = 바람이 실제로 닿는 곳. 빗나가면 축에 가장 가까운 테두리
+      let sinT = 0, side = 0, rh = null;
+      if (T.rimHit) {
+        const ox = P.o.x - c.x, oy = P.o.y - c.y, oz = P.o.z - c.z;
+        const on = ox * nrm.x + oy * nrm.y + oz * nrm.z;
+        const Ox = ox - on * nrm.x, Oy = oy - on * nrm.y, Oz = oz - on * nrm.z;
+        const dn2 = P.d.x * nrm.x + P.d.y * nrm.y + P.d.z * nrm.z;
+        let Dx = P.d.x - dn2 * nrm.x, Dy = P.d.y - dn2 * nrm.y, Dz = P.d.z - dn2 * nrm.z;
+        const Dl = Math.hypot(Dx, Dy, Dz);
+        if (Dl > 0.2) {
+          Dx /= Dl; Dy /= Dl; Dz /= Dl;
+          const od = Ox * Dx + Oy * Dy + Oz * Dz;
+          const px = Ox - od * Dx, py = Oy - od * Dy, pz = Oz - od * Dz; // 중심에서 축까지 수선
+          const b = Math.hypot(px, py, pz);
+          let ex, ey, ez;
+          if (b < DISC_R) { const tt = -od - Math.sqrt(DISC_R * DISC_R - b * b); ex = Ox + tt * Dx; ey = Oy + tt * Dy; ez = Oz + tt * Dz; }
+          else { ex = (px / b) * DISC_R; ey = (py / b) * DISC_R; ez = (pz / b) * DISC_R; }
+          e = { x: c.x + ex, y: c.y + ey, z: c.z + ez };
+          sinT = Math.min(1, b / DISC_R);
+          rh = { x: ex / DISC_R, y: ey / DISC_R, z: ez / DISC_R }; // 맞은 점의 바깥 방향
+          // 어느 쪽을 스쳤나: (맞은 점 × 진행 방향)·법선 → 세로축 회전 방향
+          side = Math.sign((ey * Dz - ez * Dy) * nrm.x + (ez * Dx - ex * Dz) * nrm.y + (ex * Dy - ey * Dx) * nrm.z) || 0;
+        }
+      }
       // 제트 축 기준 위치
       const rx = e.x - P.o.x, ry = e.y - P.o.y, rz = e.z - P.o.z;
       const a = rx * P.d.x + ry * P.d.y + rz * P.d.z;
@@ -278,16 +324,27 @@ export class Table {
       // 파워 곡선: 들어 올림은 파워에 비례, 미는 힘은 파워^pushExp → 너무 세게 불면 '뒤집히기보다 밀려남'(스윗스팟 생성)
       const pw = P.power;
       const bl = P.blast || 0;
-      const liftK = T.lift * liftF * k * (1 - T.blastLift * Math.min(1, bl));
+      const cosT = Math.sqrt(1 - sinT * sinT);
+      const liftK = T.lift * liftF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT));
       const pushK = T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k * (1 + T.blastPush * bl);
-      b.applyImpulseAtPoint({ x: P.d.x * pushK, y: liftK, z: P.d.z * pushK }, e, true);
+      // 미는 방향: 진행 방향 ↔ 맞은 면 안쪽(−rh) 사이. 정면이면 그대로, 옆을 맞으면 반대쪽 대각선으로 꺾임
+      let fx = P.d.x, fz = P.d.z;
+      if (rh && sinT > 0) {
+        const w = T.deflect * sinT;
+        fx = P.d.x * (1 - w) - rh.x * w; fz = P.d.z * (1 - w) - rh.z * w;
+        const fl = Math.hypot(fx, fz) || 1; const dl = Math.hypot(P.d.x, P.d.z) || 1;
+        fx *= dl / fl; fz *= dl / fl;
+      }
+      b.applyImpulseAtPoint({ x: fx * pushK, y: liftK, z: fz * pushK }, e, true);
+      // 옆을 스치는 바람 → 테두리를 끌고 감 = 팽이 회전 (원판 법선 축)
+      if (side && T.spin) { const tq = T.spin * sinT * side * k * DISC_R; b.applyTorqueImpulse({ x: nrm.x * tq, y: nrm.y * tq, z: nrm.z * tq }, true); }
       if (bl > 0) b.applyImpulse({ x: P.d.x * T.push * T.blastShove * bl * k, y: 0, z: P.d.z * T.push * T.blastShove * bl * k }, true);
       // 오버파워: 무작위 텀블(결과가 운에 맡겨짐)
       if (pw > T.sweet) {
         const ch = (pw - T.sweet) * T.tumble * k;
         b.applyTorqueImpulse({ x: gauss(this.rng) * ch, y: gauss(this.rng) * ch * 0.3, z: gauss(this.rng) * ch }, true);
       }
-      hits.push({ id: d.id, s, gap, liftF, e, dir: { x: P.d.x, y: P.d.y, z: P.d.z } });
+      hits.push({ id: d.id, s, gap, liftF, e, dir: { x: fx, y: P.d.y, z: fz } });
     }
     P.t += T.dt;
     if (P.t >= T.puffDuration) this.puff = null;

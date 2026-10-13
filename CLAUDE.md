@@ -38,6 +38,7 @@ mockup/index.html  UI 마크업 + CSS (빌드 템플릿)
 tools/build.mjs    → dist/puff.html (오프라인 단일 파일), dist/puff-artifact.html (claude.ai 아티팩트용)
 tools/tune.mjs     바람 물리 파라미터 자동 탐색
 tools/powercurve.mjs  숨 비율 → 뒤집힌 장수/원 밖 장수 곡선 (숨 규칙 바꾸면 필수)
+tools/aimmap.mjs   조준 지점(좌우×높이) → 장수·옆 이동·구르기·회전·원 밖 지도 (바람 모델 바꾸면 필수)
 tools/physics-spike.mjs  물리 안정성/분포 측정
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
 tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행
@@ -65,4 +66,7 @@ node tools/tune.mjs 140   # 물리 재튜닝(수 분)
   1.0↑ = **돌풍**(들기↓ 밀기↑) → 딱지가 **분필 원(r=3.2) 밖**으로 날아가 무효. 1.05 −10%, 1.1 −25%, 1.2↑ ≈0장. 물리 바닥 = 책상 크기.
   숨 규칙을 바꾸면 반드시 `node tools/powercurve.mjs 8` 로 곡선을 다시 재고 레벨을 재보정(`calibrate.mjs`).
 - 조준 높이별 분포: 맨 위 = 안정(4~10장), 가운데 = 대박 아니면 꽝(0~16장), 아래 = 헛방.
-- `pkill -f` 패턴이 자기 셸 커맨드라인에도 들어 있으면 자기 자신을 죽인다. PID 로 죽일 것.
+- 4차(좌우 조준): 바람 힘은 '입에서 가장 가까운 테두리'가 아니라 **제트 축이 실제로 닿는 테두리**에 줘야 좌우가 의미 있다
+  (옛 모델은 lat 0.8 에도 힘 받는 점이 12° 만 이동 → 옆을 불면 손해만). `node tools/aimmap.mjs` 로 옆 이동·구르기·회전·장수를 잰다.
+  게임(main.js shotGeometry)·봇(botlib)·측정 도구는 같은 기하(표적 = 곡면 위 c − D·√(1−lat²) + side·lat)를 써야 한다.
+- `pkill -f`/`pgrep -f` 패턴이 자기 셸 커맨드라인에도 들어 있으면 자기 자신을 죽이거나(pkill) 대기 루프가 안 끝난다(pgrep). PID 로 다루거나 `ps -eo args | grep -v grep | grep -q "node tools/..."` 처럼 node 접두로 거를 것.

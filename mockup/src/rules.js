@@ -48,7 +48,7 @@ export function resolveShot(shot, n, top, rng, overShake = 1) {
     power: PHYS_SWEET,
     blast: clamp(ex / BLAST_SPAN, 0, 1.4),
     h: clamp(shot.h + gauss(rng) * ex * 1.2 * k, 0.03, top),
-    lat: 0,
+    lat: clamp((shot.lat || 0) + gauss(rng) * ex * 1.0 * k, -0.95, 0.95), // 숨이 넘치면 조준도 조금 흔들림
     over: true,
     ratio,
   };
@@ -64,7 +64,7 @@ export { gauss };
 export const POUCH_FULL = 1.12; // 꽉 = sweetHiFor 상한. 지금 판(N ≤ 24)의 정답(hi ≤ 1.0)보다 항상 위 → 꽉에서 놓으면 늘 손해(돌풍)
 export const POUCH_DETENT = 0.08; // 꽉에서 손가락이 이만큼(당김 단위) 더 가도 숨이 안 늘어남 = 손끝 멈춤 신호
 export const POUCH_GAIN = 0.4; // 그 너머는 고무줄처럼 뻑뻑하게(0.4배) 우겨넣기 → 벽 POWER_MAX
-export const STRAIN_MS = 1400; // 꽉에서 버틸 수 있는 시간(벽에서는 절반). 넘으면 콜록
+export const STRAIN_MS = 1400; // 꽉에서 버틸 수 있는 시간(벽에서는 절반). 넘으면 콜록 = 취소(숨·차례 안 씀, 재윤님 4차 결정)
 export const STRAIN_RECOVER_MS = 900;
 export const LEAK_AT = 0.35; // 버팀이 이만큼 차면 입꼬리로 김이 샘(연출만, 숨은 그대로)
 
@@ -86,4 +86,27 @@ export function strainStep(s, p, dtMs, full, strainMs = STRAIN_MS) {
     return Math.min(1, s + dtMs / (strainMs * (1 - 0.5 * k)));
   }
   return Math.max(0, s - dtMs / STRAIN_RECOVER_MS);
+}
+
+// ── 삐져나온 딱지 노리기 (4차) ──────────────────────────────
+// 다시 쌓은 더미에서 '부는 사람 쪽'으로 삐져나온 딱지를 찾는다. 그 테두리 밑은 틈이 커서 바람이 파고든다
+// (tools/aimmap.mjs PROT 실험: 0.25 삐져나온 쪽을 노리면 8.3장 vs 가운데 6.8장 vs 반대쪽 3.3장).
+// toward = 더미 → 부는 사람 수평 단위벡터. 반환 { lat, h, amount } 또는 null. 실력이 높을수록 자주 찾는다.
+// lat 부호는 main.js shotGeometry 와 같다: 바람 방향 D 기준 side = (−D.z, D.x).
+export function pickProtrusion(table, toward, skill, rng) {
+  if (rng() > clamp((skill - 0.9) / 1.4, 0, 0.85)) return null;
+  const c = table.pileCenter();
+  const side = { x: toward.z, z: -toward.x };
+  let best = null;
+  for (const d of table.liveDiscs()) {
+    const p = d.body.translation();
+    const ox = p.x - c.x, oz = p.z - c.z, m = Math.hypot(ox, oz);
+    if (m < 0.1) continue;
+    const ux = ox / m, uz = oz / m;
+    const facing = ux * toward.x + uz * toward.z; // 1 = 부는 사람 쪽으로 튀어나옴
+    if (facing < 0.15) continue;
+    const score = m * (0.4 + 0.6 * facing);
+    if (!best || score > best.score) best = { score, lat: clamp(ux * side.x + uz * side.z, -0.9, 0.9), h: p.y, amount: m };
+  }
+  return best;
 }

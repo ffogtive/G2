@@ -19,7 +19,7 @@ for (const n of Ns) for (const hf of Hs) {
       const raw = { lat: 0, h: Math.max(0.03, top * hf), power: sweetHiFor(n) * r };
       const sh = resolveShot(raw, n, top, mul(s * 31 + n), 1);
       const c = t.pileCenter();
-      t.blow({ aim: { x: c.x - 1, y: sh.h, z: c.z + sh.lat }, dir: { x: 1, z: 0 }, power: sh.power, blast: sh.blast || 0 });
+      t.blow({ aim: { x: c.x - Math.sqrt(1 - sh.lat * sh.lat), y: sh.h, z: c.z + sh.lat }, dir: { x: 1, z: 0 }, power: sh.power, blast: sh.blast || 0 });
       const res = t.runUntilSettled(4);
       sum += res.flipped.length;
       outSum += t.liveDiscs().filter((d) => !t.inCircle(d)).length;
