@@ -390,7 +390,7 @@ data/users/{uid}/pvp                   이어 하기
   - 1B: id 6비트 + 사원수에서 가장 큰 성분의 자리 2비트
   - 6B: 위치 int16 ×3 (×1/1000 단위)
   - 6B: 사원수 smallest-three int16 ×3
-  - 프레임마다 0.002 넘게 움직인 딱지만 넣는다.
+  - ~~프레임마다 0.002 넘게 움직인 딱지만 넣는다.~~ → **구현(P0)**: '받는 쪽이 지금 보고 있는 자세'에서 위치 0.006·회전 0.012rad 넘게 벗어난 딱지만 넣는다(`turn.js MOVE_EPS·ROT_EPS`). 크기는 같고(20장 평균 8.4KB), 원안은 느리게 기어오르는 딱지가 0.037(≈3px)까지 어긋났다. 판정 스텝의 마지막 프레임은 문턱 0 → 재생 끝 = `post`.
 - **용량**
   - 한 판(20장, 18숨)은 약 160KB, 문서 약 19개다. 대부분이 track이다.
   - 양쪽이 ack하면 `track`을 지운다. 그러면 숨당 약 2KB가 남는다.
@@ -649,6 +649,13 @@ data/users/{uid}/pvp                   이어 하기
 | **P2** 실시간 랭크 | 한 칸 10+10, Glicko-2, 샷클락, 기록 대전, 기기 증명 | — | 대기 중앙값 8초 이하(약 10k DAU) |
 | **P3** | 관전, 리그, 크루, 리플레이 링크 | — | — |
 
+- **구현 현황 (2026-10-13)**
+  - **P0 (네트워크 없음, 커밋 22ba7a5)**: `turn.js` + `sim.js`(추가만) + `tools/pvpsync.mjs`. (a)~(e) 통과, 솔로 비트 동일.
+  - **P0.5a (두 탭, 커밋 5b05fb9)**: `net.js` LocalNet + `pvp.js` + main.js `match.net` 가지 + `tools/pvp-check.mjs`. 턴별 해시 100%, 상한 위반 0.
+  - **P0.5b (아티팩트)**: `net.js` ArtifactNet = `claude.use('db'|'room'|'user')` 얇은 어댑터(크기 계량 · db `unavailable` 한 번 재시도 · 끝난 방은 같은 이름으로 다시 들어가 손잡이·presence 다시 걸기 · 죽은 구독 다시 걸기). `resolveNet()`은 부팅 뒤에 기다리고, 셋 중 하나라도 null·내 id 없음·`can('data.write') === false`면 null → 'VS 친구' 버튼이 숨고 솔로는 그대로.
+    - 게시 없이 확인: `tools/fake-claude.js`(LocalNet 위에 아티팩트 API 모양 + `snapPoll` 폴링 강등 흉내) → `NET=artifact pvp-check` 와 `artifact-check`(claude 없음 · use=null · 보기 전용 → 숨김 / 가짜 호스트 → 방 만들기).
+    - 원안과 다른 점: ① `can()`이 null(플랫폼이 말 안 함)이면 버튼을 **보인다**(user.d.ts: 'null 은 못 함이 아니다' → 쓰기 거절 `invalid_argument` 면 '참여자 이상만' 안내). ② 로비도 `m-{code}` 방에 먼저 들어가 presence 변화 = '매치 문서 다시 읽기' 신호 + 3초 안전망 읽기(onSnapshot 이 30초 폴링이어도 안 멈춤). 대결 중에도 기다리는 문서(상대 자리·상대 샷·매치)만 3초마다 읽는다. ③ 기권은 자리 상태(presence `s.resign`)로도 바로 안다. ④ 받는 쪽 검증 기록 `p/{uid}/m/{code}-{seat}/v/{g}{tt}` = `{hashShooter, hashVerifier, same, simS, simV, sameEngine, uaS, ua, src, blowToPlus, rtt}`(E10 + 지연). 놓기 → 상대 첫 '+1' ≈ `blowToPlus + rtt/2`(기기 시계가 달라서). ⑤ `simV`에 sim·rules·turn 소스 해시를 넣는다(빌드 define, P0 이슈 6). ⑥ 같은 계정 두 탭 시험 = 로비 제목 5번 탭(개발 토글, 이 브라우저만), 탭마다 자리는 sessionStorage 로 기억.
+    - 게이트(목업 쪽): 빌드 · artifact-check 4경우 · pvp-check(LocalNet · NET=artifact · NET=artifact SNAPPOLL=30000) 통과, 솔로 비트 동일. **문서 게이트(같은 조직 2계정 10판 · RTT·지연 p90 · E10 기기 쌍별)는 게시 뒤 사람 시험**으로 남는다 — `ArtifactData list` 로 `p/*/m/*/v/*` 를 모으면 된다.
 - **모바일**: Capacitor로 웹을 감싼다. iOS는 WKWebView(JSC)다. 쏜 사람 로컬 예측을 켤지는 iOS E10 결과로 정한다.
 - **문서 후속**
   - GDD 개정분에 아이템 절을 더한다.

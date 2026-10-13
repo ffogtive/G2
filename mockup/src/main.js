@@ -22,7 +22,7 @@ import * as Cues from './cues.js';
 // PvP (P0.5a): 아래 셋은 match.net 가지에서만 쓴다 — 솔로 경로는 이 모듈의 함수를 한 번도 부르지 않는다
 import { turnSeeds, hash32 } from './sim.js';
 import { ShotRun, TrackPlayer, TrackChunker, BeatClock, encodeState, toB64, fromB64, hashBytes, shotSimV, puppetTable, posePuppet, setPose as setDiscPose, traceToB64, traceFromB64 } from './turn.js';
-import { pickNet, param, makeCode } from './net.js';
+import { resolveNet, param, makeCode } from './net.js';
 import * as Pvp from './pvp.js';
 
 const $ = (s) => document.querySelector(s);
@@ -2751,18 +2751,20 @@ function openAlbum() {
   show('#album');
 }
 
-// ── 네트워크 PvP (P0.5a: 같은 브라우저 두 탭 = LocalNet) ─────────────────────────
+// ── 네트워크 PvP (P0.5a: 같은 브라우저 두 탭 = LocalNet · P0.5b: claude.ai 아티팩트 = ArtifactNet) ─────────────────────────
 // 🧭 가설: 그 턴에 부는 사람의 기기가 심판(ShotRun: 새 월드·턴별 시드·스텝 판정)이고, 두 화면 모두 30Hz 궤적을 '꼭두각시 월드'
 //   (turn.js puppetTable — 스텝을 안 돌리고 자세만 꽂는 월드, d.id = 판 id)에 꽂아 재생하면(쏜 사람도 자기 버퍼를 재생)
 //   솔로 연출 코드(watchSim·react·collect·영수증)를 그대로 쓰면서 두 화면의 턴별 상태 해시가 100% 같다.
 //   솔로 경로는 match.net 이 없으면 이 절의 함수를 하나도 안 부른다(가드 한 줄씩). 판가름 = tools/pvp-check.mjs
 // 흐름: 로비(4자 코드) → 가위바위보(커밋-리빌) → 3판(판마다 선공 교대) → 결과. 상태 = 매치 문서 + 샷 문서의 순수 함수(pvp.js replayState)
 // 시험 토글: ?pvplocal(LocalNet 켬) ?pvpbot(자동 손: 가위바위보·조준·당김을 합성 포인터로) ?pvpdrop=K(받은 trk K번째마다 버림 → db 이어 받기)
-//   ?pvpclock=S(샷 시계 초) ?pvplag=ms(LocalNet 지연)
-const NET = pickNet();
+//   ?pvpclock=S(샷 시계 초) ?pvplag=ms(LocalNet 지연) ?pvpsame(같은 계정끼리 허용 — 아티팩트에선 로비 제목 5번 탭)
+// P0.5b: Net 은 부팅 뒤에 정해진다(claude.use 는 최대 10초 → 부팅을 막지 않음). null 이면 PvP 버튼이 숨고 솔로는 그대로
+let NET = null;
+const netReady = resolveNet().catch(() => null);
 const NET_CANON = Object.freeze({ x: 0, z: -1 }), NET_MIRROR = Object.freeze({ x: 0, z: 1 });
 const PVP = { bot: param('pvpbot') != null, drop: Math.max(0, +(param('pvpdrop') || 0)), clock: +(param('pvpclock') || 0) || Pvp.SHOT_CLOCK };
-const lobby = { n: 10, busy: false, token: 0, unsub: null, code: null, seat: null };
+const lobby = { n: 10, busy: false, token: 0, unsub: null, code: null, seat: null, room: null };
 let pv = null; // 지금 재생 중인 숨 { player, tf, go, started, final, mine, key, tg, last, ... }
 const sims = []; // 앞서 도는 물리: 쏜 사람 녹화(프레임당 8ms) · 받는 쪽 뒤 검증(3ms)
 let netLastFrame = 0, netTickT = 0;
@@ -2771,11 +2773,27 @@ function pvpLogSave() { try { sessionStorage.setItem('pvp-log', JSON.stringify(p
 function pvpLogAdd(e) { pvpLog.push(e); pvpLogSave(); return e; }
 window.__pvpLog = pvpLog;
 window.__pvpMeter = () => NET?.meter.summary() ?? null;
+window.__pvpRtt = () => match?.net?.rtt?.slice() ?? null;
 const netResStr = (r) => `f:${r.flipped.join(',')}|o:${r.outs.join(',')}`;
 
 // ── 로비 ──
+// 문구: 아티팩트(친구 = 다른 사람)면 'Art' 짝이 있는 키는 그쪽(두 탭 시험 문구 → 친구 문구)
+const tk = (k) => (NET?.kind === 'artifact' && t(k + 'Art') !== k + 'Art' ? k + 'Art' : k);
 function refreshPvpChips() { document.querySelectorAll('#pvpChips button').forEach((b) => b.classList.toggle('on', +b.dataset.n === lobby.n)); }
-function pvpErr(key) { const el = $('#pvpErr'); el.textContent = key ? t(key) : ''; el.hidden = !key; }
+function pvpErr(key) { const el = $('#pvpErr'); el.textContent = key ? t(tk(key)) : ''; el.hidden = !key; }
+// 쓰기 거절 → 안내: 아티팩트는 권한 밖 쓰기를 invalid_argument 로 거절한다(db.d.ts). 용량은 quota_exceeded
+const netErrKey = (e) => (e?.code === 'quota_exceeded' ? 'pvpQuota' : e?.code === 'invalid_argument' && NET?.kind === 'artifact' ? 'pvpNoWrite' : 'pvpNetErr');
+// 같은 계정끼리(개발 토글): 기본은 막는다(기획서). 아티팩트는 주소 토글을 못 붙이니 로비 제목 5번 탭으로 켜고 끈다(이 브라우저에만)
+function devSame() { if (param('pvpsame') != null) return true; try { return localStorage.getItem('pvp-dev-same') === '1'; } catch (e) { return false; } }
+// 이어 하기 표시: db data/users/{uid}/pvp(다른 기기·새 탭) + 이 탭의 sessionStorage(같은 계정 두 탭이면 탭마다 자리가 다르다)
+function tabActive(a) {
+  try {
+    if (a === undefined) return JSON.parse(sessionStorage.getItem('pvp-active') || 'null');
+    if (a) sessionStorage.setItem('pvp-active', JSON.stringify(a)); else sessionStorage.removeItem('pvp-active');
+  } catch (e) { /* 저장 안 됨 → db 만 */ }
+  return null;
+}
+function netSetActive(net, a) { tabActive(a); return net.db.doc(Pvp.paths.active(net.uid)).set({ active: a }); }
 function openPvpLobby() {
   if (!NET) return;
   sfx.unlock(); sfx.pop();
@@ -2783,20 +2801,26 @@ function openPvpLobby() {
   $('#pvpLobby').hidden = false;
   refreshPvpChips();
 }
-function closePvpLobby() {
-  sfx.pop();
+function lobbyStop(leave) {
   lobby.token++;
   lobby.unsub?.(); lobby.unsub = null;
-  if (lobby.code) {
+  if (leave) lobby.room?.leave().catch(() => {});
+  lobby.room = null;
+}
+function closePvpLobby() {
+  sfx.pop();
+  const code = lobby.code, seat = lobby.seat;
+  lobbyStop(true);
+  if (code) {
     // 만들어 놓고 아무도 안 왔으면 방을 닫는다. 이미 둘이 앉았으면 나간 쪽의 기권(상대가 가위바위보에서 영영 기다리지 않게)
-    const ref = NET.db.doc(Pvp.paths.match(lobby.code)), seat = lobby.seat;
+    const ref = NET.db.doc(Pvp.paths.match(code));
     ref.get().then((s) => {
       const m = s.data();
       if (!m || m.result || m.status === 'abandoned' || m.status === 'done') return;
       if (m.status === 'open') return ref.update({ status: 'abandoned', updatedAt: Date.now() });
       return ref.update({ status: 'abandoned', result: { winner: Pvp.other(seat), reason: 'resign', by: seat, at: Date.now() }, updatedAt: Date.now() });
     }).catch(() => {});
-    NET.db.doc(Pvp.paths.active(NET.uid)).set({ active: null }).catch(() => {});
+    netSetActive(NET, null).catch(() => {});
   }
   lobby.code = null;
   $('#pvpLobby').hidden = true;
@@ -2814,14 +2838,14 @@ async function pvpCreate() {
   try {
     const uid = NET.uid;
     let code = null;
-    for (let i = 0; i < 12 && !code; i++) { const c = makeCode(4); if (!(await NET.db.doc(Pvp.paths.match(c)).get()).exists) code = c; }
+    for (let i = 0; i < 12 && !code; i++) { const c = makeCode(NET.codeLen || 4); if (!(await NET.db.doc(Pvp.paths.match(c)).get()).exists) code = c; }
     if (!code) throw new Error('no free code');
     const n = lobby.n, at = Date.now();
     await NET.db.doc(Pvp.paths.seat(uid, code, 'a')).set({ v: 1, code, seat: 'a', uid, cards: pickShowCards(n), sv: 1, at });
     await NET.db.doc(Pvp.paths.match(code)).set({ v: 1, sim: shotSimV(), status: 'open', createdAt: at, updatedAt: at, host: uid, seats: { a: { uid, at }, b: null }, n, mode: 'fun', seed: null, pot: null, set: { games: Pvp.GAMES, g: 0 }, first: null, items: { goggles: 0 }, beat: 1, score: { a: 0, b: 0 }, result: null });
-    await NET.db.doc(Pvp.paths.active(uid)).set({ active: { code, seat: 'a', at } });
+    await netSetActive(NET, { code, seat: 'a', at });
     netLobbyWait(code, 'a');
-  } catch (e) { console.warn('[pvp] create', e); pvpErr('pvpNetErr'); } finally { lobby.busy = false; }
+  } catch (e) { console.warn('[pvp] create', e?.code || e); pvpErr(netErrKey(e)); } finally { lobby.busy = false; }
 }
 async function pvpJoin() {
   if (!NET || lobby.busy) return;
@@ -2833,10 +2857,10 @@ async function pvpJoin() {
     let m = (await ref.get()).data();
     if (!m || m.status === 'abandoned' || m.status === 'done') { pvpErr('pvpBadCode'); return; }
     if (m.sim !== shotSimV()) { pvpErr('pvpSimDiff'); return; } // 같은 엔진·규칙이 아니면 해시가 안 맞는다
-    if (m.seats?.a?.uid === uid) { pvpErr('pvpSelf'); return; } // 같은 사람끼리는 막는다(기획서: 개발 토글로만)
+    if (m.seats?.a?.uid === uid && !devSame()) { pvpErr('pvpSelf'); return; } // 같은 사람끼리는 막는다(기획서: 개발 토글로만)
     if (m.seats?.b && m.seats.b.uid !== uid) { pvpErr('pvpFull'); return; }
     if (!m.seats?.b) {
-      const lease = await ref.acquire({ holder: uid, ttlMs: 5000 }); // 자리 잡기: 빌린 동안만 쓴다(get-then-set 경쟁 방지)
+      const lease = await ref.acquire({ holder: uid + ':' + (NET.peer || 'tab'), ttlMs: 5000 }); // 자리 잡기: 빌린 동안만 쓴다(get-then-set 경쟁 방지)
       if (!lease.acquired) { pvpErr('pvpFull'); return; }
       m = (await ref.get()).data();
       if (m.seats?.b && m.seats.b.uid !== uid) { pvpErr('pvpFull'); return; }
@@ -2844,23 +2868,24 @@ async function pvpJoin() {
       await NET.db.doc(Pvp.paths.seat(uid, code, 'b')).set({ v: 1, code, seat: 'b', uid, cards: pickShowCards(m.n), sv: 1, at });
       await ref.update({ seats: { b: { uid, at } }, status: 'seated', updatedAt: at });
     }
-    await NET.db.doc(Pvp.paths.active(uid)).set({ active: { code, seat: 'b', at: Date.now() } });
+    await netSetActive(NET, { code, seat: 'b', at: Date.now() });
     netLobbyWait(code, 'b');
-  } catch (e) { console.warn('[pvp] join', e); pvpErr('pvpNetErr'); } finally { lobby.busy = false; }
+  } catch (e) { console.warn('[pvp] join', e?.code || e); pvpErr(netErrKey(e)); } finally { lobby.busy = false; }
 }
 // 매치 문서에 시드·판이 생길 때까지 로비에서 기다림(호스트는 상대가 앉으면 직접 정한다). 재접속도 이 길
+// 아티팩트 db onSnapshot 은 실시간이 안 되면 약 30초 폴링으로 떨어진다 → 같은 방 이름에 먼저 들어가 presence 가 바뀌면(상대가 앉음·판 정함)
+// 바로 다시 읽고, 3초마다 한 번 더 읽는다(빠른 길 + 안전망). 문서가 진실, room 은 '지금 다시 읽어' 신호일 뿐
 function netLobbyWait(code, seat) {
-  const tok = ++lobby.token;
+  lobbyStop(false);
+  const tok = lobby.token;
   lobby.code = code; lobby.seat = seat;
   $('#pvpLobby').hidden = false; $('#pvpPick').hidden = true; $('#pvpWait').hidden = false; pvpErr(null);
   $('#pvpCode').textContent = code;
   $('#pvpStatus').textContent = t(seat === 'a' ? 'pvpWaiting' : 'pvpJoined');
-  lobby.unsub?.();
   const ref = NET.db.doc(Pvp.paths.match(code));
-  let writing = false;
-  lobby.unsub = ref.onSnapshot(async (s) => {
-    if (tok !== lobby.token) return;
-    const m = s.data();
+  let writing = false, started = false;
+  const handle = async (m) => {
+    if (tok !== lobby.token || started) return;
     if (!m || m.status === 'abandoned') { pvpErr('pvpGone'); return; }
     if (seat === 'a' && m.seats?.b && !m.pot && !writing) {
       writing = true; // 호스트: 시드·판을 정하고 가위바위보로
@@ -2870,26 +2895,53 @@ function netLobbyWait(code, seat) {
         const seed = crypto.getRandomValues(new Uint32Array(1))[0] >>> 0;
         const pot = Pvp.makePot(seed, as?.cards || pickShowCards(m.n), bs?.cards || pickShowCards(m.n));
         await ref.update({ seed, pot, status: 'rps', updatedAt: Date.now() });
-      } catch (e) { writing = false; console.warn('[pvp] seed', e); }
+        lobby.room?.presence({ ph: 'rps' }).catch(() => {}); // 참가자에게 '다시 읽어'
+        if (tok === lobby.token && !started) handle((await ref.get()).data()); // 내 쓰기도 바로(구독이 늦어도)
+      } catch (e) { writing = false; console.warn('[pvp] seed', e?.code || e); }
       return;
     }
     if (m.pot && m.seed != null) {
-      lobby.token++; lobby.unsub?.(); lobby.unsub = null; lobby.code = null;
+      started = true;
+      lobbyStop(false); lobby.code = null; // 방은 나가지 않는다: startNetMatch 가 같은 이름으로 들어가면 같은 방(presence 그대로)
       $('#pvpLobby').hidden = true;
       startNetMatch(code, seat, m);
     }
-  });
+  };
+  const unSnap = ref.onSnapshot((s) => handle(s.data()), (e) => console.warn('[pvp] lobby snap', e?.code));
+  const poke = () => { if (tok === lobby.token && !started) ref.get().then((s) => handle(s.data())).catch(() => {}); };
+  const poll = setInterval(poke, 3000);
+  let unPeers = null;
+  NET.room.join('m-' + code.toLowerCase()).then((room) => {
+    if (tok !== lobby.token) { if (!started && lobby.code !== code && !(match?.net && !match.net.ended)) room.leave().catch(() => {}); return; } // 그새 로비를 닫았다(대결로 넘어간 거면 같은 방을 쓴다)
+    lobby.room = room;
+    room.presence({ seat, uid: NET.uid, ph: 'lobby' }).catch(() => {});
+    unPeers = room.onPeers((ch) => { if ([...ch.joined, ...ch.updated].some((p) => !p.sameTab)) poke(); });
+  }).catch((e) => console.warn('[pvp] lobby room', e?.code || e));
+  lobby.unsub = () => { unSnap(); clearInterval(poll); unPeers?.(); };
 }
 async function netBoot() {
+  if (NET.kind === 'artifact') { // 문구: 두 탭 시험 → 친구
+    for (const id of ['pvpBtn', 'pvpOr', 'pvpShare']) { const el = document.getElementById(id) || document.querySelector(`[data-t="${id}"]`); if (el) el.dataset.t = tk(id); }
+    refreshTexts();
+  }
   $('#pvpBtn').hidden = false;
   try {
+    // 이 탭의 표시가 먼저(같은 계정 두 탭), 없으면 db(다른 기기·새 탭)
+    const ta = tabActive(), cands = [];
+    if (ta?.code) cands.push({ ...ta, tab: true });
     const a = (await NET.db.doc(Pvp.paths.active(NET.uid)).get()).data()?.active;
-    if (!a?.code) return;
-    const m = (await NET.db.doc(Pvp.paths.match(a.code)).get()).data();
-    if (!m || m.status === 'done' || m.status === 'abandoned' || m.result) { await NET.db.doc(Pvp.paths.active(NET.uid)).set({ active: null }); return; }
-    toast(t('pvpResumed'));
-    netLobbyWait(a.code, a.seat); // 판이 정해져 있으면 바로 대결로(문서로 다시 계산)
-  } catch (e) { console.warn('[pvp] resume', e); }
+    if (a?.code && !(ta && ta.code === a.code && ta.seat === a.seat)) cands.push(a);
+    for (const c of cands) {
+      const m = (await NET.db.doc(Pvp.paths.match(c.code)).get()).data();
+      const live = m && m.status !== 'done' && m.status !== 'abandoned' && !m.result && m.seats?.[c.seat]?.uid === NET.uid;
+      if (!live) { if (c.tab) tabActive(null); else await NET.db.doc(Pvp.paths.active(NET.uid)).set({ active: null }); continue; }
+      if (lobby.code || (match?.net && !match.net.ended) || state !== 'home') return; // 그새 사람이 로비·대결(솔로 포함)을 열었다 → 끊지 않는다(다음 새로고침 때 이어 하기)
+      toast(t('pvpResumed'));
+      tabActive({ code: c.code, seat: c.seat, at: c.at || Date.now() });
+      netLobbyWait(c.code, c.seat); // 판이 정해져 있으면 바로 대결로(문서로 다시 계산)
+      return;
+    }
+  } catch (e) { console.warn('[pvp] resume', e?.code || e); }
 }
 
 // ── 대결 시작 ──
@@ -2907,14 +2959,15 @@ async function startNetMatch(code, seat, m) {
     doc: m, inbox: new Map(), sendq: [], unsubs: [], waiters: [], mySeat: null, oppSeatDb: null, oppSeatPres: null, oppSeat: null, oppPres: null,
     oppHere: false, oppSeen: false, oppGoneAt: 0, live: [], score: { a: 0, b: 0 }, games: [], prev: '00000000', g: 0, t: 0, cur: null,
     ended: false, pres: {}, seatQ: Promise.resolve(), trkSeen: 0, preMiss: 0, fresh: true, clockEnd: 0, forceFire: null,
+    sentAt: new Map(), rtt: [], pollAt: 0, matchPollAt: 0, meOffAt: 0,
   };
   M.cardOf = (pid) => (M.pot[pid] && CARD_BY_ID[M.pot[pid].c] ? M.pot[pid].c : 'mandu');
   M.mySeat = (await net.db.doc(Pvp.paths.seat(uid, code, seat)).get()).data() || { v: 1, code, seat, uid, cards: [], sv: 0 };
   const oppRef = oppUid ? net.db.doc(Pvp.paths.seat(oppUid, code, other)) : null;
   const opp0 = oppRef ? (await oppRef.get()).data() : null;
-  const names = oppUid ? await net.user.profiles([oppUid]).catch(() => []) : [];
+  const names = oppUid ? await net.user.profiles([oppUid]).catch(() => ({})) : {};
   if (my !== runId) return;
-  const rivalName = names[0]?.name || t('rival');
+  const rivalName = names?.[oppUid]?.name || t('rival'); // 이름은 db 에 안 남긴다(id 만) — 보는 사람 기준으로 그때그때
   const rivalCard = CARD_BY_ID[opp0?.cards?.[0]] || CARDS[0];
   match = { net: M, seed: M.seed, rng: mulberry32(M.seed), myStake: [], aiStake: [], pot: m.pot.map((p) => ({ id: p.c, from: p.s === seat ? 'me' : 'ai' })), rivalName, rivalCard, mode: 'fun', n: m.n, turn: 'me', turnNo: 0, best: 0, flipsMe: 0 };
   M.room = await net.room.join('m-' + code.toLowerCase());
@@ -2923,7 +2976,7 @@ async function startNetMatch(code, seat, m) {
   M.unsubs.push(M.room.onPeers((ch) => netPeers(M, ch)));
   if (oppRef) M.unsubs.push(oppRef.onSnapshot((s) => { M.oppSeatDb = s.data() || null; netOppSeat(M); }));
   M.unsubs.push(net.db.doc(Pvp.paths.match(code)).onSnapshot((s) => netMatchDoc(M, s.data())));
-  netPresence(M, { seat, uid, ph: 'wait' });
+  netPresence(M, { seat, uid, ph: 'wait', ...(M.mySeat.sv ? { s: seatPres(M.mySeat) } : {}) }); // 새로고침해도 내 자리 상태(가위바위보·ack)를 바로 다시 알린다
   if (!netTickT) netTickT = setInterval(netTick, 100);
   window.__pvp = () => netState(M);
   state = 'match'; pose = 'eye'; gogglesOn = false; camZoom = 0;
@@ -3033,8 +3086,8 @@ async function netSetEnd(M) {
   pvpLogAdd({ code: M.code, key: 'set', role: 'set', tag: `${M.games.map((s) => `${s.a}-${s.b}`).join('|')}:${r.winner || 'draw'}`, at: Date.now() });
   try {
     if (M.seat === 'a') await M.net.db.doc(Pvp.paths.match(M.code)).update({ status: 'done', result: { winner: r.winner, reason: 'set', games: M.games, at: Date.now() }, score: { a: r.won.a, b: r.won.b }, updatedAt: Date.now() });
-    await M.net.db.doc(Pvp.paths.active(M.uid)).set({ active: null });
-  } catch (e) { console.warn('[pvp] end', e); }
+    await netSetActive(M.net, null);
+  } catch (e) { console.warn('[pvp] end', e?.code || e); }
   netShowResult(M, { winner: r.winner, reason: 'set', won: r.won });
 }
 function netShowResult(M, r) {
@@ -3161,7 +3214,7 @@ function netPlayTo(P, tf, force = false) {
   simWatch.simTime += Math.max(0, dts);
   syncMeshes();
   watchSim();
-  if (!P.plusAt && simWatch.count > 0) P.plusAt = Date.now(); // 놓기 → 첫 '+1' (쏜 쪽·받는 쪽 둘 다 → 차이 = 네트워크 길이 더한 지연. 두 탭은 같은 시계)
+  if (!P.plusAt && simWatch.count > 0) { P.plusAt = Date.now(); P.plusPerf = performance.now(); } // 놓기 → 첫 '+1' (쏜 쪽·받는 쪽 둘 다 → 차이 = 네트워크 길이 더한 지연. 두 탭은 같은 시계)
   if (P.final && P.player.received >= P.final.frames && P.tf >= P.final.frames) netFinishPlayback(P);
 }
 function netFinishPlayback(P) {
@@ -3206,6 +3259,22 @@ function netTick() {
   }
   netClockUi(M);
   netConnUi(M);
+  netPoll(M);
+}
+// 안전망 읽기(3초마다, 기다릴 때만): 아티팩트 db onSnapshot 은 실시간이 안 되면 약 30초 폴링으로 떨어진다(db.d.ts).
+// room 이 주 경로지만 재접속·새로고침 직후엔 room 메시지가 없다 → 기다리는 문서만 직접 다시 읽는다(상대 자리 · 상대 샷 · 매치 문서)
+function netPoll(M) {
+  const nowT = performance.now();
+  if (M.ended || nowT - M.pollAt < 3000) return;
+  M.pollAt = nowT;
+  const db = M.net.db;
+  if (M.waiters.length && M.oppUid) db.doc(Pvp.paths.seat(M.oppUid, M.code, M.other)).get().then((sn) => {
+    const d = sn.data();
+    if (d && (d.sv || 0) > (M.oppSeatDb?.sv || 0)) { M.oppSeatDb = d; netOppSeat(M); }
+  }).catch(() => {});
+  const ib = M.cur && !M.cur.mine ? M.inbox.get(M.cur.key) : null;
+  if (ib?.ref && !ib.doc) ib.ref.get().then((sn) => ib.onDoc?.(sn)).catch(() => {});
+  if (nowT - M.matchPollAt > 6000) { M.matchPollAt = nowT; db.doc(Pvp.paths.match(M.code)).get().then((sn) => netMatchDoc(M, sn.data())).catch(() => {}); }
 }
 function netStepSim(s, budget) {
   const t0 = performance.now();
@@ -3229,6 +3298,8 @@ function netPump(M) {
     if (topic === 'trk' && nowT - (M.lastTrkAt || 0) < 50) break;
     M.sendq.shift();
     if (topic === 'trk') M.lastTrkAt = nowT;
+    if (M.sentAt.size >= 400) M.sentAt.delete(M.sentAt.keys().next().value); // 끊긴 동안 보낸 건 메아리가 안 온다 → 오래된 것부터 버림
+    M.sentAt.set(`${topic}|${data?.t}|${data?.seq ?? ''}`, nowT); // 내 메아리(isMe && sameTab)까지 = room 왕복(RTT)
     M.room.emit(topic, data).catch((e) => console.warn('[pvp] emit', topic, e.code || e.message));
   }
 }
@@ -3270,9 +3341,15 @@ function netPeers(M, ch) {
   } else if (!M.oppGoneAt) M.oppGoneAt = performance.now();
 }
 function netConnUi(M) {
-  const el = $('#pvpConn');
-  const away = !M.ended && state === 'match' && M.oppSeen && !M.oppHere && M.oppGoneAt && performance.now() - M.oppGoneAt > 2000;
-  if (el.hidden === !!away) { el.hidden = !away; if (away) el.textContent = t('pvpOppAway'); }
+  const el = $('#pvpConn'), nowT = performance.now();
+  // 내 연결: connected() 가 false 로 2초 넘게 머물 때만 끊김(플랫폼은 주기적으로 잠깐 다시 잇는다 — room.d.ts)
+  const conn = M.room ? M.room.connected() : true;
+  if (conn) M.meOffAt = 0; else if (!M.meOffAt) M.meOffAt = nowT;
+  const live = !M.ended && state === 'match';
+  const meAway = live && M.meOffAt && nowT - M.meOffAt > 2000;
+  const away = live && M.oppSeen && !M.oppHere && M.oppGoneAt && nowT - M.oppGoneAt > 2000;
+  const key = meAway ? 'pvpMeAway' : away ? 'pvpOppAway' : null;
+  if (el.hidden === !!key || (key && el.dataset.k !== key)) { el.hidden = !key; el.dataset.k = key || ''; if (key) el.textContent = t(key); }
 }
 // 샷 시계: 내 차례면 내 시계(다 되면 forceFire), 상대 차례면 상대 presence 의 clk
 function netClockStart(M) { M.clockEnd = performance.now() + PVP.clock * 1000; M.clockFired = false; M.clkSent = null; }
@@ -3296,13 +3373,15 @@ function netSeat(M, mutate) {
   mutate(s);
   s.sv = (s.sv || 0) + 1; s.at = Date.now();
   M.mySeat = s;
-  netPresence(M, { s: { sv: s.sv, rps: s.rps || null, ack: s.ack || null, resign: !!s.resign } });
+  netPresence(M, { s: seatPres(s) });
   const ref = M.net.db.doc(Pvp.paths.seat(M.uid, M.code, M.seat));
   M.seatQ = M.seatQ.then(() => ref.set(s)).catch((e) => console.warn('[pvp] seat', e.code || e.message)); // 한 문서에 쓰기는 하나씩
   return M.seatQ;
 }
+const seatPres = (s) => ({ sv: s.sv || 0, rps: s.rps || null, ack: s.ack || null, resign: !!s.resign });
 function netOppSeat(M) {
   M.oppSeat = Pvp.newerSeat(M.oppSeatDb, M.oppSeatPres);
+  if (M.oppSeat?.resign && !M.ended && M.my === runId) { netOppResigned(M); return; } // 기권: 자리 상태(presence 빠른 길)로도 — 매치 문서 구독이 폴링이어도 바로
   for (const w of M.waiters.slice()) if (M.oppSeat && w.pred(M.oppSeat)) { M.waiters.splice(M.waiters.indexOf(w), 1); w.res(M.oppSeat); }
 }
 function netWaitOpp(M, pred) {
@@ -3320,7 +3399,7 @@ function netOppResigned(M) {
   if (pv) netAbort(pv);
   $('#rps').hidden = true;
   hideGizmo();
-  M.net.db.doc(Pvp.paths.active(M.uid)).set({ active: null }).catch(() => {});
+  netSetActive(M.net, null).catch(() => {});
   pvpLogAdd({ code: M.code, key: 'set', role: 'set', tag: 'resign:' + M.seat, at: Date.now() });
   netShowResult(M, { winner: M.seat, reason: 'resign' });
 }
@@ -3331,8 +3410,8 @@ async function netResign() {
   try {
     await M.net.db.doc(Pvp.paths.match(M.code)).update({ status: 'abandoned', result: { winner: M.other, reason: 'resign', by: M.seat, at: Date.now() }, updatedAt: Date.now() });
     await netSeat(M, (s) => { s.resign = true; });
-    await M.net.db.doc(Pvp.paths.active(M.uid)).set({ active: null });
-  } catch (e) { console.warn('[pvp] resign', e); }
+    await netSetActive(M.net, null);
+  } catch (e) { console.warn('[pvp] resign', e?.code || e); }
 }
 // 홈으로: 방 나가기·구독 끊기·앞서 돌던 물리와 꼭두각시 월드 반납. 솔로면 아무것도 안 함
 function netStop() {
@@ -3460,6 +3539,19 @@ function netWriteShot(M, g, ti, rec, o) {
   const doc = { v: 1, g, turn: ti, seat: M.seat, by: M.uid, n: o.n, simV: rec.simV, seeds: rec.seeds, ids: rec.ids, in: rec.in, shot: rec.shot, pre: rec.pre, post: rec.post, track: rec.track, res: rec.res, score: o.score, hash: rec.hash, qhash: rec.qhash, prev: M.prev, at: o.at, ...(o.trace?.length ? { trace: traceToB64(o.trace) } : {}), ua: (navigator.userAgent || '').slice(0, 96) };
   M.net.db.doc(Pvp.paths.shot(M.uid, M.code, M.seat, Pvp.shotKey(g, ti))).set(doc).catch((e) => console.warn('[pvp] shot doc', e.code || e.message));
 }
+// 받는 쪽 검증 기록(E10 실데이터 · 지연): p/{uid}/m/{code}-{seat}/v/{g}{tt}. 화면·판정에는 안 쓴다(고발 근거 아님)
+//   same = 같은 입력·내 새 월드 재시뮬 해시 == 쏜 사람 해시. sameEngine = simV(엔진·튜닝·규칙·코덱·소스 해시)가 같은가. ua 쌍 = 기기 쌍
+//   blowToPlus = room 'blow' 를 받은 때 → 내 화면 첫 '+1'(받는 쪽 시계만) · rtt = 내 emit 메아리 왕복 중앙값 → 놓기→상대 첫 '+1' ≈ blowToPlus + rtt/2
+function netWriteVerify(M, key, fin, v, o, P) {
+  const med = (a) => { if (!a.length) return null; const x = [...a].sort((p, q) => p - q); return x[x.length >> 1]; };
+  const doc = {
+    v: 1, key, seat: M.seat, shooter: M.other, hashShooter: fin.hash, hashVerifier: v?.hash ?? null, same: !!(v && v.hash === fin.hash && v.post === fin.post),
+    simS: o.doc?.simV ?? null, simV: shotSimV(), sameEngine: o.doc?.simV != null ? o.doc.simV === shotSimV() : null,
+    uaS: o.doc?.ua ?? null, ua: (navigator.userAgent || '').slice(0, 96), src: P.src || null, frames: fin.frames,
+    blowToPlus: P.plusPerf && o.blowPerf ? Math.round(P.plusPerf - o.blowPerf) : null, rtt: med(M.rtt), rttN: M.rtt.length, at: Date.now(),
+  };
+  M.net.db.doc(Pvp.paths.verify(M.uid, M.code, M.seat, key)).set(doc).catch((e) => console.warn('[pvp] verify doc', e?.code || e));
+}
 // 시험용 자동 손(?pvpbot): 학습자 봇 분포로 합성 포인터(누르기 → 당기기 → 놓기). 진짜 입력 경로(pointerAim·콩닥·presence)를 그대로 지난다
 async function netBotShot(M) {
   M.botRng ||= mulberry32(hash32(M.uid + '|' + M.code));
@@ -3488,12 +3580,17 @@ function netBox(M, key) {
 function netWake(ib) { const w = ib.wakers; ib.wakers = []; for (const f of w) f(); ib.pump?.(); }
 function netWait(ib, ms) { return new Promise((res) => { const tm = setTimeout(res, ms); ib.wakers.push(() => { clearTimeout(tm); res(); }); }); }
 function netOnMsg(M, topic, msg) {
-  if (msg.sameTab || M.ended) return;
+  if (msg.sameTab) { // 내 메아리: RTT 만 잰다(내 화면은 보낼 때 이미 그렸다)
+    const k = `${topic}|${msg.data?.t}|${msg.data?.seq ?? ''}`, t0 = M.sentAt.get(k);
+    if (t0 != null) { M.sentAt.delete(k); M.rtt.push(Math.round(performance.now() - t0)); if (M.rtt.length > 200) M.rtt.shift(); }
+    return;
+  }
+  if (M.ended) return;
   const d = msg.data;
   if (!d || typeof d.t !== 'string') return;
   const key = d.t.split('.')[0];
   const ib = netBox(M, key);
-  if (topic === 'blow') { ib.blow = d; ib.blowAt = Date.now(); ib.chunks = []; ib.done = null; ib.unverified = !msg.by || msg.by !== M.oppUid; } // by 가 없거나 다르면 버리지 않고 '미검증' 표시(db 로 확정)
+  if (topic === 'blow') { ib.blow = d; ib.blowAt = Date.now(); ib.blowPerf = performance.now(); ib.chunks = []; ib.done = null; ib.unverified = !msg.by || msg.by !== M.oppUid; } // by 가 없거나 다르면 버리지 않고 '미검증' 표시(db 로 확정)
   else if (!ib.blow || ib.blow.t !== d.t) return; // 다른 시도의 조각·끝
   else if (topic === 'trk') { ib.chunkAt = Date.now(); if (PVP.drop && ++M.trkSeen % PVP.drop === 0) return; ib.chunks.push(d); }
   else ib.done = d;
@@ -3515,16 +3612,18 @@ async function netRemoteTurn(M, g, ti) {
   netShowOppAim(M);
   const ib = netBox(M, key);
   const ref = M.net.db.doc(Pvp.paths.shot(M.oppUid, M.code, M.other, key));
-  const d0 = (await ref.get()).data();
+  const d0 = (await ref.get().catch(() => null))?.data();
   if (d0 && d0.seat === M.other) { ib.doc = d0; ib.docFirst = true; } // 이미 끝난 숨(늦었거나 재접속) → db 궤적으로
-  const unDoc = ref.onSnapshot((s) => { const d = s.data(); if (d && d.seat === M.other && (!ib.doc || ib.doc.n !== d.n)) { ib.doc = d; ib.docAt = Date.now(); netWake(ib); } });
+  ib.ref = ref;
+  ib.onDoc = (s) => { const d = s.data(); if (d && d.seat === M.other && (!ib.doc || ib.doc.n !== d.n)) { ib.doc = d; ib.docAt = Date.now(); netWake(ib); } }; // 구독·안전망 읽기(netPoll) 공용
+  const unDoc = ref.onSnapshot((s) => ib.onDoc?.(s));
   let out = null;
-  try { out = await netReceive(M, key, ib, ctx); } finally { unDoc(); ib.pump = null; }
+  try { out = await netReceive(M, key, ib, ctx); } finally { unDoc(); ib.pump = null; ib.ref = null; ib.onDoc = null; }
   tension(false);
   if (!ctx.run.fired) ctx.run.free();
   if (!alive() || !out) return false;
   M.inbox.delete(key);
-  await netApplyResult(M, g, ti, M.other, out.P, { role: 'recv', verP: out.verP, at: out.at, auto: out.auto, preMiss: out.preMiss, doc: ib.doc, n: ctx.run.n, seeds: ctx.seeds, unverified: !!ib.unverified });
+  await netApplyResult(M, g, ti, M.other, out.P, { role: 'recv', verP: out.verP, at: out.at, auto: out.auto, preMiss: out.preMiss, doc: ib.doc, n: ctx.run.n, seeds: ctx.seeds, unverified: !!ib.unverified, blowPerf: ib.blowPerf || null });
   return true;
 }
 // 받을 시도 고르기: db 문서(완성된 기록 = 진실)가 있고 지금 room 시도와 다르면 db, 아니면 room blow. 12초 안에 끝이 안 오면 '상대 숨 취소'
@@ -3635,7 +3734,7 @@ async function netApplyResult(M, g, ti, seat, P, o) {
   let beatOk = null;
   if (o.doc?.trace && o.doc.in?.beat) beatOk = BeatClock.replay(o.seeds.beat, o.doc.in.beat, o.n, traceFromB64(o.doc.trace)) === o.doc.in.power; // 콩닥 다시 계산
   const entry = pvpLogAdd({ code: M.code, key, g, t: ti, seat, role: o.role, qhash: shown, expect: fin.qhash, res: netResStr(fin.res), tag: Pvp.stateTag(M.live, M.score, shown), ver: o.ver ?? null, beatOk, src: P.src, plus: P.plusAt && o.at ? P.plusAt - o.at : null, preMiss: o.preMiss || 0, unverified: o.unverified || false, tl: P.tl || null, frames: fin.frames, auto: o.auto || 0, at: Date.now() });
-  if (o.verP) o.verP.then((v) => { entry.ver = v && v.hash === fin.hash && v.post === fin.post ? 'same' : 'diff'; pvpLogSave(); });
+  if (o.verP) o.verP.then((v) => { entry.ver = v && v.hash === fin.hash && v.post === fin.post ? 'same' : 'diff'; pvpLogSave(); netWriteVerify(M, key, fin, v, o, P); });
   if (seat === M.other) netSeat(M, (s) => { s.ack = key; });
   await react(flipped, who);
   await collect(flipped, who);
@@ -3693,6 +3792,17 @@ function wireUI() {
   // PvP 로비 (두 탭: ?pvplocal)
   $('#pvpBtn').addEventListener('click', openPvpLobby);
   $('#pvpClose').addEventListener('click', closePvpLobby);
+  // 개발 토글: 로비 제목 5번 탭(2.5초 안) = 같은 계정끼리 대결 허용 켜기/끄기(이 브라우저만). 계정 하나로 두 탭 시험할 때
+  let devTaps = [];
+  $('#pvpLobby h2').addEventListener('click', () => {
+    const nowT = performance.now();
+    devTaps = devTaps.filter((x) => nowT - x < 2500).concat(nowT);
+    if (devTaps.length < 5) return;
+    devTaps = [];
+    const on = !devSame();
+    try { localStorage.setItem('pvp-dev-same', on ? '1' : '0'); } catch (e) { /* 저장 안 됨 */ }
+    toast(fmt(t('pvpDevSame'), { on: on ? 'ON' : 'OFF' }));
+  });
   $('#pvpCreate').addEventListener('click', () => pvpCreate());
   $('#pvpJoin').addEventListener('click', () => pvpJoin());
   $('#pvpCodeIn').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') pvpJoin(); });
@@ -3745,7 +3855,7 @@ async function bootInner() {
   wireUI();
   goHome();
   window.__puffBooted = true;
-  if (NET) netBoot(); // PvP 버튼 + 진행 중이던 대결로 돌아가기(새로고침·재접속)
+  netReady.then((n) => { if (!n) return; NET = n; window.__pvpNet = n.kind; netBoot(); }); // PvP 버튼 + 진행 중이던 대결로 돌아가기(새로고침·재접속). null 이면 아무것도 안 함
   const lvHash = /#lv(\d+)/.exec(location.hash || '');
   if (lvHash) setTimeout(() => openLevelIntro(Math.max(1, +lvHash[1])), 400); // 테스트용: 주소 끝 #lv18
   requestAnimationFrame((t0) => { lastT = t0; frame(t0); });

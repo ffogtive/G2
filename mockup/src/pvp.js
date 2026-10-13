@@ -18,6 +18,7 @@ export const paths = {
   seat: (uid, code, seat) => `p/${uid}/m/${code}-${seat}`,
   shots: (uid, code, seat) => `p/${uid}/m/${code}-${seat}/t`,
   shot: (uid, code, seat, key) => `p/${uid}/m/${code}-${seat}/t/${key}`,
+  verify: (uid, code, seat, key) => `p/${uid}/m/${code}-${seat}/v/${key}`, // 받는 쪽 검증 기록(E10)
   active: (uid) => `data/users/${uid}/pvp`,
 };
 export const shotKey = (g, t) => `${g}${String(t).padStart(2, '0')}`;

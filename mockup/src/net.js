@@ -7,7 +7,8 @@
 // Net 인터페이스 (docs/design/items-pvp.md §2.1, 아티팩트 db.d.ts·room.d.ts·user.d.ts 의 부분집합):
 //   net.kind                         'local' | 'artifact'
 //   net.uid                          내 id (db 경로 p/{uid}/…, data/users/{uid}/…)
-//   net.user.me() / id() / can()
+//   net.codeLen                      방 코드 길이(LocalNet 4 · ArtifactNet 6)
+//   net.user.me() / id() / can() / profiles(ids) → { [id]: {id, name, …} }
 //   net.db.doc(path)                 { id, path, get() → {exists, data()}, set(obj), update(obj), delete(), acquire({holder, ttlMs}), onSnapshot(next, err) → unsub, collection(p) }
 //   net.db.collection(path)          { path, doc(id?), get() → {docs, size, empty, docChanges()}, onSnapshot(next, err) → unsub }
 //   net.room.join(name) → NamedRoom  { name, emit(topic, data), on(topic, h) → unsub, presence(patch), peers(), onPeers(h) → unsub, connected(), onConnection(h), leave() }
@@ -69,7 +70,15 @@ export class Meter {
     console.warn('[net] 상한 위반', kind, JSON.stringify(detail));
   }
   topic(t, bytes) { const o = (this.byTopic[t] ||= { n: 0, max: 0, sum: 0 }); o.n++; o.sum += bytes; o.max = Math.max(o.max, bytes); }
-  summary() { return { violations: this.violations, count: this.count, max: this.max, byTopic: this.byTopic }; }
+  // 플랫폼이 돌려준 오류(코드별 수 + 최근 20개) — 사람 시험 때 window.__pvpMeter() 로 본다
+  fail(kind, e) {
+    const code = (e && e.code) || 'error';
+    this.errors = this.errors || { n: {}, last: [] };
+    this.errors.n[code] = (this.errors.n[code] || 0) + 1;
+    this.errors.last.push({ kind, code, message: String((e && e.message) || e).slice(0, 160), at: Date.now() });
+    if (this.errors.last.length > 20) this.errors.last.shift();
+  }
+  summary() { return { violations: this.violations, count: this.count, max: this.max, byTopic: this.byTopic, errors: this.errors || null }; }
 }
 
 // ── LocalNet: 같은 브라우저의 두 탭 ─────────────────────────
@@ -98,8 +107,10 @@ export class LocalNet {
       id: async () => this.uid,
       me: async () => ({ id: this.uid, name: nick, avatarUrl: '', color: '#3a8fe0', email: null, isOwner: true, canEdit: true }),
       can: async () => true,
-      profiles: async (ids) => ids.map((id) => ({ id, name: 'Tab ' + String(id).slice(-4).toUpperCase(), isMe: id === this.uid })),
+      // 아티팩트 user.profiles 와 같은 모양: { [id]: Profile } (넘긴 id 마다 한 칸)
+      profiles: async (ids) => Object.fromEntries([...new Set([].concat(ids))].map((id) => [id, { id, name: 'Tab ' + String(id).slice(-4).toUpperCase(), avatarUrl: '', color: '#3a8fe0', email: null, isMe: id === this.uid, guest: false }])),
     };
+    this.codeLen = 4;
   }
   // emit·presence 공용 예산(초당 40, 버스트 80)
   take() {
@@ -393,13 +404,221 @@ class LocalRoom {
   }
 }
 
-// 지금 쓸 수 있는 Net. P0.5a: ?pvplocal(또는 #pvplocal) 이면 LocalNet, 아니면 null(PvP 버튼 숨김).
-// P0.5b: claude.use('db'|'room'|'user') 가 모두 있으면 ArtifactNet — 아직 없음.
+// ── ArtifactNet: claude.ai 아티팩트 capability (P0.5b) ─────────────────────────
+// 🧭 가설: 아티팩트 db·room·user 는 이미 Net 과 같은 모양이라, 어댑터는 (1) 크기 기록(플랫폼이 강제하니 여기선 계량만)
+//   (2) 일시 오류 한 번 다시(db unavailable, room upstream_error) (3) 끝난 방·죽은 구독 다시 잇기 (4) user.profiles 모양 맞추기 — 이 넷이면 된다.
+//   판가름 = 가짜 claude(LocalNet 위에 아티팩트 API 모양, tools/fake-claude.js)로 아티팩트 빌드 두 페이지가 pvp-check 3판을 끝까지 두는가.
+// 선언(docs/design/items-pvp.md §2.1 선언 JSON): db rules(matches·p·p/{self}·data/users/{self}) · room topics blow·trk·done = interact · user profile.
+const TERMINAL = new Set(['revoked', 'not_granted', 'capability_disabled', 'capability_removed', 'transform_error']);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// 동사 한 번 다시: db 'unavailable' 은 문서가 '짧은 무작위 지연 뒤 한 번' 다시 하라고 한다(set = 전체 교체, update = 절댓값 병합 → 두 번 써도 같다)
+async function again(fn, codes) {
+  try { return await fn(); } catch (e) {
+    if (!e || !codes.includes(e.code)) throw e;
+    await sleep(300 + Math.random() * 700);
+    return fn();
+  }
+}
+const DB_RETRY = ['unavailable'];
+// 구독이 끝나면(다리가 멈춘 unavailable · 잠깐 넘친 resource_exhausted) 새로 구독하는 것만이 복구 → 몇 번 다시 건다. 나머지 코드는 err 로 넘김
+function resub(open, next, onErr, meter, what) {
+  let un = null, alive = true, tries = 0;
+  const sub = () => {
+    un = open((s) => { tries = 0; if (alive) next(s); }, (e) => {
+      if (!alive) return;
+      meter.fail(what, e);
+      if (e && (e.code === 'unavailable' || e.code === 'resource_exhausted' || e.code === 'queue_overflow') && tries < 6) { tries++; setTimeout(() => { if (alive) sub(); }, 1500 * tries); }
+      else onErr?.(e);
+    });
+  };
+  sub();
+  return () => { alive = false; try { un?.(); } catch (e) { /* 무시 */ } };
+}
+class ArtDb {
+  constructor(net, db) { this.net = net; this.d = db; }
+  doc(path) { return new ArtDocRef(this, this.d.doc(path)); }
+  collection(path) { return new ArtCollRef(this, this.d.collection(path)); }
+  // 쓰기 크기 기록. 256KiB·깊이 32 를 넘으면 보내지 않고 바로 invalid_argument(플랫폼과 같은 답)
+  meterDoc(path, data, patch = false) {
+    const m = this.net.meter, bytes = jsonBytes(data);
+    m.count.docWrite++;
+    m.max.doc = Math.max(m.max.doc, bytes);
+    if (bytes > LIMITS.doc) { m.violation('doc', { path, bytes, patch }); throw err('invalid_argument', `document over 256 KiB (${bytes} B): ${path}`); }
+    if (depth(data) > LIMITS.depth) { m.violation('depth', { path }); throw err('invalid_argument', 'document too deep: ' + path); }
+  }
+  wrapErr(p) { return p.catch((e) => { this.net.meter.fail('db', e); throw e; }); }
+}
+class ArtDocRef {
+  constructor(db, ref) { this.db = db; this.r = ref; this.id = ref.id; this.path = ref.path; }
+  get() { return this.db.wrapErr(again(() => this.r.get(), DB_RETRY)); }
+  async set(data) { this.db.meterDoc(this.path, data); return this.db.wrapErr(again(() => this.r.set(data), DB_RETRY)); }
+  async update(data) { this.db.meterDoc(this.path, data, true); return this.db.wrapErr(again(() => this.r.update(data), DB_RETRY)); }
+  delete() { return this.db.wrapErr(again(() => this.r.delete(), DB_RETRY)); }
+  acquire(o) { return this.db.wrapErr(again(() => this.r.acquire(o), DB_RETRY)); }
+  onSnapshot(next, onErr) { return resub((n, e) => this.r.onSnapshot(n, e), next, onErr, this.db.net.meter, 'snap:' + this.path); }
+  collection(p) { return new ArtCollRef(this.db, this.r.collection(p)); }
+}
+class ArtCollRef {
+  constructor(db, ref) { this.db = db; this.r = ref; this.path = ref.path; }
+  doc(id) { return new ArtDocRef(this.db, id == null ? this.r.doc() : this.r.doc(id)); }
+  async add(data) { const d = this.doc(); await d.set(data); return d; }
+  get() { return this.db.wrapErr(again(() => this.r.get(), DB_RETRY)); }
+  onSnapshot(next, onErr) { return resub((n, e) => this.r.onSnapshot(n, e), next, onErr, this.db.net.meter, 'snapq:' + this.path); }
+}
+// 이름 있는 방. 플랫폼이 재연결 때 스스로 다시 들어가지만, 못 하면 그 방이 끝난다(리스너마다 오류 하나) → 같은 이름으로 다시 들어가
+// 손잡이(on·onPeers·onConnection)와 내 presence 를 그대로 다시 건다. 게임 코드는 방이 바뀐 줄 모른다.
+class ArtRoom {
+  constructor(net, name) {
+    this.net = net; this.name = name; this.r = null;
+    this.handlers = new Map(); this.peerSubs = new Set(); this.connSubs = new Set();
+    this.pres = {}; this.left = false; this.dead = false; this.rejoining = false; this.wired = []; this.gen = 0;
+  }
+  async open() { this.r = await joinRetry(this.net, this.name); this.wire(); return this; }
+  wire() {
+    const r = this.r, gen = ++this.gen;
+    for (const u of this.wired.splice(0)) { try { u(); } catch (e) { /* 무시 */ } }
+    this.lostFn = (e) => { if (gen === this.gen) this.lost(e); };
+    for (const topic of this.handlers.keys()) this.wired.push(r.on(topic, (m) => this.fan(topic, m), this.lostFn));
+    this.wired.push(r.onPeers((ch) => { for (const h of [...this.peerSubs]) { try { h(ch); } catch (e) { console.error(e); } } }, this.lostFn));
+    this.wired.push(r.onConnection((c) => this.connFan(c), this.lostFn));
+  }
+  fan(topic, m) { for (const h of [...(this.handlers.get(topic) || [])]) { try { h(m); } catch (e) { console.error(e); } } }
+  connFan(c) { for (const h of [...this.connSubs]) { try { h(c); } catch (e) { console.error(e); } } }
+  lost(e) {
+    this.net.meter.fail('room', e);
+    if (this.left || this.rejoining) return;
+    if (TERMINAL.has(e?.code) || e?.code === 'not_permitted') { this.dead = true; this.connFan(false); return; }
+    this.rejoining = true;
+    this.connFan(false);
+    (async () => {
+      for (let i = 1; i <= 8 && !this.left; i++) {
+        await sleep(Math.min(8000, 800 * i));
+        if (this.left) break;
+        try {
+          this.r = await this.net.cap.room.join(this.name);
+          this.wire();
+          if (Object.keys(this.pres).length) await this.r.presence(this.pres).catch(() => {});
+          this.rejoining = false;
+          this.connFan(this.r.connected());
+          return;
+        } catch (e2) { this.net.meter.fail('rejoin', e2); if (TERMINAL.has(e2?.code) || e2?.code === 'not_permitted') break; }
+      }
+      this.rejoining = false; this.dead = true;
+    })();
+  }
+  on(topic, h) {
+    if (typeof h !== 'function') throw new TypeError('handler');
+    if (!this.handlers.has(topic)) {
+      this.handlers.set(topic, new Set());
+      if (this.r) this.wired.push(this.r.on(topic, (m) => this.fan(topic, m), this.lostFn));
+    }
+    this.handlers.get(topic).add(h);
+    return () => this.handlers.get(topic)?.delete(h);
+  }
+  onPeers(h) {
+    this.peerSubs.add(h);
+    setTimeout(() => { if (this.peerSubs.has(h) && this.r) { const ps = this.r.peers(); h({ peers: ps, joined: ps, left: [], updated: [] }); } }, 0); // 늦게 단 손잡이도 첫 배달(지금 방)을 받는다
+    return () => this.peerSubs.delete(h);
+  }
+  onConnection(h) { this.connSubs.add(h); setTimeout(() => { if (this.connSubs.has(h)) h(this.connected()); }, 0); return () => this.connSubs.delete(h); }
+  peers() { return this.r ? this.r.peers() : Object.freeze([]); }
+  connected() { return !!this.r && !this.dead && !this.rejoining && this.r.connected(); }
+  async emit(topic, data) {
+    const m = this.net.meter, bytes = jsonBytes(data);
+    m.count.emit++; m.max.emit = Math.max(m.max.emit, bytes); m.topic(topic, bytes);
+    if (!LIMITS.topics.includes(topic)) m.violation('topic', { topic }); // 선언에 없는 주제 → 플랫폼이 not_permitted
+    if (bytes > LIMITS.emit) { m.violation('emit', { topic, bytes }); throw err('invalid_argument', `emit over 4 KiB (${bytes} B)`); }
+    if (!this.net.take()) { m.count.dropped++; m.violation('rate', { topic }); } // 기록만(예산은 플랫폼이 강제: 넘친 emit 은 버려짐)
+    if (!this.r || this.dead) throw err('upstream_error', 'room not open');
+    return this.r.emit(topic, data).catch((e) => { m.fail('emit', e); throw e; });
+  }
+  async presence(patch) {
+    const next = { ...this.pres };
+    for (const [k, v] of Object.entries(patch || {})) { if (v === null) delete next[k]; else next[k] = clone(v); }
+    const m = this.net.meter, bytes = jsonBytes(next);
+    m.count.presence++; m.max.presence = Math.max(m.max.presence, bytes);
+    if (bytes > LIMITS.presence) { m.violation('presence', { bytes }); throw err('invalid_argument', `presence over 4 KiB (${bytes} B)`); }
+    this.pres = next;
+    if (!this.r || this.dead) return;
+    return this.r.presence(patch).catch((e) => { m.fail('presence', e); throw e; });
+  }
+  async leave() {
+    if (this.left) return;
+    this.left = true;
+    for (const u of this.wired.splice(0)) { try { u(); } catch (e) { /* 무시 */ } }
+    this.net.rooms.delete(this.name);
+    try { await this.r?.leave(); } catch (e) { /* 무시 */ }
+  }
+}
+async function joinRetry(net, name) {
+  let last;
+  for (let i = 0; i < 3; i++) {
+    try { return await net.cap.room.join(name); } catch (e) {
+      last = e; net.meter.fail('join', e);
+      if (!(e?.code === 'upstream_error' || e?.code === 'limit_reached')) throw e;
+      await sleep(1000 * (i + 1));
+    }
+  }
+  throw last;
+}
+export class ArtifactNet {
+  constructor({ db, room, user, uid, canWrite = null }) {
+    this.kind = 'artifact';
+    this.uid = uid;
+    this.peer = 't' + randId(12); // 이 페이지 로드(자리 잡기 lease 의 holder — 같은 계정 두 탭도 서로 다르게). 플랫폼 peer 와는 별개
+    this.canWrite = canWrite; // true | null(플랫폼이 말 안 함 → 쓰기 거절이 판가름)
+    this.codeLen = 6; // 같은 조직 사람이 모두 같은 db 를 쓴다 → 문서대로 6자(31^6 ≈ 8.9억)
+    this.cap = Object.freeze({ db, room, user });
+    this.meter = new Meter();
+    this.tokens = LIMITS.burst; this.tokAt = now();
+    this.rooms = new Map();
+    this.db = new ArtDb(this, db);
+    this.room = { join: (name) => this.join(name) };
+    this.user = {
+      id: async () => uid,
+      me: () => user.me(),
+      can: (c) => user.can(c),
+      profiles: async (ids) => { try { return (await user.profiles(ids)) || {}; } catch (e) { return {}; } }, // 절대 거절 안 한다지만 방어
+    };
+  }
+  take() { return LocalNet.prototype.take.call(this); }
+  join(name) {
+    if (!ROOM_RE.test(name)) return Promise.reject(err('invalid_argument', 'room name: ' + name));
+    let r = this.rooms.get(name);
+    if (!r) {
+      r = new ArtRoom(this, name);
+      this.rooms.set(name, r);
+      r.ready = r.open().catch((e) => { this.rooms.delete(name); throw e; });
+    }
+    return r.ready;
+  }
+}
+
+// 지금 쓸 수 있는 Net(동기): ?pvplocal(또는 #pvplocal) 이면 LocalNet, 아니면 null. 아티팩트 iframe 은 주소 토글을 못 붙인다
 export function pickNet() {
   if (param('pvplocal') == null) return null;
   try {
     if (typeof BroadcastChannel !== 'function' || typeof localStorage === 'undefined') return null;
     localStorage.getItem('pn1-probe');
     return new LocalNet({ lag: +(param('pvplag') || 0) });
+  } catch (e) { return null; }
+}
+// 비동기(P0.5b): ?pvplocal → LocalNet. 아니면 claude.use('db'|'room'|'user') 셋이 다 있고 내 id 가 있고 can('data.write') 이 false 가
+// 아니면 ArtifactNet. 하나라도 없으면 null → PvP 버튼은 숨고 혼자서도 다 돈다. use() 는 최대 10초 → 부팅을 막지 않게 부트 뒤에 기다린다.
+// can() 이 null = 플랫폼이 이 화면에 아무 말도 안 함(user.d.ts: 'null 은 못 함이 아니다') → 버튼을 두고 쓰기 거절(invalid_argument)이 판가름.
+export async function resolveNet() {
+  const local = pickNet();
+  if (local) return local;
+  const c = typeof window !== 'undefined' ? window.claude : undefined;
+  if (!c || typeof c.use !== 'function') return null;
+  try {
+    const use = (n) => Promise.resolve().then(() => c.use(n)).catch(() => null);
+    const [db, room, user] = await Promise.all([use('db'), use('room'), use('user')]);
+    if (!db || !room || !user || typeof room.join !== 'function') return null;
+    const uid = await Promise.resolve(user.id()).catch(() => null);
+    if (!uid) return null; // id 없음 = 내 자리(p/{self}·data/users/{self})를 못 씀
+    const can = await Promise.resolve(user.can('data.write')).catch(() => null);
+    if (can === false) return null; // 보기 전용(Viewer·Commenter·밖 손님)
+    return new ArtifactNet({ db, room, user, uid, canWrite: can });
   } catch (e) { return null; }
 }

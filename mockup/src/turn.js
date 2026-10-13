@@ -113,9 +113,11 @@ export function hashState(table) {
 }
 
 // 같은 엔진·같은 규칙 확인용 버전(8자): sim(TUNE·JUDGE·Rapier) + 숨 규칙 상수 + 코덱
+// 빌드가 넣는 물리·규칙·코덱 소스 해시(tools/build.mjs define). Node 도구에선 없음 → ''(pvpsync 는 Node 끼리만 비교)
+const SIM_SRC = typeof __PUFF_SIMSRC__ !== 'undefined' ? __PUFF_SIMSRC__ : ''; // eslint-disable-line no-undef
 export function shotSimV() {
   const r = [Rules.GREEN_LO, Rules.WEAK_ZERO, Rules.WEAK_FLOOR, Rules.WEAK_EXP, Rules.BLAST_SPAN, Rules.PHYS_SWEET, Rules.PHYS_SWEET_ONE, Rules.POWER_MAX, Rules.sweetHiFor(1), Rules.sweetHiFor(20), Rules.LIP_BACK, Rules.LIP_MIN];
-  return hashBytes(new TextEncoder().encode(simVersion() + '|' + r.join(',') + `|${TRACK_HZ},${MOVE_EPS},${ROT_EPS},${POSE_BYTES}`)).slice(0, 8);
+  return hashBytes(new TextEncoder().encode(simVersion() + '|' + r.join(',') + `|${TRACK_HZ},${MOVE_EPS},${ROT_EPS},${POSE_BYTES}` + (SIM_SRC ? '|' + SIM_SRC : ''))).slice(0, 8);
 }
 
 // ── 화면용: 받는 쪽은 y축 180° (p' = (−x, y, −z), q' = qy(π)·q) ───────────

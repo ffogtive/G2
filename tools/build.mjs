@@ -4,6 +4,7 @@
 import * as esbuild from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -28,14 +29,19 @@ function sfxScript() {
   return Object.keys(map).length ? `<script>window.__PUFF_SFX__=${JSON.stringify(map)}</script>` : '';
 }
 
+// PvP simV 에 물리·규칙·코덱 소스 해시를 넣는다(P0 이슈 6: TUNE·상수만으로는 코드가 바뀐 걸 못 잡는다).
+// 같은 소스로 만든 두 빌드(오프라인·아티팩트)는 같은 값 → 버전이 다른 사람끼리는 참가가 거절된다(pvpSimDiff). Node 도구는 이 값 없이 돈다
+const simSrc = createHash('sha256').update(['sim.js', 'rules.js', 'turn.js'].map((f) => readFileSync(join(root, 'mockup/src', f), 'utf8').replace(/\r\n/g, '\n')).join('\0')).digest('hex').slice(0, 12);
+const define = { __PUFF_SIMSRC__: JSON.stringify(simSrc) };
+
 async function build() {
   const sfx = sfxScript();
-  const offline = await esbuild.build({ entryPoints: [entry], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none' });
+  const offline = await esbuild.build({ entryPoints: [entry], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none', define });
   const offJs = offline.outputFiles[0].text;
   const full = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n</head>\n<body>\n' + tpl.replace('<!--APP-->', () => `${sfx}<script>${safe(offJs)}</script>`) + '\n</body>\n</html>\n';
   writeFileSync(join(root, 'dist/puff.html'), full);
 
-  const art = await esbuild.build({ entryPoints: [entry], bundle: true, format: 'esm', minify: true, write: false, target: 'es2020', external: ['three', '@dimforge/rapier3d-compat'], legalComments: 'none' });
+  const art = await esbuild.build({ entryPoints: [entry], bundle: true, format: 'esm', minify: true, write: false, target: 'es2020', external: ['three', '@dimforge/rapier3d-compat'], legalComments: 'none', define });
   const importmap = {
     imports: {
       three: 'https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.min.js',
@@ -50,7 +56,7 @@ async function build() {
   if (unresolved.length) throw new Error('import map 에 없는 모듈: ' + unresolved.join(', '));
   const artHtml = tpl.replace('<!--APP-->', () => `${sfx}<script type="importmap">${JSON.stringify(importmap)}</script>\n<script type="module">${safe(art.outputFiles[0].text)}</script>`);
   writeFileSync(join(root, 'dist/puff-artifact.html'), artHtml);
-  console.log(`built dist/puff.html (${(full.length / 1024).toFixed(0)} KB), dist/puff-artifact.html (${(artHtml.length / 1024).toFixed(0)} KB)`);
+  console.log(`built dist/puff.html (${(full.length / 1024).toFixed(0)} KB), dist/puff-artifact.html (${(artHtml.length / 1024).toFixed(0)} KB) · sim src ${simSrc}`);
 }
 
 await build();

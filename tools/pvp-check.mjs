@@ -12,6 +12,9 @@
 //   LAG=ms      LocalNet room·db 알림 지연(두 탭 모두)
 //   CLOCK=s     샷 시계(기본 30). 짧게 주면 자동 헛숨 경로도 지난다(봇은 0.8~2.5초 안에 쏜다)
 //   LIMIT=ms    전체 제한 시간(기본 15분)
+//   NET=artifact  아티팩트 빌드(dist/puff-artifact.html, CDN → node_modules) + 가짜 claude 호스트(tools/fake-claude.js: LocalNet 위에 db·room·user 모양)
+//                 → ArtifactNet 경로(claude.use · 6자 코드 · 로비 room 빠른 길 · 검증 기록)를 같은 게이트로. 상한 위반은 페이지 계량 + 가짜 호스트 계량 둘 다
+//   SNAPPOLL=ms   (NET=artifact) db onSnapshot 이 실시간을 잃고 폴링으로 떨어진 상태(실제 약 30000). room 빠른 길·3초 안전망 읽기로 버티는가
 // 통과(종료 코드 0): 모든 턴이 두 탭 로그에 있고 지문·res 100% 같음 · 화면 끝 해시 = 쏜 사람 qhash 100% · 뒤 검증 same 100%
 //   · 판·세트 결과 같음 · LocalNet 상한 위반 0(emit·presence 4KiB, 문서 256KiB, 선언 주제, 초당 40·버스트 80) · 콘솔 오류 0
 import { createRequire } from 'module';
@@ -19,6 +22,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { wrapArtifact, routeCdn, fakeClaude } from './artifact-host.mjs';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PW);
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -26,14 +30,17 @@ const N = +(process.argv[2] || 5);
 const RELOADAT = process.env.RELOADAT || 'any'; // recv = 상대 숨 재생 중 / mine = 내 차례
 const RELOAD = (process.env.RELOAD || '').toLowerCase(), DROP = +(process.env.DROP || 0), LAG = +(process.env.LAG || 0), CLOCK = +(process.env.CLOCK || 0);
 const LIMIT = +(process.env.LIMIT || 15 * 60 * 1000);
+const ART = (process.env.NET || '').toLowerCase() === 'artifact';
 
 if (!process.env.NOBUILD) execFileSync('node', [join(root, 'tools/build.mjs')], { stdio: 'inherit' });
-const file = join(root, 'dist/puff.html');
+const file = ART ? wrapArtifact() : join(root, 'dist/puff.html');
 if (!existsSync(file)) throw new Error('dist/puff.html 없음 — npm run build');
-const q = (extra = '') => `file://${file}?pvplocal&pvpbot${LAG ? `&pvplag=${LAG}` : ''}${CLOCK ? `&pvpclock=${CLOCK}` : ''}${extra}`;
+const q = (extra = '') => `file://${file}?${ART ? '' : 'pvplocal&'}pvpbot${LAG && !ART ? `&pvplag=${LAG}` : ''}${CLOCK ? `&pvpclock=${CLOCK}` : ''}${extra}`;
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await browser.newContext();
+const cdnLogs = [];
+if (ART) { await routeCdn(ctx, cdnLogs); await ctx.addInitScript({ content: await fakeClaude({ mode: 'full', lag: LAG, snapPoll: +(process.env.SNAPPOLL || 0) }) }); }
 // 화면 크기를 다르게(세로 폰 · 가로) — 물리·판정은 카메라와 무관해야 한다
 const A = await ctx.newPage(), B = await ctx.newPage();
 // 헤드리스 소프트웨어 렌더(swiftshader)는 두 탭이면 fps 가 낮다 → 작게. 가로·세로는 다르게 둔다
@@ -48,8 +55,9 @@ const t0 = Date.now();
 const sec = () => ((Date.now() - t0) / 1000).toFixed(0) + 's';
 await A.goto(q());
 await B.goto(q(DROP ? `&pvpdrop=${DROP}` : ''));
-const homeOk = async (p) => p.waitForFunction(() => window.__puffBooted && !document.querySelector('#home').hidden, null, { timeout: 90000 }); // 다른 작업과 CPU 를 나눠 쓰면 부팅이 느리다
+const homeOk = async (p) => p.waitForFunction(() => window.__puffBooted && !document.querySelector('#home').hidden && !document.querySelector('#pvpBtn').hidden, null, { timeout: 90000 }); // 다른 작업과 CPU 를 나눠 쓰면 부팅이 느리다. PvP 버튼은 Net 이 정해진 뒤(부팅 뒤)에 켜진다
 await homeOk(A); await homeOk(B);
+console.log(`[${sec()}] Net: A ${await A.evaluate(() => window.__pvpNet)} B ${await B.evaluate(() => window.__pvpNet)}${ART ? ' (아티팩트 빌드 + 가짜 claude 호스트)' : ''}`);
 console.log(`[${sec()}] 두 탭 부팅. PvP 버튼 보임: A ${await A.$eval('#pvpBtn', (e) => !e.hidden)} B ${await B.$eval('#pvpBtn', (e) => !e.hidden)}`);
 // 로비 버튼은 DOM click(작은 가로 화면에선 홈 아래 줄이 화면 밖 — 배치 시험이 아니라 흐름 시험)
 const tap = (p, sel) => p.$eval(sel, (e) => e.click());
@@ -57,7 +65,7 @@ const tap = (p, sel) => p.$eval(sel, (e) => e.click());
 await tap(A, '#pvpBtn');
 await tap(A, `#pvpChips button[data-n="${N}"]`);
 await tap(A, '#pvpCreate');
-await A.waitForFunction(() => /^[A-Z0-9]{4}$/.test(document.querySelector('#pvpCode')?.textContent || ''), null, { timeout: 10000 });
+await A.waitForFunction(() => /^[A-Z0-9]{4,6}$/.test(document.querySelector('#pvpCode')?.textContent || ''), null, { timeout: 15000 });
 const code = await A.$eval('#pvpCode', (e) => e.textContent);
 console.log(`[${sec()}] A 방 만들기 → 코드 ${code} (판 크기 각자 ${N})`);
 // B: 코드로 참가
@@ -96,9 +104,12 @@ const logA = (await A.evaluate(() => window.__pvpLog)).filter((e) => e.code === 
 const logB = (await B.evaluate(() => window.__pvpLog)).filter((e) => e.code === code);
 const meterA = await A.evaluate(() => window.__pvpMeter());
 const meterB = await B.evaluate(() => window.__pvpMeter());
+const hostA = ART ? await A.evaluate(() => window.__fakeMeter?.() ?? null) : null; // 가짜 호스트가 강제한 상한(실제 플랫폼 몫)
+const hostB = ART ? await B.evaluate(() => window.__fakeMeter?.() ?? null) : null;
+const verifyDocs = await A.evaluate((c) => Object.keys(localStorage).filter((k) => k.startsWith('pn1:p/') && k.includes('/m/' + c + '-') && k.includes('/v/')).map((k) => JSON.parse(localStorage.getItem(k))), code);
 doneA = await A.evaluate(() => window.__pvpDone ?? null);
 doneB = await B.evaluate(() => window.__pvpDone ?? null);
-writeFileSync(join(root, 'tools/scratch/pvp-last.json'), JSON.stringify({ code, logA, logB, meterA, meterB, doneA, doneB }, null, 1));
+writeFileSync(join(root, 'tools/scratch/pvp-last.json'), JSON.stringify({ code, logA, logB, meterA, meterB, hostA, hostB, verifyDocs, doneA, doneB }, null, 1));
 await A.screenshot({ path: join(root, 'tools/scratch/pvp-a.png') });
 await B.screenshot({ path: join(root, 'tools/scratch/pvp-b.png') });
 await browser.close();
@@ -131,7 +142,7 @@ for (const k of keys) {
 }
 const pct = (a, b) => (b ? ((100 * a) / b).toFixed(1) : '—') + `% (${a}/${b})`;
 const qt = (a, p) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.min(s.length - 1, Math.floor(p * s.length))] : null; };
-const viol = [...(meterA?.violations || []), ...(meterB?.violations || [])];
+const viol = [...(meterA?.violations || []), ...(meterB?.violations || []), ...(hostA?.violations || []), ...(hostB?.violations || [])];
 console.log('\n── 결과 ──');
 console.log(`세트: A ${JSON.stringify(doneA)}\n      B ${JSON.stringify(doneB)}`);
 console.log(`턴 ${turns} · 두 탭 다 기록 ${pct(both, turns)} · 지문 같음 ${pct(tagSame, both)} · res 같음 ${pct(resSame, both)}`);
@@ -142,10 +153,21 @@ console.log(`받는 쪽 출처 ${JSON.stringify(srcs)} · 놓기 → 상대 화�
 const avg = (a) => (a.length ? (a.reduce((x, y) => x + y, 0) / a.length).toFixed(0) : '—');
 console.log(`화면 fps(1초 rAF 표본) A 평균 ${avg(fps.a)} 최저 ${fps.a.length ? Math.min(...fps.a) : '—'} · B 평균 ${avg(fps.b)} 최저 ${fps.b.length ? Math.min(...fps.b) : '—'} — 재생은 프레임 dt 상한 50ms 라 20fps 밑이면 느려진다(솔로와 같음)`);
 for (const [k, m] of [['A', meterA], ['B', meterB]]) console.log(`${k} 계량: emit ${m.count.emit}(최대 ${m.max.emit}B) presence ${m.count.presence}(최대 ${m.max.presence}B) 문서 쓰기 ${m.count.docWrite}(최대 ${m.max.doc}B) 주제별 ${JSON.stringify(Object.fromEntries(Object.entries(m.byTopic).map(([t, o]) => [t, `${o.n}개 최대${o.max}B`])))}`);
+if (ART) for (const [k, m] of [['A', hostA], ['B', hostB]]) console.log(`${k} 가짜 호스트 계량: emit ${m?.count.emit}(최대 ${m?.max.emit}B) presence ${m?.count.presence}(최대 ${m?.max.presence}B) 문서 쓰기 ${m?.count.docWrite}(최대 ${m?.max.doc}B) 버린 emit ${m?.count.dropped}`);
+for (const [k, m] of [['A', meterA], ['B', meterB]]) if (m?.errors) console.log(`${k} 플랫폼 오류 ${JSON.stringify(m.errors.n)}`);
+const vSame = verifyDocs.filter((d) => d.same).length, vEng = verifyDocs.filter((d) => d.sameEngine).length;
+const bp = verifyDocs.map((d) => d.blowToPlus).filter((x) => x != null), rt = verifyDocs.map((d) => d.rtt).filter((x) => x != null);
+console.log(`검증 기록(p/…/v/, E10) ${verifyDocs.length}개 · 같음 ${pct(vSame, verifyDocs.length)} · 같은 엔진 ${pct(vEng, verifyDocs.length)} · blow→첫 '+1' p50 ${qt(bp, 0.5)} p90 ${qt(bp, 0.9)} ms · 메아리 RTT 중앙 ${qt(rt, 0.5)} ms`);
+if (cdnLogs.length) console.log('CDN 404: ' + cdnLogs.join(' '));
 console.log(`상한 위반 ${viol.length}${viol.length ? ' ' + JSON.stringify(viol.slice(0, 5)) : ''}`);
 console.log(`콘솔 오류 A ${errs.a.length} B ${errs.b.length}${errs.a.length + errs.b.length ? '\n' + [...errs.a, ...errs.b].slice(0, 10).join('\n') : ''}`);
-if (bad.length) console.log('불일치:\n  ' + bad.slice(0, 20).join('\n  '));
 const sameSet = doneA && doneB && JSON.stringify(doneA.games) === JSON.stringify(doneB.games) && doneA.winner === doneB.winner;
-const pass = doneA && doneB && sameSet && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && !viol.length && !errs.a.length && !errs.b.length && !bad.length;
+// 받는 쪽 턴마다 검증 기록(자리·턴 키로 하나), 모두 같음
+const recvKeys = new Set([...logA, ...logB].filter((e) => e.role === 'recv').map((e) => `${e.seat === 'a' ? 'b' : 'a'}|${e.key}`));
+const docKeys = new Set(verifyDocs.map((d) => `${d.seat}|${d.key}`));
+const verDocsOk = [...recvKeys].every((k) => docKeys.has(k)) && vSame === verifyDocs.length;
+if (!verDocsOk) bad.push(`검증 기록: 받은 턴 ${recvKeys.size} · 기록 ${docKeys.size} · 같음 ${vSame}`);
+if (bad.length) console.log('불일치:\n  ' + bad.slice(0, 20).join('\n  '));
+const pass = doneA && doneB && sameSet && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && verDocsOk && !viol.length && !errs.a.length && !errs.b.length && !bad.length && !cdnLogs.length;
 console.log(`\n${pass ? 'PASS' : 'FAIL'} — ${sec()}`);
 process.exit(pass ? 0 : 1);
