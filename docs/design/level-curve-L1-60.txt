@@ -1,68 +1,68 @@
-# 레벨 1~60 학습자 봇 검증 (4차: 좌우 조준·닿는 점 물리·삐져나온 더미 기준, 2026-10-13) — 판당 30회, 보정과 다른 시드
-# 요약: ±12%p 48/60, ±15%p 52/60, 평균 절대 오차 8.5%p (보정 시드 기준 3.8%p). 30회 표본 잡음(±8%p)이 대부분 → 보정·검증 시도 100회↑ 필요(P1)
+# 레벨 1~60 학습자 봇 검증 (4차 최종: 좌우 조준·닿는 점 물리, 삐져나옴 끔, 2026-10-13) — 판당 40회, 보정과 다른 시드
+# 요약: ±12%p 46/60, ±15%p 52/60, 평균 절대 오차 8.1%p (보정 시드 기준 56/60, 3.2%p). 판 단위 차이는 대부분 표본 잡음 → 시도 100회↑ 필요(P1)
 
   1 new       relief    flip 2/3 in 3                    want  92%  got 100% ####################
-  2 practice  normal    flip 3/5 in 2                    want  85%  got  93% ###################
-  3 practice2 normal    flip 2/4 in 3                    want  75%  got 100% ####################
-  4 rival     normal    rival kongi x4 skill0.64         want  60%  got  60% ############
-  5 applied   normal    flip 6/7 in 2                    want  65%  got  60% ############
-  6 relief    relief    flip 8/12 in 3                   want  93%  got  93% ###################
-  7 applied   normal    flip 7/10 in 2                   want  68%  got  80% ################
-  8 precision normal    flip 5/6 in 2                    want  60%  got  63% #############
-  9 boss      normal    rival boss x5 skill0.85          want  50%  got  40% ########
- 10 reward    relief    flip 8/16 in 2                   want  93%  got  83% #################
- 11 new       relief    golden@0.21 N11 in 3             want  92%  got  93% ###################
- 12 practice  normal    flip 7/12 in 2                   want  85%  got  83% #################
- 13 practice2 normal    flip 7/9 in 2                    want  75%  got  77% ###############
- 14 rival     normal    rival kongi x5 skill1.4          want  60%  got  60% ############
- 15 applied   normal    golden@0.53 N11 in 2             want  65%  got  57% ###########
- 16 relief    relief    flip 8/13 in 3                   want  93%  got  97% ###################
- 17 applied   normal    golden@0.42 N11 in 3             want  68%  got  67% #############
- 18 precision normal    golden@0.53 N13 in 3             want  60%  got  33% #######
- 19 boss      normal    rival boss x6 skill1.4           want  50%  got  53% ###########
- 20 reward    relief    flip 8/14 in 3                   want  93%  got  97% ###################
- 21 new       relief    flip 6/11 in 3                   want  92%  got 100% ####################
- 22 practice  normal    flip 7/11 in 2                   want  85%  got  77% ###############
+  2 practice  normal    flip 4/5 in 2                    want  85%  got  83% #################
+  3 practice2 normal    flip 3/4 in 2                    want  75%  got  93% ###################
+  4 rival     normal    rival kongi x4 skill0.44         want  60%  got  73% ###############
+  5 applied   normal    flip 6/7 in 2                    want  65%  got  63% #############
+  6 relief    relief    flip 9/12 in 3                   want  93%  got  98% ####################
+  7 applied   normal    flip 8/10 in 2                   want  68%  got  78% ################
+  8 precision normal    flip 5/6 in 2                    want  60%  got  68% ##############
+  9 boss      normal    rival boss x5 skill0.51          want  50%  got  53% ###########
+ 10 reward    relief    flip 9/16 in 3                   want  93%  got  80% ################
+ 11 new       relief    golden@0.31 N11 in 3             want  92%  got  83% #################
+ 12 practice  normal    flip 9/12 in 3                   want  85%  got  90% ##################
+ 13 practice2 normal    flip 7/9 in 2                    want  75%  got  85% #################
+ 14 rival     normal    rival kongi x5 skill0.51         want  60%  got  78% ################
+ 15 applied   normal    golden@0.31 N11 in 2             want  65%  got  85% #################
+ 16 relief    relief    flip 5/13 in 3                   want  93%  got 100% ####################
+ 17 applied   normal    golden@0.53 N11 in 3             want  68%  got  60% ############
+ 18 precision normal    golden@0.53 N13 in 3             want  60%  got  63% #############
+ 19 boss      normal    rival boss x6 skill0.57          want  50%  got  63% #############
+ 20 reward    relief    flip 8/14 in 3                   want  93%  got  95% ###################
+ 21 new       relief    flip 6/11 in 2                   want  92%  got  85% #################
+ 22 practice  normal    flip 6/11 in 2                   want  85%  got  83% #################
  23 practice2 normal    golden@0.31 N15 in 3             want  75%  got  73% ###############
- 24 rival     normal    rival kongi x6 skill0.71         want  60%  got  67% #############
- 25 applied   normal    flip 8/15 in 2                   want  65%  got  57% ###########
- 26 relief    relief    flip 8/14 in 3                   want  93%  got  90% ##################
- 27 applied   normal    flip 8/16 in 2                   want  68%  got  80% ################
- 28 precision normal    golden@0.42 N15 in 3             want  60%  got  70% ##############
- 29 boss      normal    rival boss x6 skill0.57          want  50%  got  67% #############
- 30 reward    relief    flip 8/13 in 2                   want  93%  got  83% #################
- 31 new       relief    flip 7/13 in 3                   want  92%  got  90% ##################
- 32 practice  normal    flip 10/14 in 2                  want  85%  got  63% #############
- 33 practice2 normal    flip 7/14 in 2                   want  75%  got  83% #################
- 34 rival     normal    rival minsu x7 skill1.4          want  60%  got  40% ########
- 35 hard      hard      flip 13/16 in 2                  want  40%  got  30% ######
- 36 relief    relief    flip 5/14 in 3                   want  93%  got  97% ###################
- 37 applied   normal    flip 11/15 in 3                  want  68%  got  77% ###############
- 38 precision normal    golden@0.42 N15 in 3             want  60%  got  37% #######
- 39 boss      normal    rival boss x7 skill0.44          want  50%  got  63% #############
- 40 reward    relief    flip 6/15 in 3                   want  93%  got  97% ###################
- 41 new       relief    flip 9/18 in 3                   want  92%  got  93% ###################
- 42 practice  normal    flip 9/16 in 2                   want  85%  got  50% ##########
- 43 practice2 normal    flip 9/16 in 2                   want  75%  got  83% #################
- 44 rival     normal    rival minsu x8 skill0.71         want  60%  got  57% ###########
- 45 hard      hard      flip 12/16 in 2                  want  40%  got  53% ###########
- 46 relief    relief    flip 9/16 in 3                   want  93%  got  97% ###################
- 47 applied   normal    flip 9/18 in 2                   want  68%  got  77% ###############
- 48 precision normal    golden@0.37 N18 in 3             want  60%  got  73% ###############
- 49 boss      normal    rival boss x8 skill0.78          want  50%  got  40% ########
- 50 boss      hard      rival boss x8 skill1.06          want  45%  got  47% #########
- 51 new       relief    flip 6/15 in 3                   want  92%  got  97% ###################
- 52 practice  normal    flip 9/16 in 2                   want  85%  got  87% #################
- 53 practice2 normal    flip 11/18 in 2                  want  75%  got  60% ############
- 54 rival     normal    rival jiwoo x9 skill0.85         want  60%  got  70% ##############
- 55 hard      hard      flip 12/16 in 2                  want  40%  got  37% #######
- 56 relief    relief    flip 9/16 in 3                   want  93%  got  97% ###################
- 57 applied   normal    golden@0.37 N15 in 3             want  68%  got  73% ###############
- 58 precision normal    golden@0.26 N16 in 3             want  60%  got  53% ###########
- 59 boss      superhard rival boss x9 skill0.85          want  25%  got  50% ##########
- 60 reward    relief    flip 10/18 in 3                  want  93%  got  97% ###################
+ 24 rival     normal    rival kongi x6 skill0.64         want  60%  got  63% #############
+ 25 applied   normal    flip 8/15 in 2                   want  65%  got  63% #############
+ 26 relief    relief    flip 5/14 in 3                   want  93%  got  95% ###################
+ 27 applied   normal    flip 10/16 in 2                  want  68%  got  75% ###############
+ 28 precision normal    golden@0.53 N15 in 3             want  60%  got  40% ########
+ 29 boss      normal    rival boss x6 skill0.57          want  50%  got  45% #########
+ 30 reward    relief    flip 9/13 in 2                   want  93%  got  83% #################
+ 31 new       relief    flip 7/13 in 3                   want  92%  got  95% ###################
+ 32 practice  normal    flip 10/14 in 2                  want  85%  got  48% ##########
+ 33 practice2 normal    flip 7/14 in 2                   want  75%  got  75% ###############
+ 34 rival     normal    rival minsu x7 skill0.57         want  60%  got  63% #############
+ 35 hard      hard      flip 13/16 in 2                  want  40%  got  18% ####
+ 36 relief    relief    flip 9/14 in 3                   want  93%  got  98% ####################
+ 37 applied   normal    flip 9/15 in 2                   want  68%  got  63% #############
+ 38 precision normal    golden@0.53 N15 in 3             want  60%  got  68% ##############
+ 39 boss      normal    rival boss x7 skill0.64          want  50%  got  43% #########
+ 40 reward    relief    flip 9/15 in 3                   want  93%  got  90% ##################
+ 41 new       relief    flip 5/18 in 3                   want  92%  got  88% ##################
+ 42 practice  normal    flip 10/16 in 3                  want  85%  got  68% ##############
+ 43 practice2 normal    flip 10/16 in 2                  want  75%  got  80% ################
+ 44 rival     normal    rival minsu x8 skill0.64         want  60%  got  68% ##############
+ 45 hard      hard      flip 10/16 in 1                  want  40%  got  45% #########
+ 46 relief    relief    flip 5/16 in 3                   want  93%  got  98% ####################
+ 47 applied   normal    flip 10/18 in 2                  want  68%  got  75% ###############
+ 48 precision normal    golden@0.37 N18 in 3             want  60%  got  70% ##############
+ 49 boss      normal    rival boss x8 skill0.85          want  50%  got  35% #######
+ 50 boss      hard      rival boss x8 skill0.85          want  45%  got  55% ###########
+ 51 new       relief    flip 9/15 in 3                   want  92%  got  78% ################
+ 52 practice  normal    flip 8/16 in 2                   want  85%  got  70% ##############
+ 53 practice2 normal    flip 13/18 in 3                  want  75%  got  75% ###############
+ 54 rival     normal    rival jiwoo x9 skill0.85         want  60%  got  43% #########
+ 55 hard      hard      flip 12/16 in 2                  want  40%  got  33% #######
+ 56 relief    relief    flip 11/16 in 3                  want  93%  got  90% ##################
+ 57 applied   normal    golden@0.37 N15 in 3             want  68%  got  65% #############
+ 58 precision normal    golden@0.26 N16 in 3             want  60%  got  70% ##############
+ 59 boss      superhard rival boss x9 skill0.85          want  25%  got  28% ######
+ 60 reward    relief    flip 7/18 in 3                   want  93%  got  93% ###################
 
-ROLE MEANS (want→got) {"new":"0.92→0.97","practice":"0.85→0.88","practice2":"0.75→0.88","rival":"0.60→0.60","applied":"0.66→0.66","relief":"0.93→0.93","precision":"0.60→0.63","boss":"0.50→0.40","reward":"0.93→0.83"}
-ROLE MEANS (want→got) {"relief":"0.93→0.93","applied":"0.67→0.68","precision":"0.60→0.52","boss":"0.50→0.60","reward":"0.93→0.90","new":"0.92→1.00","practice":"0.85→0.77","practice2":"0.75→0.73","rival":"0.60→0.67"}
-ROLE MEANS (want→got) {"new":"0.92→0.92","practice":"0.85→0.57","practice2":"0.75→0.83","rival":"0.60→0.48","hard":"0.40→0.42","relief":"0.93→0.97","applied":"0.68→0.77","precision":"0.60→0.37","boss":"0.50→0.63","reward":"0.93→0.97"}
-ROLE MEANS (want→got) {"relief":"0.93→0.97","applied":"0.68→0.75","precision":"0.60→0.63","boss":"0.40→0.46","new":"0.92→0.97","practice":"0.85→0.87","practice2":"0.75→0.60","rival":"0.60→0.70","hard":"0.40→0.37","reward":"0.93→0.97"}
+ROLE MEANS (want→got) {"new":"0.92→0.91","practice":"0.85→0.86","practice2":"0.75→0.89","rival":"0.60→0.75","applied":"0.66→0.75","relief":"0.93→0.97","precision":"0.60→0.68","boss":"0.50→0.53","reward":"0.93→0.80"}
+ROLE MEANS (want→got) {"relief":"0.93→0.97","applied":"0.67→0.66","precision":"0.60→0.51","boss":"0.50→0.54","reward":"0.93→0.89","new":"0.92→0.85","practice":"0.85→0.82","practice2":"0.75→0.72","rival":"0.60→0.63"}
+ROLE MEANS (want→got) {"new":"0.92→0.91","practice":"0.85→0.57","practice2":"0.75→0.78","rival":"0.60→0.65","hard":"0.40→0.31","relief":"0.93→0.97","applied":"0.68→0.63","precision":"0.60→0.68","boss":"0.50→0.42","reward":"0.93→0.90"}
+ROLE MEANS (want→got) {"relief":"0.93→0.94","applied":"0.68→0.70","precision":"0.60→0.70","boss":"0.40→0.39","new":"0.92→0.78","practice":"0.85→0.70","practice2":"0.75→0.75","rival":"0.60→0.42","hard":"0.40→0.33","reward":"0.93→0.93"}
