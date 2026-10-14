@@ -1,0 +1,7 @@
+#!/bin/sh
+# 맥 /usr/bin/openssl 은 LibreSSL — `x509 -subject` 를 옛 한 줄 꼴(subject= /UID=…/OU=…/O=Test Co, Inc./C=US)로 찍는다.
+# FAKE_OPENSSL=openssl3 이면 Homebrew openssl@3 가 PATH 앞에 있는 맥(subject=UID = …, O = "Test Co, Inc.", …).
+if [ "${FAKE_OPENSSL:-libressl}" = libressl ] && [ "${1:-}" = x509 ]; then
+  case " $* " in *" -subject "*) /usr/bin/openssl "$@" -nameopt compat | sed 's/^subject=/subject= /'; exit 0 ;; esac
+fi
+exec /usr/bin/openssl "$@"

@@ -1,0 +1,8 @@
+#!/bin/sh
+# 가짜 rustup: target add / component add
+echo "rustup $*" >>"${FAKE_LOG:-/dev/null}"
+case "$1 $2" in
+  "target add") shift 2; for t; do echo "info: component 'rust-std' for target '$t' is up to date" >&2; done ;;
+  "component add") echo "info: component '$3' for target 'aarch64-apple-darwin' is up to date" >&2 ;;
+  *) echo "rustup(가짜): $*" >&2; exit 1 ;;
+esac

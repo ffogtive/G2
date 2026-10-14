@@ -1,0 +1,135 @@
+#!/bin/bash
+# 가짜 xcodebuild — 인자를 FAKE_LOG 에 남기고, 진짜처럼 확인한다:
+#   작업 공간·스킴·구성 존재, -allowProvisioningDeviceRegistration 은 -allowProvisioningUpdates 와 함께, 목적지(generic 또는
+#   지금 기기 목록에 있는 id=), 구성 xcconfig 의 #include / #include? (Generated.xcconfig 없으면 실패, Rust link.xcconfig 있으면 '링크'),
+#   Run Script 처럼 Generated.xcconfig 의 FLUTTER_ROOT 로 `flutter assemble` 호출(어느 Flutter 가 빌드에 쓰였나 기록).
+# 성공이면 DerivedData 에 '서명된' Runner.app: 바이너리 Info.plist(번들 ID = project.pbxproj 의 Runner 값), Runner,
+#   embedded.mobileprovision(Team·UDID 원문 — 진짜도 그렇다 → .local 이 700 이어야 하는 이유).
+# 시나리오: FAKE_XCODE_VERSION(27.0) FAKE_FIRST_LAUNCH=needed
+#   FAKE_BUILD=ok|noprofile_then_ok|noprofile|signfail|noaccount|appid_taken|rustlink|script_fail|compile_fail|wrongid
+#   FAKE_PACKAGE_RESOLVED=1 → Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved 를 만든다(Xcode 가 그럴 수 있음)
+K=$(cd "$(dirname "$0")/.." && pwd)
+echo "xcodebuild $*" >>"${FAKE_LOG:-/dev/null}"
+case "${1:-}" in
+  -version)
+    printf 'Xcode %s\nBuild version 27A5218a\n' "${FAKE_XCODE_VERSION:-27.0}"
+    exit 0
+    ;;
+  -checkFirstLaunchStatus) [ "${FAKE_FIRST_LAUNCH:-ok}" = ok ] && exit 0 || exit 69 ;;
+esac
+ARGS="$*"
+ws="" scheme="" cfg="" dest="" dd="" team="" style="" action="" apu=0 apdr=0 bundle_cli=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -workspace) ws=$2; shift ;;
+    -scheme) scheme=$2; shift ;;
+    -configuration) cfg=$2; shift ;;
+    -destination) dest=$2; shift ;;
+    -derivedDataPath) dd=$2; shift ;;
+    -allowProvisioningUpdates) apu=1 ;;
+    -allowProvisioningDeviceRegistration) apdr=1 ;;
+    DEVELOPMENT_TEAM=*) team=${1#*=} ;;
+    CODE_SIGN_STYLE=*) style=${1#*=} ;;
+    PRODUCT_BUNDLE_IDENTIFIER=*) bundle_cli=${1#*=} ;;
+    *=*) ;;
+    build) action=build ;;
+    -*) echo "xcodebuild: error: invalid option '$1'"; exit 64 ;;
+    *) echo "xcodebuild: error: Unknown build action '$1'."; exit 65 ;;
+  esac
+  shift
+done
+sub() { # 자리표시자 → 이 실행의 값 (실제 로그처럼 식별자 원문이 들어간다)
+  sed -e "s|@TEAM@|$team|g" -e "s|@UDID@|${FAKE_UDID:-}|g" -e "s|@NAME@|${FAKE_DEVICE_NAME:-}|g" \
+    -e "s|@HOME@|$HOME|g" -e "s|@DERIVED@|$dd|g" "$1"
+}
+fail_with() { # <fixtures/xcode/build-*.log>
+  sub "$K/fixtures/xcode/build-$1.log"
+  exit 65
+}
+echo "Command line invocation:"
+echo "    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild $ARGS"
+echo
+echo "Build settings from command line:"
+echo "    CODE_SIGN_STYLE = $style"
+echo "    DEVELOPMENT_TEAM = $team"
+echo
+[ "${action:-build}" = build ] || exit 64
+[ -f "$ws/contents.xcworkspacedata" ] || { echo "xcodebuild: error: '$ws' does not exist."; exit 66; }
+ios=$(dirname "$ws")
+[ -f "$ios/Runner.xcodeproj/xcshareddata/xcschemes/$scheme.xcscheme" ] ||
+  { echo "xcodebuild: error: The workspace named \"Runner\" does not contain a scheme named \"$scheme\"."; exit 65; }
+case "$cfg" in Debug | Release | Profile) ;; *) echo "xcodebuild: error: configuration '$cfg' 없음"; exit 65 ;; esac
+[ "$apdr" = 0 ] || [ "$apu" = 1 ] ||
+  { echo "xcodebuild: error: -allowProvisioningDeviceRegistration requires -allowProvisioningUpdates"; exit 64; }
+case "$dest" in
+  generic/platform=iOS) ;;
+  id=*)
+    devs="$K/fixtures/devicectl/devices-${FAKE_DEVICES:-x16-one}.json"
+    grep -qF "\"${dest#id=}\"" "$devs" ||
+      { echo "xcodebuild: error: Unable to find a destination matching the provided destination specifier:"; echo "		{ $dest }"; exit 70; }
+    ;;
+  *) echo "xcodebuild: error: Unable to find a destination matching the provided destination specifier: { $dest }"; exit 70 ;;
+esac
+[ -n "${FAKE_STATE:-}" ] && echo "$dest" >"$FAKE_STATE/last-dest" # 가짜 설치가 '어떤 빌드였나'를 본다
+
+# 구성 xcconfig 의 include 를 진짜처럼 푼다 (Release → Flutter/Release.xcconfig)
+xc="$ios/Flutter/$([ "$cfg" = Debug ] && echo Debug || echo Release).xcconfig"
+rust_linked=0
+while IFS= read -r line; do
+  case "$line" in
+    '#include? "'*) opt=1 ;;
+    '#include "'*) opt=0 ;;
+    *) continue ;;
+  esac
+  p=${line#*\"}
+  p=${p%\"*}
+  f="$ios/Flutter/$p"
+  if [ -f "$f" ]; then
+    case "$p" in */link.xcconfig) rust_linked=1 ;; esac
+  elif [ "$opt" = 0 ]; then
+    echo "$xc: error: could not find included file '$p' in search paths (in target 'Runner' from project 'Runner')"
+    echo "** BUILD FAILED **"
+    exit 65
+  fi
+done <"$xc"
+gen="$ios/Flutter/Generated.xcconfig"
+froot=$(sed -n 's/^FLUTTER_ROOT=//p' "$gen" | head -n 1)
+[ "$rust_linked" = 0 ] || echo "fake: Rust 링크 켜짐 (link.xcconfig)" >>"${FAKE_LOG:-/dev/null}"
+
+[ "$apu" = 1 ] || fail_with noprofile-noflag
+case "${FAKE_BUILD:-ok}" in
+  noprofile_then_ok) case "$dest" in generic/*) fail_with noprofile ;; esac ;;
+  noprofile) fail_with noprofile ;;
+  signfail) fail_with signfail ;;
+  noaccount) fail_with noaccount ;;
+  appid_taken) fail_with appid-taken ;;
+  compile_fail) fail_with compile-fail ;;
+  rustlink) [ "$rust_linked" = 0 ] || fail_with rustlink ;;
+esac
+# Run Script(xcode_backend.sh) 흉내: Generated.xcconfig 의 FLUTTER_ROOT 로 assemble
+if [ ! -x "$froot/bin/flutter" ] || ! "$froot/bin/flutter" assemble --no-version-check -dTargetPlatform=ios -dBuildMode=release \
+  release_ios_bundle_flutter_assets >/dev/null 2>&1 || [ "${FAKE_BUILD:-ok}" = script_fail ]; then
+  fail_with script-fail
+fi
+
+app="$dd/Build/Products/$cfg-iphoneos/Runner.app"
+rm -rf "$app"
+mkdir -p "$app/Frameworks/Flutter.framework" "$app/Frameworks/App.framework" "$app/_CodeSignature"
+bundle=$(grep -F 'PRODUCT_BUNDLE_IDENTIFIER = ' "$ios/Runner.xcodeproj/project.pbxproj" | grep -v RunnerTests | head -n 1 |
+  sed 's/.*= *//; s/;.*//')
+[ -z "$bundle_cli" ] || bundle=$bundle_cli
+[ "${FAKE_BUILD:-ok}" != wrongid ] || bundle=com.example.other
+/usr/bin/python3 -I -c '
+import plistlib, sys
+with open(sys.argv[1], "wb") as f:
+    plistlib.dump({"CFBundleIdentifier": sys.argv[2], "CFBundleExecutable": "Runner", "CFBundleName": "PUFF!",
+                   "MinimumOSVersion": "16.4", "CFBundleSupportedPlatforms": ["iPhoneOS"]}, f, fmt=plistlib.FMT_BINARY)
+' "$app/Info.plist" "$bundle"
+printf 'fake Mach-O arm64\n' >"$app/Runner"
+printf 'TeamIdentifier=%s\nProvisionedDevices=%s\n' "$team" "${FAKE_UDID:-}" >"$app/embedded.mobileprovision"
+printf 'fake CodeResources team=%s\n' "$team" >"$app/_CodeSignature/CodeResources"
+if [ "${FAKE_PACKAGE_RESOLVED:-0}" = 1 ]; then
+  mkdir -p "$ws/xcshareddata/swiftpm"
+  printf '{\n  "pins" : [ ],\n  "version" : 3\n}\n' >"$ws/xcshareddata/swiftpm/Package.resolved"
+fi
+echo "** BUILD SUCCEEDED **"

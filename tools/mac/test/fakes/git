@@ -1,0 +1,27 @@
+#!/bin/bash
+# 가짜 git: 그대로 넘기되 FAKE_GIT_CLONE 이 있으면 `git clone … <url> <dest>` 를 가짜 Flutter 체크아웃으로 바꾼다.
+#   good = HEAD 가 고정 리비전 · badrev = 다른 리비전 · fail = 네트워크 오류(128) · slow = good + FAKE_GIT_SLOW 표시 후 30초 멈춤(Ctrl-C 시험)
+if [ "${1:-}" = clone ] && [ -n "${FAKE_GIT_CLONE:-}" ]; then
+  K=$(cd "$(dirname "$0")/.." && pwd)
+  echo "git $*" >>"${FAKE_LOG:-/dev/null}"
+  dest=${!#}
+  url=${*: -2:1}
+  echo "Cloning into '$dest'..." >&2
+  if [ "$FAKE_GIT_CLONE" = fail ]; then
+    echo "fatal: unable to access '$url/': Could not resolve host: github.com" >&2
+    exit 128
+  fi
+  mkdir -p "$dest/bin"
+  cp "$K/fakes/sdk/flutter" "$dest/bin/flutter"
+  chmod +x "$dest/bin/flutter"
+  /usr/bin/git init -q "$dest"
+  if [ "$FAKE_GIT_CLONE" = badrev ]; then rev=0b591f2c8278ab1c6ec0b72fc3a6cd8f1e2b1c09; else rev=6a19cca56475dbfba1478ee68d7bd0c2ef891da1; fi
+  echo "$rev" >"$dest/.git/HEAD"
+  printf 'remote: Enumerating objects: 9012, done.\nReceiving objects: 100%% (9012/9012), 236.20 MiB | 31.00 MiB/s, done.\n' >&2
+  if [ "$FAKE_GIT_CLONE" = slow ]; then
+    echo cloned >"$FAKE_GIT_SLOW"
+    sleep 30
+  fi
+  exit 0
+fi
+exec /usr/bin/git "$@"

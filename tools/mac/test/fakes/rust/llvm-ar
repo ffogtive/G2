@@ -1,0 +1,4 @@
+#!/bin/sh
+# 가짜 llvm-ar (rust 의 llvm-tools): GNU ar 로 넘긴다(--format=darwin 은 뺀다)
+[ "$1" = --format=darwin ] && shift
+exec /usr/bin/ar "$@"

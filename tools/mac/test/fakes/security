@@ -1,0 +1,26 @@
+#!/bin/sh
+# 가짜 security (키체인). FAKE_TEAMS=none|one|two — 'Apple Development' 인증서 0·1·2개 (+ 배포 인증서는 언제나 거른다는 걸 보려고 1개)
+K=$(cd "$(dirname "$0")/.." && pwd)
+echo "security $*" >>"${FAKE_LOG:-/dev/null}"
+case "${1:-}" in
+  find-identity)
+    case "${FAKE_TEAMS:-one}" in
+      none) echo '     0 valid identities found' ;;
+      one)
+        echo '  1) 0123456789ABCDEF0123456789ABCDEF01234567 "Apple Development: Test Person (ZZZZZZZZZZ)"'
+        echo '  2) 89ABCDEF0123456789ABCDEF0123456789ABCDEF "Apple Distribution: Test Co, Inc. (ABCDE12345)"'
+        echo '     2 valid identities found' ;;
+      two)
+        echo '  1) 0123456789ABCDEF0123456789ABCDEF01234567 "Apple Development: Test Person (ZZZZZZZZZZ)"'
+        echo '  2) 89ABCDEF0123456789ABCDEF0123456789ABCDEF "Apple Distribution: Test Co, Inc. (ABCDE12345)"'
+        echo '  3) FEDCBA9876543210FEDCBA9876543210FEDCBA98 "Apple Development: Other Person (YYYYYYYYYY)"'
+        echo '     3 valid identities found' ;;
+    esac ;;
+  find-certificate) # -c <이름> -p
+    case "${3:-}" in
+      "Apple Development: Test Person (ZZZZZZZZZZ)") cat "$K/fixtures/certs/apple-development-a.pem" ;;
+      "Apple Development: Other Person (YYYYYYYYYY)") cat "$K/fixtures/certs/apple-development-b.pem" ;;
+      *) echo "security: SecKeychainSearchCopyNext: The specified item could not be found in the keychain." >&2; exit 44 ;;
+    esac ;;
+  *) echo "security: 가짜에 없는 명령 $*" >&2; exit 1 ;;
+esac

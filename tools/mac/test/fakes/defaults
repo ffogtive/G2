@@ -1,0 +1,11 @@
+#!/bin/sh
+# 가짜 defaults: `defaults export com.apple.dt.Xcode -` 만. FAKE_DEFAULTS=none|paid-free|two-paid|no-accounts
+K=$(cd "$(dirname "$0")/.." && pwd)
+if [ "${1:-}" = export ] && [ "${2:-}" = com.apple.dt.Xcode ] && [ "${3:-}" = - ]; then
+  case "${FAKE_DEFAULTS:-none}" in
+    none) echo "Domain com.apple.dt.Xcode does not exist" >&2; exit 1 ;;
+    *) exec cat "$K/fixtures/xcode/defaults-$FAKE_DEFAULTS.plist" ;;
+  esac
+fi
+echo "defaults: 가짜에 없는 호출 $*" >&2
+exit 1

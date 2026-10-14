@@ -1,0 +1,4 @@
+#!/bin/sh
+# 가짜 nm -gU <.a> (Xcode 의 nm): 헤더(include/puff_sim.h — build-ios.sh 는 native/puff_sim 에서 돈다)의 함수마다 ' T _puff_…'
+echo "nm $*" >>"${FAKE_LOG:-/dev/null}"
+grep -o 'puff_[a-z_0-9]*(' include/puff_sim.h 2>/dev/null | sort -u | sed 's/(//; s/^/0000000000001000 T _/'

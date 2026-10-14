@@ -1,0 +1,7 @@
+#!/bin/sh
+# 가짜 맥 uname: ios_run.sh(와 그 서브셸)가 물을 때만 Darwin/arm64. 그 밖(진짜 flutter — REAL_FLUTTER 시험)은 리눅스 그대로.
+if tr '\0' ' ' </proc/$PPID/cmdline 2>/dev/null | grep -q 'tools/mac/ios_run.sh'; then
+  case "${1:-}" in -m | -p) echo arm64 ;; -r) echo 25.1.0 ;; -a) echo "Darwin fake-mac 25.1.0 Darwin Kernel Version 25.1.0 arm64" ;; *) echo Darwin ;; esac
+else
+  exec /usr/bin/uname "$@"
+fi

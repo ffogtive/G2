@@ -1,0 +1,3 @@
+#!/bin/sh
+# 가짜 llvm-objcopy: 비트코드 섹션 지우기 = 아무것도 안 함
+exit 0

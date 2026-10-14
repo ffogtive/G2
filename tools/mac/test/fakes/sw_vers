@@ -1,0 +1,9 @@
+#!/bin/sh
+# 가짜 sw_vers (FAKE_MACOS, 기본 26.1)
+v=${FAKE_MACOS:-26.1}
+case "${1:-}" in
+  -productVersion) echo "$v" ;;
+  -buildVersion) echo 25B78 ;;
+  -productName) echo macOS ;;
+  *) printf 'ProductName:\t\tmacOS\nProductVersion:\t\t%s\nBuildVersion:\t\t25B78\n' "$v" ;;
+esac

@@ -1,0 +1,101 @@
+#!/bin/bash
+# 가짜 Flutter SDK 의 bin/flutter (fake-mac.sh 가 SDK 폴더마다 복사하고 .git/HEAD 에 리비전을 적는다).
+# 진짜 Flutter 가 쓰는 파일을 같은 경로에 만든다 → 그것들이 모두 gitignore 인지(추적 파일이 그대로인지) 시험된다.
+#   --version --machine  처음이면 'Dart SDK 받기' 를 stderr 에. FAKE_FLUTTER_REPORT=3.47.5|3.44.2|shallow|notag (fixtures/flutter)
+#   precache --ios       FAKE_PRECACHE=fail
+#   pub get --enforce-lockfile   FAKE_PUB=lockfail · FAKE_PUB_TOUCH=1(추적 파일 Release.xcconfig 를 바꾸는 사고 흉내)
+#   build ios --release --config-only --no-codesign
+#     SPM 판단 = flutter_tools flutter_features_config.dart 순서: pubspec 'flutter: config: enable-swift-package-manager'
+#     > 전역 `flutter config`(FAKE_GLOBAL_SPM=off|on) > 기본(켬). 꺼지면 CocoaPods 경로: ios/Podfile + 추적 파일
+#     Flutter/{Debug,Release}.xcconfig 에 Pods #include (cocoapods.dart addPodsDependencyToFlutterXcconfig).
+#   assemble …           (가짜 xcodebuild 의 Run Script 단계가 부른다)
+root=$(cd "$(dirname "$0")/.." && pwd -P)
+echo "flutter[$root] $*" >>"${FAKE_LOG:-/dev/null}"
+case "$*" in
+  "--version --machine")
+    if [ ! -d "$root/bin/cache/dart-sdk" ]; then
+      echo "Downloading Darwin arm64 Dart SDK from Flutter engine af7e796e161ae0bb1ff0758c71a7105418bd9ded..." >&2
+      echo "Building flutter tool..." >&2
+      mkdir -p "$root/bin/cache/dart-sdk"
+    fi
+    sed "s|@ROOT@|$root|" "$FAKE_KIT/fixtures/flutter/version-${FAKE_FLUTTER_REPORT:-3.47.5}.json"
+    ;;
+  "precache --ios")
+    if [ "${FAKE_PRECACHE:-ok}" = fail ]; then
+      echo "Downloading ios tools..."
+      echo "Failed to download https://storage.googleapis.com/flutter_infra_release/flutter/af7e796e16/ios-release/artifacts.zip: SocketException: Connection reset by peer" >&2
+      exit 1
+    fi
+    [ -d "$root/bin/cache/artifacts/engine/ios-release" ] || {
+      echo "Downloading ios tools..."
+      echo "Downloading ios-profile tools..."
+      echo "Downloading ios-release tools..."
+      mkdir -p "$root/bin/cache/artifacts/engine/ios-release"
+    }
+    ;;
+  "pub get --enforce-lockfile")
+    [ -f pubspec.yaml ] || { echo "Expected to find project root in current working directory."; exit 1; }
+    [ -f pubspec.lock ] || { echo "Retrieving dependencies failed: --enforce-lockfile but no pubspec.lock"; exit 1; }
+    if [ "${FAKE_PUB:-ok}" = lockfail ]; then
+      echo "Resolving dependencies..."
+      echo "Because puff_app depends on webview_flutter ^4.14.0 which doesn't match any versions, version solving failed."
+      echo "Unable to satisfy \`pubspec.yaml\` using \`pubspec.lock\`."
+      echo ""
+      echo "To update \`pubspec.lock\` run \`dart pub get\` without \`--enforce-lockfile\`."
+      exit 66
+    fi
+    mkdir -p .dart_tool
+    printf '{"configVersion": 2, "packages": []}\n' >.dart_tool/package_config.json
+    printf '{"plugins": {"ios": []}}\n' >.flutter-plugins-dependencies
+    [ "${FAKE_PUB_TOUCH:-0}" = 1 ] &&
+      printf '#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"\n' >>ios/Flutter/Release.xcconfig
+    echo "Resolving dependencies..."
+    echo "Got dependencies!"
+    ;;
+  "build ios --release --config-only --no-codesign")
+    [ -f pubspec.yaml ] && [ -d ios ] || { echo "Application not configured for iOS"; exit 1; }
+    spm=""
+    # pubspec 의 flutter: → config: → enable-swift-package-manager: 값 (들여쓰기 단계 무관하게 그 키만)
+    v=$(sed -n 's/^[[:space:]]*enable-swift-package-manager:[[:space:]]*\([a-z]*\).*/\1/p' pubspec.yaml | head -n 1)
+    case "$v" in true) spm=1 ;; false) spm=0 ;; esac
+    if [ -z "$spm" ]; then case "${FAKE_GLOBAL_SPM:-default}" in off) spm=0 ;; *) spm=1 ;; esac; fi
+    mkdir -p ios/Flutter ios/Runner
+    cat >ios/Flutter/Generated.xcconfig <<EOF
+// This is a generated file; do not edit or check into version control.
+FLUTTER_ROOT=$root
+FLUTTER_APPLICATION_PATH=$PWD
+COCOAPODS_PARALLEL_CODE_SIGN=true
+FLUTTER_TARGET=lib/main.dart
+FLUTTER_BUILD_DIR=build
+FLUTTER_BUILD_NAME=1.0.0
+FLUTTER_BUILD_NUMBER=1
+EXCLUDED_ARCHS[sdk=iphonesimulator*]=i386
+DART_OBFUSCATION=false
+TRACK_WIDGET_CREATION=true
+TREE_SHAKE_ICONS=false
+PACKAGE_CONFIG=.dart_tool/package_config.json
+EOF
+    printf '#!/bin/sh\nexport "FLUTTER_ROOT=%s"\nexport "FLUTTER_APPLICATION_PATH=%s"\n' "$root" "$PWD" >ios/Flutter/flutter_export_environment.sh
+    printf '// Generated file. Do not edit.\n' >ios/Runner/GeneratedPluginRegistrant.h
+    printf '// Generated file. Do not edit.\n' >ios/Runner/GeneratedPluginRegistrant.m
+    if [ "$spm" = 1 ]; then
+      mkdir -p ios/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage
+      printf '// swift-tools-version: 5.9\n// Generated file. Do not edit.\n' \
+        >ios/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage/Package.swift
+      echo "Swift Package Manager 사용 (가짜)"
+    else
+      [ -f ios/Podfile ] || printf "# Uncomment this line to define a global platform for your project\nplatform :ios, '16.4'\n" >ios/Podfile
+      for c in Debug Release; do
+        lc=$(printf '%s' "$c" | tr '[:upper:]' '[:lower:]')
+        grep -q "Pods-Runner.$lc.xcconfig" "ios/Flutter/$c.xcconfig" ||
+          printf '#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.%s.xcconfig"\n' "$lc" >>"ios/Flutter/$c.xcconfig"
+      done
+      echo "CocoaPods 경로 (가짜): Podfile 생성, Flutter/*.xcconfig 에 Pods include 추가"
+    fi
+    ;;
+  assemble*) echo "assemble (가짜)" ;;
+  *)
+    echo "flutter(가짜): 모르는 호출 $*" >&2
+    exit 64
+    ;;
+esac
