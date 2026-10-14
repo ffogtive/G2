@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDEProvisioningTeams</key>
+	<dict>
+		<key>tester@example.com</key>
+		<array>
+			<dict>
+				<key>isFreeProvisioningTeam</key>
+				<false/>
+				<key>teamID</key>
+				<string>ABCDE12345</string>
+				<key>teamName</key>
+				<string>Test Co, Inc.</string>
+				<key>teamType</key>
+				<string>Company</string>
+			</dict>
+			<dict>
+				<key>isFreeProvisioningTeam</key>
+				<false/>
+				<key>teamID</key>
+				<string>QWERT67890</string>
+				<key>teamName</key>
+				<string>Other Co</string>
+				<key>teamType</key>
+				<string>Company</string>
+			</dict>
+		</array>
+	</dict>
+</dict>
+</plist>

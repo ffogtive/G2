@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDEBuildOperationMaxNumberOfConcurrentCompileTasks</key>
+	<integer>8</integer>
+	<key>IDEProvisioningTeamByIdentifier</key>
+	<dict>
+		<key>0A1B2C3D-0000-4000-8000-000000000000</key>
+		<array>
+			<dict>
+				<key>isFreeProvisioningTeam</key>
+				<false/>
+				<key>teamID</key>
+				<string>ABCDE12345</string>
+				<key>teamName</key>
+				<string>Test Co, Inc.</string>
+				<key>teamType</key>
+				<string>Company</string>
+			</dict>
+			<dict>
+				<key>isFreeProvisioningTeam</key>
+				<true/>
+				<key>teamID</key>
+				<string>QWERT67890</string>
+				<key>teamName</key>
+				<string>Other Person (Personal Team)</string>
+				<key>teamType</key>
+				<string>Personal</string>
+			</dict>
+		</array>
+	</dict>
+</dict>
+</plist>
