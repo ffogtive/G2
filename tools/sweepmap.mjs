@@ -399,7 +399,7 @@ function gateReport(file) {
     const g3 = verdict(p3.lo > 1.05, `③ 절제(lip 힘 항 0)에서도: 튕김 ÷ 최선 고정(${ab}) = ${ci(p3)}  (이득이 기하×시간에서 나옴)`);
     if (n >= 30) pass = pass && g3;
     const p4 = pairOf(g('g|kinb'), g('g|kina'));
-    console.log(`  (정보) 각도만 ÷ 높이만 = ${ci(p4)}  (1 근처 = 위 운동량은 주원인 아님; 1안 q0.55 에서는 1.23~1.41)`);
+    console.log(`  (정보) 각도만 ÷ 높이만 = ${ci(p4)}  (1 근처 = 위 운동량은 주원인 아님. 끝 각 8° 라 경로가 짧다 — 경로를 맞추면 1.00~1.10, core-sweep §3.9 ④)`);
     console.log(`  (정보) 튕김 ÷ 각도만·높이만 = ${ci(pairOf(g('g|kina'), g('g|flick')))} · ${ci(pairOf(g('g|kinb'), g('g|flick')))}`);
   }
   console.log(`\n게이트(30장 이상 ①②③): ${pass ? '통과' : '실패'}`);

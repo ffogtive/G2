@@ -21,25 +21,27 @@
 // 판정 (기본 판 20장·숨 2, 30장·숨 3, 45장·숨 3 = levels.js 숨 2~3번. 옛 판은 BOARDS=20:3,30:4,45:5):
 //   (i)   섞기 이득 = 최적 ÷ 한 몸짓만 쓴 최적(쉬기 허용) − 1 > 5%
 //   (ii)  퍽이 최적 계획에 나온다
-//   (iii) 세기가 공짜가 아니다: 첫 수(N장)에서 약한 쪽(q ≤ 0.85) 1등(수확 1등의 95% 안에서 효율 최고)의 효율(장/칸)이
-//         센 숨(q ≥ 0.93) 수확 최고보다 5% 넘게 좋다(iii-a). 그리고 30·45장에서 짧고 센 고정 숨(q ≥ 0.93, 0.4 s 이하에 떼기) 최선이
-//         튕김(1등)을 지배(수확·효율 둘 다 이상)하지 않는다(iii-b).
+//   (iii) 세기가 공짜가 아니다: 첫 수(N장)에서 약한 쪽(q ≤ 0.85) 1등의 효율(장/칸)이 센 숨(q ≥ 0.93) 1등보다 5% 넘게 좋다(iii-a).
+//         1등 = 그 쪽 수확 1등의 95% 안에서 효율 최고(양쪽 같은 규칙). 그리고 30·45장에서 짧고 센 고정 숨(q ≥ 0.93, 0.4 s 이하에 떼기) 최선이
+//         튕김(1등)을 지배(수확·효율 둘 다 이상)하지 않는다(iii-b). q 0.85 짧은 고정(웃돈 0.125칸)은 검사 밖이라 정보 줄로만 찍는다.
 //         [정보 iii*] 문자 그대로 '어떤 몸짓도 수확·효율 둘 다 1등이 아니다'도 찍는다. 45장은 때 맞춘 튕김이 늘 둘 다 1등이라
-//         어느 비용식으로도 못 넘는다 — §0 '45장 튕김 필수' 그 자체라 판정에서 뺐다.
+//         어느 비용식으로도 못 넘는다 — 핵심 가설의 '큰 더미 튕김 필수' 그 자체라 판정에서 뺐다.
 //   (iv)  풍선이 묶인다: 최적이 무한 풍선 최적보다 2% 넘게 낮다
 //
 // 명령 (CPU 공유: 기본 일꾼 1. 같은 시드면 비트까지 같다 — 20·30·45장 겹치는 키는 sweepcheck 와 비트 동일):
 //   node tools/coresweep/econ.mjs run <out.jsonl> [W=1] [이미 잰 파일,...]   몸짓 × 장수 2·4·8·12·16·20·30·45 = 6,336샷(이어 돌리기)
-//        sweepcheck 의 chk601.jsonl 을 주면 겹치는 키를 건너뛴다 → 4,824샷, 1 일꾼 약 15분
+//        sweepcheck 의 chk601.jsonl(.gz 도 됨: tools/coresweep/data/vf/chk601.jsonl.gz)을 주면 겹치는 키를 건너뛴다 → 4,824샷, 1 일꾼 약 15분
 //   node tools/coresweep/econ.mjs table <files,...>     장수별 첫 수 표(수확·원 밖·D·규칙별 비용·장/칸)
 //   node tools/coresweep/econ.mjs gate <files,...>      규칙별 네 판정 + 최적 계획. 기본 = 옛 / 세기 웃돈만 / 3판 이음만 / 제안
 //   node tools/coresweep/econ.mjs search <files,...>    풍선(가득·+숨마다) × 판마다 가득/3판 이음 × 비용식 격자 1,008칸
 //   node tools/coresweep/econ.mjs boot <files,...> [B=200]   시드 부트스트랩: 판정 통과율·여유 95% 구간
-// 환경: SEEDS=601-624 · NS=2,4,8,...,45 (run) · BOARDS=20:2,30:3,45:3 · BAL=6 · REG=2 · K=1 · REST=1 · TOP
+// 환경: SEEDS=601-624 · NS=2,4,8,...,45 (run) · BOARDS=20:2,30:3,45:3 · BAL=6 · REG=2 · K=1 · REST=1 · TOP · EXCL=flick(gate 에서 몸짓 종류 빼기)
+//       파일은 .jsonl 또는 .jsonl.gz(레포 원자료: tools/coresweep/data/vf/chk601.jsonl.gz,tools/coresweep/data/f2/econ601.jsonl.gz)
 //       RULES='이름=a,b,p,P,k,all[@BAL,REG,K];...' (@ 뒤는 그 규칙의 풍선. 없으면 BAL·REG·K 환경값)
 // 주의: 장난감이다. 숙련(잡음 없는) 기대값 DP·선형 보간·같은 시드에서 고른 최선(승자의 저주). 수치는 레벨 봇(§9 6번)으로 다시 맞춘다.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { appendFileSync, existsSync, readFileSync, realpathSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 import * as SW from './simsweep.js';
 import { shot, poseAt, regCell, GEO } from '../sweepmap.mjs';
@@ -81,7 +83,8 @@ async function run(of, W, haveFiles) {
   const jobs = makeJobs();
   const tag = (j) => `${j.key}|${j.seed}|${j.n}`;
   const done = new Set();
-  for (const f of [of, ...haveFiles]) if (f && existsSync(f)) for (const l of readFileSync(f, 'utf8').split('\n')) if (l) done.add(tag(JSON.parse(l)));
+  for (const f of haveFiles) if (!existsSync(f)) console.error(`경고: 이미 잰 파일 ${f} 이 없다 → 겹치는 키도 다시 잰다(4,824샷이 아니라 6,336샷)`);
+  for (const f of [of, ...haveFiles]) if (f && existsSync(f)) for (const l of (f.endsWith('.gz') ? gunzipSync(readFileSync(f)).toString('utf8') : readFileSync(f, 'utf8')).split('\n')) if (l) done.add(tag(JSON.parse(l)));
   const todo = jobs.filter((j) => !done.has(tag(j)));
   console.error(`작업 ${jobs.length}, 남은 것 ${todo.length}, 일꾼 ${W} → ${of}`);
   let k = 0, fin = 0;
@@ -127,7 +130,9 @@ function actionOf(r) {
 const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 // files → { Ns, acts: [{act, kind, q, h, label, byN: Map(n → Map(seed → {flip, out, D}))}] }
 export function load(files) {
-  const rows = files.split(',').flatMap((f) => readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)));
+  // .gz 는 풀어서 읽는다(레포 원자료 tools/coresweep/data/vf/chk601.jsonl.gz · data/f2/econ601.jsonl.gz)
+  const text = (f) => (f.endsWith('.gz') ? gunzipSync(readFileSync(f)).toString('utf8') : readFileSync(f, 'utf8'));
+  const rows = files.split(',').flatMap((f) => text(f).split('\n').filter(Boolean).map((l) => JSON.parse(l)));
   const A = new Map();
   for (const r of rows) {
     const a = actionOf(r);
@@ -244,12 +249,12 @@ export function firstMove(S, rule, N) {
 
 // 네 판정
 // (iii) 은 두 갈래다. Codex 지적('세기가 공짜')을 직접 재는 것:
-//   (iii-a) 세기 값: 첫 수(N장)에서 센 숨(q ≥ 0.93)의 수확 최고 몸짓 M 보다, 약한 쪽(q ≤ 0.85) 1등 몸짓 W
-//           (수확 1등의 95% 안에서 효율 최고)의 효율(장/칸)이 5% 넘게 좋아야 한다. 여유 = 효율 W/M − 1 ≥ 0.05.
+//   (iii-a) 세기 값: 첫 수(N장)에서 센 숨(q ≥ 0.93)의 1등 몸짓 M 보다, 약한 쪽(q ≤ 0.85) 1등 몸짓 W 의
+//           효율(장/칸)이 5% 넘게 좋아야 한다. 1등 = 그 쪽 수확 1등의 95% 안에서 효율 최고(양쪽 같은 규칙). 여유 = 효율 W/M − 1 ≥ 0.05.
 //           옛 규칙은 세기가 비용에 없어서 센 숨이 같은 값이다(20장 센 고정이 1등, 45장 튕김 1.0 이 1등).
 //   (iii-b) 30·45장: 짧고 센 고정 숨(q ≥ 0.93, 0.4 s 이하에 떼기) 최선이 튕김(수확 1등의 95% 안에서 효율 최고)을 지배하지 않는다.
 //   (iii*)  [정보] 문자 그대로 '어떤 몸짓도 수확·효율 둘 다 1등이 아니다'. 1등 몸짓 A(수확 1등의 95% 안에서 효율 최고)에
-//           수확 A ≥ 1.05·B, 효율 B ≥ 1.05·A 인 상대 B 가 있나. 45장은 때 맞춘 튕김이 둘 다 1등이라 어느 비용식으로도 못 넘는다(§0 '45장 튕김 필수' 그 자체)
+//           수확 A ≥ 1.05·B, 효율 B ≥ 1.05·A 인 상대 B 가 있나. 45장은 때 맞춘 튕김이 둘 다 1등이라 어느 비용식으로도 못 넘는다(핵심 가설의 '큰 더미 튕김 필수' 그 자체)
 export function judge(S, rule, N, T, env) {
   const mix = solve(N, T, S, rule, S, env);
   const inf = solve(N, T, S, rule, S, { ...env, BAL: 999, REG: 999 });
@@ -263,9 +268,10 @@ export function judge(S, rule, N, T, env) {
   const A = top95(L);
   let tm = -Infinity, tB = null;
   for (const B of L) { if (B === A || B.y <= 0) continue; const m = Math.min(A.y / B.y, B.e / A.e) - 1; if (m > tm) { tm = m; tB = B; } }
-  // (iii-a) 세기 값: M = 센 숨(q ≥ 0.93) 중 수확 최고, W = 약한 쪽(q ≤ 0.85)의 1등(수확 1등의 95% 안에서 효율 최고)
+  // (iii-a) 세기 값: 양쪽 같은 규칙 — M = 센 숨(q ≥ 0.93)의 1등, W = 약한 쪽(q ≤ 0.85)의 1등(둘 다 그 쪽 수확 1등의 95% 안에서 효율 최고)
+  //   (고침 2026-10-14: 예전엔 M = 센 숨 수확 1등이라 웃돈이 가장 큰 q 1.0 이 뽑혀 여유가 부풀었다. 20장 +31% → +15%)
   const strong = L.filter((x) => x.a.q >= 0.93), weak = L.filter((x) => x.a.q <= 0.85);
-  const M = strong[0], W = weak.length ? top95(weak) : null;
+  const M = strong.length ? top95(strong) : null, W = weak.length ? top95(weak) : null;
   const qm = M && W ? W.e / M.e - 1 : Infinity;
   const qPair = M && W ? [W, M] : null;
   // (iii-b) 센 고정 vs 튕김
@@ -274,9 +280,11 @@ export function judge(S, rule, N, T, env) {
   const fl = fls.length ? top95(fls) : null;
   const sfDom = sf && fl ? sf.y >= fl.y && sf.e >= fl.e : false;
   const sfMargin = sf && fl ? Math.max(fl.y / sf.y, fl.e / sf.e) - 1 : NaN; // > 0 이면 지배당하지 않음
+  // [정보] (iii-b) 는 q ≥ 0.93 만 본다. 웃돈이 0.125칸뿐인 q 0.85 짧은 고정(0.4 s 이하)도 튕김과 견준다(수확·효율 비 = 짧은 고정 ÷ 튕김)
+  const sf85 = L.filter((x) => x.a.kind === 'fix' && x.a.q >= 0.85 && x.a.q < 0.93 && x.a.h <= 0.4)[0];
   const bind = 1 - mix.v / inf.v;
   const ok = { i: gain > 0.05, ii: puck, iii: qm >= 0.05 && (N < 30 || !sfDom), iv: bind > 0.02 };
-  return { N, T, K: env.K || 1, mix, inf, single, gain, puck, A, tm, tB, qm, qPair, sf, fl, sfDom, sfMargin, bind, ok, all: ok.i && ok.ii && ok.iii && ok.iv, strict: tm >= 0.05 };
+  return { N, T, K: env.K || 1, mix, inf, single, gain, puck, A, tm, tB, qm, qPair, sf, fl, sfDom, sfMargin, sf85, bind, ok, all: ok.i && ok.ii && ok.iii && ok.iv, strict: tm >= 0.05 };
 }
 
 const pct = (x) => (Number.isFinite(x) ? `${x >= 0 ? '+' : ''}${(100 * x).toFixed(0)}%` : '없음');
@@ -288,6 +296,7 @@ function printJudge(j) {
   console.log(`     (ii) 퍽 ${j.puck ? '나옴 통과' : '안 나옴 실패'} · (iv) 무한 풍선 ${j.inf.v.toFixed(1)} → 묶임 ${pct(j.bind)} ${j.ok.iv ? '통과' : '실패'}`);
   console.log(`     (iii-a) 세기 값: 약한 쪽 1등 ${mv(j.qPair[0])} vs 센 숨 최고 ${mv(j.qPair[1])} → 효율 여유 ${pct(j.qm)}` +
     (j.sf && j.fl ? ` · (iii-b) 센 고정 ${mv(j.sf)} vs 튕김 ${mv(j.fl)} → ${j.sfDom ? '센 고정이 지배' : `지배 아님(여유 ${pct(j.sfMargin)})`}` : '') + ` → ${j.ok.iii ? '통과' : '실패'}`);
+  if (j.sf85 && j.fl) console.log(`     (정보) q 0.85 짧은 고정 ${mv(j.sf85)} ÷ 튕김 ${mv(j.fl)} → 수확 ${pct(j.sf85.y / j.fl.y - 1)} · 효율 ${pct(j.sf85.e / j.fl.e - 1)}`);
   console.log(`     (iii*, 정보) 1등 ${mv(j.A)} · 맞교환 상대 ${j.tB ? mv(j.tB) : '없음'} → 여유 ${pct(j.tm)} ${j.strict ? '(지배 없음)' : '(1등이 수확·효율 둘 다 1등 = 지배)'}`);
 }
 
@@ -309,7 +318,9 @@ const failStr = (js) => (js.every((j) => j.all) ? '모두 통과' : '실패: ' +
 
 function gate(files) {
   const { acts } = load(files);
-  const S = summarize(acts);
+  const excl = (process.env.EXCL || '').split(',').filter(Boolean); // 예: EXCL=flick → 튕김 없이 푼 DP(튕김이 얼마나 필요한가)
+  const S = summarize(acts).filter((a) => !excl.includes(a.kind));
+  if (excl.length) console.log(`(뺀 몸짓 종류: ${excl.join(', ')})`);
   for (const rule of parseRules(process.env.RULES || RULES_DEF)) {
     const env = { ...envOf(), ...(rule.env || {}) };
     console.log(`\n### ${hdr(rule, env)}`);

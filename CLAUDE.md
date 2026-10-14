@@ -51,6 +51,7 @@ tools/atlas.mjs / fromtop.mjs  공략 지도(장수×높이×좌우×세기) / �
 tools/goldenside.mjs  황금 딱지가 조준에 따라 어디로 떨어지나 (★칸 판)
 tools/cuecheck.mjs    공략 단서가 규칙·실측과 맞는지 (단서·숨 규칙 바꾸면 필수)
 tools/physics-spike.mjs  물리 안정성/분포 측정
+tools/sweepmap.mjs · sweepcheck.mjs · coresweep/  고개 쓸기(푸어억) 코어 측정·재검증·모델 민감도(sens)·숨 풍선(econ)·엄지 인식기(gestnoise), 원자료 coresweep/data/ (docs/design/core-sweep.md §3.8). sim.js 바꾸면 `node tools/sweepmap.mjs verify` 필수(simsweep ≡ sim.js)
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
 tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행. claude 없음·use()=null·보기 전용 → PvP 숨김 / 가짜 호스트 → 'VS 친구'·방 만들기
 tools/fake-claude.js · artifact-host.mjs  가짜 claude.ai 호스트(LocalNet 위에 db·room·user 모양) · 아티팩트 빌드 감싸기·CDN→node_modules (시험 전용)
