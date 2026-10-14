@@ -2,8 +2,8 @@
 
 ## 🧭 핵심 가설
 
-- **(추천) 맥에서 직접: G3와 같은 `tools/mac/ios_run.sh` 한 줄이면 받기 → Flutter 준비 → 서명 빌드 → 설치 → 실행까지 끝난다.** 가짜 맥 시험(`bash tools/mac/test/fake-mac.sh` — 시나리오 109개·확인 407개, 문서의 한 줄 명령을 그대로 zsh 로 붙여 넣는 것 포함)은 통과했다. 맥과 같은 bash 3.2.57·awk 20200816·BSD sed/grep(Apple 공개 소스로 빌드, `tools/mac/test/build-macland.sh`)·python 3.9로도 통과했다. 실제 맥·아이폰에서는 아직 안 돌려 봤다. (미검증)
-  - 판가름: 첫 실행 끝의 `빌드 / 설치 / 실행 / 떠 있음` 네 줄이 모두 ok·yes인가. 그다음 화면·소리·햅틱은 재윤님이 확인한다.
+- **(추천) 맥에서 직접: G3와 같은 `tools/mac/ios_run.sh` 한 줄이면 받기 → Flutter 준비 → 서명 빌드 → 설치 → 실행까지 끝난다.** 가짜 맥 시험(`bash tools/mac/test/fake-mac.sh` — 시나리오 109개·확인 407개, 문서의 한 줄 명령을 그대로 zsh 로 붙여 넣는 것 포함)은 통과했다. 맥과 같은 bash 3.2.57·awk 20200816·BSD sed/grep(Apple 공개 소스로 빌드, `tools/mac/test/build-macland.sh`)·python 3.9로도 통과했다. **(확인됨, 2026-10-14 재윤님 맥)** Xcode 27.0 · iPhone 16 Pro(iOS 27.0.1) · 유료 팀 자동 감지 · Flutter 3.47.5 · Rust 끔에서 `빌드 ok / 설치 ok / 실행 ok / 떠 있음 yes`, 추적 파일 unchanged. 두 번째 실행은 22초(Flutter·빌드 캐시).
+  - 남은 판가름: 화면·소리·햅틱·마이크(REAL BLOW)는 재윤님이 아이폰에서 확인한다. (미검증)
 - **클라우드 세션은 맥(VPN 사설 주소)에 닿지 못한다.** 직접 재 보니 `100.x:22` 연결이 시간 초과였다. (확인됨)
 - **재윤님 개발 서버(`/home/ffogtive`)는 이미 맥으로 SSH가 된다.** 재윤님 가이드 0절의 '기존 SSH 서버' 경로다.
   - → 그 서버의 Claude 세션이 이 문서대로 받기 → 빌드 → 맥으로 보내기 → 서명 빌드 → 아이폰 설치·실행을 한다.
