@@ -1,0 +1,15 @@
+Ld @DERIVED@/Build/Intermediates.noindex/Runner.build/Release-iphoneos/Runner.build/Objects-normal/arm64/Binary/Runner normal arm64 (in target 'Runner' from project 'Runner')
+    cd @HOME@/G2/app/ios
+ld: warning: object file (@HOME@/G2/native/puff_sim/dist/ios/device/libpuff_sim.a[2](puff_sim-0001.o)) was built for newer 'iOS' version (17.0) than being linked (16.4)
+Undefined symbols for architecture arm64:
+  "___chkstk_darwin", referenced from:
+      _puff_world_step in libpuff_sim.a[2](puff_sim-0001.o)
+ld: symbol(s) not found for architecture arm64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	Ld @DERIVED@/Build/Intermediates.noindex/Runner.build/Release-iphoneos/Runner.build/Objects-normal/arm64/Binary/Runner normal arm64 (in target 'Runner' from project 'Runner')
+(1 failure)

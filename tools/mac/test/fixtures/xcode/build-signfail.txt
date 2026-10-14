@@ -1,0 +1,16 @@
+CodeSign @DERIVED@/Build/Products/Release-iphoneos/Runner.app (in target 'Runner' from project 'Runner')
+    cd @HOME@/G2/app/ios
+    Signing Identity:     "Apple Development: Test Person (ZZZZZZZZZZ)"
+    Provisioning Profile: "iOS Team Provisioning Profile: com.ffogtive.puff"
+                          (0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0)
+
+    /usr/bin/codesign --force --sign 0123456789ABCDEF0123456789ABCDEF01234567 --entitlements @DERIVED@/Build/Intermediates.noindex/Runner.build/Release-iphoneos/Runner.build/Runner.app.xcent --timestamp\=none --generate-entitlement-der @DERIVED@/Build/Products/Release-iphoneos/Runner.app
+@DERIVED@/Build/Products/Release-iphoneos/Runner.app: errSecInternalComponent
+Command CodeSign failed with a nonzero exit code
+
+** BUILD FAILED **
+
+
+The following build commands failed:
+	CodeSign @DERIVED@/Build/Products/Release-iphoneos/Runner.app (in target 'Runner' from project 'Runner')
+(1 failure)

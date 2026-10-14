@@ -2,7 +2,7 @@
 
 ## 🧭 핵심 가설
 
-- **(추천) 맥에서 직접: G3와 같은 `tools/mac/ios_run.sh` 한 줄이면 받기 → Flutter 준비 → 서명 빌드 → 설치 → 실행까지 끝난다.** 가짜 맥 시험(`bash tools/mac/selftest.sh`, 시나리오 52개·확인 193개, bash 3.2 포함)은 통과했고, 실제 맥·아이폰에서는 아직 안 돌려 봤다. (미검증)
+- **(추천) 맥에서 직접: G3와 같은 `tools/mac/ios_run.sh` 한 줄이면 받기 → Flutter 준비 → 서명 빌드 → 설치 → 실행까지 끝난다.** 가짜 맥 시험(`bash tools/mac/test/fake-mac.sh` — 시나리오 109개·확인 407개, 문서의 한 줄 명령을 그대로 zsh 로 붙여 넣는 것 포함)은 통과했다. 맥과 같은 bash 3.2.57·awk 20200816·BSD sed/grep(Apple 공개 소스로 빌드, `tools/mac/test/build-macland.sh`)·python 3.9로도 통과했다. 실제 맥·아이폰에서는 아직 안 돌려 봤다. (미검증)
   - 판가름: 첫 실행 끝의 `빌드 / 설치 / 실행 / 떠 있음` 네 줄이 모두 ok·yes인가. 그다음 화면·소리·햅틱은 재윤님이 확인한다.
 - **클라우드 세션은 맥(VPN 사설 주소)에 닿지 못한다.** 직접 재 보니 `100.x:22` 연결이 시간 초과였다. (확인됨)
 - **재윤님 개발 서버(`/home/ffogtive`)는 이미 맥으로 SSH가 된다.** 재윤님 가이드 0절의 '기존 SSH 서버' 경로다.
@@ -33,6 +33,7 @@ cd ~/G2 && git fetch origin claude/ddakji-game-design-unrfmr && git reset --hard
 - **하는 일**: Xcode·아이폰·Team 확인 → 게임 한 파일(`dist/puff.html` + 앱 다리 코드) → (Rust가 있으면) 네이티브 데모 물리 → `flutter pub get --enforce-lockfile` + `flutter build ios --config-only` → `xcodebuild` Release 자동 서명 → `codesign`·Bundle ID 확인 → `devicectl` 설치(기존 앱·진행 저장 유지) → 실행 → 8초 뒤 떠 있는지 확인.
   - **팀이 여럿이면**: 유료 팀이 하나뿐이면 그것(무료 Personal Team은 뺌), G3(`~/.lane1/deploy.env`)에서 고른 팀이 있으면 그것, 아니면 `가린 ID + 팀 이름 + 유료/무료`를 보여 주고 번호로 묻는다. 고른 값은 `~/.config/puff/iphone-deploy.env`의 `TEAM_ID=`에 남는다. 잘못 골랐으면 그 줄을 지우고 다시.
   - **스스로 다시 해 보는 것**: 프로파일에 이 아이폰이 없으면 기기 지정 빌드로 등록하고 다시(빌드 단계든 설치 단계든), Rust를 링크한 빌드가 Xcode에서 실패하면 Rust 링크를 끄고 한 번 더(웹 게임은 Rust와 무관).
+  - **아이폰 잠금**: 첫 빌드가 길어서 그사이 아이폰이 잠기는 게 보통이다. 설치·실행이 '잠김'(또는 '신뢰 안 됨')으로 실패하면 `… Enter` 를 묻고 기다린다 → 아이폰 잠금을 풀고(신뢰를 누르고) Enter 하면 빌드 없이 한 번 더 한다. 빌드가 끝날 즈음 잠금을 풀어 두면 묻지 않는다.
 - **결과**: 끝에 `빌드 / 설치 / 실행 / 떠 있음`이 따로 찍힌다. 기능(화면·불기 소리·햅틱)은 재윤님 확인이다.
   - 기록: `.local/deploy-runs/<시각>-<pid>/`. 도움을 청할 때는 **`receipt.txt`와 `errors-masked.txt`만** 보낸다(식별자를 가렸다). 화면의 빨간 오류 줄도 가려서 찍는다.
   - 같은 폴더의 `build.log`·`devices.json`·`launch.json` 원문에는 Team ID·UDID·인증서 이름이 그대로 있다. 이 레포는 공개라서 통째로 붙여 넣지 않는다.

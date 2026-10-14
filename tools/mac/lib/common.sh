@@ -8,7 +8,7 @@
 # 고정값 (CLAUDE.md '앱' 절: 컨테이너·맥이 같은 Flutter 로 pub/lock 을 푼다)
 PUFF_FLUTTER_VERSION="3.47.5"
 PUFF_FLUTTER_REVISION="6a19cca56475dbfba1478ee68d7bd0c2ef891da1" # 태그 3.47.5 = 이 커밋 (git ls-remote 로 확인, 2026-10-14)
-# 미러로 바꿔도 된다: 받은 뒤 위 리비전과 다르면 쓰지 않는다
+# 미러로 바꿔도 된다(URL 또는 절대 경로 — clone 은 받을 폴더의 부모에서 돈다): 받은 뒤 위 리비전과 다르면 쓰지 않는다
 PUFF_FLUTTER_GIT_URL=${PUFF_FLUTTER_GIT_URL:-"https://github.com/flutter/flutter.git"}
 PUFF_BUNDLE_ID="com.ffogtive.puff" # app/ios/Runner.xcodeproj/project.pbxproj 의 PRODUCT_BUNDLE_IDENTIFIER (바꾸지 말 것)
 

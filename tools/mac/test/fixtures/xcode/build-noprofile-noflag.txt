@@ -1,0 +1,2 @@
+@HOME@/G2/app/ios/Runner.xcodeproj: error: No profiles for 'com.ffogtive.puff' were found: Xcode couldn't find any iOS App Development provisioning profiles matching 'com.ffogtive.puff'. Automatic signing is disabled and unable to generate a profile. To enable automatic signing, pass -allowProvisioningUpdates to xcodebuild. (in target 'Runner' from project 'Runner')
+** BUILD FAILED **

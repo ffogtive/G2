@@ -81,9 +81,10 @@ G3에서 쓰던 아이폰이면 이미 되어 있다.
 1. 빌드 중 **"codesign이(가) 키체인의 키 'Apple Development: …'에 접근하려고 합니다"** 창이 뜨면 맥 로그인 비밀번호를 입력하고 **항상 허용**. (비밀번호를 명령줄·파일에 넣지 않는다.)
 2. 설치는 됐는데 실행이 `… not been explicitly trusted` 로 실패하면(이 개발자 인증서로 처음 깔 때) 아이폰에서:
    **설정 > 일반 > VPN 및 기기 관리 > 개발자 앱 > `Apple Development: <Apple ID>` > 신뢰 > 신뢰**
-   → 그다음 `bash tools/mac/ios_run.sh --launch-only`
+   → 터미널이 `… Enter` 를 묻고 기다리고 있으면 Enter(빌드 없이 다시 실행). 이미 끝났으면 `bash tools/mac/ios_run.sh --launch-only`
    - G3를 같은 계정으로 깔아 이미 신뢰했다면 이 단계는 안 나올 수 있다(미검증).
-3. SSH로 들어와 실행했다가 `errSecInternalComponent`가 나면: 맥 화면의 로그인된 Terminal에서 같은 명령을 다시 실행한다(키체인이 GUI 세션에 묶여 있음).
+3. 첫 빌드는 길어서 설치·실행할 즈음 아이폰이 잠겨 있기 쉽다. 잠겨서 실패하면 터미널이 Enter 를 기다린다 → 아이폰 잠금을 풀고 Enter.
+4. SSH로 들어와 실행했다가 `errSecInternalComponent`가 나면: 맥 화면의 로그인된 Terminal에서 같은 명령을 다시 실행한다(키체인이 GUI 세션에 묶여 있음).
 
 ## 만료와 다시 설치
 

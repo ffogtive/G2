@@ -1,0 +1,7 @@
+Prepare packages
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+
+@HOME@/G2/app/ios/Runner.xcodeproj: error: No profiles for 'com.ffogtive.puff' were found: Xcode couldn't find any iOS App Development provisioning profiles matching 'com.ffogtive.puff'. (in target 'Runner' from project 'Runner')
+** BUILD FAILED **

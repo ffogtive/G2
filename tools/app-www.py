@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # app-www.py — tools/app-www.mjs 의 python3 쌍둥이: dist/puff.html + mockup/app/bridge.js → app/assets/www/index.html
 # 맥에 node 가 없을 때 tools/mac/ios_run.sh 가 쓴다. 결과는 app-www.mjs 와 **바이트까지 같아야** 한다
-# (tools/mac/selftest.sh 가 sha256 으로 확인). 한쪽을 고치면 다른 쪽도 같이 고칠 것.
+# (tools/mac/test/fake-mac.sh 가 sha256 으로 확인). 한쪽을 고치면 다른 쪽도 같이 고칠 것.
 # 사용(레포 루트에서): python3 -I tools/app-www.py [게임 파일, 기본 dist/puff.html]   — macOS 기본 python3(3.9)로 돈다
 import os
 import re

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2016 # bash -c '…' 안의 $ 는 빌드한 bash 가 풀 것
 # build-macland.sh — 리눅스에서 '맥 사용자 공간' 일부를 Apple 공개 소스(github.com/apple-oss-distributions)로 빌드한다.
 #   bash 3.2.57 (태그 bash-144 = 요즘 macOS 의 /bin/bash), awk 20200816 (awk-40 = /usr/bin/awk),
 #   BSD sed·grep(2.6.0-FreeBSD)·cut·comm (text_cmds-199). fake-mac.sh 가 MACLAND=<폴더> 로 쓴다(시험 전용, 레포 밖에 만든다).

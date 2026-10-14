@@ -75,7 +75,7 @@ done
 export PUFF_YES=${PUFF_YES:-0}
 
 is_macos || die 3 "ios_run.sh 는 맥에서만 돈다(Xcode·devicectl 필요). 이 컴퓨터: $(uname -s 2>/dev/null || echo '?')." \
-  "리눅스(컨테이너)에서 할 수 있는 확인: cd app && flutter analyze && flutter test   ·   가짜 맥 흐름 시험: bash tools/mac/selftest.sh" \
+  "리눅스(컨테이너)에서 할 수 있는 확인: cd app && flutter analyze && flutter test   ·   가짜 맥 흐름 시험: bash tools/mac/test/fake-mac.sh" \
   "맥으로 SSH 되는 서버면: bash tools/iphone/deploy-from-server.sh (docs/app/iphone-deploy.md)"
 
 # 다른 Flutter 의 FLUTTER_ROOT 가 환경에 남아 있으면 Xcode 빌드 스크립트가 헷갈릴 수 있다 → 이 실행에서만 지운다
@@ -96,7 +96,7 @@ printf 'pid=%s started=%s run=%s\n' "$$" "$(date '+%Y-%m-%d %H:%M:%S')" "$RUN_DI
 
 BUILD_RESULT="not run" INSTALL_RESULT="not run" LAUNCH_RESULT="not run" RUST_RESULT="not run"
 ASSETS_RESULT="not run" FLUTTER_DESC="?" RUNNING="not checked" GIT_SNAPSHOT=0 TRACKED_RESULT="not checked"
-TEAM_ID="" TEAM_KIND="?" DEVICE_ID="?" DEVICE_NAME="?" DEVICE_MODEL="?" DEVICE_CD="" TUNNEL_DOWN=0
+TEAM_ID="" TEAM_KIND="?" DEVICE_ID="?" DEVICE_NAME="?" DEVICE_MODEL="?" DEVICE_CD="" DEVICE_OS="?" TUNNEL_DOWN=0 XCODE_VER="?"
 FLUTTER_TMP="" # Flutter 를 받는 중인 임시 폴더 — 끊겨도(Ctrl-C 포함) EXIT 트랩이 지운다
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -175,6 +175,9 @@ finish_deploy() {
       "$rc" "$CONFIG" "$BUILD_RESULT" "$INSTALL_RESULT" "$LAUNCH_RESULT" "$RUNNING" "$ASSETS_RESULT" "$RUST_RESULT" \
       "$FLUTTER_DESC"
     printf 'team_type=%s\ntracked_files=%s\nstages=%s\n' "$TEAM_KIND" "$TRACKED_RESULT" "$PUFF_STAGE_TIMES"
+    # 원격으로 도울 때 받는 건 이 파일뿐 → 판 정보(식별자 아님): Xcode·macOS·iOS·기기 모델
+    printf 'xcode=%s\nmacos=%s\nios=%s\ndevice=%s\n' "$XCODE_VER" "$(sw_vers -productVersion 2>/dev/null || echo '?')" \
+      "$DEVICE_OS" "$DEVICE_MODEL"
     printf 'git=%s%s\nbundle=%s\n' "$(git -C "$PUFF_ROOT" rev-parse --short HEAD 2>/dev/null || echo '?')" \
       "$(git -C "$PUFF_ROOT" diff --quiet HEAD 2>/dev/null || echo '+dirty')" "$BUNDLE_ID"
   } >"$RUN_DIR/receipt.txt" 2>/dev/null || true
@@ -237,6 +240,8 @@ FLUTTER=$(expand_home "${FLUTTER:-}")
 [ -z "$DEVICE_ARG" ] || PUFF_DEVICE_ID=$DEVICE_ARG
 
 is_number() { case "$1" in "" | *[!0-9]*) return 1 ;; *) return 0 ;; esac; }
+# 목록 번호: 1 이상(0·01 은 sed "0p" 가 오류로 끝나 ERR 트랩으로 넘어진다)
+is_pick() { case "$1" in "" | *[!0-9]* | 0*) return 1 ;; *) return 0 ;; esac; }
 mask() { # 붙여 넣은 로그에 식별자가 남지 않게: AB******YZ
   local s=$1 n=${#1}
   if [ "$n" -le 4 ]; then printf '****'; else printf '%s%s%s' "${s:0:2}" "******" "${s:n-2:2}"; fi
@@ -301,6 +306,7 @@ check_xcode() {
   local ver_out
   ver_out=$(xcodebuild -version 2>&1 || true)
   ver=$(printf '%s\n' "$ver_out" | awk '/^Xcode / && v == "" {v = $2} END {print v}' || true)
+  XCODE_VER=${ver:-?}
   [ -n "$ver" ] || die 3 "xcodebuild -version 실패: $(printf '%s' "$ver_out" | head -n 2 | tr '\n' ' ' || true)" \
     "라이선스 미동의? sudo xcodebuild -license accept   ·   첫 실행 준비: sudo xcodebuild -runFirstLaunch"
   version_ge "$ver" "$XCODE_MIN" || die 3 "Xcode $ver 는 너무 오래됐다(필요 >= $XCODE_MIN, 예상 27.x). App Store 에서 업데이트."
@@ -384,9 +390,11 @@ ensure_flutter() {
   rm -rf "$FLUTTER_TMP"
   log "첫 실행: Flutter $PUFF_FLUTTER_VERSION 받기 5~15분 + 첫 빌드 몇 분 — 화면이 한동안 멈춰 보여도 도는 중이다(한 번만)."
   log "Flutter $PUFF_FLUTTER_VERSION 받는 중 → $(rel "$FLUTTER_DEST") (git 약 240 MB)"
-  # 진행 표시(git --progress)는 화면에, 같은 내용은 로그에
-  if ! git clone --progress --depth 1 --branch "$PUFF_FLUTTER_VERSION" -c advice.detachedHead=false \
-    "$PUFF_FLUTTER_GIT_URL" "$FLUTTER_TMP" 2>&1 </dev/null | tee "$RUN_DIR/flutter-clone.log" >&2; then
+  # 진행 표시(git --progress)는 화면에, 같은 내용은 로그에. 받는 곳은 상대 이름으로: git 이 찍는
+  # "Cloning into '<경로>'..." 에 /Users/<이름>/ 이 남지 않게(fake-mac.sh 식별자 전수 검사가 찾음)
+  if ! (cd "$(dirname "$FLUTTER_TMP")" && git clone --progress --depth 1 --branch "$PUFF_FLUTTER_VERSION" \
+    -c advice.detachedHead=false "$PUFF_FLUTTER_GIT_URL" "$(basename "$FLUTTER_TMP")") 2>&1 </dev/null |
+    tee "$RUN_DIR/flutter-clone.log" >&2; then
     tail_errors "$RUN_DIR/flutter-clone.log" 8
     rm -rf "$FLUTTER_TMP"
     FLUTTER_TMP=""
@@ -535,7 +543,10 @@ resolve_team() {
     elif [ -n "$g3" ]; then
       TEAM_ID=$g3
       if [ "$CHECK_ONLY" = 0 ] && ask "G3(~/.lane1/deploy.env)와 같은 팀 $(mask "$g3") 을 쓸까요? [Y/n]"; then
-        case "$REPLY" in [nN]*) TEAM_ID="" ;; esac
+        case "$REPLY" in
+          [nN]*) TEAM_ID="" ;;
+          *) env_file_set TEAM_ID "$TEAM_ID" ;; # 대화로 받아들였으면 저장 — 다음 실행부터 다시 묻지 않는다
+        esac
       fi
       [ -z "$TEAM_ID" ] || ok "G3 와 같은 팀: $(mask "$TEAM_ID")"
     fi
@@ -545,7 +556,7 @@ resolve_team() {
         return 0
       fi
       ask "어느 팀? (번호)" || die 3 "팀이 여럿이다: PUFF_TEAM_ID(또는 $(rel "$ENV_FILE") 의 TEAM_ID=)를 정하고 다시"
-      is_number "$REPLY" || die 2 "번호가 아니다: '$(mask "$REPLY")'"
+      is_pick "$REPLY" || die 2 "번호가 아니다: '$(mask "$REPLY")'"
       TEAM_ID=$(printf '%s\n' "$cands" | sed -n "${REPLY}p" | cut -f1)
       [ -n "$TEAM_ID" ] || die 2 "$REPLY 번 팀이 없다"
       env_file_set TEAM_ID "$TEAM_ID"
@@ -693,7 +704,7 @@ resolve_device() {
       log "페어링된 기기가 여럿이다:"
       print_devices "$RUN_DIR/devices.cand"
       ask "어느 기기? (번호)" || die 5 "기기가 여럿이다: --device <UDID> 또는 PUFF_DEVICE_ID 로 지정"
-      is_number "$REPLY" || die 2 "번호가 아니다: '$(mask "$REPLY")'"
+      is_pick "$REPLY" || die 2 "번호가 아니다: '$(mask "$REPLY")'"
       sed -n "${REPLY}p" "$RUN_DIR/devices.cand" >"$pick"
       [ -s "$pick" ] || die 2 "$REPLY 번 기기가 없다"
     fi
@@ -818,26 +829,42 @@ flutter_config() {
 }
 
 # ---------------------------------------------------------------------------------------------------------------
+# 첫 빌드는 몇 분~십여 분 걸려서 그사이 아이폰이 저절로 잠기는 게 보통이다 → 실행이 '잠김'·'신뢰 안 됨'으로 실패하면
+# 대화형일 때 한 번 기다렸다가 다시 한다(잠금 해제·신뢰는 재윤님이 아이폰에서 직접 — 스크립트는 Enter 만 기다린다).
 launch_app() {
-  LAUNCH_RESULT="failed"
-  rm -f "$RUN_DIR/launch.json"
-  if xcrun devicectl device process launch --device "$DEVICE_ID" --terminate-existing "$BUNDLE_ID" \
-    --json-output "$RUN_DIR/launch.json" >"$RUN_DIR/launch.log" 2>&1; then
-    LAUNCH_RESULT="ok"
-    ok "실행: $BUNDLE_ID (아이폰 $DEVICE_MODEL)"
-    return 0
-  fi
-  tail_errors "$RUN_DIR/launch.log" 12
-  if grep -qiE 'trust|untrusted|not been explicitly trusted|invalid code signature|profile' "$RUN_DIR/launch.log"; then
-    warn "아이폰이 아직 이 개발자를 신뢰하지 않는다(첫 설치에서 흔함)."
-    hint "아이폰: 설정 > 일반 > VPN 및 기기 관리 > 개발자 앱 > 'Apple Development: <Apple ID>' > 신뢰 > 신뢰." \
-      "그다음: bash tools/mac/ios_run.sh --launch-only   (또는 앱 아이콘을 누른다)"
-  elif grep -qiE 'locked|passcode' "$RUN_DIR/launch.log"; then
-    hint "아이폰 잠금을 풀고: bash tools/mac/ios_run.sh --launch-only"
-  else
-    hint "자세히: $(rel "$RUN_DIR/launch.log"), $(rel "$RUN_DIR/launch.json")"
-  fi
-  return 1
+  local try=1 again
+  while :; do
+    LAUNCH_RESULT="failed"
+    rm -f "$RUN_DIR/launch.json"
+    if xcrun devicectl device process launch --device "$DEVICE_ID" --terminate-existing "$BUNDLE_ID" \
+      --json-output "$RUN_DIR/launch.json" >"$RUN_DIR/launch.log" 2>&1; then
+      LAUNCH_RESULT="ok"
+      ok "실행: $BUNDLE_ID (아이폰 $DEVICE_MODEL)"
+      return 0
+    fi
+    tail_errors "$RUN_DIR/launch.log" 12
+    again=""
+    if grep -qiE 'trust|untrusted|not been explicitly trusted|invalid code signature|profile' "$RUN_DIR/launch.log"; then
+      warn "아이폰이 아직 이 개발자를 신뢰하지 않는다(첫 설치에서 흔함)."
+      hint "아이폰: 설정 > 일반 > VPN 및 기기 관리 > 개발자 앱 > 'Apple Development: <Apple ID>' > 신뢰 > 신뢰." \
+        "그다음: bash tools/mac/ios_run.sh --launch-only   (또는 앱 아이콘을 누른다)"
+      again="아이폰에서 신뢰를 누른 뒤 Enter — 한 번 더 실행한다 (그만두려면 Ctrl-C)"
+    elif grep -qiE 'locked|passcode' "$RUN_DIR/launch.log"; then
+      hint "아이폰 잠금을 풀고: bash tools/mac/ios_run.sh --launch-only"
+      again="아이폰 잠금을 푼 뒤 Enter — 한 번 더 실행한다 (그만두려면 Ctrl-C)"
+    elif grep -qiE 'not installed|returned nil|no such application|unknown application' "$RUN_DIR/launch.log"; then
+      # 문구는 미검증(FBSApplicationLibrary returned nil 가정) — 못 맞히면 아래 '자세히' 로 떨어진다
+      hint "아이폰에 $BUNDLE_ID 가 설치돼 있지 않은 것 같다(--launch-only 는 설치하지 않는다) → 전체 실행: bash tools/mac/ios_run.sh"
+    else
+      hint "자세히: $(rel "$RUN_DIR/launch.log"), $(rel "$RUN_DIR/launch.json")"
+    fi
+    if [ -n "$again" ] && [ "$try" = 1 ] && ask "$again"; then
+      try=2
+      cp "$RUN_DIR/launch.log" "$RUN_DIR/launch.1.log"
+      continue
+    fi
+    return 1
+  done
 }
 
 # `devicectl … launch` 가 0 이어도 프로세스를 띄웠을 뿐이다: dyld 오류·첫 프레임 크래시도 0 으로 끝난다(G3 리뷰).
@@ -1013,7 +1040,7 @@ xcode_build() { # -destination $BUILD_DEST
     build </dev/null >"$RUN_DIR/build.log" 2>&1
 }
 signing_failure() { # 서명·계정 문제면 Rust 를 끄고 다시 빌드해도 소용없다
-  grep -qiE "errSecInternalComponent|No Account|requires a development team|No signing certificate|cannot be registered to your development team|App ID limit" \
+  grep -qiE "errSecInternalComponent|No Account|requires a development team|No signing certificate|cannot be registered to your development team|App ID limit|session has expired|Please log in|login details" \
     "$RUN_DIR/build.log"
 }
 rust_is_on() { case "$RUST_RESULT" in on*) return 0 ;; *) return 1 ;; esac; }
@@ -1024,8 +1051,9 @@ build_app() {
     BUILD_RESULT="ok"
     return 0
   fi
+  # 계정·키체인 문제(signing_failure)면 기기를 등록해도 소용없다 — 몇 분짜리 빌드를 한 번 더 하지 않는다
   if grep -qiE "doesn.t include the currently selected device|no devices|not registered|No profiles for" "$RUN_DIR/build.log" &&
-    [ "$DEVICE_ID" != "?" ]; then
+    [ "$DEVICE_ID" != "?" ] && ! signing_failure; then
     warn "프로비저닝 프로파일에 이 아이폰이 없다 — 기기 지정(id=) 빌드로 한 번 더(기기 등록)"
     cp "$RUN_DIR/build.log" "$RUN_DIR/build.generic.log"
     BUILD_DEST="id=$DEVICE_ID"
@@ -1063,8 +1091,10 @@ build_failed_die() {
   elif grep -qiE "cannot be registered to your development team" "$RUN_DIR/build.log"; then
     die 4 "Bundle ID $BUNDLE_ID 가 다른 팀에 이미 등록돼 있다 — 고른 팀이 그 팀이 아니다." "$(team_hint)" \
       "Bundle ID 는 바꾸지 않는다(진행 저장이 따로 논다)."
-  elif grep -qiE "No Account|requires a development team|No signing certificate|sign in" "$RUN_DIR/build.log"; then
-    die 4 "서명 준비가 안 됐다: Xcode > Settings > Apple Accounts > + (로그인) 후 다시 (tools/mac/SIGNING.md 2단계)." \
+  elif grep -qiE "No Account|requires a development team|No signing certificate|session has expired|Please log in|login details" \
+    "$RUN_DIR/build.log"; then
+    # Apple ID 세션 만료('Your session has expired. Please log in.')도 여기 — Xcode 를 오래 안 열면 흔하다(문구는 미검증)
+    die 4 "서명 준비가 안 됐다: Xcode > Settings > Apple Accounts 에서 로그인(만료됐으면 다시 로그인) 후 다시 (tools/mac/SIGNING.md 2단계)." \
       "$(team_hint)"
   elif grep -qiE "maximum App ID limit|App ID limit" "$RUN_DIR/build.log"; then
     die 4 "무료 Personal Team 한도(7일에 App ID 10개). Bundle ID $BUNDLE_ID 를 유지하고 기다리거나 안 쓰는 개발 앱 정리." \
@@ -1112,6 +1142,7 @@ profile_install_error() { grep -qiE 'provisioning profile|0xe8008015|0xe800801c'
 
 stage_begin "xcodebuild ($CONFIG, generic/platform=iOS, 자동 서명)"
 log "macOS 가 'codesign' 에 로그인 키체인 암호를 물을 수 있다 — Mac 로그인 암호 입력 후 '항상 허용'. 첫 빌드는 몇 분 걸린다."
+log "빌드가 끝나면 바로 설치·실행한다 — 그때 아이폰 잠금이 풀려 있어야 한다(잠겨 있으면 풀고 Enter 를 기다린다)."
 build_app || build_failed_die
 verify_app
 stage_end
@@ -1135,17 +1166,26 @@ if ! install_app && profile_install_error && [ "$DEVICE_ID" != "?" ] && [ "$BUIL
   verify_app
   if install_app; then INSTALL_RESULT="ok (기기 등록 후 다시)"; fi
 fi
+# 빌드하는 몇 분 사이 아이폰이 잠기거나 케이블이 빠졌으면: 대화형일 때 한 번 기다렸다 다시 설치(빌드는 다시 안 함)
+if [ "$INSTALL_RESULT" = failed ] && [ "$PUFF_YES" != 1 ] && [ -t 0 ] && ! profile_install_error &&
+  grep -qiE 'locked|passcode|disconnected|not connected' "$RUN_DIR/install.log"; then
+  tail_errors "$RUN_DIR/install.log" 6
+  warn "설치 실패: 아이폰이 잠겼거나 연결이 끊긴 것 같다(빌드하는 동안 흔함)."
+  if ask "아이폰을 케이블로 연결하고 잠금을 푼 뒤 Enter — 설치를 한 번 더 한다 (그만두려면 Ctrl-C)"; then
+    cp "$RUN_DIR/install.log" "$RUN_DIR/install.1.log"
+    if install_app; then INSTALL_RESULT="ok (잠금 해제 후 다시)"; fi
+  fi
+fi
 if [ "$INSTALL_RESULT" = failed ]; then
   tail_errors "$RUN_DIR/install.log" 12
+  # devicectl 문구는 여러 원인을 한 줄에 섞는다('disconnected, locked, or not trusted') → 처음부터 안 닿던 기기면 그것부터
+  [ "$TUNNEL_DOWN" = 0 ] || hint "시작할 때부터 devicectl 이 아이폰에 닿지 못했다(unavailable)."
   if grep -qiE 'developer mode' "$RUN_DIR/install.log"; then
     hint "개발자 모드 켜기: 설정 > 개인정보 보호 및 보안 > 개발자 모드 (tools/mac/SIGNING.md 4단계)"
-  elif grep -qiE 'locked|passcode' "$RUN_DIR/install.log"; then
-    hint "아이폰 잠금을 풀고 다시: bash tools/mac/ios_run.sh   (빌드는 캐시로 빨라진다)"
   elif profile_install_error; then
     hint "기기 지정 빌드로도 프로파일에 이 아이폰이 없다: Xcode > Settings > Apple Accounts 에서 팀 확인 후 다시." \
       "$(team_hint)"
   else
-    [ "$TUNNEL_DOWN" = 0 ] || hint "시작할 때부터 devicectl 이 아이폰에 닿지 못했다(unavailable)."
     hint "아이폰을 케이블로 연결하고 잠금을 푼 뒤 다시: bash tools/mac/ios_run.sh   (빌드는 캐시로 빨라진다)" \
       "그래도 안 되면 Xcode > Open Developer Tool > Device Hub 에서 아이폰이 연결됨으로 보이는지 확인 (tools/mac/SIGNING.md 3단계)."
   fi

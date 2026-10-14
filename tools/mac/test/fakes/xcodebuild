@@ -6,7 +6,7 @@
 # 성공이면 DerivedData 에 '서명된' Runner.app: 바이너리 Info.plist(번들 ID = project.pbxproj 의 Runner 값), Runner,
 #   embedded.mobileprovision(Team·UDID 원문 — 진짜도 그렇다 → .local 이 700 이어야 하는 이유).
 # 시나리오: FAKE_XCODE_VERSION(27.0) FAKE_FIRST_LAUNCH=needed
-#   FAKE_BUILD=ok|noprofile_then_ok|noprofile|signfail|noaccount|appid_taken|rustlink|script_fail|compile_fail|wrongid
+#   FAKE_BUILD=ok|noprofile_then_ok|noprofile|signfail|noaccount|session_expired|appid_taken|rustlink|script_fail|compile_fail|wrongid
 #   FAKE_PACKAGE_RESOLVED=1 → Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved 를 만든다(Xcode 가 그럴 수 있음)
 K=$(cd "$(dirname "$0")/.." && pwd)
 echo "xcodebuild $*" >>"${FAKE_LOG:-/dev/null}"
@@ -42,8 +42,8 @@ sub() { # 자리표시자 → 이 실행의 값 (실제 로그처럼 식별자 �
   sed -e "s|@TEAM@|$team|g" -e "s|@UDID@|${FAKE_UDID:-}|g" -e "s|@NAME@|${FAKE_DEVICE_NAME:-}|g" \
     -e "s|@HOME@|$HOME|g" -e "s|@DERIVED@|$dd|g" "$1"
 }
-fail_with() { # <fixtures/xcode/build-*.log>
-  sub "$K/fixtures/xcode/build-$1.log"
+fail_with() { # <fixtures/xcode/build-*.txt>
+  sub "$K/fixtures/xcode/build-$1.txt"
   exit 65
 }
 echo "Command line invocation:"
@@ -102,6 +102,7 @@ case "${FAKE_BUILD:-ok}" in
   noprofile) fail_with noprofile ;;
   signfail) fail_with signfail ;;
   noaccount) fail_with noaccount ;;
+  session_expired) fail_with session-expired ;;
   appid_taken) fail_with appid-taken ;;
   compile_fail) fail_with compile-fail ;;
   rustlink) [ "$rust_linked" = 0 ] || fail_with rustlink ;;

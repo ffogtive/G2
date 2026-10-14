@@ -3,7 +3,8 @@
 # device process launch, device info processes}. 기기 목록 = fixtures/devicectl/devices-$FAKE_DEVICES.json
 # (x16-one = Xcode 16 꼴, x27-one/x27-flat = Xcode 27 'properties' 꼴 — 미검증 가정, two, devmode-off, unpaired, unavailable, old-ios, empty).
 # --device 값은 그 목록의 UDID·CoreDevice 식별자·이름이어야 한다(아니면 진짜처럼 실패). 설치한 번들은 $FAKE_STATE 에 남는다.
-# 시나리오: FAKE_IOS_SDK=missing · FAKE_INSTALL=ok|fail(잠김)|gone|noprofile_generic · FAKE_LAUNCH=ok|untrusted|locked
+# 시나리오: FAKE_IOS_SDK=missing · FAKE_INSTALL=ok|fail(잠김)|gone|noprofile_generic|locked_once · FAKE_LAUNCH=ok|untrusted|locked|locked_once
+#           (locked_once = 처음 한 번만 잠김 → 잠금을 풀고 Enter 뒤 다시 하면 된다. 표시 파일은 $FAKE_STATE 에)
 #           FAKE_RUNNING=yes|no|other|fail|nokeys
 import json, os, plistlib, sys
 
@@ -43,6 +44,17 @@ def positionals(seq):
 def fixture(name, cd=""):
     with open(os.path.join(FX, name)) as f:
         return json.loads(f.read().replace("@CD@", cd))
+
+
+def first_time(tag):
+    """locked_once 용: 이 시나리오에서 처음 불렸으면 참(표시 파일을 남긴다)"""
+    if not STATE:
+        return True
+    mark = os.path.join(STATE, "once-" + tag)
+    if os.path.exists(mark):
+        return False
+    open(mark, "w").close()
+    return True
 
 
 def fail(msg, code=1, domain="com.apple.dt.CoreDeviceError", ecode=1):
@@ -124,6 +136,8 @@ if sub[:3] == ["device", "install", "app"]:
              domain="com.apple.dt.MobileDeviceErrorDomain", ecode=-402620395)
     if mode == "gone":
         fail("Unable to connect to the device. The device may be disconnected, locked, or not trusted.", ecode=4)
+    if mode == "locked_once" and not first_time("install"):
+        mode = "ok"
     if mode not in ("ok", "noprofile_generic"):
         fail("The device is locked. (0xe800000b) Unlock the device and try again.", domain="com.apple.dt.MobileDeviceErrorDomain",
              ecode=-402653173)
@@ -147,6 +161,8 @@ if sub[:3] == ["device", "process", "launch"]:
         fail('The request to open "%s" failed. The application could not be launched because it has an invalid code signature, '
              "inadequate entitlements or its profile has not been explicitly trusted by the user." % bundle,
              domain="FBSOpenApplicationServiceErrorDomain", ecode=1)
+    if mode == "locked_once":
+        mode = "locked" if first_time("launch") else "ok"
     if mode == "locked":
         fail('The request to open "%s" failed. Unable to launch %s because the device was not, or could not be, unlocked.' % (bundle, bundle),
              domain="FBSOpenApplicationServiceErrorDomain", ecode=7)
