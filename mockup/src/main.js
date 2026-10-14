@@ -86,6 +86,7 @@ const sfx = new Sfx();
 sfx.muted = !profile.settings.sound;
 const mic = new Mic();
 let micEnabled = false;
+const MIC_BLOW_LV = 0.12; // 마이크 세기(0~1.25)가 이만큼 120ms 이상이면 '불기 시작' (볼이 눈에 띄게 차오르는 정도)
 
 let renderer, scene, camera, fx;
 let table = null; // 물리 테이블 (매치 중)
@@ -1852,7 +1853,7 @@ function playerShot() {
     const minDim = Math.min(window.innerWidth, window.innerHeight);
     let aiming = null;
     let inhale = null;
-    let micPeak = 0, micBlowing = false, micTimer = null;
+    let micPeak = 0, micBlowing = false, micTimer = null, micAbove = 0;
     const F = Rules.POUCH_FULL;
     camAimGoal = 1; // 조준 시점으로
     myTurn.on = true; myTurn.t0 = performance.now(); myTurn.pressed = false;
@@ -1972,17 +1973,21 @@ function playerShot() {
       showCues(aiming);
       $('#hint').hidden = true;
       if (micEnabled && mic.ready) {
-        micPeak = 0; micBlowing = false;
+        micPeak = 0; micBlowing = false; micAbove = 0;
         micTimer = setInterval(() => {
+          if (!aiming) { clearInterval(micTimer); return; }
           const { level, blowing } = mic.sample();
           puffer.p = Math.min(POWER_MAX, level);
           breath.over = puffer.p > F + 0.01; // 마이크: 버팀·콜록 없음, 꽉 너머면 고리만 빨갛게
-          if (blowing) { micBlowing = true; micPeak = Math.max(micPeak, level); }
-          else if (micBlowing && level < micPeak * 0.45) {
+          // 불기 시작 = 바람 소리 판정(blowing) 또는 세기(level)만으로. 아이폰은 마이크가 바람 소리의 저역을 깎아(바람 소음 억제)
+          // blowing 이 거의 안 서서, 볼은 빵빵해지는데 발사가 안 됐다(재윤님 실기기). 짧은 딸깍·말소리는 120ms 지속 조건으로 거른다
+          if (blowing || level >= MIC_BLOW_LV) { micAbove += 30; micPeak = Math.max(micPeak, level); if (micAbove >= 120) micBlowing = true; }
+          if (micBlowing && level < micPeak * 0.45) {
             // 불기 끝 → 발사
             const shot = { ...aiming, power: clamp(micPeak, 0.15, POWER_MAX) };
             micBlowing = false;
             fire(shot);
+            return;
           }
           showGizmo({ ...aiming, power: puffer.p }, powerColor(puffer.p));
           if (aiming) showCues({ ...aiming, power: puffer.p });
@@ -2025,7 +2030,12 @@ function playerShot() {
     };
     const up = (ev) => {
       if (!aiming) return;
-      if (micEnabled && mic.ready) { if (!micBlowing) { aiming = null; puffer.mode = 'idle'; puffer.p = 0; hideGizmo(); clearInterval(micTimer); unpress(); } return; }
+      if (micEnabled && mic.ready) {
+        // 불던 중(또는 분 뒤)에 손을 떼면 그때까지의 최고 세기로 쏜다. 한 번도 안 불었으면 취소
+        if (micBlowing || micPeak >= MIC_BLOW_LV) { const shot = { ...aiming, power: clamp(micPeak, 0.15, POWER_MAX) }; micBlowing = false; clearInterval(micTimer); fire(shot); return; }
+        aiming = null; puffer.mode = 'idle'; puffer.p = 0; hideGizmo(); clearInterval(micTimer); unpress();
+        return;
+      }
       if (aiming.power < 0.06) {
         aiming = null; puffer.mode = 'idle'; puffer.p = 0; hideGizmo(); resetPouch(); inhale?.stop(); inhale = null; unpress();
         return;
