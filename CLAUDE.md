@@ -86,6 +86,7 @@ NET=artifact PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5   # 같은 
   - 물리·규칙을 바꾸면: `cargo test --release` → `target/release/puff_parity shots > app/test/fixtures/sim_cli_shots.json` → `cd app && flutter test` (리눅스 .so 로 Dart 경기 루프 = CLI 비트 대조)
   - iOS 링크는 맥에서 `native/puff_sim/scripts/build-ios.sh` 를 돌렸을 때만 켜진다(`#include?`). 순서·확인·문제 해결 = `docs/app/native-spike.md`. 실제 앱을 이 컨테이너에서 보려면 `app/tool/linux_check.sh`(리눅스 데스크톱 + Impeller + Xvfb)
 - **아이폰 개발 설치는 `docs/app/iphone-deploy.md`**(재윤님 가이드 'claude-code-iphone-deployment.md' 의 G2 판)
+  - **맥에서 한 줄(추천, G3 와 같은 방식)**: `bash tools/mac/ios_run.sh` — 재윤님께 줄 한 줄 명령은 iphone-deploy.md 맨 위. 1회 준비 `tools/mac/SIGNING.md`, Flutter 3.47.5 는 없으면 `~/.puff/flutter` 에 자동 설치, 기록 `.local/deploy-runs/`. 고치면 `bash tools/mac/selftest.sh`(가짜 맥, 리눅스에서 돔)
   - 0절로 현재 환경을 판별한다. 맥 로컬이면 직접, 맥 SSH가 되는 서버면 `tools/iphone/deploy-from-server.sh`, 맥에 닿지 못하는 클라우드면 설치하지 말고 '설치 준비 미완료'로 보고한다(클라우드는 `[iphone-deploy]` 커밋으로 서버 세션에 넘긴다)
   - Bundle ID `com.ffogtive.puff`(SJYTodo 값 금지), 맥 폴더는 G2 전용, 기기·Team 값은 `~/.config/puff/iphone-deploy.env`(레포 밖)
   - 테스트 → 기기용 서명 빌드 → 서명·Bundle ID 확인 → devicectl 설치 → 실행 → 기능 확인. 각 성공을 따로 보고한다. 키·비밀번호·토큰은 출력하거나 요구하지 않는다. 기존 앱을 삭제하지 않는다

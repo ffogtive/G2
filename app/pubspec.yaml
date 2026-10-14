@@ -68,6 +68,13 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
 
+  # iOS 플러그인은 Swift Package Manager 로만 묶는다(ios/Runner.xcodeproj 가 이미 SPM 통합됨, Podfile 없음).
+  # 여기 적어 두면 맥의 전역 `flutter config` 가 SPM 을 꺼 두었어도 이 프로젝트에서는 켜진다
+  # (flutter_tools flutter_features_config.dart: pubspec > 전역 설정 > 환경 변수 FLUTTER_SWIFT_PACKAGE_MANAGER).
+  # 꺼진 채로 pub get 이 돌면 ios/Podfile 이 생기고 추적 파일 ios/Flutter/{Debug,Release}.xcconfig 가 바뀐다 → 다음 git pull 이 막힘.
+  config:
+    enable-swift-package-manager: true
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
