@@ -1,31 +1,119 @@
 // audio.js — 외부 음원 0개, WebAudio 합성 효과음
 // 가설: "퍽!" 쾌감의 절반은 소리. 뒤집힐 때마다 음이 한 칸씩 올라가는 상승 차임(Peggle식)이 연쇄의 흥분을 만든다.
 
+const MASTER = 0.8;
+// 앱(iOS)에서 마이크를 켜면 WebKit 이 PlayAndRecord + VideoChat 으로 바꾼다(WebKit MediaSessionManagerCocoa.mm — 확인됨).
+// 그때 재생 레벨이 낮아진다는 보고가 많다(원인·폭은 미검증 — Apple 이 출력 처리를 어떻게 바꾸는지 문서로 못 찾음). mic.js 는 VPIO 를 안 쓴다(echoCancellation:false)
+// → 마이크가 켜진 동안만 앞단을 키운다(앱만). 뒤의 압축기가 봉우리를 누른다 — 오프라인 렌더 실측(2026-10-14, 무음 0.5초 뒤·시드 3개):
+//   가장 큰 '푸 셈 + 차임 5 + 탁 2' 최대 표본 0.80 → 0.97(−0.3dBFS, 안 깨짐), 체감 rms +1.7~2.9dB. 1.6 이상은 0.99 에 붙으니 올리지 말 것
+const MIC_BOOST = 1.5;
+
+// ── 앱(Flutter iOS 웹뷰) 소리 세션 ─────────────────────────
+// iOS WebKit 은 <audio> 없이 Web Audio 만 쓰는 페이지를 Ambient 로 잡는다 → 무음 모드(동작 버튼·제어 센터)에서 효과음이 전부 꺼진다.
+// 앱 쪽 AVAudioSession(main.dart)은 WebKit 이 자기 프로세스에서 정하는 세션에 닿지 않는다. 바꿀 수 있는 길은 웹의
+// navigator.audioSession.type 뿐(WebKit Audio Session API, iOS 16.4+). 근거 = WebKit main 소스(기기 미확인):
+//   'playback' → MediaPlayback(섞임 옵션 없음): 무음 스위치 무시. 대신 AudioContext 가 시작될 때(첫 터치) 세션이 켜져 다른 앱 음악이 멈춘다.
+//              제어 센터·잠금 화면 '지금 재생'에도 잡힌다(제목이 없으면 주소 127.0.0.1 → 아래 nowPlaying 이 'PUFF!' 로)
+//   'auto'     → Web Audio 만이면 Ambient(무음 스위치를 따르고 음악과 섞임), 마이크 녹음 중이면 PlayAndRecord(무음 무시)
+// 웹 API 로는 '무음에서도 소리 + 음악과 섞임'을 함께 못 한다(playback+섞임이 없음) — 둘 다 원하면 효과음을 Flutter 쪽에서 내야 한다.
+// 마이크를 켤 때는 'auto' 로 돌려놓는다: override 가 걸려 있으면 WebKit 이 PlayAndRecord 로 못 바꿔(AudioSessionIOS 'override set, NOT changing')
+// 녹음이 시작되지 않는다(지금 '부는 소리 인식'이 되는 길 = 'auto'). 게임 소리를 꺼 두면 'auto'(쓸데없이 음악을 끊지 않게).
+// 웹·아티팩트 빌드는 건드리지 않는다(window.__puffApp 은 앱 다리 코드가 만든다).
+export const AppAudio = {
+  silentPlay: true, // 무음 모드에서도 소리(앱 기본). false = 'auto'(무음 스위치를 따르고 다른 앱 음악과 섞임)
+  micOn: false,
+  err: null,
+  sfx: null,
+  np: false,
+  get on() { return typeof window !== 'undefined' && !!window.__puffApp; },
+  get supported() { return typeof navigator !== 'undefined' && !!navigator.audioSession; },
+  type() { try { return navigator.audioSession ? String(navigator.audioSession.type) : null; } catch (e) { return null; } },
+  want() { return this.micOn || !this.silentPlay || this.sfx?.muted ? 'auto' : 'playback'; },
+  // WebKit 이 고를 범주(소스 기준 추정 — ⚙ 소리·진동 시험 표): playAndRecord(녹음 중, 무음 무시) · playback(무음 무시) · ambient(무음 모드면 꺼짐).
+  // 마이크를 끈 순간 게임 소리가 나고 있었다면 그 소리가 그칠 때까지 PlayAndRecord 가 남는다(MediaSessionManagerCocoa) — 시험 단추로 끄면 조용하므로 바로 ambient
+  expect() {
+    if (!this.on || !this.supported) return null;
+    if (this.micOn) return 'playAndRecord';
+    return this.type() === 'playback' ? 'playback' : 'ambient';
+  },
+  apply() {
+    if (!this.on || !this.supported) return false;
+    this.nowPlaying();
+    const w = this.want();
+    try { if (navigator.audioSession.type !== w) navigator.audioSession.type = w; this.err = null; return true; } catch (e) { this.err = String((e && e.message) || e); return false; }
+  },
+  // 'playback' 이면 '지금 재생'에 잡힌다 → 제목(없으면 주소). 제목만 준다: 재생 상태·동작 처리기는 안 건드림(DOM MediaSession 세션을 켜지 않게)
+  nowPlaying() {
+    if (this.np) return;
+    this.np = true;
+    try { if (navigator.mediaSession && typeof MediaMetadata === 'function') navigator.mediaSession.metadata = new MediaMetadata({ title: 'PUFF!' }); } catch (e) { /* 없음 */ }
+  },
+  setSilentPlay(v) { this.silentPlay = !!v; this.apply(); },
+  setMic(on) { this.micOn = !!on; this.apply(); this.sfx?.boost(); },
+  get boosted() { return this.on && this.micOn; },
+};
+
 export class Sfx {
   constructor() {
     this.ctx = null;
     this.muted = false;
     this.master = null;
     this.noiseBuf = null;
+    this.states = []; // AudioContext 상태 기록(⚙ 소리·진동 시험이 보여 줌)
+    AppAudio.sfx = this;
   }
 
+  // 터치·클릭마다 불러도 된다: 없으면 만들고, 멈춰 있으면(suspended·interrupted — 전화·시리·알람·백그라운드·다른 앱 소리) 다시 깨운다
   unlock() {
+    AppAudio.apply(); // 앱: 첫 소리 전에 세션 종류
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      const s = this.ctx.state;
+      if (s === 'closed') { this.ctx = null; return this.unlock(); }
+      if (s !== 'running') { try { this.ctx.resume()?.catch?.(() => {}); } catch (e) { /* 다음 터치에 다시 */ } }
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
+    if (!AC) return; // 잠금 모드(Lockdown Mode)면 WKWebView 에 Web Audio 자체가 없다
     this.ctx = new AC();
     this.master = this.ctx.createGain();
-    this.master.gain.value = 0.8;
+    this.master.gain.value = MASTER;
+    this.boost();
     const comp = this.ctx.createDynamicsCompressor();
     this.master.connect(comp).connect(this.ctx.destination);
     const len = this.ctx.sampleRate * 1.5;
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const ctx = this.ctx;
+    const note = () => { this.states.push(`${ctx.state}@${(performance.now() / 1000).toFixed(1)}s`); if (this.states.length > 8) this.states.shift(); };
+    note();
+    ctx.onstatechange = note;
     this.loadSamples();
+  }
+
+  // 마이크 켜짐(앱)일 때만 앞단 키움
+  boost() {
+    if (!this.master) return;
+    const v = MASTER * (AppAudio.boosted ? MIC_BOOST : 1);
+    try { this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05); } catch (e) { this.master.gain.value = v; }
+  }
+
+  // ⚙ 소리·진동 시험: 게임 소리를 꺼 뒀어도 낸다. 삑 = 짧은 고음(1760Hz, 오실레이터 길), 푸 = 노이즈 소스 길
+  testBeep() {
+    this.unlock();
+    if (!this.ctx) return false;
+    const m = this.muted; this.muted = false;
+    this.tone(1760, 0.16, 'sine', 0.22);
+    this.muted = m;
+    return true;
+  }
+  testPuff() {
+    this.unlock();
+    if (!this.ctx) return false;
+    const m = this.muted; this.muted = false;
+    this.puff(0.9, 0.9);
+    this.muted = m;
+    return true;
   }
 
   get ok() {

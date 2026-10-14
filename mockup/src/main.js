@@ -9,8 +9,9 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { initPhysics, Table, DISC_R, DISC_H, mulberry32 } from './sim.js';
 import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, drawEdge, drawTape, rollCard } from './art.js';
-import { Sfx } from './audio.js';
+import { Sfx, AppAudio } from './audio.js';
 import { Mic } from './mic.js';
+import { mountSoundTest } from './diag.js';
 import { t, setLang, getLang, cardName } from './i18n.js';
 import * as Store from './store.js';
 import { Fx } from './fx.js';
@@ -84,6 +85,10 @@ if (profile.settings.lang) setLang(profile.settings.lang);
 else setLang(getLang());
 const sfx = new Sfx();
 sfx.muted = !profile.settings.sound;
+// 앱(iOS): 무음 모드에서도 소리(기본 켬 = 'playback', 다른 앱 음악은 멈춤 — 재윤님 결정 대기). ⚙ 소리·진동 시험에서 끌 수 있다
+// (끄면 'auto' = 무음 스위치를 따르고 음악과 섞임). 게임 소리를 꺼 두면 늘 'auto'. 웹은 영향 없음
+AppAudio.silentPlay = profile.settings.silentPlay !== false;
+AppAudio.apply();
 const mic = new Mic();
 let micEnabled = false;
 const MIC_BLOW_LV = 0.12; // 마이크 세기(0~1.25)가 이만큼 120ms 이상이면 '불기 시작' (볼이 눈에 띄게 차오르는 정도)
@@ -2723,6 +2728,11 @@ function openTune() {
   jump.innerHTML = `<span>${t('tune_jump')}</span><input id="tune-jump" type="number" min="1" max="10000" value="${prog().level}" style="width:5.5em"><button class="btn blue" type="button" id="tuneJumpGo">GO</button>`;
   jump.querySelector('#tuneJumpGo').onclick = () => { const n = Math.max(1, Math.min(10000, +jump.querySelector('input').value || 1)); $('#tune').hidden = true; openLevelIntro(n); };
   box.appendChild(jump);
+  // 소리·진동 시험(실기기에서 '푸'·진동이 안 올 때 캡처 한 장으로 원인 가르기 — diag.js)
+  mountSoundTest(box, {
+    sfx, t, micOn: () => micEnabled && mic.ready, toggleMic,
+    setSilentPlay: (v) => { AppAudio.setSilentPlay(v); profile.settings.silentPlay = !!v; Store.save(profile); },
+  });
   $('#tune').hidden = false;
 }
 function closeTune(reset) {
@@ -3865,23 +3875,31 @@ function wireUI() {
     refreshTexts();
   });
   $('#sndBtn').addEventListener('click', () => {
-    sfx.unlock();
     sfx.muted = !sfx.muted;
+    sfx.unlock(); // 앱: 바뀐 소리 켬/끔으로 세션을 다시 건다(끔 = 'auto' — 소리를 안 내면서 다른 앱 음악을 끊지 않게)
     profile.settings.sound = !sfx.muted;
     Store.save(profile);
     refreshTexts();
   });
-  $('#micBtn').addEventListener('click', async () => {
-    sfx.unlock();
-    if (micEnabled) { micEnabled = false; mic.stop(); refreshTexts(); return; }
-    const ok = await mic.start();
-    micEnabled = ok;
-    if (!ok) toast(t('micFail'));
-    refreshTexts();
-  });
+  $('#micBtn').addEventListener('click', toggleMic);
   document.querySelectorAll('#chips button').forEach((b) => b.addEventListener('click', () => { sfx.unlock(); sfx.pop(); stakeN = +b.dataset.n; refreshTexts(); }));
   document.querySelectorAll('#modes button').forEach((b) => b.addEventListener('click', () => { sfx.unlock(); sfx.pop(); mode = b.dataset.m; profile.settings.mode = mode; Store.save(profile); refreshTexts(); }));
   window.addEventListener('resize', layout);
+  // 소리가 멈춰 있으면(suspended·interrupted — 전화·시리·알람·다른 앱 소리 뒤) 다음 터치에서 다시 깨운다. 아직 소리를 안 만들었으면 아무것도 안 함
+  const wakeSound = () => { if (sfx.ctx && sfx.ctx.state !== 'running') sfx.unlock(); };
+  window.addEventListener('pointerdown', wakeSound, true);
+  window.addEventListener('touchend', wakeSound, true);
+}
+
+// 마이크 불기 켜기/끄기(홈 마이크 단추 · ⚙ 소리·진동 시험)
+async function toggleMic() {
+  if (micEnabled) { micEnabled = false; mic.stop(); sfx.unlock(); refreshTexts(); return; }
+  AppAudio.setMic(true); // 앱: 세션을 먼저 'auto' 로 → 이어서 소리를 깨울 때 'playback' 을 한 번 거쳤다가 바뀌지 않게
+  sfx.unlock();
+  const ok = await mic.start();
+  micEnabled = ok;
+  if (!ok) toast(t('micFail'));
+  refreshTexts();
 }
 
 async function boot() {
@@ -3932,7 +3950,8 @@ window.__puffLifecycle = {
     try { sfx.ctx?.suspend?.(); } catch (e) { /* 소리 없음 */ }
   },
   async resume() {
-    try { sfx.ctx?.resume?.(); } catch (e) { /* 소리 없음 */ }
+    if (micResume) AppAudio.setMic(true); // 앱: 마이크를 다시 켤 거면 세션부터 'auto'(playback → ambient → playAndRecord 로 세 번 바뀌며 소리가 툭 끊기지 않게)
+    try { if (sfx.ctx) sfx.unlock(); } catch (e) { /* 소리 없음 */ } // 멈춤·끊김(interrupted)·닫힘까지 깨우고 앱 소리 세션을 다시 건다
     if (micResume) { micResume = false; const ok = await mic.start(); micEnabled = ok; if (!ok) toast(t('micFail')); }
   },
 };

@@ -34,7 +34,8 @@ mockup/src/      목업 소스 (ES 모듈)
   main.js   three.js 장면·입력·연출·매치 흐름 (분필 원, 엄지 멈춤 눈금, 1인칭 볼·입술, 손가락 시범, 방금 숨 카드)
   face.js   부는 얼굴(시안 B '뽀뽀 입') + 숨 주머니 고리
   cues.js   공략 단서 계산(숨 물결 = sweetHiFor 역함수, 2~4장째 창, 원인 분류) — 렌더러 독립
-  audio.js  WebAudio 합성 효과음 / mic.js 마이크 불기 감지
+  audio.js  WebAudio 합성 효과음(앱에서는 navigator.audioSession 'playback' = 무음 모드에서도 소리, 끄면 'auto') / mic.js 마이크 불기 감지(켤 때 세션 'auto')
+  diag.js   ⚙ '소리·진동 시험'(삑·푸·진동 3단 + AudioContext·audioSession·햅틱 ACK 표) — 실기기 원인 판가름용
   store.js  내 딱지 보관함(localStorage) / i18n.js 한·영
   turn.js   PvP 한 턴: ShotRun(새 월드·턴별 시드·스텝 판정 → 30Hz 궤적·post·해시), TrackPlayer/Chunker(13B 코덱), BeatClock, 꼭두각시 월드 — 렌더러 독립
   net.js    PvP 네트워크 한 겹: Net 인터페이스(아티팩트 db·room·user 모양) + LocalNet(같은 브라우저 두 탭, 상한을 실제처럼 강제)
@@ -78,7 +79,7 @@ NET=artifact PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5   # 같은 
 
 - `app/` = Flutter 껍데기(`com.ffogtive.puff`). 게임 본체는 웹 빌드 한 파일을 **앱 안 로컬 서버(127.0.0.1:47821) + 웹뷰**로 연다. 물리·PvP 동기는 웹 코드 그대로.
 - `npm run app:www` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + `mockup/app/bridge.js` 다리 코드 → `app/assets/www/index.html`)
-- 앱 쪽 검증: `cd app && flutter analyze && flutter test`. iOS 빌드·설치는 맥에서만 — **`docs/app/ios-local.md`**
+- 앱 쪽 검증: `cd app && flutter analyze && flutter test`. 다리 코드(소리 세션·햅틱 ACK·진단)는 `npm run app:www && PW=$(npm root -g)/playwright node tools/app-bridge-check.mjs`. iOS 빌드·설치는 맥에서만 — **`docs/app/ios-local.md`**
 - 웹 진동(navigator.vibrate)은 iOS 웹뷰에 없다 → 다리 코드가 Flutter 채널 `PuffHaptic` 로 보내 햅틱으로
 - **B 시제품(네이티브 경기 장면, 웹뷰 없이)**: `native/puff_sim/`(Rust rapier3d 0.36 물리 + C ABI, README) + `app/lib/native/`(flutter_scene 장면 + `live_sim.dart` 경기 루프, dart:ffi).
   기본은 언제나 웹뷰 게임. 데모 = `-t lib/native/demo_main.dart` · `--dart-define=NATIVE_DEMO=true` · 노치 옆 1.5초 누르기 (`NATIVE_BENCH=true` = 손 안 대고 벤치)

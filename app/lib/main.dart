@@ -30,7 +30,11 @@ Future<void> main() async {
     runApp(const NativeDemoApp());
     return;
   }
-  // 무음 스위치가 켜져 있어도 '푸' 소리(게임 핵심 피드백), 다른 앱 음악은 끊지 않음
+  // 앱(Flutter) 프로세스의 소리 세션. 주의: 웹뷰(WKWebView) 게임 소리에는 닿지 않는다 — WebKit 이 자기 프로세스에서
+  // 세션을 직접 정한다(Web Audio 만 쓰면 Ambient = 무음 모드에서 꺼짐). 웹 소리의 무음 모드 처리는 게임 쪽 navigator.audioSession
+  // (mockup/src/audio.js AppAudio). 이 설정은 Flutter 쪽에서 내는 소리(앞으로의 네이티브 효과음)에만 의미가 있다.
+  // 원래 의도 '무음 스위치가 켜져 있어도 푸 + 다른 앱 음악은 끊지 않음'은 웹 API 로는 둘을 함께 못 한다(playback+섞임이 없음).
+  // 둘 다 원하면 효과음을 여기(playback + mixWithOthers)서 내야 한다 — 재윤님 결정 대기
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration(
     avAudioSessionCategory: AVAudioSessionCategory.playback,
@@ -113,6 +117,7 @@ class GamePage extends StatefulWidget {
 
 class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
   late final WebViewController _web;
+  final _haptics = HapticBridge();
 
   @override
   void initState() {
@@ -136,10 +141,7 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
           if (e.errorType == WebResourceErrorType.webContentProcessTerminated) _reload();
         },
       ))
-      ..setBackgroundColor(kBg)
-      // 웹 쪽 navigator.vibrate(ms|패턴) → 다리 코드(mockup/app/bridge.js)가 여기로 보냄
-      ..addJavaScriptChannel('PuffHaptic', onMessageReceived: (m) => playHaptic(parseHaptic(m.message)))
-      ..loadRequest(widget.url);
+      ..setBackgroundColor(kBg);
     final platform = _web.platform;
     if (platform is WebKitWebViewController) {
       platform.setInspectable(kDebugMode);
@@ -149,6 +151,27 @@ class _GamePageState extends State<GamePage> with WidgetsBindingObserver {
       AndroidWebViewController.enableDebugging(kDebugMode);
       platform.setMediaPlaybackRequiresUserGesture(false);
     }
+    _start();
+  }
+
+  // 채널 등록이 네이티브에 닿은 뒤에 게임을 연다. webview_flutter_wkwebview 3.26.2 의 addJavaScriptChannel 은 컨트롤러를 받아 온 뒤에야
+  // 문서 시작 스크립트(window.PuffHaptic = …)와 메시지 핸들러를 넣는다 → 기다리지 않고 열면 문서 시작이 앞설 수 있다(그러면 진동 메시지가 조용히 버려짐)
+  Future<void> _start() async {
+    // 웹 쪽 navigator.vibrate(ms|패턴)·진단 → 다리 코드(mockup/app/bridge.js)가 여기로 보냄
+    try {
+      await _web.addJavaScriptChannel('PuffHaptic', onMessageReceived: _onHaptic);
+    } catch (_) {/* 채널이 안 붙어도 게임은 연다(진동만 없음 — ⚙ 소리·진동 시험의 '응답 없음'으로 보인다) */}
+    if (!mounted) return;
+    await _web.loadRequest(widget.url);
+  }
+
+  // 햅틱을 내고, 받았다는 응답(몇 번째·어느 길·성공)을 웹에 돌려준다(⚙ 소리·진동 시험이 보여 줌)
+  Future<void> _onHaptic(JavaScriptMessage m) async {
+    final ack = await _haptics.handle(m.message);
+    if (!mounted) return;
+    try {
+      await _web.runJavaScript(HapticBridge.ackScript(ack));
+    } catch (_) {/* 페이지를 다시 여는 중 */}
   }
 
   // 숨은 입구 → 네이티브 데모. 웹 게임을 먼저 내려(빈 페이지) WebGL·rAF 가 GPU 를 같이 쓰지 않게 한다(FPS 측정 오염 방지).

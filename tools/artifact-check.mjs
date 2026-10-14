@@ -8,6 +8,7 @@
 //   null    claude.use() 가 모두 null(권한 없음·공개 링크·top-level)    → 부팅 · PvP 숨김
 //   viewer  user.can('data.write') = false(보기 전용)                 → 부팅 · PvP 숨김
 //   full    가짜 호스트(db·room·user)                                  → 부팅 · 'VS 친구' 보임 · 방 만들기 → 6자 코드 · 매치 문서 · 닫기 → abandoned
+// none 경우에는 ⚙ '소리·진동 시험'(diag.js)도 눌러 오류 없이 표가 뜨는지 본다
 import { createRequire } from 'module';
 import { join } from 'node:path';
 import { wrapArtifact, routeCdn, fakeClaude, root } from './artifact-host.mjs';
@@ -78,6 +79,16 @@ for (const mode of modes) {
     }
     const st = await r.page.evaluate(() => window.__puff());
     extra += ` | in match: ${JSON.stringify({ state: st.state, live: st.live, turn: st.turn })}`;
+  }
+  if (mode === 'none' && r.homeShown) {
+    // ⚙ 소리·진동 시험(diag.js): 웹에서도 오류 없이 표가 뜨는가(앱 전용 줄 없이 '웹'·진동 줄)
+    await r.page.click('#tuneBtn');
+    await r.page.click('#diagGo');
+    const d = await r.page.waitForFunction(() => window.__puffDiagLast?.done && window.__puffDiagLast.rows, null, { timeout: 20000 }).then((h) => h.jsonValue()).catch(() => null);
+    await r.page.click('#tuneClose');
+    const diagOk = !!d && d.length >= 6 && !d.some(([k]) => /③-\d/.test(k));
+    ok &&= diagOk;
+    extra += ` | sound test: ${d ? d.length + ' rows · ' + d.map(([k, v]) => `${k}=${v}`).filter((x) => /AudioContext|③/.test(x)).join(' · ') : 'no table'}${diagOk ? '' : ' FAIL'}`;
   }
   if (mode === 'full') {
     ok &&= !r.pvpHidden && r.netKind === 'artifact';

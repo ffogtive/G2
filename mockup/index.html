@@ -236,6 +236,16 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .trow input { grid-column: 1 / -1; width: 100%; accent-color: var(--go-dark); }
 .trow b { font-family: var(--display); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 #tune h2 { margin: 0 0 6px; font-family: var(--display); }
+.diag { border-top: 2px dashed rgba(0,0,0,0.18); margin-top: 12px; padding-top: 2px; }
+.diag-how { font-size: 0.82rem; text-align: left; margin: 2px 0 8px; opacity: 0.85; line-height: 1.35; white-space: pre-line; }
+.diag-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 6px 0; }
+.diag-btns button { font-family: var(--body); font-size: 0.9rem; color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; box-shadow: 0 2px 0 var(--ink); cursor: pointer; }
+.diag-btns button:active { transform: translateY(2px); box-shadow: none; }
+.diag-btns button:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: 0 2px 0 var(--ink); }
+.diag-step { font-family: var(--display); min-height: 1.3em; margin: 4px 0; }
+.diag-tab { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
+.diag-tab td { padding: 3px 4px; border-bottom: 1px solid rgba(0,0,0,0.1); vertical-align: top; overflow-wrap: anywhere; }
+.diag-tab td:first-child { width: 38%; font-weight: bold; }
 .daily-score { font-family: var(--display); font-size: 4rem; color: var(--gold); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); line-height: 1.1; }
 #dailyCard h2 { margin: 0; font-family: var(--display); }
 #dailyShare { width: 100%; box-sizing: border-box; font-family: var(--body); font-size: 1rem; border: 3px solid var(--ink); border-radius: 12px; padding: 8px; resize: none; margin: 8px 0 12px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
