@@ -183,7 +183,8 @@ export function balloonCost({ kind, q, D }) {
 export const balloonInit = () => ({ t: tenths(BALLOON.max) });
 export const balloonCells = (s) => s.t / 10;
 export const balloonCanPay = (s, cost) => tenths(cost) <= s.t;
-// 내 차례 +regen(상한 max). 숨 없이 차례만 넘길 때(econ DP 의 '쉼')도 이것. 취소(콜록 등)는 차례를 쓰지 않으므로 부르지 않는다
+// 내 차례 +regen(상한 max). balloonStep 이 숨 한 번마다 부른다. 지금 게임에는 쉬기 몸짓(숨 없이 차례만 넘기기)이 없다 —
+// econ DP 의 '쉼'(REST=1, 측정용)을 흉내 낼 때와, 게임에 쉬기 몸짓이 생기면 그때만 따로 부른다. 취소(콜록 등)는 차례를 쓰지 않으므로 부르지 않는다
 export const balloonRefill = (s) => ({ t: Math.min(tenths(BALLOON.max), s.t + tenths(BALLOON.regen)) });
 // 숨 한 번: 비용을 빼고 차례 +regen. 모자라면 null(그 숨은 못 쉰다). = econ solve 의 min(BAL, b − c + REG)
 export function balloonStep(s, cost) {

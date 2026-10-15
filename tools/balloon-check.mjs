@@ -11,8 +11,10 @@
 // ④ DP 대조: econ solve 를 rules.js 의 balloonInit/balloonStep/balloonRefill/balloonCost 로 다시 짠 것이
 //    20장·숨 2 / 30장·숨 3 / 45장·숨 3 × 3판(쉬기 허용·금지)에서 값·계획이 econ 과 같다 → 차례마다 +1 · 3판 이음의 뜻까지 같다
 // ⑤ 게이트: `node tools/coresweep/econ.mjs gate <원자료>` 를 BALLOON 수치(RULES)로 돌려 네 판정 모두 통과
+//    — 쉬기 허용(REST=1, econ 기본)과 쉬기 금지(REST=0) 둘 다. 게임에는 쉬기 몸짓이 없으므로 REST=0 이 게임과 같은 쪽이다
+// ⑥ 부트스트랩: `econ.mjs boot <원자료> 200` (REST=1·0) 에서 세 판 모두 '넷 다 통과' 90% 이상 (core-sweep §9 3번 게이트)
 //
-// 명령: node tools/balloon-check.mjs            (1초 안쪽. 숨 풍선 식·econ.mjs 를 바꾸면 필수)
+// 명령: node tools/balloon-check.mjs            (약 6초. 숨 풍선 식·econ.mjs 를 바꾸면 필수)
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -117,19 +119,39 @@ for (const REST of [1, 0]) for (const [N, T] of BOARDS) {
   ok(Object.is(e.v, r.v) && pstr(e.plan) === pstr(r.plan), `${N}장·숨 ${T} × ${B.rounds}판 ${REST ? '쉬기 허용' : '쉬기 금지'}: econ ${e.v.toFixed(4)} · rules ${r.v.toFixed(4)} · 계획 ${e.plan.length}수 ${pstr(e.plan) === pstr(r.plan) ? '같음' : '다름'}`);
 }
 
-// ⑤ 게이트 — BALLOON 수치를 RULES 로 넘겨 econ gate 를 그대로 돌린다
-console.log(`⑤ 게이트: node tools/coresweep/econ.mjs gate ${DATA.join(',')}`);
+// ⑤ 게이트 — BALLOON 수치를 RULES 로 넘겨 econ gate 를 그대로 돌린다 (쉬기 허용 = econ 기본, 쉬기 금지 = 게임과 같음)
 const RULES = `rules=${B.base},${B.perSec},0,${B.puck},${B.tax}@${B.max},${B.regen},${B.rounds}`;
-const env = { ...process.env, RULES };
-for (const k of ['BOARDS', 'BAL', 'REG', 'K', 'REST', 'EXCL', 'TOP']) delete env[k]; // econ 기본 판·쉬기 허용
-const g = spawnSync(process.execPath, [join(root, 'tools/coresweep/econ.mjs'), 'gate', FILES], { env, encoding: 'utf8' });
-const out = (g.stdout || '') + (g.stderr || '');
-console.log(out.split('\n').filter(Boolean).map((l) => '    | ' + l).join('\n'));
-ok(g.status === 0 && /→ 네 판정 모두 통과/.test(out), `RULES='${RULES}' — ${(out.match(/네 판정 [^·\n]*/) || ['(판정 줄 없음)'])[0].trim()}`);
-for (const [N, T] of BOARDS) {
-  const j = judge(S, NEW, N, T, { BAL: B.max, REG: B.regen, K: B.rounds, REST: 1 });
-  const pc = (x) => `${x >= 0 ? '+' : ''}${(100 * x).toFixed(0)}%`;
-  ok(j.all, `${N}장·숨 ${T} × ${B.rounds}판: (i) 섞기 이득 ${pc(j.gain)} ${j.ok.i ? 'O' : 'X'} · (ii) 퍽 ${j.ok.ii ? 'O' : 'X'} · (iii) 세기 값 ${pc(j.qm)}${N >= 30 ? `·센 고정 지배 ${j.sfDom ? '예' : '아니오'}` : ''} ${j.ok.iii ? 'O' : 'X'} · (iv) 묶임 ${pc(j.bind)} ${j.ok.iv ? 'O' : 'X'}`);
+const econEnv = (REST) => {
+  const env = { ...process.env, RULES };
+  for (const k of ['BOARDS', 'BAL', 'REG', 'K', 'REST', 'EXCL', 'TOP']) delete env[k]; // econ 기본 판
+  if (!REST) env.REST = '0';
+  return env;
+};
+const pc = (x) => `${x >= 0 ? '+' : ''}${(100 * x).toFixed(0)}%`;
+for (const REST of [1, 0]) {
+  const lab = REST ? '쉬기 허용(REST=1)' : '쉬기 금지(REST=0, 게임과 같음)';
+  console.log(`⑤ 게이트 ${lab}: ${REST ? '' : 'REST=0 '}node tools/coresweep/econ.mjs gate ${DATA.join(',')}`);
+  const g = spawnSync(process.execPath, [join(root, 'tools/coresweep/econ.mjs'), 'gate', FILES], { env: econEnv(REST), encoding: 'utf8' });
+  const out = (g.stdout || '') + (g.stderr || '');
+  console.log(out.split('\n').filter(Boolean).map((l) => '    | ' + l).join('\n'));
+  ok(g.status === 0 && /→ 네 판정 모두 통과/.test(out), `${lab} RULES='${RULES}' — ${(out.match(/네 판정 [^·\n]*/) || ['(판정 줄 없음)'])[0].trim()}`);
+  for (const [N, T] of BOARDS) {
+    const j = judge(S, NEW, N, T, { BAL: B.max, REG: B.regen, K: B.rounds, REST });
+    ok(j.all, `${lab} ${N}장·숨 ${T} × ${B.rounds}판: (i) 섞기 이득 ${pc(j.gain)} ${j.ok.i ? 'O' : 'X'} · (ii) 퍽 ${j.ok.ii ? 'O' : 'X'} · (iii) 세기 값 ${pc(j.qm)}${N >= 30 ? `·센 고정 지배 ${j.sfDom ? '예' : '아니오'}` : ''} ${j.ok.iii ? 'O' : 'X'} · (iv) 묶임 ${pc(j.bind)} ${j.ok.iv ? 'O' : 'X'}`);
+  }
+}
+
+// ⑥ 부트스트랩 — §9 3번 게이트 '부트스트랩 통과율 90% 이상' (econ.mjs boot 200회, 시드 부트스트랩)
+for (const REST of [1, 0]) {
+  const lab = REST ? '쉬기 허용' : '쉬기 금지';
+  console.log(`⑥ 부트스트랩 ${lab}: ${REST ? '' : 'REST=0 '}node tools/coresweep/econ.mjs boot ${DATA.join(',')} 200`);
+  const g = spawnSync(process.execPath, [join(root, 'tools/coresweep/econ.mjs'), 'boot', FILES, '200'], { env: econEnv(REST), encoding: 'utf8' });
+  const out = (g.stdout || '') + (g.stderr || '');
+  const rows = [...out.matchAll(/(\d+)장·숨 (\d+): 넷 다 통과 (\d+)%/g)].map((m) => ({ N: +m[1], T: +m[2], p: +m[3] }));
+  for (const [N, T] of BOARDS) {
+    const r = rows.find((x) => x.N === N && x.T === T);
+    ok(g.status === 0 && r && r.p >= 90, `${lab} ${N}장·숨 ${T}: 넷 다 통과 ${r ? r.p + '%' : '(줄 없음)'} (≥ 90%)`);
+  }
 }
 
 console.log(fails ? `\n실패 ${fails}개` : '\n모두 통과: rules.js 숨 풍선 ≡ econ.mjs new, 네 판정 통과');

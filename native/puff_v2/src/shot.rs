@@ -5,7 +5,7 @@
 //! 판정: 원 안(분필 원 r 3.2, 책상 위, y ≥ −1.2) + 그림 면 위(로컬 +y·세계 y > 0.2) = 뒤집힘.
 
 use crate::aero::{Aero, AeroParams};
-use crate::breath::{BreathProgram, BreathSpec, Kind, RawInput, JET_DT};
+use crate::breath::{BreathProgram, BreathSpec, FlatEnd, FlatRel, FlatSpec, Kind, RawInput, JET_DT};
 use crate::geom::{deg, V3};
 use crate::jet::Jet;
 use crate::json::Obj;
@@ -40,6 +40,10 @@ pub struct ShotSpec {
     pub trace: bool,
     /// 이름표 (실험 팔)
     pub tag: String,
+    /// 평평한 바닥 측정 숨 (pose = flat 일 때만, 원시 입력 길 대신). None = 옛 길 그대로
+    pub flat: Option<FlatSpec>,
+    /// 평평한 바닥: 위·아래 절반 기울기 시계열을 결과에 싣는다 (1/60 s 간격, 1.2 s 까지)
+    pub tilt_series: bool,
 }
 
 impl ShotSpec {
@@ -58,6 +62,8 @@ impl ShotSpec {
             max_after: 6.0,
             trace: false,
             tag: String::new(),
+            flat: None,
+            tilt_series: false,
         }
     }
 
@@ -66,8 +72,30 @@ impl ShotSpec {
         let mut s = ShotSpec::new(20, 1, Pose::Chin, BreathSpec::puff(1.0), 0.0, 0.5);
         let mut kind = Kind::Puff;
         let (mut q, mut dur, mut sweep, mut delay, mut smax) = (1.0, 1.93, 0.0, 0.0, 1.0);
+        // 평평한 바닥 (pose=flat): rel=D|top, relx (top 일 때 도달 뒤 초, 0.04), off (0.04), w (°/s), t0, a=도|top, ax (top + 0.5°), area=pueok|puff
+        let mut fl = FlatSpec::fixed(1.0, 0.6);
+        let mut fl_rel_top = false;
+        let mut fl_relx = 0.04;
+        let mut fl_a_top = false;
+        let mut fl_ax = 0.5;
+        let mut fl_a = 0.0;
+        // 조용히 무시되는 조합을 막기 위해 쓴 키를 모은다 (평평한 바닥 전용 / 원시 숨 전용)
+        let mut flat_keys: Vec<String> = Vec::new();
+        let mut raw_keys: Vec<String> = Vec::new();
+        let (mut has_a, mut has_ax, mut has_relx) = (false, false, false);
         for tok in line.split_whitespace() {
             let (k, v) = tok.split_once('=').ok_or_else(|| format!("'{tok}' 는 key=value 가 아님"))?;
+            match k {
+                "rel" | "relx" | "off" | "w" | "t0" | "a" | "ax" | "area" | "tilt" => flat_keys.push(k.to_string()),
+                "breath" | "kind" | "dur" | "sweep" | "delay" | "smax" => raw_keys.push(k.to_string()),
+                _ => {}
+            }
+            match k {
+                "a" => has_a = true,
+                "ax" => has_ax = true,
+                "relx" => has_relx = true,
+                _ => {}
+            }
             let num = || v.parse::<f64>().map_err(|_| format!("'{tok}' 값이 숫자가 아님"));
             match k {
                 "n" => s.pile.n = num()? as usize,
@@ -135,10 +163,62 @@ impl ShotSpec {
                     }
                 }
                 "tag" => s.tag = v.to_string(),
+                "rel" => {
+                    if v == "top" {
+                        fl_rel_top = true;
+                    } else {
+                        fl.rel = FlatRel::At(num()?);
+                    }
+                }
+                "relx" => fl_relx = num()?,
+                "off" => fl.off = num()?,
+                "w" => fl.w = num()?,
+                "t0" => fl.t0 = num()?,
+                "a" => {
+                    if v == "top" {
+                        fl_a_top = true;
+                    } else {
+                        fl_a = num()?;
+                    }
+                }
+                "ax" => fl_ax = num()?,
+                "area" => {
+                    fl.area_puff = match v {
+                        "puff" => true,
+                        "pueok" => false,
+                        _ => return Err(format!("모르는 area '{v}' (pueok|puff)")),
+                    }
+                }
+                "tk" => s.pile.thick_scale = num()?,
+                "mk" => s.pile.mass_scale = num()?,
+                "tilt" => s.tilt_series = num()? > 0.5,
                 _ => return Err(format!("모르는 키 '{k}'")),
             }
         }
         s.breath = BreathSpec { kind, q, dur, sweep_dps: sweep, sweep_delay: delay, sweep_max: smax };
+        if s.pose != Pose::Flat && !flat_keys.is_empty() {
+            return Err(format!("{} 는 pose=flat 전용 키 (지금 pose={})", flat_keys.join(","), s.pose.name()));
+        }
+        if s.pose == Pose::Flat {
+            if !raw_keys.is_empty() {
+                return Err(format!("pose=flat 은 원시 숨 키 {} 를 쓰지 않는다 (rel·w·t0·a 를 쓴다)", raw_keys.join(",")));
+            }
+            if fl.w > 0.0 && !has_a {
+                return Err("pose=flat w>0 이면 a=도|top 가 있어야 한다 (없으면 쓸기 없이 돈다)".into());
+            }
+            if has_ax && !fl_a_top {
+                return Err("ax 는 a=top 일 때만 쓴다".into());
+            }
+            if has_relx && !fl_rel_top {
+                return Err("relx 는 rel=top 일 때만 쓴다".into());
+            }
+            fl.q = q;
+            if fl_rel_top {
+                fl.rel = FlatRel::Reach(fl_relx);
+            }
+            fl.end = if fl_a_top { FlatEnd::Top(fl_ax) } else { FlatEnd::Deg(fl_a) };
+            s.flat = Some(fl);
+        }
         Ok(s)
     }
 
@@ -213,6 +293,126 @@ pub struct ShotResult {
     pub hash: u64,
     pub raw_bytes: usize,
     pub trace: Vec<String>,
+    /// 평평한 바닥 측정 기록 (pose = flat 일 때만 JSON 에 실린다)
+    pub flat: Option<FlatRecord>,
+}
+
+/// 평평한 바닥 측정 기록: 더미·고개 값 + 위·아래 절반 기울기 (v1 `tools/sweepmap.mjs shot` 의 halves()·tLift·tTop 과 같은 정의)
+/// - 절반 기울기 = 그 절반(아래 = 번호 < ⌊N/2⌋, 위 = 나머지; 번호는 아래부터 쌓은 순서) 딱지의 '그림-아래에서 돈 각' acos(−u_y) 평균(°).
+///   처음 그림-아래면 0°, 완전히 뒤집히면 180°. 빠진(책상 밖으로 떨어진) 딱지는 뺀다.
+/// - 시각은 숨 시작(제트 명령 0) 기준 화면 초. 제트는 고정 지연 2스텝(1/240 s) 뒤에 켜진다.
+#[derive(Clone, Debug, Default)]
+pub struct FlatRecord {
+    pub top: f64,
+    pub alpha_top: f64,
+    pub a_deg: f64,
+    pub d: f64,
+    pub t_reach: f64,
+    /// 위 절반 평균 기울기가 처음 5°·10°·20° 를 넘은 시각 (−1 = 못 넘음)
+    pub t5: f64,
+    pub t10: f64,
+    pub t20: f64,
+    /// 맨 아래 딱지 기울기(수평면 기준) > 5° 시각 (v1 tLift)
+    pub t_lift: f64,
+    /// 위 절반 기울기 at 0.05·0.1·0.2·0.3·0.4 s
+    pub tt_at: [f64; 5],
+    pub max_tt: f64,
+    pub max_tb: f64,
+    pub end_tb: f64,
+    /// 바람 축이 앞면에서 꼭대기를 아래 → 위로 넘은 시각과 그때 위 절반 기울기 (v1 tTop·ttAtTop)
+    pub t_cross: f64,
+    pub tt_at_cross: f64,
+    /// 뒤집힘 ≥ 70% (v1 '통째')
+    pub whole70: bool,
+    /// (t, 아래, 위) 1/60 s 간격 (tilt=1 일 때만)
+    pub series: Vec<(f64, f64, f64)>,
+}
+
+/// 절반 기울기 (아래, 위) °
+fn halves(sim: &Sim, half: usize) -> (f64, f64) {
+    let (mut sb, mut nb, mut st, mut nt) = (0.0f64, 0usize, 0.0f64, 0usize);
+    for i in 0..sim.n() {
+        if sim.discs[i].removed {
+            continue;
+        }
+        let u = sim.rot(i).rotate(V3::Y);
+        let a = deg(libm::acos((-u.y).clamp(-1.0, 1.0)));
+        if i < half {
+            sb += a;
+            nb += 1;
+        } else {
+            st += a;
+            nt += 1;
+        }
+    }
+    (if nb > 0 { sb / nb as f64 } else { 0.0 }, if nt > 0 { st / nt as f64 } else { 0.0 })
+}
+
+/// 스텝마다 부르는 기울기 추적기 (읽기만 — 물리 상태를 바꾸지 않는다)
+struct TiltTrack {
+    half: usize,
+    top0: f64,
+    z_f: f64,
+    below: bool,
+    next_series: f64,
+    rec: FlatRecord,
+    want_series: bool,
+}
+
+impl TiltTrack {
+    fn new(sim: &Sim, top0: f64, want_series: bool) -> Self {
+        let rec = FlatRecord { t5: -1.0, t10: -1.0, t20: -1.0, t_lift: -1.0, tt_at: [-1.0; 5], t_cross: -1.0, tt_at_cross: -1.0, ..Default::default() };
+        TiltTrack { half: sim.n() / 2, top0, z_f: sim.z_f, below: false, next_series: 0.0, rec, want_series }
+    }
+    /// 스텝 뒤. jet_md = 이번 스텝 제트의 (입, 방향) — 꼭대기 넘음 판정용 (제트 없으면 None)
+    fn update(&mut self, sim: &Sim, jet_md: Option<(V3, V3)>) {
+        let t = sim.time;
+        let (tb, tt) = halves(sim, self.half);
+        if let Some((m, d)) = jet_md {
+            if self.rec.t_cross < 0.0 && d.z < -1e-6 {
+                let s = (self.z_f - m.z) / d.z;
+                if m.y + s * d.y <= self.top0 {
+                    self.below = true;
+                } else if self.below {
+                    self.rec.t_cross = t;
+                    self.rec.tt_at_cross = tt;
+                }
+            }
+        }
+        if !sim.discs[0].removed {
+            let up = sim.rot(0).rotate(V3::Y);
+            let tilt = deg(libm::acos(libm::fabs(up.y).min(1.0)));
+            if self.rec.t_lift < 0.0 && tilt > 5.0 {
+                self.rec.t_lift = t;
+            }
+        }
+        for (th, slot) in [(5.0, 0usize), (10.0, 1), (20.0, 2)] {
+            let v = match slot {
+                0 => &mut self.rec.t5,
+                1 => &mut self.rec.t10,
+                _ => &mut self.rec.t20,
+            };
+            if *v < 0.0 && tt > th {
+                *v = t;
+            }
+        }
+        for (k, at) in [0.05, 0.1, 0.2, 0.3, 0.4].iter().enumerate() {
+            if self.rec.tt_at[k] < 0.0 && t >= *at - 1e-9 {
+                self.rec.tt_at[k] = tt;
+            }
+        }
+        if tt > self.rec.max_tt {
+            self.rec.max_tt = tt;
+        }
+        if tb > self.rec.max_tb {
+            self.rec.max_tb = tb;
+        }
+        self.rec.end_tb = tb;
+        if self.want_series && t >= self.next_series - 1e-9 && t <= 1.2 + 1e-9 {
+            self.rec.series.push((t, tb, tt));
+            self.next_series += 1.0 / 60.0;
+        }
+    }
 }
 
 impl ShotResult {
@@ -273,6 +473,29 @@ impl ShotResult {
             .f("cpu_ms", self.cpu_ms, 1)
             .s("hash", &format!("{:016x}", self.hash))
             .u("raw_bytes", self.raw_bytes as u64);
+        if let Some(f) = &self.flat {
+            let mut fo = Obj::new();
+            fo.f("top", f.top, 4)
+                .f("alpha_top", f.alpha_top, 3)
+                .f("a", f.a_deg, 3)
+                .f("d", f.d, 4)
+                .f("t_reach", f.t_reach, 4)
+                .f("t5", f.t5, 4)
+                .f("t10", f.t10, 4)
+                .f("t20", f.t20, 4)
+                .f("t_lift", f.t_lift, 4)
+                .raw("tt_at", &format!("[{}]", f.tt_at.iter().map(|v| format!("{:.2}", v)).collect::<Vec<_>>().join(",")))
+                .f("max_tt", f.max_tt, 2)
+                .f("max_tb", f.max_tb, 2)
+                .f("end_tb", f.end_tb, 2)
+                .f("t_cross", f.t_cross, 4)
+                .f("tt_at_cross", f.tt_at_cross, 2)
+                .b("whole70", f.whole70);
+            if !f.series.is_empty() {
+                fo.raw("series", &format!("[{}]", f.series.iter().map(|(t, b, u)| format!("[{:.4},{:.2},{:.2}]", t, b, u)).collect::<Vec<_>>().join(",")));
+            }
+            o.raw("flat", &fo.end());
+        }
         o.end()
     }
 }
@@ -318,19 +541,24 @@ pub fn run_shot_from(snap: &Snapshot, spec: &ShotSpec) -> ShotResult {
     let mut sim = Sim::restore(snap);
     let n = sim.n();
     let raw = spec.raw();
-    let prog = BreathProgram::build(&raw, spec.mode, sim.z_f, sim.desk.z_e);
+    let top0 = sim.column_top();
+    let prog = match &spec.flat {
+        Some(fs) => BreathProgram::build_flat(fs, spec.mode, spec.lat, sim.z_f, sim.desk.z_e, top0),
+        None => BreathProgram::build(&raw, spec.mode, sim.z_f, sim.desk.z_e),
+    };
     let mut res = ShotResult {
         tag: spec.tag.clone(),
         n,
         seed: spec.pile.seed,
         pose: spec.pose.name().into(),
-        kind: match spec.breath.kind {
-            Kind::Puff => "puff".into(),
-            Kind::Pueok => "pueok".into(),
+        kind: match (&spec.flat, spec.breath.kind) {
+            (Some(_), _) => "rel".into(),
+            (None, Kind::Puff) => "puff".into(),
+            (None, Kind::Pueok) => "pueok".into(),
         },
-        q: spec.breath.q,
-        dur: if spec.breath.kind == Kind::Pueok { prog.t_stop } else { 0.0 },
-        sweep: spec.breath.sweep_dps,
+        q: spec.flat.map(|f| f.q).unwrap_or(spec.breath.q),
+        dur: if spec.flat.is_some() || spec.breath.kind == Kind::Pueok { prog.t_stop } else { 0.0 },
+        sweep: spec.flat.map(|f| f.w).unwrap_or(spec.breath.sweep_dps),
         mode: spec.mode.name().into(),
         lat: raw.lat(),
         h: raw.h(),
@@ -348,12 +576,13 @@ pub fn run_shot_from(snap: &Snapshot, spec: &ShotSpec) -> ShotResult {
         raw_bytes: raw.to_bytes().len(),
         ..Default::default()
     };
-    let height = sim.column_top();
+    let height = top0;
     res.available = match spec.pose {
         Pose::Chin => spec.pile.inset >= crate::pose::CHIN_FWD,
-        Pose::Eye => true,
+        Pose::Eye | Pose::Flat => true,
         Pose::Under => under_available(&sim, raw.lat(), height),
     };
+    let mut tilt = if spec.flat.is_some() { Some(TiltTrack::new(&sim, top0, spec.tilt_series)) } else { None };
     let start: Vec<V3> = (0..n).map(|i| sim.pos(i)).collect();
     let mut apex: Vec<f64> = start.iter().map(|p| p.y).collect();
     let mut aero = Aero::new(spec.aero);
@@ -438,6 +667,9 @@ pub fn run_shot_from(snap: &Snapshot, spec: &ShotSpec) -> ShotResult {
         res.audit.h4_nan += aero.out.nan;
         sim.step();
         track(&sim, &mut apex);
+        if let Some(tk) = tilt.as_mut() {
+            tk.update(&sim, jet.as_ref().map(|j| (j.m, j.d)));
+        }
         if spec.trace {
             let jj = jet.as_ref().map(|j| j.j).unwrap_or(0.0);
             let (mut rise, mut tilt, mut air) = (0.0f64, 0.0f64, 0u32);
@@ -516,6 +748,9 @@ pub fn run_shot_from(snap: &Snapshot, spec: &ShotSpec) -> ShotResult {
         apply(&mut sim, &aero.out.force, &aero.out.torque, wref * 1e-6);
         sim.step();
         track(&sim, &mut apex);
+        if let Some(tk) = tilt.as_mut() {
+            tk.update(&sim, None);
+        }
         k += 1;
         if sim.max_speed() < STILL_SPEED {
             quiet += 1;
@@ -566,6 +801,16 @@ pub fn run_shot_from(snap: &Snapshot, spec: &ShotSpec) -> ShotResult {
     }
     res.zero = res.flipped == 0;
     res.whole = res.flipped == n;
+    if let (Some(tk), Some(fr)) = (tilt, prog.flat) {
+        let mut rec = tk.rec;
+        rec.top = fr.top;
+        rec.alpha_top = fr.alpha_top;
+        rec.a_deg = fr.a_deg;
+        rec.d = fr.d;
+        rec.t_reach = fr.t_reach;
+        rec.whole70 = res.flipped as f64 >= 0.7 * n as f64;
+        res.flat = Some(rec);
+    }
     res.hash = sim.state_hash() ^ (res.flipped as u64) << 56 ^ (res.out as u64) << 48;
     res.cpu_ms = t0.elapsed().as_secs_f64() * 1000.0;
     res

@@ -89,6 +89,10 @@ pub struct PileParams {
     /// 세계 방위 90° = +z = 입 쪽 (A0.3b 말림 쐐기 같은 단위 시험용)
     pub force_warp: Option<(WarpKind, f64, f64)>,
     pub force_top: usize,
+    /// 민감도 손잡이(기본 1, 게임 손잡이 아님): 콜라이더 두께 배율. 휨 a(공력 틈)는 그대로 — 평평한 바닥 측정(`flat`)의 두께 단
+    pub thick_scale: f64,
+    /// 민감도 손잡이(기본 1): 딱지 질량 배율. 힘 단위 W_ref(기준 딱지 무게)는 그대로
+    pub mass_scale: f64,
 }
 
 impl PileParams {
@@ -105,11 +109,13 @@ impl PileParams {
             inset: 8.0,
             force_warp: None,
             force_top: 0,
+            thick_scale: 1.0,
+            mass_scale: 1.0,
         }
     }
-    /// 캐시 열쇠
+    /// 캐시 열쇠 (두께·질량 배율은 기본값이 아닐 때만 덧붙인다 — 옛 열쇠 그대로)
     pub fn key(&self) -> String {
-        format!(
+        let mut k = format!(
             "{}|{}|{:.6}|{:.6}|{:.4},{:.4},{:.4},{:.4}|{:.6}|{:.6}|{:.6}|{:.6}|{:?}|{}",
             self.n,
             self.seed,
@@ -125,7 +131,11 @@ impl PileParams {
             self.inset,
             self.force_warp,
             self.force_top
-        )
+        );
+        if self.thick_scale != 1.0 || self.mass_scale != 1.0 {
+            k.push_str(&format!("|tk{:.6}|mk{:.6}", self.thick_scale, self.mass_scale));
+        }
+        k
     }
 }
 
@@ -183,8 +193,12 @@ pub fn make_layout(p: &PileParams) -> PileLayout {
                 psi = -az_deg * core::f64::consts::PI / 180.0 - spin;
             }
         }
-        let h = if PAPER_T + a > MIN_T { PAPER_T + a } else { MIN_T };
-        props.push(DiscProps { h, kind, a, psi, mass: DISC_MASS });
+        let mut h = if PAPER_T + a > MIN_T { PAPER_T + a } else { MIN_T };
+        if p.thick_scale != 1.0 {
+            h *= p.thick_scale;
+        }
+        let mass = if p.mass_scale != 1.0 { DISC_MASS * p.mass_scale } else { DISC_MASS };
+        props.push(DiscProps { h, kind, a, psi, mass });
         // 그림 면 아래(로컬 +y → 세계 −y): x 축 π, 그 위에 세계 y 축 spin
         let q = Qt::axis_angle(V3::Y, spin).mul(Qt::axis_angle(V3::new(1.0, 0.0, 0.0), core::f64::consts::PI));
         pos.push(V3::new(ox, y + h * 0.5 + 1e-5 * i as f64, oz));

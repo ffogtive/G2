@@ -108,6 +108,10 @@ impl RawInput {
         if b.len() < 3 || (b.len() - 3) % 3 != 0 {
             return None;
         }
+        // 코드 3 = 평평한 바닥(측정 전용, build_flat 길). 원시 입력 계약(PvP 기록) 밖이라 받지 않는다
+        if b[0] & 3 == Pose::Flat.code() {
+            return None;
+        }
         let pose = Pose::from_code(b[0] & 3);
         let armed = b[0] & 4 != 0;
         let h_q = (((b[0] >> 4) as u16) << 8) | b[2] as u16;
@@ -236,6 +240,69 @@ pub struct BreathProgram {
     /// 숨 동안 제트 각의 최소·최대 (수평 기준 °, + = 위)
     pub jet_deg_min: f64,
     pub jet_deg_max: f64,
+    /// 평평한 바닥 측정(`build_flat`)이 푼 값. 원시 입력 길(`build`)은 None
+    pub flat: Option<FlatResolved>,
+}
+
+/// 평평한 바닥 고개 쓸기의 끝 각
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum FlatEnd {
+    /// 고정 각 A (°)
+    Deg(f64),
+    /// 그 더미의 꼭대기 각(바람 자국이 꼭대기에 닿는 각) + extra (°)
+    Top(f64),
+}
+
+/// 평평한 바닥 숨의 떼기(엄지 뗌 = 숨 끝) 시각
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum FlatRel {
+    /// 고정 시각 D (화면 초)
+    At(f64),
+    /// 고개가 끝 각에 닿은 뒤 extra 초 (쓸기 없으면 t0 + extra)
+    Reach(f64),
+}
+
+/// 평평한 바닥 '게임 문법' 숨 (측정 전용, docs/design/core-sweep.md §2.3 `rel`·§3.9 ①):
+/// 0.26 s 올림 코사인으로 올라가 엄지를 뗄 때(D)까지 가득, 뗀 뒤 off 초(기본 0.04) 동안 올림 코사인 반으로 잦아든다.
+/// 고개 α(t) = 0 (t ≤ t0), 그 뒤 w(°/s) 로 A 까지 오르고 멈춘다(v1 `alphaOf` 그대로, 목 속도 상한 없음).
+/// 유량 Q = Q_max·q·env, 입 면적은 푸어억 시간표(1.1 → 2.5 cm², 0.32 s 부터 1.12 s) 또는 `area_puff` 면 1.1 cm² 고정.
+/// 원시 입력(30 Hz) 길을 거치지 않는다 — 연속 시각의 측정 프로그램이다(PvP 기록 계약 밖).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FlatSpec {
+    pub q: f64,
+    pub rel: FlatRel,
+    pub off: f64,
+    /// 쓸기 속도 (°/s). 0 = 고개 고정
+    pub w: f64,
+    pub t0: f64,
+    pub end: FlatEnd,
+    pub area_puff: bool,
+}
+
+impl FlatSpec {
+    /// 고개 고정, D 에 떼기
+    pub fn fixed(q: f64, d: f64) -> Self {
+        Self { q, rel: FlatRel::At(d), off: 0.04, w: 0.0, t0: 0.0, end: FlatEnd::Deg(0.0), area_puff: false }
+    }
+    /// 꼭대기 각 + 0.5° 까지 w °/s 로 들고, 닿은 뒤 0.04 s 에 떼기 (sweepcheck `v|Atop|rel@top`)
+    pub fn flick(q: f64, w: f64, t0: f64) -> Self {
+        Self { q, rel: FlatRel::Reach(0.04), off: 0.04, w, t0, end: FlatEnd::Top(0.5), area_puff: false }
+    }
+}
+
+/// 더미를 보고 푼 평평한 바닥 숨 값
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FlatResolved {
+    /// 가라앉힌 더미 꼭대기 높이 (u)
+    pub top: f64,
+    /// 바람 자국이 꼭대기에 닿는 고개 각 (°)
+    pub alpha_top: f64,
+    /// 쓸기 끝 각 A (°, 0 = 고정)
+    pub a_deg: f64,
+    /// 엄지 떼기 시각 D (화면 초)
+    pub d: f64,
+    /// 고개가 A 에 닿는 시각 (쓸기 없으면 −1)
+    pub t_reach: f64,
 }
 
 #[inline]
@@ -363,7 +430,87 @@ impl BreathProgram {
             samples.push(BreathSample { m, d, q_lps, a_cm2: a, dphi: phi });
         }
         let cost = cost_of(vol, q_peak);
-        BreathProgram { rig, kind, samples, q_peak, vol_l: vol, cost, j_peak, t_stop, sweep_stopped, jet_deg_min: jet_min, jet_deg_max: jet_max }
+        BreathProgram { rig, kind, samples, q_peak, vol_l: vol, cost, j_peak, t_stop, sweep_stopped, jet_deg_min: jet_min, jet_deg_max: jet_max, flat: None }
+    }
+
+    /// 평평한 바닥 측정 프로그램 ([`FlatSpec`]). top = 가라앉힌 더미 꼭대기 높이(꼭대기 각을 푸는 데만 쓴다)
+    pub fn build_flat(fs: &FlatSpec, mode: SweepMode, lat: f64, z_f: f64, z_e: f64, top: f64) -> BreathProgram {
+        let rig = PoseRig::new(Pose::Flat, mode, lat, top, z_f, z_e);
+        let dt = JET_DT;
+        // 꼭대기 각은 그 쓸기 종류의 기하로 푼다 ((a)(b) 는 바람 자국 0.5 + 4·tan α, (c) 는 목 축)
+        let alpha_top = crate::pose::flat_alpha_top_deg(top, z_f, mode);
+        let a_deg = if fs.w > 0.0 {
+            match fs.end {
+                FlatEnd::Deg(a) => a,
+                FlatEnd::Top(x) => alpha_top + x,
+            }
+        } else {
+            0.0
+        };
+        let t_reach = if fs.w > 0.0 && a_deg > 0.0 { fs.t0 + a_deg / fs.w } else { -1.0 };
+        let d = match fs.rel {
+            FlatRel::At(d) => d,
+            FlatRel::Reach(x) => (if t_reach >= 0.0 { t_reach } else { fs.t0 }) + x,
+        };
+        let d = d.max(dt);
+        let off = fs.off.max(dt);
+        let q = fs.q.clamp(0.0, 1.0);
+        let n = libm::ceil((d + off) / dt - 1e-9) as usize;
+        let (ar, wr) = (rad(a_deg), rad(fs.w));
+        let v_d = ramp_up(d, PUEOK_RAMP);
+        let mut samples = Vec::with_capacity(n);
+        let mut sweep_stopped = false;
+        let (mut jet_min, mut jet_max) = (f64::INFINITY, f64::NEG_INFINITY);
+        let (mut q_peak, mut vol, mut j_peak) = (0.0f64, 0.0f64, 0.0f64);
+        for k in 0..n {
+            let t = (k as f64 + 0.5) * dt;
+            let phi = if a_deg <= 0.0 || t <= fs.t0 { 0.0 } else { libm::fmin(ar, wr * (t - fs.t0)) };
+            let (m, dd) = rig.mouth_dir(phi);
+            if libm::fabs(rig.dphi_eff(phi) - phi) > 1e-12 {
+                sweep_stopped = true;
+            }
+            let ja = crate::geom::deg(libm::atan2(dd.y, -dd.z));
+            jet_min = jet_min.min(ja);
+            jet_max = jet_max.max(ja);
+            let env = if t <= d {
+                ramp_up(t, PUEOK_RAMP)
+            } else {
+                let u = libm::fmin(off, t - d);
+                v_d * 0.5 * (1.0 + libm::cos(core::f64::consts::PI * u / off))
+            };
+            let a = if fs.area_puff || t < PUEOK_PU {
+                A_PUFF_CM2
+            } else if t < PUEOK_PU + PUEOK_WIDEN {
+                A_PUFF_CM2 + (A_PUEOK_END_CM2 - A_PUFF_CM2) * (t - PUEOK_PU) / PUEOK_WIDEN
+            } else {
+                A_PUEOK_END_CM2
+            };
+            let q_lps = Q_MAX_LPS * q * env;
+            if env > 0.0 && q > q_peak {
+                q_peak = q;
+            }
+            vol += q_lps * dt / time_scale();
+            let j = j_of(q_lps, a);
+            if j > j_peak {
+                j_peak = j;
+            }
+            samples.push(BreathSample { m, d: dd, q_lps, a_cm2: a, dphi: phi });
+        }
+        let cost = cost_of(vol, q_peak);
+        BreathProgram {
+            rig,
+            kind: Kind::Pueok,
+            samples,
+            q_peak,
+            vol_l: vol,
+            cost,
+            j_peak,
+            t_stop: d,
+            sweep_stopped,
+            jet_deg_min: jet_min,
+            jet_deg_max: jet_max,
+            flat: Some(FlatResolved { top, alpha_top, a_deg, d, t_reach }),
+        }
     }
 
     pub fn duration(&self) -> f64 {
@@ -404,6 +551,42 @@ mod tests {
         let b = raw.to_bytes();
         assert!(b.len() <= 200, "{} B", b.len());
         assert_eq!(RawInput::from_bytes(&b).unwrap(), raw);
+        // 코드 3(평평한 바닥)은 원시 입력 계약 밖 → 거부
+        assert!(RawInput::from_bytes(&BreathSpec::puff(1.0).to_raw(Pose::Flat, 0.0, 0.5).to_bytes()).is_none());
+    }
+    #[test]
+    fn flat_program_rel_envelope_and_sweep() {
+        // 고정: D 0.4 에 떼고 0.04 s 에 0. 제트 수평, 입 (0, 0.5, z_f + 4)
+        let p = BreathProgram::build_flat(&FlatSpec::fixed(1.0, 0.4), SweepMode::Native, 0.0, 1.0, 9.0, 1.5);
+        assert!((p.duration() - 0.44).abs() < 2.0 * JET_DT, "길이 {}", p.duration());
+        let s0 = p.samples[0];
+        assert!((s0.m.y - 0.5).abs() < 1e-12 && (s0.m.z - 5.0).abs() < 1e-12 && (s0.d.z + 1.0).abs() < 1e-12);
+        let at = |t: f64| p.samples[((t / JET_DT) as usize).min(p.samples.len() - 1)];
+        assert!((at(0.30).q_lps - Q_MAX_LPS).abs() < 1e-9, "가득 {}", at(0.30).q_lps);
+        assert!(at(0.439).q_lps < 0.01 * Q_MAX_LPS, "끝 {}", at(0.439).q_lps);
+        assert!(p.jet_deg_max.abs() < 1e-9);
+        // 튕김: 꼭대기 1.5 u → 꼭대기 각 + 0.5° 까지 120°/s, 닿은 뒤 0.04 s 에 떼기
+        let f = BreathProgram::build_flat(&FlatSpec::flick(0.85, 120.0, 0.3), SweepMode::Native, 0.0, 1.0, 9.0, 1.5);
+        let r = f.flat.unwrap();
+        assert!((crate::pose::flat_wind_mark(rad(r.alpha_top), 1.0) - 1.5).abs() < 1e-9);
+        assert!((r.a_deg - r.alpha_top - 0.5).abs() < 1e-12);
+        assert!((r.d - (0.3 + r.a_deg / 120.0 + 0.04)).abs() < 1e-12);
+        assert!((f.jet_deg_max - r.a_deg).abs() < 0.01, "끝 각 {} vs {}", f.jet_deg_max, r.a_deg);
+        // §2.1 표: 8° → 입 25 mm, 바람 자국 39 mm
+        let (o, _) = crate::pose::flat_pose(rad(8.0), 0.0, 1.0);
+        assert!((o.y * 25.0 - 25.4).abs() < 0.5 && (crate::pose::flat_wind_mark(rad(8.0), 1.0) * 25.0 - 38.8).abs() < 0.5);
+        // (a) 각도만·(b) 높이만: a=top 은 그 기하(바람 자국 0.5 + 4·tan α)로 꼭대기 각을 푼다 — 꼭대기 각에서 바람 축이 꼭대기 높이
+        for mode in [SweepMode::Angle, SweepMode::Height] {
+            let g = BreathProgram::build_flat(&FlatSpec::flick(0.85, 120.0, 0.3), mode, 0.0, 1.0, 9.0, 1.5);
+            let r = g.flat.unwrap();
+            assert!((crate::pose::FLAT_MOUTH_Y + crate::pose::FLAT_FWD * libm::tan(rad(r.alpha_top)) - 1.5).abs() < 1e-9, "{mode:?}");
+            let (m, d) = g.rig.mouth_dir(rad(r.alpha_top));
+            assert!((m.y + (d.y / -d.z) * (m.z - 1.0) - 1.5).abs() < 1e-9, "{mode:?} 바람 자국");
+            assert!((r.alpha_top - r_c_alpha(1.5)).abs() > 0.1, "{mode:?} 는 (c) 와 다른 각");
+        }
+    }
+    fn r_c_alpha(top: f64) -> f64 {
+        crate::pose::flat_alpha_top_deg(top, 1.0, SweepMode::Native)
     }
     #[test]
     fn neck_limits_hold() {

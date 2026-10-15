@@ -14,6 +14,7 @@
   - 단, 솔버 반복을 pgs 2·stab 2 로 올려야 했다. 1·1 이면 64장에서 0.11 u/s 떨림이 남아 속력 기준에 걸린다. 아래 '설계서와 다른 점' 참고.
 - **(정식 측정 + 감사 반영 1차로 확인됨, [`docs/research/v2-spike.md`](../../docs/research/v2-spike.md))** S0·S1(N 30~40)·S2(F2 없음 조건부)·S4 통과, S3·S6 실패(→ 쓸기 UI 제외, P = 30), S5 판정 불가(kmax 식 없음). 턱 최대 퍽 오라클 평균 20장 0.00·30장 0.03·40장 0.72장.
   - **가설 수정 (감사 반영)**: 턱·눈높이를 해부 범위로 자르자 턱은 약 37장 위를 노릴 수 없고 60장은 0장이다. 쓸기는 9°/s ÷ 고정 1.03 [0.89, 1.19](512짝, 쓸 여유 0~8°). F2 흡입(`f2=2`)을 켜면 30장 퍽이 0.03 → 3.1장, S2 가 뒤집히지만 H1 을 41% 샷에서 어긴다.
+- **(정직 엔진 안 확인됨 · 실물 미검증, 2026-10-15, [`docs/research/v2-flatfloor.md`](../../docs/research/v2-flatfloor.md)) 평평한 바닥 숨(입 12.5 mm·10 cm, opt-in `pose=flat`)은 20~45장을 거의 넘기지 못한다.** 게임 문법 고정 숨 3,840샷 전부 0장, 사전 등록 튕김 한 숨 0.00~0.04장, 꼭대기 뒤 0.1 s 버티기 40·45장 0.19장(최선 고정 대비 +0.19 [0.08, 0.29]·[0.04, 0.38]장 — 0 보다 크지만 판 설계에 쓸 수 없는 크기), 30장 이상은 위 절반이 5°도 기울지 않는다(두께·Cp_in·μ ±30%·F2 에서도 같음) → core-sweep §9 1번: 문자 판정 비 ∞(분모 0 → 판가름 불능), 해석 판정 실패.
 - **(스모크 신호, 미검증: 시드 2개) 턱 자세는 거의 넘기지 못한다.** 가짜 힘은 넣지 않았다.
   - 1~30장: 사실상 0장이다.
   - 30~50장: 꼭대기 근처 조준(높이 0.75~0.9)에서만 푸어억 평균 0.4~1.6장이다. 원 밖으로 날아가는 것이 3~5장이다.
@@ -53,7 +54,9 @@ native/puff_v2/
   src/gates.rs      G1(settle), S0(unit) + 부록, 스파이크 S1~S6 실험 정의(오라클 분리·짝 부트스트랩)
   src/json.rs       의존성 없는 JSON 쓰개
   src/bin/puff_v2.rs CLI
-  tests/engine.rs   단위 변환·벽 법칙 적분·S0·H3·H4·결정성(해시)·더미 시드 순수성
+  tests/engine.rs   단위 변환·벽 법칙 적분·S0·H3·H4·결정성(해시)·더미 시드 순수성·평평한 바닥(opt-in)
+  scripts/flatfloor.mjs  평평한 바닥 고개 튕김 판가름 실행기·보고 (docs/research/v2-flatfloor.md, core-sweep §9 1번)
+  data/flatfloor/   그 원자료 (*.jsonl.gz, 한 줄 = 한 샷)
   out/              측정 결과: settle.json·unit.json·smoke_S*.json (요약은 남김) · smoke_S*.jsonl (샷 전부, gitignore)
 ```
 
@@ -64,7 +67,7 @@ native/puff_v2/
 ```bash
 cd native/puff_v2
 export CARGO_TARGET_DIR=$PWD/../puff_sim/target     # 선택
-cargo test --release --offline                      # 20개: 단위(S 3.21)·벽 법칙 적분·S0·H3·H4·결정성·휨 비율
+cargo test --release --offline                      # 23개: 단위(S 3.21)·벽 법칙 적분·S0·H3·H4·결정성·휨 비율·해부 범위·평평한 바닥 opt-in(옛 키 해시 고정)
 cargo build --release --offline
 B=$CARGO_TARGET_DIR/release/puff_v2
 
@@ -76,7 +79,7 @@ $B shot n=40 seed=3 pose=chin breath=puff q=1 h=1.2         # 샷 하나 → JSO
 $B shot n=8 pose=under inset=-0.3 h=0.2 trace=1 2>trace.jsonl   # 스텝 기록(t, j, F1z, F3, F4y, Π_c/Π_ext, vmax, rise, tilt, air)
 printf 'n=20 seed=1 h=0.5\nn=20 seed=1 h=0.5 breath=pueok dur=1.93\n' | $B batch 3   # 여러 샷(입력 순서대로)
 $B spike S1 seeds=32 threads=3 out=out/S1.jsonl    # 게이트 한 개 (요약 JSON 은 stdout, 샷은 out)
-$B probe n=10 seed=2 h=0.4                  # 최대 유량 순간 공력 한 번: 경계면별 g_k·Π_ext·Π_c·열린 넓이·지렛대
+$B probe n=10 seed=2 h=0.4                  # 최대 유량 순간 공력 한 번: 경계면별 g_k·Π_ext·Π_c·열린 넓이·지렛대 (원시 입력 0.15 s, pose=flat 은 build_flat 0.30 s)
 PUFF_DEBUG_H1=1 $B shot n=4 pose=under inset=-0.3 h=0.2   # H1 위반 때 덩어리 구성원·힘·가로챈 J 를 stderr 로
 $B nominal 20,40 1-64                       # 시드별 명목 더미 높이 (물리 없음)
 ```
@@ -86,6 +89,28 @@ $B nominal 20,40 1-64                       # 시드별 명목 더미 높이 (�
 
 ```bash
 cd scripts && python3 spike.py run core_sel core_rep s6_sel s6_rep s4 && python3 spike.py analyze
+```
+
+### 평평한 바닥 고개 쓸기 (opt-in 측정, 2026-10-15)
+
+설계서 [`docs/design/core-sweep.md`](../../docs/design/core-sweep.md) §2.1 기하·§2.3 `rel` 숨을 정직 엔진에 옮겼다. 결과·판정은 [`docs/research/v2-flatfloor.md`](../../docs/research/v2-flatfloor.md).
+`pose=flat` 일 때만 켜진다. 옛 자세(턱·눈높이·책상 밑)·옛 키의 샷은 해시·JSON 이 바이트까지 그대로다(바꾸기 전 바이너리로 12샷 대조, `flat_scenario_is_opt_in` 시험).
+- 원시 입력 계약 밖이다: `RawInput::from_bytes` 는 자세 코드 3(평평한 바닥)을 받지 않는다(PvP 기록·원시 입력 길로 재지 않은 Flat 숨이 만들어지지 않게). 샷은 `build_flat` 길로만 돈다.
+- 잘못 섞은 키는 오류다(조용히 무시하지 않음): 평평한 바닥 키(`rel relx off w t0 a ax area tilt`) + 다른 자세, `pose=flat` + 원시 숨 키(`breath dur sweep delay smax`), `w>0` 인데 `a` 없음, `a=top` 없이 `ax`, `rel=top` 없이 `relx`.
+
+- 기하: 입 (lat, 0.5 u, z_f + 4 u) = 책상 위 12.5 mm·앞면에서 10 cm, 수평 제트에서 시작. 목 축 N = 입 + (0, 1.6, 3.6). 고개 α 만큼 N 둘레로 젖힌다(입이 오르고 제트가 함께 꺾임, α ∈ [0, 45°]).
+- 숨(`rel`): 0.26 s 올림 코사인 → 엄지를 뗄 때(D)까지 가득 → 뗀 뒤 `off`(0.04 s) 동안 잦아듦. 유량 3.9 L/s·q, 입 면적 = 푸어억 시간표(`area=puff` 면 1.1 cm² 고정). 원시 입력(30 Hz)을 거치지 않는 연속 시각 측정 프로그램이다.
+- 고개: α(t) = 0 (t ≤ t0), 그 뒤 w °/s 로 A 까지(v1 `alphaOf` 그대로, 목 속도 상한 없음). `a=top` 이면 A = 그 더미의 꼭대기 각(바람 자국이 가라앉힌 꼭대기에 닿는 각, 그 `mode` 의 기하로 푼다: (c) 목 축, (a)(b) 0.5 + 4·tan α) + `ax`(0.5°). `rel=top` 이면 D = 도달 + `relx`(0.04 s).
+- 기록(`flat` 객체): 꼭대기·꼭대기 각·A·D, 위 절반 평균 기울기가 5°·10°·20° 를 넘은 시각(t5·t10·t20), 0.05~0.4 s 의 위 절반 기울기, 맨 아래 딱지 5°(t_lift), 바람 축이 꼭대기를 넘은 시각과 그때 위 절반 기울기, 70% 통째. `tilt=1` 이면 1/60 s 시계열.
+- 민감도 손잡이(게임 손잡이 아님): `tk`(콜라이더 두께 배율, 휨 틈은 그대로), `mk`(질량 배율). 기본 1 이면 더미 열쇠·배치가 옛것과 같다.
+
+```bash
+B=$CARGO_TARGET_DIR/release/puff_v2
+$B shot n=40 seed=401 pose=flat q=0.85 rel=0.8 tilt=1                        # 고정 숨 0.8 s 에 떼기
+$B shot n=40 seed=401 pose=flat q=0.85 w=120 t0=0.3 a=top rel=top            # 사전 등록 튕김(꼭대기 각 + 0.5° 에서 떼기)
+$B shot n=45 seed=401 pose=flat q=0.85 rel=0.6 tk=2.1 mk=2.1 cp_in=0.56       # 두께 ×2.1·들기 ×0.7
+$B probe n=40 seed=401 pose=flat                                            # build_flat 길, 0.30 s 순간(최대 유량 j 14.3) 경계면별 공력. q=0.6 이면 j 5.15. PROBE_T=초 로 시각 바꿈
+cd scripts && THREADS=2 node flatfloor.mjs run base401 base601 sens f2 nscan aimtop && node flatfloor.mjs v1 2 && node flatfloor.mjs v1check && node flatfloor.mjs report
 ```
 
 ### 샷 API (다음 단계용)
@@ -98,7 +123,8 @@ let r: ShotResult = puff_v2::run_shot(&spec);        // 또는 run_batch(&specs,
 r.flipped; r.out; r.zero; r.audit.h1 /* … */; r.to_json();
 ```
 
-CLI 키는 `n seed pose=chin|eye|under breath=puff|pueok q dur sweep(°/s) delay smax mode=c|a|b h lat inset sigma warp cp0 cp_in cd f2=0|1|2 cs edge=0|1 audit trace max_after mu_pp mu_pt pgs stab solver=1440|1920 fwarp=curl:0.03:90 ftop tag` 이다.
+CLI 키는 `n seed pose=chin|eye|under|flat breath=puff|pueok q dur sweep(°/s) delay smax mode=c|a|b h lat inset sigma warp cp0 cp_in cd f2=0|1|2 cs edge=0|1 audit trace max_after mu_pp mu_pt pgs stab solver=1440|1920 fwarp=curl:0.03:90 ftop tag` 이다.
+- 평평한 바닥(`pose=flat`)만: `rel=D|top relx off w t0 a=도|top ax area=pueok|puff tilt=1`, 더미: `tk mk`.
 - `f2=1` 윗면 충돌만(옛 선택), `f2=2` 충돌 + 스치는 흐름 흡입(§4.7 F2 전체, `cs` 기본 0.8). 기본 0 = §7.2 스파이크 구성.
 - `edge=1`(기본) F4 책상 받침의 책상 밖 노드 입구 = 책상 모서리 점(밑면 법선). `edge=0` 은 옛 선택(테두리·반지름 법선·틈 0.25) — 옛 S4 원자료와 해시가 같다.
 

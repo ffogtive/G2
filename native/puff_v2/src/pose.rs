@@ -13,6 +13,12 @@
 //! **해부 범위 (D8, §4.5 표 '제트 각')**: 턱·눈높이의 머리 각 φ 는 [0, φ_max] 로 자른다(턱 25° = 제트 −25~0°,
 //! 눈높이 20° = 제트 −50~−30°). 표적이 범위 밖이면 φ₀ 를 범위 끝에 두고 `aim_clamped`. 쓸기 φ₀ + Δφ 도 같은 범위에서
 //! 멈춘다(머리가 해부 한계에 닿음 — 세 진단 쓸기 (a)(b)(c) 모두 같은 유효 Δφ). 책상 밑은 제트 각 [30°, 60°].
+//!
+//! **평평한 바닥 FLAT (측정 전용, opt-in — docs/design/core-sweep.md §2.1, docs/research/v2-flatfloor.md)**:
+//! 입 M0 = (lat, 0.5, z_f + 4) (책상 위 12.5 mm, 앞면에서 10 cm), 제트 수평(φ = 0)으로 시작. 목 축 N = M0 + (0, 1.6, 3.6).
+//! 고개 α 만큼 N 둘레로 젖힌다: 입 o = N + R_x(α)(M0 − N), 제트 d = (0, sin α, −cos α). 해부 범위 α ∈ [0, 45°].
+//! (b) 높이만은 v1 `tools/sweepmap.mjs poseAt` 과 같은 꼴(입 = M0 + (0, 4·tan α, 0), 제트 수평). 바람 자국 높이는 [`flat_wind_mark`]
+//! ((a)(b) 는 [`flat_wind_mark_mode`] = 0.5 + 4·tan α — `a=top` 꼭대기 각도 그 기하로 푼다).
 
 use crate::geom::{rad, rot_x, V3};
 
@@ -21,6 +27,8 @@ pub enum Pose {
     Eye,
     Chin,
     Under,
+    /// 평평한 바닥 고개 쓸기 (측정 전용, `build_flat` 길). 코드 3 은 기록용으로만 쓰고 `RawInput::from_bytes` 는 받지 않는다
+    Flat,
 }
 
 impl Pose {
@@ -29,12 +37,14 @@ impl Pose {
             Pose::Eye => 0,
             Pose::Chin => 1,
             Pose::Under => 2,
+            Pose::Flat => 3,
         }
     }
     pub fn from_code(c: u8) -> Pose {
         match c {
             0 => Pose::Eye,
             2 => Pose::Under,
+            3 => Pose::Flat,
             _ => Pose::Chin,
         }
     }
@@ -43,6 +53,7 @@ impl Pose {
             Pose::Eye => "eye",
             Pose::Chin => "chin",
             Pose::Under => "under",
+            Pose::Flat => "flat",
         }
     }
     pub fn parse(s: &str) -> Option<Pose> {
@@ -50,6 +61,7 @@ impl Pose {
             "eye" | "EYE" | "e" => Some(Pose::Eye),
             "chin" | "CHIN" | "c" => Some(Pose::Chin),
             "under" | "UNDER" | "u" => Some(Pose::Under),
+            "flat" | "FLAT" | "f" => Some(Pose::Flat),
             _ => None,
         }
     }
@@ -102,6 +114,51 @@ pub const UNDER_MIN_DEG: f64 = 30.0;
 pub const UNDER_MAX_DEG: f64 = 60.0;
 /// 쓸기 전체 범위 24° (s = 1)
 pub const SWEEP_FULL_DEG: f64 = 24.0;
+/// 평평한 바닥 (core-sweep §2.1): 입 높이 0.5 u(12.5 mm), 앞면에서 4 u(10 cm), 목 축 = 입 + (0, 1.6, 3.6), 고개 상한 45°
+pub const FLAT_MOUTH_Y: f64 = 0.5;
+pub const FLAT_FWD: f64 = 4.0;
+pub const FLAT_NECK: V3 = V3 { x: 0.0, y: 1.6, z: 3.6 };
+pub const FLAT_MAX_DEG: f64 = 45.0;
+
+/// 평평한 바닥 목 축 기하에서 고개 α(rad) 의 입과 제트 방향 (앞면 z_f, 옆걸음 lat)
+pub fn flat_pose(alpha: f64, lat: f64, z_f: f64) -> (V3, V3) {
+    let m0 = V3::new(lat, FLAT_MOUTH_Y, z_f + FLAT_FWD);
+    let n = m0 + FLAT_NECK;
+    (n + rot_x(m0 - n, alpha), rot_x(dir_deg(0.0), alpha))
+}
+
+/// 바람 자국 높이: 제트 축이 더미 앞면(z = z_f)에 닿는 높이 h(α) = o_y + tan α·(o_z − z_f)
+pub fn flat_wind_mark(alpha: f64, z_f: f64) -> f64 {
+    let (o, d) = flat_pose(alpha, 0.0, z_f);
+    o.y + (d.y / -d.z) * (o.z - z_f)
+}
+
+/// 쓸기 종류별 바람 자국 높이. (c) 목 축 = [`flat_wind_mark`]. (a) 각도만(입 고정, 제트 회전)·(b) 높이만(v1 `poseAt 'b'`,
+/// 입 평행 이동, 제트 수평)은 둘 다 입 거리 FLAT_FWD 에서 h(α) = 0.5 + FLAT_FWD·tan α 다
+pub fn flat_wind_mark_mode(alpha: f64, z_f: f64, mode: SweepMode) -> f64 {
+    match mode {
+        SweepMode::Native => flat_wind_mark(alpha, z_f),
+        SweepMode::Angle | SweepMode::Height => FLAT_MOUTH_Y + FLAT_FWD * libm::tan(alpha),
+    }
+}
+
+/// 바람 자국이 높이 `top` 에 닿는 고개 각 (°, 그 쓸기 종류의 기하로). 처음부터 축이 꼭대기 위면 0.
+/// 이분법 60회 ([0, 60°], v1 sweepcheck `alphaTop` 과 같은 규칙). (c) 는 바꾸기 전과 비트까지 같은 계산
+pub fn flat_alpha_top_deg(top: f64, z_f: f64, mode: SweepMode) -> f64 {
+    if top <= flat_wind_mark_mode(0.0, z_f, mode) {
+        return 0.0;
+    }
+    let (mut lo, mut hi) = (0.0f64, 60.0f64);
+    for _ in 0..60 {
+        let m = 0.5 * (lo + hi);
+        if flat_wind_mark_mode(rad(m), z_f, mode) > top {
+            hi = m;
+        } else {
+            lo = m;
+        }
+    }
+    hi
+}
 
 /// −z 방향을 기준으로 수평에서 deg 만큼 든 방향 (deg > 0 = 위)
 pub fn dir_deg(deg: f64) -> V3 {
@@ -139,6 +196,7 @@ pub fn phi_range(pose: Pose) -> (f64, f64) {
         Pose::Chin => (0.0, rad(CHIN_JET_MAX_DEG - CHIN_REF_DEG)),
         Pose::Eye => (0.0, rad(EYE_JET_MAX_DEG - EYE_REF_DEG)),
         Pose::Under => (rad(UNDER_MIN_DEG), rad(UNDER_MAX_DEG)),
+        Pose::Flat => (0.0, rad(FLAT_MAX_DEG)),
     }
 }
 
@@ -171,6 +229,13 @@ impl PoseRig {
                 rig.reach = (target - m).len();
                 rig
             }
+            Pose::Flat => {
+                // 시작은 언제나 수평 제트(φ₀ = 0). 높이 조준 없음 — h 는 기록만
+                let m0 = V3::new(lat, FLAT_MOUTH_Y, z_f + FLAT_FWD);
+                let (phi_lo, phi_hi) = phi_range(pose);
+                let reach = (target - m0).len();
+                PoseRig { pose, mode, pivot: m0 + FLAT_NECK, m0, d_ref: dir_deg(0.0), phi0: 0.0, target, aim_clamped: false, reach, phi_lo, phi_hi }
+            }
             Pose::Under => {
                 let m0 = V3::new(lat, UNDER_Y, z_e + UNDER_FWD);
                 let dy = target.y - m0.y;
@@ -195,7 +260,7 @@ impl PoseRig {
     /// 해부 범위 안의 유효 쓸기 각: clamp(φ₀ + Δφ, φ_lo, φ_hi) − φ₀ (턱·눈높이). 책상 밑은 그대로
     pub fn dphi_eff(&self, dphi: f64) -> f64 {
         match self.pose {
-            Pose::Chin | Pose::Eye => {
+            Pose::Chin | Pose::Eye | Pose::Flat => {
                 let mut phi = self.phi0 + dphi;
                 if phi < self.phi_lo {
                     phi = self.phi_lo;
@@ -212,7 +277,12 @@ impl PoseRig {
     /// 쓸기 각 Δφ(rad, 명령된 머리 각) 에서 입 위치와 제트 방향 (단위). 턱·눈높이는 해부 범위에서 멈춘다
     pub fn mouth_dir(&self, dphi: f64) -> (V3, V3) {
         match self.pose {
-            Pose::Chin | Pose::Eye => {
+            Pose::Flat if self.mode == SweepMode::Height => {
+                // v1 poseAt 'b': 입이 L·tan α 만큼 평행 이동, 제트 수평
+                let a = self.dphi_eff(dphi);
+                (self.m0 + V3::new(0.0, FLAT_FWD * libm::tan(self.phi0 + a), 0.0), self.d_ref)
+            }
+            Pose::Chin | Pose::Eye | Pose::Flat => {
                 let dphi = self.dphi_eff(dphi);
                 let at = |phi: f64| -> (V3, V3) {
                     (self.pivot + rot_x(self.m0 - self.pivot, phi), rot_x(self.d_ref, phi))

@@ -5,12 +5,13 @@
 //!   puff_v2 spike S1..S6 [seeds=8] [threads=3] [ns=20,30] [out=파일.jsonl]   실험 한 게이트 (요약 JSON, 샷은 out 에)
 //!   puff_v2 shot key=value ...                     샷 하나 → JSON 한 줄 (trace=1 이면 스텝 기록을 stderr 로)
 //!   puff_v2 batch [threads] < 줄마다 key=value      샷 여러 개 → 입력 순서대로 JSON 줄
-//!   puff_v2 probe key=value ...                    가라앉힌 더미에 최대 유량 순간 공력 한 번 (경계면별 진단)
+//!   puff_v2 probe key=value ...                    가라앉힌 더미에 최대 유량 순간 공력 한 번 (경계면별 진단). pose=flat 은 build_flat 0.30 s, 그 밖은 원시 입력 0.15 s (PROBE_T=초)
 //!   puff_v2 nominal [N,N,..] [a-b]                 시드별 명목 더미 높이 (물리 없음, 조준 격자용 — scripts/spike.py)
 //!   puff_v2 version
 //!
 //! 샷 키: n seed pose=chin|eye|under breath=puff|pueok q dur sweep(°/s) delay smax mode=c|a|b h lat inset sigma warp
-//!        cp0 cp_in cd f2 audit trace max_after mu_pp mu_pt fwarp=curl:0.03:90 ftop tag
+//!        cp0 cp_in cd f2 audit trace max_after mu_pp mu_pt fwarp=curl:0.03:90 ftop tag tk mk
+//!        pose=flat 전용: rel=D|top relx off w t0 a=도|top ax area=pueok|puff tilt (원시 숨 키 breath dur sweep delay smax 와 섞으면 오류)
 
 use puff_v2::*;
 use std::io::{BufRead, Write};
@@ -162,11 +163,16 @@ fn main() {
             let spec = ShotSpec::parse_kv(&rest.join(" ")).unwrap();
             let snap = shot::settle_pile(&spec.pile, spec.solver);
             let sim = pile::Sim::restore(&snap);
-            let raw = spec.raw();
-            let prog = breath::BreathProgram::build(&raw, spec.mode, sim.z_f, sim.desk.z_e);
-            let k = ((0.15 / breath::JET_DT) as usize).min(prog.samples.len() - 1);
+            // pose=flat 은 샷과 같은 build_flat 길(꼭대기 = 가라앉힌 더미). 순간 시각: PROBE_T(화면 초),
+            // 기본 원시 입력 0.15 s(퍽 가득) · 평평한 바닥 0.30 s(rel 봉투 가득 0.26 s 뒤, 입 넓어지기 0.32 s 전 = 최대 유량)
+            let prog = match &spec.flat {
+                Some(fs) => breath::BreathProgram::build_flat(fs, spec.mode, spec.lat, sim.z_f, sim.desk.z_e, sim.column_top()),
+                None => breath::BreathProgram::build(&spec.raw(), spec.mode, sim.z_f, sim.desk.z_e),
+            };
+            let t_probe: f64 = std::env::var("PROBE_T").ok().and_then(|v| v.parse().ok()).unwrap_or(if spec.flat.is_some() { 0.30 } else { 0.15 });
+            let k = ((t_probe / breath::JET_DT) as usize).min(prog.samples.len() - 1);
             let jet = jet::Jet::from_sample(&prog.samples[k]).unwrap();
-            println!("jet m={:?} d={:?} j={:.2} pi0={:.1} d0={:.3}", jet.m, jet.d, jet.j, jet.pi0, jet.d0);
+            println!("jet t={:.4} m={:?} d={:?} j={:.2} pi0={:.1} d0={:.3}", (k as f64 + 0.5) * breath::JET_DT, jet.m, jet.d, jet.j, jet.pi0, jet.d0);
             let mut a = aero::Aero::new(spec.aero);
             a.debug = true;
             let (fr, ci) = a.compute(&sim, Some(&jet));

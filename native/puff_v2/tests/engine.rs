@@ -178,3 +178,56 @@ fn bootstrap_ratio_undefined_when_both_zero() {
     let (p, lo, hi) = gates::paired_ratio_ci(&[2.0, 4.0, 3.0, 5.0], &[3.0, 6.0, 4.5, 7.5], 500);
     assert!((p - 1.5).abs() < 1e-12 && lo <= p && p <= hi);
 }
+
+/// 평평한 바닥(pose=flat)은 opt-in: 옛 키 샷의 해시·JSON 은 그대로, 평평한 바닥 샷은 결정적이고 기록이 실린다.
+/// 기대 해시 = 평평한 바닥을 넣기 전 바이너리(2026-10-15)로 기록한 값 (docs/research/v2-flatfloor.md §6).
+#[test]
+fn flat_scenario_is_opt_in() {
+    assert!(!PileParams::new(30, 11).key().contains("tk"), "기본 두께·질량 배율이면 옛 더미 열쇠");
+    for (line, want) in [
+        ("n=6 seed=5 pose=under breath=puff q=0.8 inset=-0.3 h=0.2", "3225da5f5e5358f2"),
+        ("n=4 seed=6 pose=under breath=puff q=1 inset=-0.45 h=0.3 edge=0", "edc23eb196a9afb5"),
+        ("n=20 seed=4 pose=eye breath=puff q=0.85 h=0.9", "e1c92efe80c1e3b2"),
+        ("n=30 seed=3 pose=chin breath=pueok q=0.9 dur=0.8 sweep=9 delay=0.3 mode=b h=1.3 lat=0.25", "f5acb00e8de4f07f"),
+    ] {
+        let s = ShotSpec::parse_kv(line).unwrap();
+        assert!(s.flat.is_none());
+        let r = run_shot(&s);
+        assert_eq!(format!("{:016x}", r.hash), want, "{line}");
+        assert!(r.flat.is_none() && !r.to_json().contains("\"flat\""));
+    }
+    let s = ShotSpec::parse_kv("n=8 seed=2 pose=flat q=0.85 w=120 t0=0.1 a=top rel=top max_after=1.5").unwrap();
+    let a = run_shot(&s);
+    let b = run_shot(&s);
+    assert_eq!(a.hash, b.hash);
+    let f = a.flat.as_ref().unwrap();
+    assert!((f.a_deg - f.alpha_top - 0.5).abs() < 1e-12);
+    assert!((f.d - (0.1 + f.a_deg / 120.0 + 0.04)).abs() < 1e-9);
+    assert!(a.to_json().contains("\"flat\":{"));
+    // 원시 입력 자세 코드 3(평평한 바닥)은 원시 입력 계약(PvP 기록) 밖 → from_bytes 가 거부
+    let raw = BreathSpec::puff(1.0).to_raw(Pose::Flat, 0.0, 0.5);
+    assert!(puff_v2::breath::RawInput::from_bytes(&raw.to_bytes()).is_none());
+    // 조용히 무시되던 키 조합은 오류: 평평한 바닥 키 + 다른 자세, pose=flat + 원시 숨 키, w>0 인데 a 없음, a=top 없이 ax, rel=top 없이 relx
+    for bad in [
+        "n=8 seed=2 pose=chin q=0.85 rel=0.8",
+        "n=8 seed=2 pose=eye q=0.85 w=120 t0=0.1 a=top",
+        "n=8 seed=2 tilt=1",
+        "n=8 seed=2 pose=flat breath=pueok dur=0.8 q=0.85",
+        "n=8 seed=2 pose=flat q=0.85 sweep=9 rel=0.6",
+        "n=8 seed=2 pose=flat q=0.85 w=120 t0=0.1 rel=top",
+        "n=8 seed=2 pose=flat q=0.85 w=120 a=10 ax=1 rel=0.6",
+        "n=8 seed=2 pose=flat q=0.85 rel=0.6 relx=0.1",
+    ] {
+        assert!(ShotSpec::parse_kv(bad).is_err(), "오류여야 함: {bad}");
+    }
+    assert!(ShotSpec::parse_kv("n=8 seed=2 pose=flat q=0.85 w=100000 t0=0 a=top ax=-1 rel=0.6 tk=2.1 mk=2.1 cp_in=0.56 f2=2").is_ok());
+    // 두께 배율: 명목 높이가 그 배율만큼, 열쇠가 달라짐
+    let mut p2 = PileParams::new(30, 11);
+    p2.thick_scale = 1.5;
+    p2.mass_scale = 1.5;
+    let l1 = puff_v2::pile::make_layout(&PileParams::new(30, 11));
+    let l2 = puff_v2::pile::make_layout(&p2);
+    assert!((l2.nominal / l1.nominal - 1.5).abs() < 1e-9);
+    assert!((l2.props[0].mass / l1.props[0].mass - 1.5).abs() < 1e-12);
+    assert_ne!(p2.key(), PileParams::new(30, 11).key());
+}
