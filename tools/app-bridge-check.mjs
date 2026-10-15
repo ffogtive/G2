@@ -6,6 +6,10 @@
 //              · 마이크 켬 → getUserMedia 때 type=auto(= 'playback' 이면 iOS 가 녹음을 안 함) · 소리 키움 · 무음 단추 잠김 · 끔 → playback
 //              · '무음 모드에서도 소리' 끔 → auto · 마이크 단추 두 번 연타 = 녹음 한 번 · 수명주기 pause/resume = 'playback' 안 거치고 auto
 //              · 게임 소리 끔 → auto(음악 안 끊음) · 켬 → playback
+//              · 소리 컨텍스트는 클릭(활성화) 안에서 만들어져 running · 표가 0.5초마다 다시 그려짐(오디오 시계 '흐름') · 시험 전 → 후 줄
+//  [stuck]     첫 AudioContext 가 resume 에 영영 대답 안 함(iOS WebKit 버그 흉내) → 재윤님 순서(⚙ → 2.5초 → [시험])에서 시험 도중 다시 만들기 없음
+//              · 삑·푸가 같은 컨텍스트(멈춤으로 보임) → 활성화 두 번 뒤 다음 클릭에서 닫고 새로 만들어 running
+//  [stall]     첫 AudioContext 가 'running' 인데 시계가 안 흐름(iOS 끊김 뒤 흉내) → 톡마다 stall 로 세고 두 번 뒤 다시 만들어 시계 흐름
 //  [race-lost] 채널 래퍼(window.PuffHaptic)가 핸들러 등록보다 먼저 돌아 비어 있어도 진동 메시지가 간다(메시지 핸들러로 직접)
 //  [web]       다리 없는 빌드(dist/puff.html): navigator.audioSession·mediaSession 을 건드리지 않음 · 시험 표에 '웹'·진동 '이 기기 미지원'
 // 사용: npm run app:www && PW=$(npm root -g)/playwright node tools/app-bridge-check.mjs   (약 1분)
@@ -40,6 +44,19 @@ function fakeHost({ variant }) {
   window.__resumeTypes = []; // AudioContext.resume() 를 부른 순간의 type(수명주기: 마이크를 다시 켤 거면 'auto' 에서 깨워야 함)
   const res0 = AudioContext.prototype.resume;
   AudioContext.prototype.resume = function () { window.__resumeTypes.push(sess.type); return res0.call(this); };
+  window.__acMade = 0; // 만들어진 AudioContext 수(부팅만으로는 0 이어야 함 — 활성화 안에서만 만든다)
+  const AC0 = window.AudioContext;
+  window.AudioContext = class extends AC0 {
+    constructor(...a) {
+      super(...a);
+      const first = window.__acMade++ === 0;
+      if (first && variant === 'stuck') { // 첫 컨텍스트: 멈추고, resume 은 영영 대답 없음(bugs.webkit.org 281566 흉내)
+        AC0.prototype.suspend.call(this);
+        this.resume = () => new Promise(() => {});
+      }
+      if (first && variant === 'stall') Object.defineProperty(this, 'currentTime', { get: () => 0.5, configurable: true }); // running 인데 시계 멈춤
+    }
+  };
   if (variant === 'web') return;
   // Dart 흉내(app/lib/haptics.dart HapticBridge.handle 과 같은 응답 모양)
   let n = 0;
@@ -93,14 +110,20 @@ async function runDiag(page) {
 { // ── 앱 ──
   console.log('[app] 다리 + 가짜 WKWebView 채널·Dart 응답·audioSession');
   const { ctx, page, errs } = await open('app');
-  const boot = await page.evaluate(() => ({ native: document.documentElement.classList.contains('native'), type: navigator.audioSession.type, vib: typeof navigator.vibrate, np: navigator.mediaSession?.metadata?.title ?? null }));
+  const boot = await page.evaluate(() => ({ native: document.documentElement.classList.contains('native'), type: navigator.audioSession.type, vib: typeof navigator.vibrate, np: navigator.mediaSession?.metadata?.title ?? null, made: window.__acMade }));
   ok('부팅: html.native · navigator.vibrate 다리', boot.native && boot.vib === 'function');
   ok('터치 모드 소리 세션 = playback (무음 모드에서도 소리)', boot.type === 'playback', `type=${boot.type}`);
   ok("'지금 재생' 제목 = PUFF! (없으면 127.0.0.1)", boot.np === 'PUFF!', `title=${boot.np}`);
   const r = await runDiag(page);
   await page.screenshot({ path: 'tools/scratch/app-bridge-diag.png' });
   ok('시험 표: 앱 · html.native · AudioContext 있음', r['실행 환경'] === '앱 · html.native 예' && /^(running|suspended)/.test(r.AudioContext || ''), `${r['실행 환경']} / ${r.AudioContext}`);
-  ok('삑·푸 냈음', r['① 삑 · ② 푸'] === '냈음 · 냈음', r['① 삑 · ② 푸']);
+  const bp = r['① 삑 · ② 푸 소리 상태(전 → 삑 뒤 → 푸 뒤)'] || '';
+  ok('시험 전 → 삑 뒤 → 푸 뒤: 끝이 running · 시계 흐름', /→ running [\d.]+s → running [\d.]+s \(흐름 \+/.test(bp), bp);
+  const log0 = r['소리 상태 기록'] || '';
+  ok('소리 컨텍스트: 부팅에선 안 만들고 첫 클릭(활성화) 안에서 만들어 running', boot.made === 0 && /^new@[\d.]+s\((pointerup|click)\)→running@[\d.]+s \d+ms(?!\()/.test(log0), `부팅 때 ${boot.made}개 · ${log0}`);
+  await page.waitForTimeout(1300);
+  const live = await diagRows(page);
+  ok("표가 계속 다시 그려짐(소리 시계 '흐름' · 지금 시각 바뀜)", /흐름 \+/.test(live['소리 시계'] || '') && live['소리 시계'] !== r['소리 시계'], `${r['소리 시계']} ⇒ ${live['소리 시계']}`);
   ok('③-1 게임 길 응답 = 뷰에 붙인 생성기', /^OK · view/.test(r['③-1 진동: 게임 길'] || ''), r['③-1 진동: 게임 길']);
   ok('③-2 엔진 길 응답', /^OK · engine/.test(r['③-2 진동: 엔진 길'] || ''), r['③-2 진동: 엔진 길']);
   ok('③-3 Core Haptics 응답', /^OK · core/.test(r['③-3 진동: Core Haptics'] || ''), r['③-3 진동: Core Haptics']);
@@ -114,7 +137,7 @@ async function runDiag(page) {
   const on = await page.evaluate(() => ({ gum: window.__gumTypes.slice(), type: navigator.audioSession.type }));
   const r2 = await diagRows(page);
   ok('마이크 켬: getUserMedia 때 type=auto (playback 이면 iOS 가 녹음 안 함)', on.gum.length === 1 && on.gum[0] === 'auto' && on.type === 'auto', `gum ${JSON.stringify(on.gum)} · 지금 ${on.type}`);
-  ok('마이크 켬: 소리 키움 표시', /켜짐 · 소리 키움/.test(r2['마이크'] || ''), r2['마이크']);
+  ok('마이크 켬: 마이크용 AudioContext running · 소리 키움 표시', /^켜짐 · AudioContext running · 소리 키움/.test(r2['마이크'] || ''), r2['마이크']);
   const lock = await page.evaluate(() => ({ dis: document.querySelector('#diagSilent').disabled, txt: document.querySelector('#diagSilent').textContent }));
   ok("마이크 켬: '무음 모드에서도 소리' 단추 잠김 · 예상 범주 = 녹음+재생", lock.dis && /마이크 켬 중엔 무효/.test(lock.txt) && /^녹음\+재생/.test(r2['예상 소리 범주'] || ''), `${lock.txt} | ${r2['예상 소리 범주']}`);
   await page.click('#diagMic');
@@ -151,6 +174,61 @@ async function runDiag(page) {
   ok('게임 소리 끔 → auto · 켬 → playback', sndOff === 'auto' && sndOn === 'playback', `${sndOff} → ${sndOn}`);
   const log = await page.evaluate(() => window.__fakeSess.log);
   console.log(`  type 기록: ${log.join(' → ')}`);
+  ok('오류 0', !errs.length, errs.join(' | '));
+  await ctx.close();
+}
+
+{ // ── 멈춘 컨텍스트 → 다시 만들기 ──
+  console.log('[stuck] 첫 AudioContext 의 resume 이 영영 대답 없음 → 활성화 두 번 뒤 닫고 새로');
+  const { ctx, page, errs } = await open('stuck');
+  // 재윤님 순서: ⚙(만들기) → 2.5초 → [시험](두 번째 활성화 = resume). 650ms 뒤 푸가 다시 만들면(옛 userActivation 길) 삑·푸가 다른 컨텍스트로 갔다
+  await page.click('#tuneBtn');
+  await page.waitForTimeout(2500);
+  await page.click('#diagGo');
+  await page.waitForFunction(() => window.__puffDiagLast?.done, null, { timeout: 20000 });
+  const t0 = await diagRows(page);
+  const same = await page.evaluate(() => { const r = window.__puffDiagLast.res; return !!r.s0 && r.s0.ctx === r.s1?.ctx && r.s1?.ctx === r.s2?.ctx; });
+  const made0 = await page.evaluate(() => window.__acMade);
+  const lg0 = t0['소리 상태 기록'] || '', bp0 = t0['① 삑 · ② 푸 소리 상태(전 → 삑 뒤 → 푸 뒤)'] || '';
+  ok('⚙ → 2.5초 → [시험]: 시험 도중 다시 만들기 없음 · 삑·푸 같은 컨텍스트 · 멈춤으로 보임', !/recreate@/.test(lg0) && made0 === 1 && same && /^suspended [\d.]+s → suspended [\d.]+s → suspended [\d.]+s \(멈춤 \+0\.00s/.test(bp0), `만듦 ${made0} · 같은 ctx ${same} · ${bp0} · ${lg0}`);
+  let rr = {};
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(700);
+    rr = await diagRows(page);
+    if (/recreate@/.test(rr['소리 상태 기록'] || '')) break;
+    await page.click('.diag-how'); // 아무 데나 톡(활성화)
+  }
+  await page.waitForTimeout(700);
+  rr = await diagRows(page);
+  const lg = rr['소리 상태 기록'] || '';
+  const made = await page.evaluate(() => window.__acMade);
+  ok('멈춘 컨텍스트: 시도 기록(resume…) 뒤 recreate → 새 컨텍스트 running', /resume@[\d.]+s\((pointerup|click)\)/.test(lg) && /recreate@[\d.]+s\((pointerup|click)\) suspended › new@[\d.]+s\((pointerup|click)\)→running/.test(lg) && made === 2 && /^running/.test(rr.AudioContext || ''), `만듦 ${made} · ${rr.AudioContext} · ${lg}`);
+  await page.evaluate(() => { window.__prevRes = window.__puffDiagLast?.res; }); // 앞 시험의 done 이 남아 있다 → 새 결과를 기다림
+  await page.click('#diagGo');
+  await page.waitForFunction(() => window.__puffDiagLast?.done && window.__puffDiagLast.res !== window.__prevRes, null, { timeout: 20000 });
+  const r3 = await diagRows(page);
+  ok('다시 만든 뒤 시험: 삑·푸 때 running · 시계 흐름', /running [\d.]+s \(흐름 \+/.test(r3['① 삑 · ② 푸 소리 상태(전 → 삑 뒤 → 푸 뒤)'] || ''), r3['① 삑 · ② 푸 소리 상태(전 → 삑 뒤 → 푸 뒤)']);
+  ok('오류 0', !errs.length, errs.join(' | '));
+  await ctx.close();
+}
+
+{ // ── 'running' 인데 시계 멈춤 → stall 로 세고 다시 만들기 ──
+  console.log("[stall] 첫 AudioContext 가 running 인데 currentTime 이 안 흐름 → 톡 두 번 stall 뒤 다시 만듦");
+  const { ctx, page, errs } = await open('stall');
+  await page.click('#tuneBtn');
+  let rr = {};
+  for (let i = 0; i < 6; i++) {
+    await page.waitForTimeout(700);
+    rr = await diagRows(page);
+    if (/recreate@/.test(rr['소리 상태 기록'] || '')) break;
+    await page.click('.diag-how');
+  }
+  await page.waitForTimeout(1300);
+  rr = await diagRows(page);
+  const lg = rr['소리 상태 기록'] || '';
+  const made = await page.evaluate(() => window.__acMade);
+  const nStall = (lg.match(/stall@/g) || []).length;
+  ok('running 인데 시계 멈춤: stall 두 번 → recreate(running) → 새 컨텍스트 running · 시계 흐름', nStall === 2 && /stall@[\d.]+s\((pointerup|click)\) \+0\.00s/.test(lg) && /recreate@[\d.]+s\((pointerup|click)\) running › new@[\d.]+s\((pointerup|click)\)→running/.test(lg) && made === 2 && /흐름 \+/.test(rr['소리 시계'] || ''), `만듦 ${made} · stall ${nStall} · ${rr['소리 시계']} · ${lg}`);
   ok('오류 0', !errs.length, errs.join(' | '));
   await ctx.close();
 }

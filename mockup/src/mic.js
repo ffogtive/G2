@@ -31,6 +31,9 @@ export class Mic {
       });
       const AC = window.AudioContext || window.webkitAudioContext;
       this.ctx = new AC();
+      // await 뒤(활성화 밖)에 만들었다 → 생성 직후는 suspended. 깨워 둔다(웹 Safari 는 '녹음 중이면 허용'에 기댐 — 미검증).
+      // suspended 로 남으면 분석기가 0 만 읽는다 → 상태는 ⚙ 마이크 줄(ctxState)에 보인다
+      try { this.ctx.resume()?.catch?.(() => {}); } catch (e) { /* 옛 webkitAudioContext */ }
       const src = this.ctx.createMediaStreamSource(stream);
       this.an = this.ctx.createAnalyser();
       this.an.fftSize = 1024;
@@ -48,6 +51,8 @@ export class Mic {
       return false;
     }
   }
+
+  get ctxState() { return this.ctx ? this.ctx.state : null; }
 
   stop() {
     if (this.stream) this.stream.getTracks().forEach((t) => t.stop());

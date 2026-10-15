@@ -53,42 +53,242 @@ export const AppAudio = {
   get boosted() { return this.on && this.micOn; },
 };
 
+// ── 소리 깨우기: 사용자 활성화 사건 안에서만 만들고 깨운다 ─────────────
+// HTML 'activation-triggering input event' = keydown(Esc 제외)·mousedown·pointerdown(마우스만)·pointerup(마우스 아님)·touchend.
+// click 은 그 뒤라 활성화가 살아 있다. 터치의 pointerdown 은 활성화가 아니다 → 거기서 만들면 Safari 는 손을 뗄 때까지 suspended.
+// WebKit 은 제스처가 필요할 때 '소스 start' 를 시작 계기로 쓴다 → 활성화 때 resume() + 1샘플 무음 소스(옛 iOS 잠금 풀기).
+// 합성 사건(isTrusted=false — el.click()·?pvpbot)은 활성화가 아니다.
+const ACT_EVENTS = new Set(['pointerup', 'touchend', 'click', 'keydown', 'mousedown', 'mouseup']);
+export function activationType(ev) {
+  if (!ev || typeof ev.type !== 'string' || ev.isTrusted === false) return null;
+  if (ev.type === 'keydown') return ev.key === 'Escape' ? null : 'keydown';
+  if (ACT_EVENTS.has(ev.type)) return ev.type;
+  if (ev.type === 'pointerdown' && ev.pointerType === 'mouse') return 'pointerdown';
+  return null;
+}
+const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+const sec = (ms) => `${(ms / 1000).toFixed(1)}s`;
+const SAME_TAP_MS = 600; // 톡 한 번 = pointerup·touchend·click 세 사건 → 시도 하나로 센다
+const MAX_TRIES = 2; // 활성화 두 번에도 running 이 아니면 다음 활성화에서 닫고 새로 만든다
+const MAX_RECREATE = 2; // running 이 되기 전까지 다시 만들기 최대 횟수(아무 컨텍스트도 못 켜는 환경에서 헛돌지 않게)
+const STALL_MIN_S = 0.5; // 'running' 인데 시계가 멈춤(iOS 끊김 뒤) 판정: 벽시계 이만큼 이상 지났는데 currentTime 증가가 그 절반 미만
+const LOG_CAP = 10;
+
 export class Sfx {
   constructor() {
     this.ctx = null;
     this.muted = false;
     this.master = null;
     this.noiseBuf = null;
-    this.states = []; // AudioContext 상태 기록(⚙ 소리·진동 시험이 보여 줌)
+    this.log = []; // AudioContext 시도·상태 기록({s, res, pending, n}) → states(⚙ 소리·진동 시험이 그대로 보여 줌)
+    this.cur = null; // 지금 결과를 기다리는 시도(만들기·깨우기)
+    this.tries = 0; // running 이 아닌 채로 한 활성화 시도 수(만들기 포함)
+    this.lastTry = -1e9;
+    this.recreates = 0;
+    this.lastEv = null;
+    this.paused = false; // 앱 수명주기 pause() 로 우리가 멈춤
+    this.blank = null;
+    this.sessWatch = false;
+    this.noApi = false; // Web Audio 자체가 없음(잠금 모드) — ⚙ 표가 '아직 안 만듦'과 가른다
+    this.ref = null; // 'running' 시계 기준점 {ctx, ct, at}(멈춤 판정)
+    this.stalled = false; // 마지막 판정이 '멈춤'이었나(같은 톡의 다음 사건도 깨우기만)
     AppAudio.sfx = this;
   }
 
-  // 터치·클릭마다 불러도 된다: 없으면 만들고, 멈춰 있으면(suspended·interrupted — 전화·시리·알람·백그라운드·다른 앱 소리) 다시 깨운다
-  unlock() {
+  // 시도 기록: 'new@5.2s(click)→running@5.2s 14ms' · 'resume@6.1s(touchend)…'(대기 중) · 'resume@6.1s(touchend)✗NotAllowedError' · 'recreate@9.0s(click) suspended'
+  //           뒤 시도와 함께 풀린 옛 시도 'new@0.0s(pointerup)→running@3.0s 3015ms(뒤 시도로 풀림)' · 'running' 인데 시계 멈춤 'stall@8.0s(click) +0.00s/2.10s'
+  //           상태 바뀜 'running@5.3s' · 앱 소리 세션 'session:interrupted@7.0s' · Web Audio 없음 'noapi@1.0s(click)'
+  get states() {
+    return this.log.map((e) => `${e.s}${e.n > 1 ? `×${e.n}` : ''}${e.pending ? '…' : e.res || ''}`);
+  }
+  note(s, extra) {
+    const e = { s, n: 1, t0: nowMs(), ...extra };
+    this.log.push(e);
+    if (this.log.length > LOG_CAP) this.log.shift();
+    return e;
+  }
+  // resume() 결과를 시도 기록에 붙인다(해결 시각·걸린 ms / 거절 이름). 끝나지 않으면 '…' 로 남는다(WebKit: 시작 허가가 없으면 대기)
+  // 같은 기록에 resume 이 여럿 붙으면(같은 톡의 다른 사건·×n) 먼저 끝난 것만 적고, 걸린 시간은 그 시도를 시작한 때부터.
+  // WebKit 은 허락 안 된 resume 을 거절하지 않고 대기시킨다 → 뒤 시도가 running 을 만들면 옛 대기도 함께 풀린다.
+  // 그래서 해결 시각을 절대초로 적고, 더 새 시도가 있거나(this.cur !== e) ×n 으로 합쳐졌으면 '(뒤 시도로 풀림)' — 느린 성공으로 읽지 않게
+  settle(e, ctx, p) {
+    if (!p || typeof p.then !== 'function') { if (e.pending) { e.pending = false; e.res = `→${ctx.state}`; } return; }
+    p.then(() => {
+      if (ctx === this.ctx && ctx.state === 'running') this.ran();
+      if (!e.pending) return;
+      e.pending = false;
+      const t = nowMs();
+      e.res = `→${ctx.state}@${sec(t)} ${Math.round(t - e.t0)}ms${this.cur !== e || e.n > 1 ? '(뒤 시도로 풀림)' : ''}`;
+    }, (err) => {
+      if (!e.pending) return;
+      e.pending = false;
+      e.res = `✗${(err && err.name) || err}`;
+    });
+  }
+  ran() { this.tries = 0; this.recreates = 0; this.paused = false; }
+
+  // 어디서 불러도 된다(옛 API). 만들기·다시 만들기·시도 세기는 진짜 활성화 사건(신뢰된 Event 객체) 안일 때만 한다:
+  //  - 클릭·키·손 뗌 처리기 안 → kick(같은 사건이면 main.js 전역 리스너가 이미 했으므로 건너뜀)
+  //  - 활성화 밖(터치 pointerdown·타이머·await 뒤·⚙ 시험의 650ms 뒤) → 만들지도 세지도 적지도 않는다. 멈춘 컨텍스트가 있으면 resume 만:
+  //    앱 웹뷰(제스처 요구 꺼짐 — 전화·시리 뒤 첫 경기 누름에서 들숨이 멈춘 시계에 예약되지 않게) · 웹은 일시 활성화가 살아 있을 때.
+  //    WebKit 이 시작을 허락하는 기준은 사건 처리 중 제스처 토큰이지 navigator.userActivation 이 아니다(미검증) → 여기서 새로 만들면 안 된다
+  //  - from='lifecycle'(앱이 앞으로 돌아옴, Flutter → runJavaScript): 앱 웹뷰는 제스처 요구가 꺼져 있어 깨우기만 한다(만들지는 않음)
+  unlock(from) {
     AppAudio.apply(); // 앱: 첫 소리 전에 세션 종류
-    if (this.ctx) {
-      const s = this.ctx.state;
-      if (s === 'closed') { this.ctx = null; return this.unlock(); }
-      if (s !== 'running') { try { this.ctx.resume()?.catch?.(() => {}); } catch (e) { /* 다음 터치에 다시 */ } }
+    const ctx = this.ctx;
+    if (from === 'lifecycle') {
+      if (ctx && ctx.state !== 'closed' && (this.paused || ctx.state !== 'running')) { this.paused = false; this.resumeTry('lifecycle', false); }
       return;
     }
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return; // 잠금 모드(Lockdown Mode)면 WKWebView 에 Web Audio 자체가 없다
-    this.ctx = new AC();
-    this.master = this.ctx.createGain();
+    const ev = typeof window !== 'undefined' ? window.event : null;
+    if (activationType(ev)) return this.kick(ev);
+    if (ctx && ctx.state !== 'running' && ctx.state !== 'closed' && !this.paused
+      && (AppAudio.on || (typeof navigator !== 'undefined' && navigator.userActivation?.isActive))) this.wakeOnly();
+  }
+
+  // 세지도 적지도 않고 resume 만(결과는 onstatechange 'running@…' 으로 기록에 남는다)
+  wakeOnly() {
+    try { this.ctx.resume()?.catch?.(() => {}); } catch (e) { /* 옛 webkitAudioContext */ }
+  }
+
+  // 활성화 사건 하나(main.js 가 window capture 로 pointerup·touchend·click·keydown 마다 부름).
+  // 문자열(사건 이름만)이면 진짜 활성화가 아니다 → 만들기·다시 만들기·세기 없이 깨우기만
+  kick(ev) {
+    const real = !!ev && typeof ev === 'object';
+    const type = real ? activationType(ev) : (typeof ev === 'string' ? ev : null);
+    if (!type) return;
+    if (real) { if (this.lastEv === ev) return; this.lastEv = ev; }
+    AppAudio.apply();
+    const t = nowMs();
+    const ctx = this.ctx;
+    if (!real) { if (ctx && ctx.state !== 'running' && ctx.state !== 'closed') this.wakeOnly(); return; }
+    if (!ctx || ctx.state === 'closed') { this.create(type); this.silent(); return; }
+    if (ctx.state === 'running') {
+      // iOS 끊김 뒤 'running' 인데 currentTime 이 안 흐를 때가 있다(⚙ '멈춤') → 그때는 멈춘 것과 같게 세고, MAX_TRIES 뒤 다시 만든다
+      const r = this.ref;
+      if (!r || r.ctx !== ctx) { this.ref = { ctx, ct: ctx.currentTime, at: t }; this.stalled = false; if (!this.paused) this.ran(); return; }
+      const dw = (t - r.at) / 1000;
+      if (dw < STALL_MIN_S) { if (this.stalled) { this.wakeOnly(); this.silent(); } return; } // 같은 톡의 다음 사건 — 판정은 앞 사건 것
+      const dct = ctx.currentTime - r.ct;
+      this.ref = { ctx, ct: ctx.currentTime, at: t };
+      if (dct >= dw * 0.5) { this.stalled = false; if (!this.paused) this.ran(); return; }
+      this.stalled = true;
+      if (t - this.lastTry >= SAME_TAP_MS) {
+        if (this.tries >= MAX_TRIES && this.recreates < MAX_RECREATE) { this.recreate(type); this.silent(); return; }
+        this.tries++;
+        this.lastTry = t;
+        this.note(`stall@${sec(t)}(${type}) +${dct.toFixed(2)}s/${dw.toFixed(2)}s`);
+      }
+      this.wakeOnly(); // running 이라 곧바로 풀린다 → ran() 을 부르는 settle 을 붙이지 않는다(시계가 흐르는지로 판정)
+      this.silent();
+      return;
+    }
+    // suspended · interrupted(전화·시리·알람·다른 앱 소리·백그라운드) — 같게 다룬다
+    const sameTap = t - this.lastTry < SAME_TAP_MS;
+    if (!sameTap && this.tries >= MAX_TRIES && this.recreates < MAX_RECREATE) this.recreate(type);
+    else this.resumeTry(type, sameTap);
+    this.silent();
+  }
+
+  // 같은 톡 안의 두 번째 사건(sameTap)은 세지도 적지도 않고 resume 만 다시 부른다(진짜 활성화가 어느 사건인지 엔진마다 다름)
+  resumeTry(type, sameTap) {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    let e = this.cur;
+    if (!sameTap) {
+      this.tries++;
+      this.lastTry = nowMs();
+      const last = this.log[this.log.length - 1];
+      if (last && last === this.cur && last.pending && last.kind === 'resume' && last.type === type) { last.n++; e = last; } // 같은 대기가 이어지면 ×n(풀리면 '(뒤 시도로 풀림)')
+      else e = this.cur = this.note(`resume@${sec(this.lastTry)}(${type})`, { kind: 'resume', type, pending: true, t0: this.lastTry });
+    }
+    let p = null;
+    try { p = ctx.resume(); } catch (err) { if (e && !sameTap) { e.pending = false; e.res = `✗${(err && err.name) || err}`; } return; }
+    if (e && e.pending) this.settle(e, ctx, p);
+    else p?.catch?.(() => {});
+  }
+
+  recreate(type) {
+    const old = this.ctx;
+    this.recreates++;
+    this.note(`recreate@${sec(nowMs())}(${type}) ${old.state}`);
+    try { old.onstatechange = null; old.close()?.catch?.(() => {}); } catch (e) { /* 이미 닫힘 */ }
+    this.ctx = null;
+    this.create(type);
+  }
+
+  create(type) {
+    const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
+    const t = nowMs();
+    if (!AC) { // 잠금 모드(Lockdown Mode)면 WKWebView 에 Web Audio 자체가 없다 → 한 번만 적는다('-' = 한 번도 시도 안 함과 가르게)
+      if (!this.noApi) { this.noApi = true; this.note(`noapi@${sec(t)}(${type})`); }
+      return;
+    }
+    let ctx;
+    try { ctx = new AC(); } catch (err) { this.note(`new@${sec(t)}(${type})✗${(err && err.name) || err}`); return; }
+    this.ctx = ctx;
+    this.master = ctx.createGain();
     this.master.gain.value = MASTER;
     this.boost();
-    const comp = this.ctx.createDynamicsCompressor();
-    this.master.connect(comp).connect(this.ctx.destination);
-    const len = this.ctx.sampleRate * 1.5;
-    this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const comp = ctx.createDynamicsCompressor();
+    this.master.connect(comp).connect(ctx.destination);
+    const len = ctx.sampleRate * 1.5;
+    this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    // 생성 직후 state 는 늘 suspended(스펙·WebKit: running 은 나중에 비동기) → 만든 순간 상태는 적지 않고, 바뀔 때마다 적는다
+    let lastSt = null;
+    ctx.onstatechange = () => {
+      if (ctx !== this.ctx || ctx.state === lastSt) return; // 같은 상태가 두 번 오면(엔진마다) 한 번만
+      lastSt = ctx.state;
+      this.note(`${ctx.state}@${sec(nowMs())}`);
+      if (ctx.state === 'running') { this.ran(); this.ref = { ctx, ct: ctx.currentTime, at: nowMs() }; this.stalled = false; } // 멈춤 판정은 running 이 된 때부터
+    };
+    this.tries = 1;
+    this.lastTry = t;
+    const e = this.cur = this.note(`new@${sec(t)}(${type})`, { kind: 'new', type, pending: true, t0: t });
+    let p = null;
+    try { p = ctx.resume(); } catch (err) { /* 옛 webkitAudioContext */ }
+    this.settle(e, ctx, p);
+    this.watchSession();
+    if (!this.samples) this.loadSamples();
+  }
+
+  // 1샘플 무음 소스를 destination 에 바로 — WebKit 은 활성화 안의 소스 start 로 렌더링을 시작한다
+  silent() {
     const ctx = this.ctx;
-    const note = () => { this.states.push(`${ctx.state}@${(performance.now() / 1000).toFixed(1)}s`); if (this.states.length > 8) this.states.shift(); };
-    note();
-    ctx.onstatechange = note;
-    this.loadSamples();
+    if (!ctx || ctx.state === 'closed') return;
+    try {
+      if (!this.blank || this.blank.ctx !== ctx) this.blank = { ctx, buf: ctx.createBuffer(1, 1, ctx.sampleRate) };
+      const s = ctx.createBufferSource();
+      s.buffer = this.blank.buf;
+      s.connect(ctx.destination);
+      s.start(0);
+    } catch (e) { /* 다음 활성화에 다시 */ }
+  }
+
+  // 앱 수명주기(뒤로 감): 우리가 멈춘다. 돌아오면 unlock('lifecycle') 이 깨운다(WebKit 은 스크립트가 멈춘 컨텍스트를 스스로 안 깨움)
+  pause() {
+    const ctx = this.ctx;
+    if (!ctx || ctx.state === 'closed') return;
+    this.paused = true;
+    try { ctx.suspend()?.catch?.(() => {}); } catch (e) { /* 소리 없음 */ }
+  }
+
+  // 앱(iOS)만: navigator.audioSession 상태(inactive·active·interrupted) 바뀜도 같은 기록에(읽기만 — 웹·아티팩트는 안 건드림)
+  watchSession() {
+    if (this.sessWatch || !AppAudio.on || !AppAudio.supported) return;
+    this.sessWatch = true;
+    try {
+      const s = navigator.audioSession;
+      if (typeof s.addEventListener === 'function') s.addEventListener('statechange', () => { this.note(`session:${s.state}@${sec(nowMs())}`); });
+    } catch (e) { /* 없음 */ }
+  }
+
+  // ⚙ 표·시험용 한 장면: 상태와 오디오 시계(currentTime 이 실제로 흐르는지 = 진짜 렌더링 중인지)
+  snap() {
+    const ctx = this.ctx;
+    return ctx ? { state: ctx.state, ct: ctx.currentTime, at: nowMs(), ctx } : null;
   }
 
   // 마이크 켜짐(앱)일 때만 앞단 키움
@@ -98,9 +298,9 @@ export class Sfx {
     try { this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05); } catch (e) { this.master.gain.value = v; }
   }
 
-  // ⚙ 소리·진동 시험: 게임 소리를 꺼 뒀어도 낸다. 삑 = 짧은 고음(1760Hz, 오실레이터 길), 푸 = 노이즈 소스 길
+  // ⚙ 소리·진동 시험: 게임 소리를 꺼 뒀어도 낸다. 삑 = 짧은 고음(1760Hz, 오실레이터 길), 푸 = 노이즈 소스 길.
+  // 깨우지 않는다(unlock 안 부름): [시험] 클릭 때 전역 kick 이 이미 했다. 650ms 뒤 푸에서 다시 만들면 삑·푸가 다른 컨텍스트로 가서 판가름이 틀어진다
   testBeep() {
-    this.unlock();
     if (!this.ctx) return false;
     const m = this.muted; this.muted = false;
     this.tone(1760, 0.16, 'sine', 0.22);
@@ -108,7 +308,6 @@ export class Sfx {
     return true;
   }
   testPuff() {
-    this.unlock();
     if (!this.ctx) return false;
     const m = this.muted; this.muted = false;
     this.puff(0.9, 0.9);
@@ -162,19 +361,23 @@ export class Sfx {
     g.gain.exponentialRampToValueAtTime(0.06, t0 + 0.15);
     src.connect(bp).connect(g).connect(this.master);
     let held = false;
+    const ctx = this.ctx; // 다시 만들기(recreate) 뒤에도 이 핸들은 자기 컨텍스트만 만진다 — 닫힌 컨텍스트면 조용히 무시
+    const safe = (f) => { try { f(); } catch (e) { /* 닫힌 컨텍스트 */ } };
     return {
       set: (p) => {
         if (held) return;
-        bp.frequency.setTargetAtTime(500 + p * 1400, this.ctx.currentTime, 0.05);
-        g.gain.setTargetAtTime(0.03 + p * 0.09, this.ctx.currentTime, 0.05);
+        safe(() => {
+          bp.frequency.setTargetAtTime(500 + p * 1400, ctx.currentTime, 0.05);
+          g.gain.setTargetAtTime(0.03 + p * 0.09, ctx.currentTime, 0.05);
+        });
       },
       // 숨 주머니 꽉: 들숨 소리가 뚝 끊김 (더 안 들어감)
-      hold: () => { held = true; g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.015); },
+      hold: () => { held = true; safe(() => g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.015)); },
       resume: () => { held = false; },
-      stop: () => {
-        g.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03);
-        src.stop(this.ctx.currentTime + 0.2);
-      },
+      stop: () => safe(() => {
+        g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.03);
+        src.stop(ctx.currentTime + 0.2);
+      }),
     };
   }
 

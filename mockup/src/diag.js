@@ -13,10 +13,10 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 /**
  * @param {HTMLElement} box   붙일 곳(튜닝 창 #tuneRows)
- * @param {{ sfx: import('./audio.js').Sfx, t: (k: string) => string, micOn: () => boolean, toggleMic: () => Promise<void>, setSilentPlay: (v: boolean) => void }} deps
+ * @param {{ sfx: import('./audio.js').Sfx, t: (k: string) => string, micOn: () => boolean, micCtx?: () => (string|null), toggleMic: () => Promise<void>, setSilentPlay: (v: boolean) => void }} deps
  */
 export function mountSoundTest(box, deps) {
-  const { sfx, t, micOn, toggleMic, setSilentPlay } = deps;
+  const { sfx, t, micOn, micCtx, toggleMic, setSilentPlay } = deps;
   const app = typeof window !== 'undefined' ? window.__puffApp : null;
   const silentBtn = !!app && AppAudio.supported; // 세션을 바꿀 수 있을 때만(안드로이드 앱·웹엔 없음)
   const wrap = document.createElement('div');
@@ -31,17 +31,38 @@ export function mountSoundTest(box, deps) {
 
   const yes = () => t('diagYes'), no = () => t('diagNo');
   const ackText = (a) => (a ? `${a.ok ? 'OK' : t('diagFail')} · ${a.path || '?'}${a.ms != null ? ` · ${a.ms}ms` : ''}${a.err ? ` · ${a.err}` : ''}` : t('diagNoAck'));
+  const s1 = (ms) => `${(ms / 1000).toFixed(1)}s`;
+  // 컨텍스트 없음: Web Audio 자체가 없으면(잠금 모드) '없음', 아니면 아직 안 만듦(만들기 실패는 기록 줄에 new✗)
+  const noCtx = () => t(sfx.noApi ? 'diagNoCtx' : 'diagNotYet');
+  const snapText = (s) => (s ? `${s.state} ${s.ct.toFixed(2)}s` : noCtx());
+  // 두 장면 사이 오디오 시계가 흘렀나(currentTime 증가 ≥ 벽시계의 절반 = 진짜 렌더링 중). 'running' 표시만으로는 모른다
+  const flow = (a, b) => {
+    if (!a || !b || a.ctx !== b.ctx) return '';
+    const dct = b.ct - a.ct, dw = (b.at - a.at) / 1000;
+    if (dw < 0.2) return '';
+    return `${dct >= dw * 0.5 ? t('diagFlow') : t('diagStall')} +${dct.toFixed(2)}s/${dw.toFixed(2)}s`;
+  };
+  let prevSnap = null, clock = '';
   function rows() {
     const ctx = sfx.ctx;
     const r = [];
     r.push([t('diagEnv'), `${app ? t('diagApp') : t('diagWeb')} · html.native ${document.documentElement.classList.contains('native') ? yes() : no()}`]);
-    r.push(['AudioContext', `${ctx ? `${ctx.state} · ${ctx.sampleRate}Hz` : t('diagNoCtx')} · ${t('diagSound')} ${sfx.muted ? t('diagOff') : t('diagOn')}`]);
-    r.push([t('diagCtxLog'), sfx.states.join(' → ') || '-']);
-    r.push(['audioSession', AppAudio.supported ? `${yes()} · type=${AppAudio.type()}${app ? ` (${t('diagWant')} ${AppAudio.want()})` : ''}${AppAudio.err ? ` · ${AppAudio.err}` : ''}` : t('diagUnsupported')]);
+    r.push(['AudioContext', `${ctx ? `${ctx.state} · ${ctx.sampleRate}Hz` : noCtx()} · ${t('diagSound')} ${sfx.muted ? t('diagOff') : t('diagOn')}`]);
+    // 표는 0.5초마다 다시 그린다 → 이 줄의 '지금'이 표를 그린 시각(아래 기록의 @초와 같은 기준)
+    r.push([t('diagClock'), `${ctx ? `ct ${ctx.currentTime.toFixed(2)}s${clock ? ` · ${clock}` : ''}` : '-'} · ${t('diagNow')} ${s1(performance.now())}`]);
+    r.push([t('diagCtxLog'), sfx.states.join(' › ') || '-']);
+    let sessState = '';
+    try { const st = navigator.audioSession?.state; if (st) sessState = ` · state=${st}`; } catch (e) { /* 없음 */ }
+    r.push(['audioSession', AppAudio.supported ? `${yes()} · type=${AppAudio.type()}${sessState}${app ? ` (${t('diagWant')} ${AppAudio.want()})` : ''}${AppAudio.err ? ` · ${AppAudio.err}` : ''}` : t('diagUnsupported')]);
     const ex = AppAudio.expect();
     if (ex) r.push([t('diagExpect'), t('diagEx_' + ex)]);
-    r.push([t('diagMic'), (micOn() ? t('diagMicOn') : t('diagMicOff')) + (AppAudio.boosted ? ` · ${t('diagBoost')}` : '')]);
-    if (res) r.push([`${t('diagBeep')} · ${t('diagPuff')}`, `${res.beep ? t('diagPlayed') : t('diagNoCtx')} · ${res.puff ? t('diagPlayed') : t('diagNoCtx')}`]);
+    // 마이크용 AudioContext(mic.js, 두 번째) 상태: suspended 면 분석기가 0 만 읽어 불기 인식이 안 된다
+    const mc = micOn() && micCtx ? micCtx() : null;
+    r.push([t('diagMic'), (micOn() ? t('diagMicOn') : t('diagMicOff')) + (mc ? ` · AudioContext ${mc}` : '') + (AppAudio.boosted ? ` · ${t('diagBoost')}` : '')]);
+    // 시험 전 → 삑 뒤 → 푸 뒤: 상태와 오디오 시계. 끝까지 suspended·시계 멈춤이면 소리가 안 난 것(삑·푸는 시계가 흘러야 들린다).
+    // 컨텍스트가 없어도(잠금 모드) 줄을 남긴다 = 소리를 못 냈다는 기록. s1·s2 는 찍기 전이면 '…'
+    const sn = (k) => (k in res ? snapText(res[k]) : '…');
+    if (res) r.push([t('diagBeepPuff'), `${sn('s0')} → ${sn('s1')} → ${sn('s2')}${'s2' in res ? ` (${flow(res.s0, res.s2) || '-'})` : ''}`]);
     if (app) {
       r.push([t('diagChannel'), `${app.channelName() || t('diagNone')} · ${t('diagSentAck')} ${app.sent} / ${app.acks}${app.drops ? ` · ${t('diagDrops')} ${app.drops}` : ''}${app.err ? ` · ${app.err}` : ''}`]);
       if (res) {
@@ -72,10 +93,19 @@ export function mountSoundTest(box, deps) {
       b.disabled = micOn(); // 마이크 켬 = 늘 'auto'(PlayAndRecord) → 이 단추는 아무것도 안 바꾼다
       b.textContent = `${t('diagSilent')}: ${AppAudio.silentPlay ? t('diagOn') : t('diagOff')}${b.disabled ? ` (${t('diagMicLock')})` : ''}`;
     }
+    const s = sfx.snap();
+    if (s && prevSnap && s.ctx === prevSnap.ctx && (s.at - prevSnap.at) >= 400) { clock = flow(prevSnap, s); prevSnap = s; }
+    else if (!s || !prevSnap || s.ctx !== prevSnap.ctx) { clock = ''; prevSnap = s; }
     const r = rows();
     $('#diagOut').innerHTML = `<table class="diag-tab"><tbody>${r.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`;
     window.__puffDiagLast = { rows: r, res, done: !!res && !busy };
   }
+  // ⚙ 를 연 그 순간에 굳은 표가 아니라 지금 상태를 보이게: 창이 열려 있는 동안 0.5초마다 다시 그린다(닫히면 건너뜀, 떼어지면 멈춤)
+  const timer = setInterval(() => {
+    if (!wrap.isConnected) { clearInterval(timer); return; }
+    if (wrap.closest('[hidden]')) return;
+    render();
+  }, 500);
   const step = (s) => { $('#diagStep').textContent = s; };
   // 게임 길(navigator.vibrate)은 id 가 없다 → 응답 수가 늘 때까지 기다림
   async function ackAfter(n0, ms) {
@@ -96,11 +126,12 @@ export function mountSoundTest(box, deps) {
     if (busy) return;
     busy = true;
     $('#diagGo').disabled = true;
-    res = { at: new Date().toLocaleTimeString() };
+    res = { at: new Date().toLocaleTimeString(), s0: sfx.snap() }; // 시험 전(이 클릭에서 전역 kick 이 깨우기를 막 요청한 직후 — 결과는 비동기라 아직 반영 전)
     try { wrap.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 스크롤 없음 */ } // 표가 한 화면에 들어오게(캡처 한 장)
     try {
-      step(t('diagBeep')); res.beep = sfx.testBeep(); await wait(650);
-      step(t('diagPuff')); res.puff = sfx.testPuff(); await wait(1000);
+      // 삑·푸는 소리만 낸다(깨우지 않음 — 650ms 뒤 푸에서 다시 만들면 삑·푸가 다른 컨텍스트로 간다). 깨우기는 이 클릭의 전역 kick 이 했다
+      step(t('diagBeep')); res.beep = sfx.testBeep(); await wait(650); res.s1 = sfx.snap();
+      step(t('diagPuff')); res.puff = sfx.testPuff(); await wait(1000); res.s2 = sfx.snap();
       if (app) {
         step(t('diagVib1')); const n0 = app.acks; navigator.vibrate(50); res.v1 = await ackAfter(n0, 1500); await wait(700);
         step(t('diagVib2')); res.v2 = await timed(app.request('d:engine:heavy')); await wait(700);
