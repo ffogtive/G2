@@ -173,6 +173,8 @@ function rotate(q, v) {
   };
 }
 
+function rotateInv(q, v) { return rotate({ x: -q.x, y: -q.y, z: -q.z, w: q.w }, v); } // 세계 → 몸 좌표 (보정 2차 쿠션용)
+
 function quatFromAxisAngle(ax, ay, az, ang) {
   const s = Math.sin(ang / 2);
   return { x: ax * s, y: ay * s, z: az * s, w: Math.cos(ang / 2) };
@@ -449,6 +451,14 @@ export class Table {
     //  cushionFar (u): 들기가 틈이 gapRef 를 넘으면 exp(−(틈 − gapRef)/cushionFar) 로 줄어듦(바닥 효과 — 공중 높이 뜬 딱지는 쿠션이 없다, 로켓 방지)
     const lag = P.prog && T.jetLag > 0 ? T.jetLag : 0;
     const o0 = lag ? { ...P.o } : null, d0 = lag ? { ...P.d } : null;
+    // ── 보정 2차 손잡이(연구용, 06 §7 · ownclips.mjs STAGES=pilot2…gate2). TUNE 에 없음 → tune 으로만. 안 넘기면 아래 2차 분기 전부 건너뜀(비트 동일) ──
+    // 가설(미검증): 즉시 테두리 들기를 rimShare(6.5~10%)만 남기고, 나머지 들기는 맨 아래 틈의 '상태 있는 공기 쿠션'(cushTau 0.5 화면 s ≈ 실물 156 ms
+    //   동안 쌓이고 천천히 샘)이 맡으면 같은 옮김에서 첨부1 '다 넘김'과 첨부2 '위 일부'가 함께 나온다.
+    //   → 판가름 = 보류 시드 437~460 의 P1∧P2 + 순서, 그리고 τ 0.05 대조(Cτ)에서 그 분리가 사라지는가(ownclips.mjs 머리 주석 사전 등록)
+    //  rimShare (0~1): v1 즉시 테두리 들기 liftB 에 곱하는 몫(아래 liftB 줄). 없으면 × 1
+    //  cushTau·cushGain·cushLeak·cushArm·cushShield·cushOpen: 쿠션(아래 cushionPass 주석). cushTau > 0 일 때만 켜지고 숨마다 새 상태
+    const CF = T.cushTau > 0 ? new Map() : null;
+    if (CF && (!this.cush || P.t === 0)) this.cush = new Map();
     const R = P.refl; // 8차 책상 퍼올림(반사 바람). 없으면 아래는 기존 경로 그대로
     const hits = [];
     for (const d of this.liveDiscs()) {
@@ -514,10 +524,12 @@ export class Table {
         s *= 1 + T.lipSplit * (P.splitD + (P.splitU - P.splitD) * above - 1);
         above = 1 - T.lipSplit + T.lipSplit * above;
       }
+      let sOpen = s; // 차폐 전 세기(보정 2차 쿠션 cushShield 0 용). 아래 계산에는 안 씀
       if (R) {
         // 반사 손실 + 책상 속에 묻힌 테두리(쌓인 무게로 맨 아래 장이 책상에 파묻힘 — 기존 물리의 침투)는 책상 위 바람이 못 닿음
         s *= T.reflLoss * Math.min(1, Math.max(0, (e.y + DISC_H / 2) / DISC_H));
         if (s <= 0) continue;
+        sOpen = s;
         // 차폐(진짜 경로): 입 → F(내려오는 바람) 와 F → 테두리(올라가는 바람). 책상은 반사면이므로 딱지만 가린다
         if (this.discBlocks(R.M, R.F, 0.02, d, b) || this.discBlocks(R.F, e, 0.08, d, b)) s *= T.shield;
       } else {
@@ -533,6 +545,7 @@ export class Table {
       const down = new RAPIER.Ray({ x: e.x, y: e.y - 0.01, z: e.z }, { x: 0, y: -1, z: 0 });
       const g = this.world.castRay(down, 2, true, undefined, undefined, d.collider, b);
       const gap = g ? g.toi : 2;
+      if (CF && s > 0) CF.set(d.id, { s: T.cushShield === 0 ? sOpen : s, r: { x: e.x - c.x, y: e.y - c.y, z: e.z - c.z }, gap, kind: this.gapKind(g, c) }); // 틈 입구에 닿은 바람(쿠션 먹이)
       // 퍼올림(7차): 아래에서 올라오는 바람은 테두리 밑 틈으로 더 잘 파고든다(∝ 세기²). up = 0 이면 + 0 → 그대로
       // 8차: 틈이 0(아래 장·책상에 납작하게 붙음)이면 공기가 들어갈 자리가 없다 → scoopFlushWedge(0) 만큼만. 진짜 틈 = gap − (H/2 − 0.01)
       const L9 = P.lip; // 9차 입술 높이 경로(blowLip). 아니면 아래 기존 식 그대로
@@ -572,7 +585,10 @@ export class Table {
       // (7차 시제품은 테두리에 liftW 전부 + 중심에 3·liftW 를 더 얹어 운동량을 4배로 부풀렸다.) liftW = 0(기본 경로)이면 rimF = liftF 그대로
       const riseShare = Math.min(1, L9 ? T.lipRise : T.scoopRise);
       const rimF = liftW > 0 ? liftF - riseShare * liftW : liftF;
-      const liftB = T.lift * rimF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT)) * (1 - (L9 ? T.lipPress : T.press) * P.down);
+      // rimShare(보정 2차): 가설(미검증) — v1 즉시 테두리 들기 중 실제로 테두리에서 바로 작용하는 몫은 6.5~10% 뿐이고, 나머지는 쿠션 상태를 거쳐서만 작용한다.
+      //   liftB 에 곱하므로 riseK·scoopLift 로 흘러가는 몫도 함께 줄고, 밀기·회전·구르기는 그대로다. 모든 장수에 거는 전역 변경(15장만 아님).
+      //   안 넘기면 × 1 = IEEE754 에서 정확히 같은 값(비트 동일). 설계 시드에서 위¼ 10° 시각을 정하는 것은 이 값 하나(r0.1 47/41 ms · r0.08 57/47 · r0.065 62/52)
+      const liftB = T.lift * rimF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT)) * (1 - (L9 ? T.lipPress : T.press) * P.down) * (T.rimShare ?? 1);
       const liftK = L9 ? liftB : liftB * (1 + T.scoopLift * P.up);
       // 퍼올림 띄움: 파고든 공기만큼 밑면 전체를 받쳐 중심째 앞위로 → 포물선. 돌풍이면 훨씬 세게(원 밖으로) — 9차 경로는 돌풍 배수 없음
       const riseK = liftW > 0 ? (liftB / rimF) * liftW * riseShare * (L9 ? 1 : 1 + T.scoopBlast * bl) : 0;
@@ -616,14 +632,89 @@ export class Table {
       hits.push({ id: d.id, s, gap, liftF, e, dir: { x: fx, y: P.d.y, z: fz } });
     }
     if (lag) this.jetPose(P, g0); // 지금 자세로 되돌림(측정 도구가 읽는 P.o·P.d)
+    if (CF) this.cushionPass(CF);
     P.t += T.dt;
     if (P.t >= (P.dur ?? T.puffDuration) + (lag ? lag * 12 : 0)) this.puff = null; // 지연이면 마지막 공기(축 거리 12 u)까지 기다림
     return hits;
   }
 
+  // ── 보정 2차 렌즈 B: 상태 있는 공기 쿠션 (연구용, TUNE 에 없음 → cushTau 를 안 넘기면 this.cush 가 생기지 않아 비트 동일) ──
+  // 가설(미검증): 첨부1 이 15장을 '덩어리째 낮게' 들어 뒤집은 것은 맨 아래 틈(책상)에 쌓인 공기 압력이다. 압력은 제트가 그 틈 입구에
+  //   머무는 동안 시간 상수 cushTau 로 쌓이고, 틈이 벌어진 만큼 샌다 → 오래 머문 첨부1 은 문턱을 넘고, 일찍 쓸어 올린 첨부2 는 못 넘는다.
+  //  가설 수정(설계 시드 361~390 탐침, 확인됨): 압력 자체는 가른다(열린 고리 최고 압력 첨부1/첨부2 = 1.46~1.55배, 첨부3 = 0).
+  //   그러나 쓸모 있는 칸에서 장수를 가르는 것은 '덩어리째 이륙'이 아니라 더미 '짐 덜기'(cushArm 0, 이륙 20~30%)이고, 첨부2 도 층째 더 넘어간다.
+  //   그래서 2차 사전 등록은 즉시 테두리 들기를 rimShare 로 함께 줄인 능선 9칸이다(ownclips.mjs 머리 주석 '보정 2차').
+  //  틈 = 바람 맞은 딱지 d 의 '입구 테두리'(제트가 닿은 곳) 밑. 종류: 책상(맨 아래 장) · 딱지(말려 들린 장 사이) · 없음(공중)
+  //  먹이 f = 그 테두리에 닿은 세기 s(v1 과 같은 값: 거리·원뿔·봉투·흔들림·차폐 포함) × 입구 몫 w
+  //       cushShield 0 = 먹이에서 차폐(한 점 시선 광선)를 뺌: 책상 높이 쿠션은 제트의 퍼진 흐름이 0.1~0.3 u 오버행을 돌아 채운다(설계 가정).
+  //       기본(안 넘김) = 차폐 포함. 시드 377·383·390 은 맨 아래 장이 위 장들보다 0.1~0.2 u 안쪽이라 시선이 가려져 먹이 × 0.35 → 0장.
+  //       밝힘: 2차가 쓰는 cushShield 0 은 이 결과(첨부1 +1.3, 첨부2 +0.7장)를 보고 고른 값이다(사후 선택).
+  //       w = 책상 1(맨 아래 층만. 종이 딱지는 책상에 늘 테두리 틈이 있음, 설계 가정) · 딱지 사이 min(1, 공기 틈/cushOpen)(cushOpen 0 = 책상 틈만) · 없음 0
+  //  압력 p: dp/dt = (f − p·(1 + 공기 틈/cushLeak)) / cushTau  (정확한 지수 갱신, 바람이 떠나도 p 는 τ 로 빠짐·숨이 끝나도 꼬리)
+  //       밝힘: τ 0.5 화면 s(실물 156 ms)의 느린 배기·꼬리는 현상론적이다. 실제 얇은 틈의 공기는 수 ms 에 빠진다(2차 위험 6).
+  //  들기: 충격 J = cushGain × lift × p × m × dt (v1 테두리 들기 rimF = 1 과 같은 단위) 를 그 틈 위 기둥(d 와 그 위에 얹힌 장)에 질량 비로,
+  //        d 의 '위쪽' 법선 방향으로, 각 장 중심 + cushArm × (입구 테두리 방향 R) 지점에 준다.
+  //        cushArm > 0 이면 먼 쪽 아래 모서리를 지레받침으로 기둥째 기우는 회전력이 생기지만, 장마다 비틀어 짐이 가벼운 위 장이 먼저 말린다(가짜 효과).
+  //        밝힘: 2차는 cushArm 0 이다. 이때 이 힘은 밑면 압력이 아니라 기둥 전체에 거는 질량 비례 균일 반중력(체적력)이다 — 회전력도 경첩도 없다.
+  //        그래서 첨부1 의 '덩어리째 기울어 넘어감'은 쿠션이 직접 만들 수 없고, 회전은 남은 테두리 들기(rimShare)와 접촉에서만 나온다.
+  //  코드 기본값(cushArm 0.5 · cushLeak 0.1 · 차폐 먹이 · cushGain 1)은 2차 고정값과 다르다 → ownclips.mjs 는 칸마다 tune 에 빠짐없이 적는다.
+  //  대조 C0(쿠션 없음)은 cushTau 키를 아예 빼서 만든다. cushGain 0 으로 켜 두면 0 충격도 applyImpulseAtPoint(wake = true)로 잠든 몸을 깨워 물리가 달라진다.
+  // 틈 종류: 0 없음(공중·쿠션 없음) · 2 딱지 사이 · 1 책상 = 그 기둥 맨 아래 장(수평 R 안에 더 낮은 장이 없음)이면서 중심 높이 < 2H(바닥 효과)
+  //   (오버행 밑으로 보이는 먼 책상, 한 장 들린 뒤의 공중은 공기를 가두지 못함. 15장 맨 아래 장은 무게로 책상에 약 1H 묻혀 있음)
+  gapKind(g, c) {
+    if (!g) return 0;
+    if (g.collider.parent()?.isDynamic()) return 2;
+    if (c.y >= 2 * DISC_H) return 0;
+    for (const o of this.liveDiscs()) { if (o.off) continue; const p = o.body.translation(); if (p.y < c.y - 0.02 && Math.hypot(p.x - c.x, p.z - c.z) < DISC_R) return 0; }
+    return 1;
+  }
+  cushionPass(F) {
+    const T = this.T, S = this.cush, dt = T.dt;
+    if (!S) return;
+    const lam = T.cushLeak ?? 0.1, arm = T.cushArm ?? 0.5, open = T.cushOpen ?? 0, G = T.cushGain ?? 1;
+    if (F) for (const [id, f] of F) {
+      const w = f.kind === 1 ? 1 : f.kind === 2 && open > 0 ? Math.min(1, Math.max(0, f.gap - (DISC_H / 2 - 0.01)) / open) : 0;
+      if (w <= 0 && !S.has(id)) continue;
+      const loc = rotateInv(this.discs[id].body.rotation(), f.r);
+      const st = S.get(id);
+      if (st) st.loc = loc; else S.set(id, { p: 0, loc });
+    }
+    const live = this.liveDiscs().filter((o) => !o.off);
+    for (const [id, st] of S) {
+      const d = this.discs[id];
+      if (d.removed || d.off) { S.delete(id); continue; }
+      const b = d.body, c = b.translation(), q = b.rotation();
+      const r = rotate(q, st.loc);
+      const f = F?.get(id);
+      let gap, kind;
+      if (f) { gap = f.gap; kind = f.kind; }
+      else {
+        const g = this.world.castRay(new RAPIER.Ray({ x: c.x + r.x, y: c.y + r.y - 0.01, z: c.z + r.z }, { x: 0, y: -1, z: 0 }), 2, true, undefined, undefined, d.collider, b);
+        gap = g ? g.toi : 2; kind = this.gapKind(g, c);
+      }
+      const air = Math.max(0, gap - (DISC_H / 2 - 0.01));
+      const w = kind === 1 ? 1 : kind === 2 && open > 0 ? Math.min(1, air / open) : 0;
+      const leak = 1 + air / lam, pss = (f ? f.s * w : 0) / leak;
+      st.p = pss + (st.p - pss) * Math.exp((-leak * dt) / T.cushTau);
+      if (!(st.p > 1e-5)) { if (!f) S.delete(id); continue; }
+      const nrm = rotate(q, { x: 0, y: 1, z: 0 }), sg = nrm.y >= 0 ? 1 : -1;
+      const J = G * T.lift * st.p * b.mass() * dt;
+      const col = live.filter((o) => { const p = o.body.translation(); return p.y >= c.y - 0.02 && Math.hypot(p.x - c.x, p.z - c.z) < DISC_R; });
+      let Mt = 0; for (const o of col) Mt += o.body.mass();
+      for (const o of col) {
+        const p = o.body.translation(), j = (J * o.body.mass()) / Mt;
+        o.body.applyImpulseAtPoint({ x: sg * nrm.x * j, y: sg * nrm.y * j, z: sg * nrm.z * j }, { x: p.x + arm * r.x, y: p.y + arm * r.y, z: p.z + arm * r.z }, true);
+      }
+      st.peak = Math.max(st.peak || 0, st.p);
+    }
+    if (!F && !S.size) this.cush = null;
+  }
+
   step() {
     // lastHits: 이번 스텝에 바람이 '가장자리 밑으로 파고든' 딱지들 (렌더러가 공기 유입을 그리는 데 사용)
+    const tail = !this.puff && this.cush; // 보정 2차 쿠션: 숨이 끝난 뒤 남은 압력(없으면 null → 그대로)
     this.lastHits = this.puff ? this.applyWind() : null;
+    if (tail) this.cushionPass(null);
     this.world.step();
     this.time += this.T.dt;
     // 책상 밖으로 떨어진 딱지: 책상 밑에 멈춰 둔다(off). 무효 처리되고 다음 '다시 쌓기'에서 회수
