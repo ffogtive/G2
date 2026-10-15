@@ -52,6 +52,7 @@ tools/goldenside.mjs  황금 딱지가 조준에 따라 어디로 떨어지나 (
 tools/cuecheck.mjs    공략 단서가 규칙·실측과 맞는지 (단서·숨 규칙 바꾸면 필수)
 tools/physics-spike.mjs  물리 안정성/분포 측정
 tools/sweepmap.mjs · sweepcheck.mjs · coresweep/  고개 쓸기(푸어억) 코어 측정·재검증·모델 민감도(sens)·숨 풍선(econ)·엄지 인식기(gesture)·손 잡음 시험(gestnoise)·실물 3판 보정(ownclips: calreport / calreport2·choose2·verdict2, 원자료 data/own/calib·calib2, docs/research/06 §5·§7), 원자료 coresweep/data/ (docs/design/core-sweep.md §3.8). sim.js 바꾸면 `node tools/sweepmap.mjs verify` 필수(simsweep ≡ sim.js)
+tools/coresweep/react3.mjs  제트 도달 지연 회차(jetLag, 06 §8 — 판정 통과·물리 채택 아님, 시험 토글 대기 G12): self3·list·run·choose3·verdict3·report, 단계·시드·동결을 코드가 강제(커밋된 choice3.json 없으면 평가·가드 거부), 원자료 coresweep/data/react3/. simsweep·ownclips·sweepmap·rules·sim 바꾸면 `node tools/coresweep/react3.mjs self3` 필수
 native/puff_v2/ + scripts/flatfloor.mjs  정직 엔진(3D 제트) 평평한 바닥 게이트(run·report, 원자료 data/flatfloor/ → docs/research/v2-flatfloor.md). 고치면 `CARGO_TARGET_DIR=../puff_sim/target cargo test --release --offline`
 tools/balloon-check.mjs  rules.js 숨 풍선(BALLOON·balloonCost·balloonStep) ≡ coresweep/econ.mjs 'new' 비트 대조(비용 격자·3판 DP) + econ gate 네 판정 (풍선 식·econ 바꾸면 필수, 1초)
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
