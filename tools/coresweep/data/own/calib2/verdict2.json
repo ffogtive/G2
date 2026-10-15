@@ -1,0 +1,365 @@
+{
+ "stage": "verdict2",
+ "prereg": "2026-10-15 보정 2차 사전 등록(ownclips.mjs 머리 주석)",
+ "seeds": "437~460",
+ "n": 24,
+ "choice": "G28|r0.08",
+ "tune": {
+  "cushTau": 0.5,
+  "cushArm": 0,
+  "cushLeak": 0.6,
+  "cushShield": 0,
+  "cushGain": 28,
+  "rimShare": 0.08
+ },
+ "P": [
+  {
+   "hit": 10,
+   "n": 24,
+   "rate": 0.4167,
+   "lo": 0.2447,
+   "hi": 0.6117,
+   "pass": false
+  },
+  {
+   "hit": 16,
+   "n": 24,
+   "rate": 0.6667,
+   "lo": 0.4671,
+   "hi": 0.8203,
+   "pass": true
+  },
+  {
+   "hit": 24,
+   "n": 24,
+   "rate": 1,
+   "lo": 0.862,
+   "hi": 1,
+   "pass": true
+  }
+ ],
+ "order": {
+  "d12": {
+   "d": 6.875,
+   "dlo": 5.5,
+   "dhi": 8.25
+  },
+  "d23": {
+   "d": 4.5417,
+   "dlo": 3.625,
+   "dhi": 5.5
+  },
+  "ok": true,
+  "method": "sweepmap pairedRatio B 2000 RNG 20261014, x.any 같은 시드 짝 차"
+ },
+ "H1": false,
+ "H1name": null,
+ "H2": false,
+ "S": [
+  false,
+  true,
+  false,
+  false,
+  false,
+  true
+ ],
+ "G11": {
+  "nominal": {
+   "nP": 2,
+   "pass": true
+  },
+  "substantive": {
+   "nP": 1,
+   "pass": false
+  },
+  "reading": "substantive",
+  "fold": true,
+  "split": "G11 명목 통과(속빈 P3), 가설 판정 실패"
+ },
+ "M1": {
+  "pass": true,
+  "rule": "pairedRatio(C0 첨부1, 칸 첨부1).dlo > 0",
+  "d": {
+   "d": 11.4167,
+   "dlo": 10.0417,
+   "dhi": 12.625
+  }
+ },
+ "M2": {
+  "pass": false,
+  "rule": "r* ≤ 0.08(맞출 수 없음): pairedRatio(Cτ 첨부1, 칸 첨부1).dlo > 0",
+  "ctFit": false,
+  "d1": {
+   "d": 0.0417,
+   "dlo": -1.9167,
+   "dhi": 2.375
+  },
+  "d2": {
+   "d": -5.6667,
+   "dlo": -7.0833,
+   "dhi": -4.0833
+  },
+  "hitP2": {
+   "d": 0.5417,
+   "dlo": 0.3333,
+   "dhi": 0.75
+  }
+ },
+ "mech": "기술 통계만(H1 아님 — 기전 이름 안 붙임)",
+ "flags": {
+  "F1": {
+   "on": true,
+   "q3med": 2.05,
+   "rule": "첨부3 x.qmax[3] 시드 중앙값 < 10°"
+  },
+  "F2": {
+   "on": true,
+   "rule": "P2 통과 ∧ (S1 ∨ S2 실패)"
+  },
+  "F3": {
+   "on": true,
+   "rule": "S4 실패"
+  },
+  "F4": {
+   "on": null,
+   "rule": "gate2 뒤 calreport2 가 채움(20/30/40장 중 하나라도 칸 튕김÷최선 고정 95% 상한 < v1 점 추정, 또는 칸 튕김 평균 < v1 의 절반)"
+  }
+ },
+ "rows": {
+  "cell": {
+   "P": [
+    {
+     "hit": 10,
+     "n": 24,
+     "rate": 0.4167,
+     "lo": 0.2447,
+     "hi": 0.6117
+    },
+    {
+     "hit": 16,
+     "n": 24,
+     "rate": 0.6667,
+     "lo": 0.4671,
+     "hi": 0.8203
+    },
+    {
+     "hit": 24,
+     "n": 24,
+     "rate": 1,
+     "lo": 0.862,
+     "hi": 1
+    }
+   ],
+   "any": [
+    11.417,
+    4.542,
+    0
+   ],
+   "top2": 4.458,
+   "bot2": 0.083,
+   "t10ms": [
+    52,
+    46.7,
+    null
+   ],
+   "lift1": {
+    "hit": 17,
+    "n": 24,
+    "rate": 0.7083,
+    "lo": 0.5083,
+    "hi": 0.8509,
+    "ms": 129.9,
+    "rise": 1.693
+   },
+   "dist1": 4.18,
+   "nP": 2,
+   "margin": -0.1833,
+   "nS": 2,
+   "S": [
+    false,
+    true,
+    false,
+    false,
+    false,
+    true
+   ]
+  },
+  "v1": {
+   "P": [
+    {
+     "hit": 0,
+     "n": 24,
+     "rate": 0,
+     "lo": 0,
+     "hi": 0.138
+    },
+    {
+     "hit": 1,
+     "n": 24,
+     "rate": 0.0417,
+     "lo": 0.0074,
+     "hi": 0.2024
+    },
+    {
+     "hit": 14,
+     "n": 24,
+     "rate": 0.5833,
+     "lo": 0.3883,
+     "hi": 0.7553
+    }
+   ],
+   "any": [
+    8.25,
+    9.292,
+    1.083
+   ],
+   "top2": 6.625,
+   "bot2": 2.667,
+   "t10ms": [
+    15.6,
+    10.3,
+    20.9
+   ],
+   "lift1": {
+    "hit": 0,
+    "n": 24,
+    "rate": 0,
+    "lo": 0,
+    "hi": 0.138,
+    "ms": null,
+    "rise": null
+   },
+   "dist1": 2.45,
+   "nP": 0,
+   "margin": -0.6,
+   "nS": 0,
+   "S": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  "C0": {
+   "P": [
+    {
+     "hit": 0,
+     "n": 24,
+     "rate": 0,
+     "lo": 0,
+     "hi": 0.138
+    },
+    {
+     "hit": 1,
+     "n": 24,
+     "rate": 0.0417,
+     "lo": 0.0074,
+     "hi": 0.2024
+    },
+    {
+     "hit": 24,
+     "n": 24,
+     "rate": 1,
+     "lo": 0.862,
+     "hi": 1
+    }
+   ],
+   "any": [
+    0,
+    0.042,
+    0
+   ],
+   "top2": 0.042,
+   "bot2": 0,
+   "t10ms": [
+    67.6,
+    52,
+    null
+   ],
+   "lift1": {
+    "hit": 0,
+    "n": 24,
+    "rate": 0,
+    "lo": 0,
+    "hi": 0.138,
+    "ms": null,
+    "rise": null
+   },
+   "dist1": 0.025,
+   "nP": 1,
+   "margin": -0.6,
+   "nS": 0,
+   "S": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  "Ct": {
+   "P": [
+    {
+     "hit": 14,
+     "n": 24,
+     "rate": 0.5833,
+     "lo": 0.3883,
+     "hi": 0.7553
+    },
+    {
+     "hit": 3,
+     "n": 24,
+     "rate": 0.125,
+     "lo": 0.0434,
+     "hi": 0.31
+    },
+    {
+     "hit": 24,
+     "n": 24,
+     "rate": 1,
+     "lo": 0.862,
+     "hi": 1
+    }
+   ],
+   "any": [
+    11.375,
+    10.208,
+    0
+   ],
+   "top2": 6.833,
+   "bot2": 3.375,
+   "t10ms": [
+    46.7,
+    41.4,
+    null
+   ],
+   "lift1": {
+    "hit": 19,
+    "n": 24,
+    "rate": 0.7917,
+    "lo": 0.5953,
+    "hi": 0.9076,
+    "ms": 77.9,
+    "rise": 1.12
+   },
+   "dist1": 2.35,
+   "nP": 1,
+   "margin": -0.475,
+   "nS": 4,
+   "S": [
+    true,
+    true,
+    false,
+    true,
+    true,
+    false
+   ]
+  }
+ },
+ "inputs": [
+  "ho2.jsonl.gz"
+ ]
+}
