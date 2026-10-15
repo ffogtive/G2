@@ -439,15 +439,28 @@ export class Table {
     const P = this.puff;
     if (!P) return null;
     const T = this.T;
-    let env;
-    if (P.prog) { const g = P.prog(P.t); this.jetPose(P, g); env = g.env; P.trace?.push({ t: P.t, o: { ...P.o }, phi: g.phi, env }); }
+    let env, g0 = null;
+    if (P.prog) { const g = P.prog(P.t); this.jetPose(P, g); env = g.env; g0 = g; P.trace?.push({ t: P.t, o: { ...P.o }, phi: g.phi, env }); }
     else env = Math.sin(Math.min(1, P.t / T.puffDuration) * Math.PI); // 0→1→0
+    // ── 보정 손잡이(연구용, 06 실물 3판 보정 · ownclips.mjs STAGES=cal). TUNE 에 없음 → 안 넘기면 아래 분기 전부 건너뜀(비트 동일) ──
+    //  jetLag (화면 s / u): 제트 수송 지연(얼린 경로). 지금 더미에 닿는 공기는 '축 거리 a × jetLag' 전에 그때의 입 자리·방향·세기로 나온 것.
+    //          prog 경로만. 딱지마다 prog(t − a·jetLag) 의 자세·세기를 쓴다(자세만 앞당기는 'jd' 와 달리 자세도 함께 늦음)
+    //  tableCushion (배): 테두리 밑 틈 광선이 책상(고정체)에 닿는 딱지 = 책상과 사이의 공기 쿠션 → tableCushion × lift × exp(−틈/길이) 를 그 위 기둥에 나눠 줌(아래 참고)
+    //  cushionFar (u): 들기가 틈이 gapRef 를 넘으면 exp(−(틈 − gapRef)/cushionFar) 로 줄어듦(바닥 효과 — 공중 높이 뜬 딱지는 쿠션이 없다, 로켓 방지)
+    const lag = P.prog && T.jetLag > 0 ? T.jetLag : 0;
+    const o0 = lag ? { ...P.o } : null, d0 = lag ? { ...P.d } : null;
     const R = P.refl; // 8차 책상 퍼올림(반사 바람). 없으면 아래는 기존 경로 그대로
     const hits = [];
     for (const d of this.liveDiscs()) {
       const b = d.body;
       const c = b.translation();
       const nrm = rotate(b.rotation(), { x: 0, y: 1, z: 0 });
+      if (lag) {
+        const aC = (c.x - o0.x) * d0.x + (c.y - o0.y) * d0.y + (c.z - o0.z) * d0.z; // 지금 자세 기준 딱지 중심 축 거리
+        const te = P.t - Math.max(0, aC) * lag;
+        if (te < 0) continue; // 아직 공기가 안 닿음
+        const gl = P.prog(te); this.jetPose(P, gl); env = gl.env;
+      }
       // 입 쪽으로 가장 가까운 가장자리 점: (O - c)를 원판 평면에 투영
       let vx = P.o.x - c.x, vy = P.o.y - c.y, vz = P.o.z - c.z;
       const dn = vx * nrm.x + vy * nrm.y + vz * nrm.z;
@@ -539,7 +552,14 @@ export class Table {
         }
       }
       let liftF = Math.min(1.35, Math.max(T.minLift, (gap + wedge) / T.gapRef));
-      const liftW = wedge > 0 ? liftF - Math.min(1.35, Math.max(T.minLift, gap / T.gapRef)) : 0; // 파고든 공기로 늘어난 들기
+      let liftW = wedge > 0 ? liftF - Math.min(1.35, Math.max(T.minLift, gap / T.gapRef)) : 0; // 파고든 공기로 늘어난 들기
+      let cushLF = 0;
+      if (T.tableCushion > 0 || T.cushionFar > 0) { // 보정 손잡이(위 주석). 안 넘기면 안 들어옴
+        const far = T.cushionFar > 0 ? Math.exp(-Math.max(0, gap - T.gapRef) / T.cushionFar) : 1;
+        liftF *= far; liftW *= far;
+        // 이 테두리 밑은 책상 → 쿠션(아래에서 기둥째 들기). 쿠션 압력은 닿을 듯할 때 최대, 틈이 커지면 새어 나가 줄어듦: exp(−틈/길이), 길이 = cushionFar(없으면 gapRef)
+        if (T.tableCushion > 0 && g && !g.collider.parent()?.isDynamic()) cushLF = Math.exp(-gap / (T.cushionFar > 0 ? T.cushionFar : T.gapRef));
+      }
       if (T.loneLift && this.isLone(d, c, nrm)) liftF = Math.max(liftF, T.loneLift * (0.45 + 0.55 * sinT));
       const m = b.mass();
       const k = s * m * T.dt;
@@ -571,6 +591,14 @@ export class Table {
       if (L9) liftY = liftK + T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k * Math.max(0, P.d.y) * T.lipPushUp * under;
       else liftY = R ? liftK + pushK * Math.max(0, P.d.y) * T.reflPushUp * under : liftK;
       b.applyImpulseAtPoint({ x: fx * pushK, y: liftY, z: fz * pushK }, e, true);
+      if (cushLF > 0) {
+        // 책상 쿠션: 압력은 맨 아래 장 밑면에 걸리지만 그 위 기둥이 함께 들린다 → 이 장과 그 위에 얹힌 장(수평 1 u 안·높이 같거나 위)에
+        // 질량 비로 나눠 '이 테두리 쪽'(e 의 x·z, 각 장 높이)에 준다 = 기둥이 먼 쪽 아래 모서리를 경첩으로 통째로 기움. 한 장만 밀면 빠져나가 로켓(시범 39 u)
+        const Jc = T.tableCushion * T.lift * cushLF * k;
+        const col = this.liveDiscs().filter((o) => { if (o.off) return false; const p = o.body.translation(); return p.y >= c.y - 0.02 && Math.hypot(p.x - c.x, p.z - c.z) < DISC_R; });
+        let Mt = 0; for (const o of col) Mt += o.body.mass();
+        for (const o of col) { const p = o.body.translation(); o.body.applyImpulseAtPoint({ x: 0, y: (Jc * o.body.mass()) / Mt, z: 0 }, { x: e.x, y: p.y, z: e.z }, true); }
+      }
       if (riseK > 0) {
         const carry = L9 ? T.lipCarry : T.scoopCarry;
         const cx = P.d.x * carry, cy = 1 - carry + P.d.y * carry, cz = P.d.z * carry;
@@ -587,8 +615,9 @@ export class Table {
       }
       hits.push({ id: d.id, s, gap, liftF, e, dir: { x: fx, y: P.d.y, z: fz } });
     }
+    if (lag) this.jetPose(P, g0); // 지금 자세로 되돌림(측정 도구가 읽는 P.o·P.d)
     P.t += T.dt;
-    if (P.t >= (P.dur ?? T.puffDuration)) this.puff = null;
+    if (P.t >= (P.dur ?? T.puffDuration) + (lag ? lag * 12 : 0)) this.puff = null; // 지연이면 마지막 공기(축 거리 12 u)까지 기다림
     return hits;
   }
 

@@ -25,21 +25,51 @@
 //             t0 = 입술이 실제로 오르기 시작한 때 − 숨 시작, A = v1 입 상승이 실측 입술 상승(÷H × top0)과 같아지는 각, w = A ÷ 실측 상승 시간.
 //   - 판정: v1 게임 판정(분필 원 r 3.2 안, faceUp > 0.2) 'flip' 과 함께, 실물 놀이에는 원이 없으므로 '어디든 그림이 위' flipAny(책상 밖 'off' 제외)를 주 지표로 쓴다.
 //     결과 분류: 다 넘김 = flipAny ≥ 0.8·N, 0장 = flipAny ≤ 1, 그 사이 = 일부. '위 일부' = 일부이면서 넘어간 장이 쌓은 순서 위 절반에서 더 많음.
+//   - 제트 도달 지연 jd (STAGES=jd, 2026-10-15 돌리기 전 사전 등록):
+//       가설(미검증): v1 에 없는 '입 → 더미' 제트 도달 지연을 세 판에 같은 양의 Δ 로 넣으면 첨부1 > 첨부2 > 첨부3 순서가 나온다.
+//       구현 = 힘 경로만: 숨 봉투 env(t) → env(t − Δ) (t < Δ 이면 0), 숨 길이 dur → dur + Δ. 입술 경로·고개 각·제트 방향은 실측 시각 그대로(자세는 안 옮김).
+//       값: Δ_실물 ∈ {0, 10, 20, 30, 40} ms (화면 = × 3.21), 옮김 = 사전 등록 칸 flat q 0.85 + 민감도 q 0.7·1.0, 시드 401~424, 15장.
+//       판정(주) = flat q 0.85 에서 1−2, 2−3 같은 시드 짝 차 95% 부트스트랩 구간이 둘 다 0 위. 보조 = 첨부1 다 넘김(≥0.8N)·15/15 비율(윌슨 95%),
+//       첨부2 '위 일부'·첨부3 0장 비율, 위쪽 10° 시각(숨 시작 뒤, 실물 52/42/32 ms). 다중 비교: Δ 5 × q 3 = 15칸, 주 판정은 q 0.85 다섯 칸.
+//       진단(판정 아님): Δ 31.25 ms(= 7.5프레임)는 옛 이웃 's-7.5'(자세를 7.5프레임 앞당김)와 시간 원점만 다른 같은 샷이다
+//       (u = t − Δ 로 바꾸면 자세(u + Δ)·봉투(u) 가 s-7.5 와 같다. 다른 것: 힘 전에 12스텝 더 쉼, 스텝 위상 0.04 스텝) → 통계로 같아야 한다.
+//   - 물리 보정 (STAGES=cal → choose → ho,rob,sk,gate · 2026-10-15 재윤님 '더 이상 촬영 못 함' → 실물 3판이 기준. 돌리기 전 사전 등록):
+//       가설(미검증): v1 에 손잡이 3개(simsweep.js, 안 넘기면 비트 동일)를 더하면 같은 옮김(flat, q 0.85)으로 세 판을 함께 낸다.
+//         jetLag (화면 s/u) 제트 수송 지연(얼린 경로: 자세·세기 모두 a·jetLag 전의 것) · tableCushion (배) 책상 쿠션 들기 · cushionFar (u) 공중 쿠션 감쇠(로켓 방지)
+//       격자(거침, 4×4×4 = 64칸): jetLag {0, 0.01, 0.02, 0.03} · tableCushion {0, 1, 3, 8} · cushionFar {0(끔), 1.0, 0.4, 0.15}
+//         (시범 391~393 세 번 뒤 고정: 쿠션을 '한 장 배수' → '기둥에 나눔' → '닿을 때 최대 exp(−틈/길이)' 로 고침(한 장만 밀면 빠져나가 39 u 로켓), tableCushion 범위 {0,2,6,15} → {0,1,3,8})
+//       고르기 시드 401~412(12) · 평가(보류) 시드 413~436(24) · 시범(구현 점검만, 고르기·평가 밖) 391~393
+//       목표(무차원, 어디든 그림 위 = flipAny):
+//         P1 첨부1 ≥ 13/15 인 시드 ≥ 60% · P2 첨부2 1~5장 이면서 위 절반에서 더 많이(anyTop > anyBot) 인 시드 ≥ 60% · P3 첨부3 ≤ 1장 인 시드 ≥ 70%
+//         S(시각·모양, 보조, 시드 중앙값): S1~3 판마다 위¼ 10° 가 실물 32~52 ms · S4 첨부1 맨 아래 장 이륙(가장 낮은 점 > 0.05 u)이 시드 ≥ 50% 이고 중앙값 54~85 ms
+//           · S5 첨부1 맨 아래 장 최대 상승 중앙값(이륙한 시드) ≤ 1.5 u · S6 첨부1 착지(책상 위 딱지 평균 앞 이동) 4~8 u (= 2~4 D)
+//       고르는 규칙(사전): (a) 맞춘 P 수 최대 → (b) min(P1−0.6, P2−0.6, P3−0.7) 최대 → (c) 맞춘 S 수 최대 → (d) v1 에서 가까운 칸(격자 번호 합 최소)
+//       견고성(평가 시드): 손잡이 하나씩 ×0.9·×1.1, 실측 입력을 판 하나씩 거리 ±0.15 D(±0.3 u)·입 높이 ±0.2 H·고개 시각 ±10 ms(±2.4프레임)
+//         → 순서(1−2·2−3 같은 시드 짝 차 95% 구간 > 0)가 모두 살아야 '견고'
+//       실력 구조(sk, 첨부1 기하·평가 시드): 입술 상승 시작 숨 시작 +0/+40/+85(실측)/+130 ms × 숨 길이 100/200/310(실측) ms(급차단)
+//         산 = +85 이 +0·+130 보다 많고(같은 시드 짝 차 95% > 0), +0 은 '위 일부', 숨 100 ms 는 ≤ 1장 ≥ 70%
+//       코어 게이트(gate): sweepcheck 의 v|relfix(4×5) ÷ v|flick, 20·30·40장, 시드 601~612, v1 과 보정 칸
 //
 // 명령 (CPU 4코어 공유: 기본 2 일꾼. 15장 한 샷 약 0.2~0.4 s)
 //   node tools/coresweep/ownclips.mjs self                      shotO ≡ sweepmap shot() (표준 숨·쓸기 6샷, 모든 필드 비트 동일) + 봉투 점검
 //   node tools/coresweep/ownclips.mjs list                      단계별 샷 수
 //   node tools/coresweep/ownclips.mjs run <out.jsonl> [W=2]     전 단계(이어 돌리기 가능). STAGES=ref,r,rn,c,fx,n 로 거르기 · STAGES=pb = 보조 탐침(기본 밖)
+//                                                              STAGES=jd = 제트 도달 지연(기본 밖, 1,152샷 — Δ 0 은 'r' 기본 키와 같은 샷)
 //   node tools/coresweep/ownclips.mjs report <out.jsonl[.gz][,…]>
+//   물리 보정: STAGES=cal … run cal.jsonl → choose cal.jsonl(사전 등록 규칙 1칸) → CALF=cal.jsonl STAGES=ho,rob,sk[,gate] … run eval.jsonl
+//             (GATEV1=40 = v1 게이트 줄은 40장만 돌리고 20·30장은 data/vf/chk601 의 v|relfix·v|flick 을 key 'gate|v1|…' 로 바꿔 씀, 비트 동일 확인)
+//             node tools/coresweep/ownclips.mjs calreport <cal·eval·gate 파일들> · STAGES=pilot = 시범 391~393(구현 점검)
+//             원자료 tools/coresweep/data/own/calib/ (cal401 · eval413 · gate_v1_from_chk601 · pilot3 = 지금 코드 / pilot1·2 = 고치기 전 쿠션 식이라 지금 코드로는 재현 안 됨, 기록용)
 //   node tools/coresweep/ownclips.mjs path <clip> [jet]          한 영상의 옮긴 입·제트·봉투 시계열(화면 초) — 옮김 점검용
 // 환경: SEEDS=401-424(기본) · KEYS=정규식(그 키만)
 // 원자료: tools/coresweep/data/own/own401.jsonl.gz (기본 단계 4,776샷, 2 일꾼 약 9분) · probe401.jsonl.gz (STAGES=pb 96샷)
-//   다시 보기: node tools/coresweep/ownclips.mjs report tools/coresweep/data/own/own401.jsonl.gz,tools/coresweep/data/own/probe401.jsonl.gz
+//         · jd401.jsonl.gz (STAGES=jd 1,152샷)
+//   다시 보기: node tools/coresweep/ownclips.mjs report tools/coresweep/data/own/own401.jsonl.gz,tools/coresweep/data/own/probe401.jsonl.gz,tools/coresweep/data/own/jd401.jsonl.gz
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import * as SW from './simsweep.js';
-import { shot, breathOf, alphaOf, poseAt, causeOf, GEO, regCell, pairedRatio, index } from '../sweepmap.mjs';
+import { shot, breathOf, alphaOf, poseAt, causeOf, GEO, regCell, pairedRatio, index, pairOf } from '../sweepmap.mjs';
 
 const D2R = Math.PI / 180;
 const FR = (1 / 240) * 3.21; // 화면 초 / 영상 프레임
@@ -126,7 +156,12 @@ function makeProgO(table, top0, spec) {
   const P = CLIPS[spec.P ?? spec.K];
   const ym = (P.ymf + (spec.dyf || 0)) * top0;
   const L = P.L0 + (spec.dL || 0);
-  const br = spec.breath ? breathOf(spec.breath.kind, spec.breath.D, spec.breath.off) : breathMeas(spec.B ?? spec.K, { exp: spec.exp || 40, norm: !!spec.norm });
+  const br0 = spec.breath ? breathOf(spec.breath.kind, spec.breath.D, spec.breath.off) : breathMeas(spec.B ?? spec.K, { exp: spec.exp || 40, norm: !!spec.norm });
+  // 제트 도달 지연 jd(실물 ms): 힘(숨 봉투)만 Δ 늦게 더미에 닿는다. 자세(입술 경로·고개 각·제트 방향)는 실측 시각 그대로 — 아래 prog 의 fk·al(t) 는 안 건드림.
+  // jd 없음/0 이면 br = br0 (같은 객체 → 옛 샷과 비트 동일)
+  const dS = ((spec.jd || 0) / 1000) * 3.21;
+  let br = dS > 0 ? { dur: br0.dur + dS, env: (t) => (t < dS ? 0 : br0.env(t - dS)) } : br0;
+  if (spec.cut) { const cS = (spec.cut / 1000) * 3.21, b1 = br; if (cS < b1.dur) br = { dur: cS, env: (t) => (t < cS ? b1.env(t) : 0) }; } // 실력 구조: 숨을 cut ms(실물)에서 급차단
   if (spec.kin === 'c') {
     const geo = { ...GEO, ym, L };
     const M0 = { x: c.x, y: ym, z: zf + L };
@@ -206,7 +241,7 @@ export function shotO(job) {
     live.forEach((d, k) => { const u = rot(d.body.rotation(), { x: 0, y: 1, z: 0 }); s[qi[k]] += Math.acos(Math.max(-1, Math.min(1, -u.y))); });
     return s.map((v, j) => v / Math.max(1, qc[j]) / D2R);
   };
-  const on = { b10: -1, t10: -1 };
+  const on = { b10: -1, t10: -1, lo: -1 }; // lo = 맨 아래 장 이륙(가장 낮은 점 > 0.05 u) 시각
   const qmax = [0, 0, 0, 0];
   const y0b = bottom.body.translation().y;
   let botRise = 0, maxDisc = 0;
@@ -236,6 +271,7 @@ export function shotO(job) {
       if (on.b10 < 0 && Q[0] >= 10) on.b10 = tn;
       if (on.t10 < 0 && Q[3] >= 10) on.t10 = tn;
       if (!bottom.off) botRise = Math.max(botRise, bottom.body.translation().y - y0b);
+      if (on.lo < 0 && !bottom.off) { const ub = rot(bottom.body.rotation(), { x: 0, y: 1, z: 0 }), cb = Math.min(1, Math.abs(ub.y)); if (bottom.body.translation().y - (Math.sqrt(1 - cb * cb) + (SW.DISC_H / 2) * cb) > 0.05) on.lo = tn; }
       for (const d of live) if (!d.off) { const u = rot(d.body.rotation(), { x: 0, y: 1, z: 0 }); const a = Math.acos(Math.max(-1, Math.min(1, -u.y))) / D2R; if (a > maxDisc) maxDisc = a; }
     }
     if (!t.puff && i > 30 && t.isSettled()) { capped = 0; break; }
@@ -267,7 +303,7 @@ export function shotO(job) {
   const fa = onDesk.filter((d) => t.faceUp(d) > 0.2);
   r.x = {
     any: fa.length, anyTop: fa.filter((d) => d.id >= half).length, anyBot: fa.filter((d) => d.id < half).length, off: job.n - onDesk.length,
-    qmax: qmax.map((v) => +v.toFixed(1)), on: { b10: +on.b10.toFixed(3), t10: +on.t10.toFixed(3) }, botRise: +botRise.toFixed(3), maxDisc: +maxDisc.toFixed(1),
+    qmax: qmax.map((v) => +v.toFixed(1)), on: { b10: +on.b10.toFixed(3), t10: +on.t10.toFixed(3), ...(job.cal ? { lo: +on.lo.toFixed(3) } : {}) }, botRise: +botRise.toFixed(3), maxDisc: +maxDisc.toFixed(1),
     dist: +mean(onDesk.map((d) => -(d.body.translation().z - c0.z))).toFixed(2),
   };
   return r;
@@ -278,11 +314,14 @@ const SEEDS = () => { const [a, b] = (process.env.SEEDS || '401-424').split('-')
 const QS = [0.7, 0.85, 1.0];
 const JETS = ['flat', 'face', 'mirror', 'wall'];
 const lvl = (ci) => Math.pow(10, (CLIPS[ci].plateau - REF_DB) / 40); // 고원 세기비(첨부 3 = 0.77)
-const rkey = (s, q) => `r|${s.jet}|P${s.P}K${s.K}B${s.B}|q${q}${s.shift ? `|s${s.shift}` : ''}${s.dL ? `|dL${s.dL}` : ''}${s.dyf ? `|dy${s.dyf}` : ''}${s.norm ? '|norm' : ''}${s.exp && s.exp !== 40 ? `|e${s.exp}` : ''}`;
+const rkey = (s, q) => `r|${s.jet}|P${s.P}K${s.K}B${s.B}|q${q}${s.shift ? `|s${s.shift}` : ''}${s.dL ? `|dL${s.dL}` : ''}${s.dyf ? `|dy${s.dyf}` : ''}${s.norm ? '|norm' : ''}${s.exp && s.exp !== 40 ? `|e${s.exp}` : ''}${s.jd ? `|j${s.jd}` : ''}`;
+export const JD = [0, 10, 20, 30, 40]; // 제트 도달 지연 사전 등록 값(실물 ms)
+const JD_EQ = 31.25; // 진단: 7.5프레임 × 4.1667 ms = 옛 이웃 's-7.5' 와 수식상 같은 샷
 function pileTop(n, seed) { SW.setDiscH(0.11); const t = new SW.Table(seed * 7907 + n); t.addPile(Array.from({ length: n }, (_, i) => i)); t.settle(600); return t.columnTop(); }
 
 export function makeJobs() {
   const J = [], st = new Set((process.env.STAGES || 'ref,r,rn,c,fx,n').split(','));
+  if (['cal', 'pilot', 'ho', 'rob', 'sk', 'gate'].some((x) => st.has(x))) return calJobs(st); // 물리 보정 단계는 따로(시드 고정)
   const push = (key, n, s, q, extra) => J.push({ key, n, seed: s, q, ...extra });
   for (const s of SEEDS()) {
     const n = 15;
@@ -319,6 +358,10 @@ export function makeJobs() {
         push('c|1|t0z', n, s, 0.85, { spec: { kin: 'c', P: 1, B: 1, sweep: { ...g, t0: 0 } }, meta: g });
         for (const [k, sh] of [[1, 7.5], [2, -7.5], [3, -7.5]]) { const sp = { kin: 'r', P: k, K: k, B: k, jet: 'flat', dyf: -0.25, shift: sh }; push(`r|flat|P${k}K${k}B${k}|q0.85|dy-0.25|s${sh}`, n, s, 0.85, { spec: sp }); }
       }
+      if (st.has('jd')) { // 제트 도달 지연(기본 단계 밖, STAGES=jd): 세 판 같은 Δ, 힘만 늦게. Δ 0 = 'r' 기본 키 그대로(다시 돌리면 own401 줄과 비트 동일해야 함)
+        for (const q of QS) for (const jd of JD) { const sp = { ...base, jet: 'flat', ...(jd ? { jd } : {}) }; push(rkey(sp, q), n, s, q, { spec: sp }); }
+        const sp = { ...base, jet: 'flat', jd: JD_EQ }; push(rkey(sp, 0.85), n, s, 0.85, { spec: sp }); // 진단: ≡ 'rn' s-7.5
+      }
       if (st.has('n')) for (const nn of [13, 17]) {
         for (const jet of ['flat', 'wall']) { const sp = { ...base, jet }; J.push({ key: rkey(sp, 0.85), n: nn, seed: s, q: 0.85, spec: sp }); }
         const g = grammarOf(ci, pileTop(nn, s));
@@ -329,6 +372,78 @@ export function makeJobs() {
   // 같은 (키, n, 시드) 중복 제거 (fx 대각선 = r 기본)
   const seen = new Set();
   return J.filter((j) => { const k = `${j.key}|${j.n}|${j.seed}`; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// ───────────────────────── 물리 보정 (STAGES=cal|ho|rob|sk|gate, 맨 위 사전 등록) ─────────────────────────
+export const CAL_GRID = { jetLag: [0, 0.01, 0.02, 0.03], tableCushion: [0, 1, 3, 8], cushionFar: [0, 1.0, 0.4, 0.15] };
+const KN = ['jetLag', 'tableCushion', 'cushionFar'];
+const tuneOf = (s) => Object.fromEntries(KN.filter((k) => s[k]).map((k) => [k, s[k]]));
+const ctag = (s) => (KN.every((k) => !s[k]) ? 'v1' : `jl${s.jetLag || 0}|tc${s.tableCushion || 0}|cf${s.cushionFar || 0}`);
+const MS = 1000 / 3.21; // 화면 s → 실물 ms
+const FRMS = 1000 / 240; // 영상 1프레임 = 실물 ms
+const med = (a) => { const b = a.filter(Number.isFinite).sort((x, y) => x - y); return b.length ? (b.length % 2 ? b[(b.length - 1) / 2] : (b[b.length / 2 - 1] + b[b.length / 2]) / 2) : NaN; };
+// 판마다 목표 지표 (rows = 그 판 시드 줄들)
+function takeStats(ci, rows) {
+  const n = rows.length;
+  const hit = rows.filter((r) => (ci === 1 ? r.x.any >= 13 : ci === 2 ? r.x.any >= 1 && r.x.any <= 5 && r.x.anyTop > r.x.anyBot : r.x.any <= 1)).length;
+  const lo = rows.map((r) => (r.x.on.lo > 0 ? r.x.on.lo * MS : NaN));
+  return {
+    n, rate: hit / n, hit, any: mean(rows.map((r) => r.x.any)), t10: med(rows.map((r) => (r.x.on.t10 > 0 ? r.x.on.t10 * MS : NaN))),
+    pLo: lo.filter(Number.isFinite).length / n, lo: med(lo), rise: med(rows.filter((r) => r.x.on.lo > 0).map((r) => r.x.botRise)), dist: med(rows.map((r) => r.x.dist)),
+    top: mean(rows.map((r) => r.x.anyTop)), bot: mean(rows.map((r) => r.x.anyBot)), maxRise: med(rows.map((r) => r.x.botRise)),
+  };
+}
+const TH = [0, 0.6, 0.6, 0.7];
+function scoreOf(st) { // st[1..3] = takeStats
+  const pm = [1, 2, 3].map((ci) => st[ci].rate - TH[ci]);
+  const nP = pm.filter((v) => v >= 0).length;
+  const S = [1, 2, 3].map((ci) => st[ci].t10 >= 32 && st[ci].t10 <= 52);
+  S.push(st[1].pLo >= 0.5 && st[1].lo >= 54 && st[1].lo <= 85, Number.isFinite(st[1].rise) && st[1].rise <= 1.5, st[1].dist >= 4 && st[1].dist <= 8);
+  return { nP, margin: Math.min(...pm), nS: S.filter(Boolean).length, S, pm };
+}
+const gidx = (s) => KN.reduce((a, k) => a + CAL_GRID[k].indexOf(s[k] || 0), 0);
+// 사전 등록 규칙으로 한 칸 고르기 (cal 줄만 씀)
+export function chooseCal(files) {
+  const rows = readRows(files).filter((r) => r.key.startsWith('cal|') && r.n === 15);
+  const G = new Map();
+  for (const r of rows) { const [, a, b, c, T] = r.key.split('|'); const k = `${a}|${b}|${c}`; if (!G.has(k)) G.set(k, { s: { jetLag: +a.slice(2), tableCushion: +b.slice(2), cushionFar: +c.slice(2) }, T: { 1: [], 2: [], 3: [] } }); G.get(k).T[+T.slice(1)].push(r); }
+  const L = [...G.values()].map((g) => { const st = { 1: takeStats(1, g.T[1]), 2: takeStats(2, g.T[2]), 3: takeStats(3, g.T[3]) }; return { ...g, st, sc: scoreOf(st) }; });
+  L.sort((x, y) => y.sc.nP - x.sc.nP || y.sc.margin - x.sc.margin || y.sc.nS - x.sc.nS || gidx(x.s) - gidx(y.s));
+  return L;
+}
+const calSetting = () => { if (process.env.CAL) return JSON.parse(process.env.CAL); if (!process.env.CALF) throw new Error('CALF=<cal 원자료> 또는 CAL=<json> 필요'); return chooseCal(process.env.CALF)[0].s; };
+const P6G = { kind: 'pueok', D: 0.6 };
+function calJobs(st) {
+  const J = [];
+  const take = (key, ci, s, tune, sp = {}) => J.push({ key, n: 15, seed: s, q: 0.85, cal: 1, ...(Object.keys(tune).length ? { tune } : {}), spec: { kin: 'r', P: ci, K: ci, B: ci, jet: 'flat', ...sp } });
+  if (st.has('cal')) for (const s of R(401, 412)) for (const jl of CAL_GRID.jetLag) for (const tc of CAL_GRID.tableCushion) for (const cf of CAL_GRID.cushionFar) {
+    const S0 = { jetLag: jl, tableCushion: tc, cushionFar: cf };
+    for (const ci of [1, 2, 3]) take(`cal|jl${jl}|tc${tc}|cf${cf}|T${ci}`, ci, s, tuneOf(S0));
+  }
+  if (st.has('pilot')) for (const s of R(391, 393)) for (const S0 of [{}, { tableCushion: 1 }, { tableCushion: 3 }, { tableCushion: 3, cushionFar: 0.15 }, { tableCushion: 8, cushionFar: 0.15 }, { tableCushion: 3, cushionFar: 0.4 }, { jetLag: 0.02, tableCushion: 3, cushionFar: 0.15 }, { jetLag: 0.02, tableCushion: 8, cushionFar: 0.15 }])
+    for (const ci of [1, 2, 3]) take(`pilot|${ctag(S0)}|T${ci}`, ci, s, tuneOf(S0));
+  const need = ['ho', 'rob', 'sk', 'gate'].some((x) => st.has(x));
+  if (!need) return J;
+  const C = calSetting(), tc = tuneOf(C), CT = ctag(C);
+  console.error(`보정 칸 = ${JSON.stringify(C)}`);
+  for (const s of R(413, 436)) {
+    if (st.has('ho')) for (const ci of [1, 2, 3]) { take(`ho|${CT}|T${ci}`, ci, s, tc); take(`ho|v1|T${ci}`, ci, s, {}); }
+    if (st.has('rob')) {
+      for (const k of KN) if (C[k]) for (const [sg, f] of [['-', 0.9], ['+', 1.1]]) { const t2 = { ...tc, [k]: +(C[k] * f).toPrecision(6) }; for (const ci of [1, 2, 3]) take(`rob|${k}${sg}|T${ci}`, ci, s, t2); }
+      for (const ci of [1, 2, 3]) for (const [nm, sp] of [['dL+', { dL: 0.3 }], ['dL-', { dL: -0.3 }], ['dy+', { dyf: 0.2 }], ['dy-', { dyf: -0.2 }], ['sh+', { shift: 2.4 }], ['sh-', { shift: -2.4 }]]) take(`rob|${nm}@${ci}|T${ci}`, ci, s, tc, sp);
+    }
+    if (st.has('sk')) for (const [cn, tt] of [[CT, tc], ['v1', {}]]) for (const rs of [0, 40, 85, 130]) for (const bl of [100, 200, 310]) {
+      const sp = { ...(rs !== 85 ? { shift: +((rs - 85) / FRMS).toFixed(3) } : {}), ...(bl !== 310 ? { cut: bl } : {}) };
+      take(`sk|${cn}|rs${rs}|bl${bl}`, 1, s, tt, sp);
+    }
+  }
+  const v1ns = (process.env.GATEV1 || '20,30,40').split(',').map(Number); // v1 줄은 기존 원자료(data/vf/chk601 v|relfix·v|flick, 비트 동일)로 대신할 수 있음
+  if (st.has('gate')) for (const n of [40, 30, 20]) for (const s of R(601, 612)) for (const [cn, tt] of [[CT, tc], ['v1', {}]].filter(([cn]) => cn !== 'v1' || v1ns.includes(n))) {
+    const rc = regCell(n), T0 = Object.keys(tt).length ? { tune: tt } : {};
+    for (const qq of [0.7, 0.85, 0.93, 1.0]) for (const h of [0.3, 0.4, 0.5, 0.6, 0.8]) J.push({ key: `gate|${cn}|relfix|q${qq}|h${h}`, n, seed: s, q: qq, kin: 'c', sweep: {}, breath: { kind: 'rel', D: +h.toFixed(4), off: 0.04 }, ...T0 });
+    J.push({ key: `gate|${cn}|flick`, n, seed: s, q: rc.q, kin: 'c', sweep: rc.sweep, breath: P6G, ...T0 });
+  }
+  return J;
 }
 
 async function runJobs(jobs, of, W) {
@@ -380,8 +495,23 @@ async function selfTest() {
     const b = breathMeas(ci); let mx = 0, I = 0; const h = 1 / 2400; for (let t = 0; t < b.dur; t += h) { const v = b.env(t); mx = Math.max(mx, v); I += v * h; }
     console.log(`  첨부${ci} 봉투 길이 ${b.dur.toFixed(3)} s(화면) = 실물 ${(b.dur / 3.21 * 1000).toFixed(0)} ms · 최대 ${mx.toFixed(2)} · ∫env ${I.toFixed(3)} · 문법(15장 꼭대기 ${top.toFixed(2)}) ${JSON.stringify(grammarOf(ci, top))}`);
   }
-  console.log(`shotO ≡ shot() ${ok}/${cases.length} (모든 필드 비트 동일) · spec 'c' 경로 ≡ 표준 ${specOk ? '같음' : '다름'}`);
-  if (ok !== cases.length || !specOk) process.exitCode = 1;
+  // 제트 도달 지연: 자세는 jd 와 무관(비트 동일), 봉투는 정확히 Δ 늦음(t < Δ 이면 0), 길이 + Δ. jd 0 은 지연 없음과 같은 샷
+  let jdOk = true;
+  { const t = new SW.Table(401 * 7907 + 15); t.addPile(Array.from({ length: 15 }, (_, i) => i)); t.settle(600); const top0 = t.columnTop();
+    for (const ci of [1, 2, 3]) for (const jd of [10, 30, JD_EQ]) {
+      const a = makeProgO(t, top0, { kin: 'r', P: ci, K: ci, B: ci, jet: 'flat' }), b = makeProgO(t, top0, { kin: 'r', P: ci, K: ci, B: ci, jet: 'flat', jd }), dS = (jd / 1000) * 3.21;
+      if (Math.abs(b.br.dur - a.br.dur - dS) > 1e-12) jdOk = false;
+      for (let tt = 0; tt < b.br.dur; tt += 1 / 240) {
+        const ga = a.prog(tt), gb = b.prog(tt);
+        if (JSON.stringify(ga.o) !== JSON.stringify(gb.o) || ga.phi !== gb.phi) jdOk = false;
+        if (gb.env !== (tt < dS ? 0 : a.br.env(tt - dS))) jdOk = false;
+      }
+    } }
+  const z0 = JSON.stringify(SHOT_FIELDS(shotO({ n: 15, seed: 408, q: 0.85, spec: { kin: 'r', P: 2, K: 2, B: 2, jet: 'flat' } })));
+  const z1 = JSON.stringify(SHOT_FIELDS(shotO({ n: 15, seed: 408, q: 0.85, spec: { kin: 'r', P: 2, K: 2, B: 2, jet: 'flat', jd: 0 } })));
+  if (z0 !== z1) jdOk = false;
+  console.log(`shotO ≡ shot() ${ok}/${cases.length} (모든 필드 비트 동일) · spec 'c' 경로 ≡ 표준 ${specOk ? '같음' : '다름'} · 제트 지연(자세 그대로·봉투 Δ 늦음·jd 0 ≡ 없음) ${jdOk ? '맞음' : '틀림'}`);
+  if (ok !== cases.length || !specOk || !jdOk) process.exitCode = 1;
 }
 
 async function pathDump(ci, jet = 'flat') {
@@ -431,6 +561,42 @@ function orderLine(tag, K, k1, k2, k3) {
   const mode = `2번 일부(위) ${pct(s[1].pTopPart)} · 3번 0장 ${pct(s[2].pNone)} · 1번 다 넘김 ${pct(s[0].pAll)}`;
   console.log(`  ${tag.padEnd(26)} 1 / 2 / 3 = ${s.map((v) => v.any.toFixed(1)).join(' / ')}장 · 1−2 ${dci(d12)} · 2−3 ${dci(d23)} · 1−3 ${dci(d13)} → 순서 ${ok ? '재현(구간)' : okw ? '점 추정만' : '아님'} · ${mode}`);
 }
+// 비율 95% 구간(윌슨) · 실물 위쪽 10° 시각(숨 시작 뒤 ms, 06 §2)
+const wilson = (k, n) => { const z = 1.96, p = k / n, d = 1 + (z * z) / n, c = (p + (z * z) / (2 * n)) / d, h = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / d; return [Math.max(0, c - h), Math.min(1, c + h)]; };
+const p0 = (v) => `${Math.round(100 * v)}%`;
+// 같은 시드 짝 차(앞 − 뒤) 부트스트랩 구간, 수준 lv (주 판정 다섯 칸 본페로니 = 99%)
+function pairDiff(A, B, lv = 0.99, nb = 10000) {
+  const s = [...A.keys()].filter((x) => B.has(x)).sort((a, b) => a - b), d = s.map((x) => A.get(x).x.any - B.get(x).x.any), n = d.length, Rr = SW.mulberry32(20261015), out = [];
+  for (let b = 0; b < nb; b++) { let t = 0; for (let i = 0; i < n; i++) t += d[Math.floor(Rr() * n)]; out.push(t / n); }
+  out.sort((a, b) => a - b);
+  return [out[Math.floor(((1 - lv) / 2) * nb)], out[Math.min(nb - 1, Math.floor((1 - (1 - lv) / 2) * nb))]];
+}
+function jdReport(K) {
+  const jk = (ci, q, d) => `r|flat|P${ci}K${ci}B${ci}|q${q}${d ? `|j${d}` : ''}`;
+  console.log('-- 제트 도달 지연 (STAGES=jd, 사전 등록): 힘(숨 봉투)만 Δ 늦게 닿음 · 입·고개 자세는 실측 시각 그대로 · flat 제트 · 세 판 같은 Δ (Δ 0 = 위 r 기본 칸)');
+  console.log('   판정(주) = q 0.85 에서 1−2·2−3 같은 시드 짝 차 95% 구간이 둘 다 0 위. 위¼ 10° = 숨 시작 뒤 실물 ms(Δ 포함), 실물은 52 / 42 / 32 ms');
+  for (const q of QS) {
+    console.log(`   q ${q}${q === 0.85 ? ' (사전 등록 칸)' : ' (민감도)'}`);
+    for (const d of JD) {
+      const ks = [1, 2, 3].map((ci) => jk(ci, q, d)), ms = ks.map((k) => K.get(k));
+      if (ms.some((m) => !m)) continue;
+      orderLine(`Δ ${d} ms`, K, ...ks);
+      const A = [...ms[0].values()], nA = A.filter((r) => r.x.any >= 0.8 * r.n).length, n15 = A.filter((r) => r.x.any >= r.n).length;
+      const [lo, hi] = wilson(nA, A.length), [lo2, hi2] = wilson(n15, A.length);
+      const t10 = ms.map((m) => { const s = stat(m); return Number.isFinite(s.t10) ? ((s.t10 / 3.21) * 1000).toFixed(0) : '-'; });
+      const bf = q === 0.85 ? (() => { const a = pairDiff(ms[0], ms[1]), b = pairDiff(ms[1], ms[2]); return ` · 본페로니(5칸) 99%: 1−2 [${a.map((v) => v.toFixed(1)).join(', ')}] 2−3 [${b.map((v) => v.toFixed(1)).join(', ')}] → ${a[0] > 0 && b[0] > 0 ? '유지' : '깨짐'}`; })() : '';
+      console.log(`      첨부1 다 넘김(≥0.8N) ${nA}/${A.length} = ${p0(nA / A.length)} [${p0(lo)}, ${p0(hi)}] · 15/15 ${n15}/${A.length} [${p0(lo2)}, ${p0(hi2)}] · 위¼ 10° ${t10.join(' / ')} ms${bf}`);
+    }
+  }
+  console.log('   q 0.85 칸 자세히:');
+  for (const d of JD) for (const ci of [1, 2, 3]) { const k = jk(ci, 0.85, d); if (K.has(k)) console.log(lineO(k, K.get(k))); }
+  const eq = [1, 2, 3].map((ci) => [K.get(jk(ci, 0.85, JD_EQ)), K.get(`r|flat|P${ci}K${ci}B${ci}|q0.85|s-7.5`)]);
+  if (eq.every(([a]) => a)) {
+    console.log(`   진단: Δ ${JD_EQ} ms(힘만 7.5프레임 늦게) 와 옛 이웃 's-7.5'(자세만 7.5프레임 앞당김)는 시간 원점만 다른 같은 샷(스텝 위상 0.04 스텝 차·힘 전 12스텝 더 쉼만 다름)`);
+    orderLine(`Δ ${JD_EQ} ms`, K, ...[1, 2, 3].map((ci) => jk(ci, 0.85, JD_EQ)));
+    eq.forEach(([a, b], i) => { if (!b) return; const s = [...a.keys()].filter((x) => b.has(x)), same = s.filter((x) => a.get(x).x.any === b.get(x).x.any).length; console.log(`      첨부${i + 1}: Δ ${stat(a).any.toFixed(1)} · s-7.5 ${stat(b).any.toFixed(1)}장 · 짝 차 ${dci(pr(b, a))} · 같은 장수 ${same}/${s.length} 시드`); });
+  }
+}
 function report(files) {
   const M = index(readRows(files));
   for (const n of [...M.keys()].sort((a, b) => a - b)) {
@@ -450,6 +616,11 @@ function report(files) {
         console.log(`   이웃 (${jet}, q 0.85): s = 고개를 숨보다 늦게(+)·일찍(−) 7.5프레임(화면 0.1 s), dL = 거리 ±1 u, dy = 입 높이 ±0.25·꼭대기, norm = 영상마다 고원 1, e25 = dB 지수 25`);
         for (const sf of sfx) orderLine(`${jet}${sf}`, K, `r|${jet}|P1K1B1|q0.85${sf}`, `r|${jet}|P2K2B2|q0.85${sf}`, `r|${jet}|P3K3B3|q0.85${sf}`);
         for (const ci of [1, 2, 3]) console.log(`     첨부${ci}: ` + sfx.map((sf) => { const m = K.get(`r|${jet}|P${ci}K${ci}B${ci}|q0.85${sf}`); return m ? `${sf.slice(1)} ${stat(m).any.toFixed(1)}` : ''; }).join(' · '));
+        if (jet === 'flat' && K.has('r|flat|P2K2B2|q0.85|dy0.25') && K.has('r|flat|P1K1B1|q0.85|dy-0.25')) { // 06 §4: 판 하나만 dy 이웃 행으로 바꾼 조합(사후 조합, 다중 비교 보정 없음)
+          console.log('   입 높이 조합 (flat, q 0.85, 사후 조합·다중 비교 보정 없음): 판 하나만 dy 이웃 행으로 바꿈');
+          orderLine('2번만 dy+0.25', K, 'r|flat|P1K1B1|q0.85', 'r|flat|P2K2B2|q0.85|dy0.25', 'r|flat|P3K3B3|q0.85');
+          orderLine('1번 dy−0.25·2번 dy+0.25', K, 'r|flat|P1K1B1|q0.85|dy-0.25', 'r|flat|P2K2B2|q0.85|dy0.25', 'r|flat|P3K3B3|q0.85');
+        }
       }
       for (const jet of ['flat', 'wall']) {
         const fx = (P, Kk, B) => K.get(`r|${jet}|P${P}K${Kk}B${B}|q0.85`);
@@ -465,7 +636,8 @@ function report(files) {
         for (const [lab, m] of [['P←1', fx(1, 3, 3)], ['K←1', fx(3, 1, 3)], ['B←1', fx(3, 3, 1)], ['P·K←1', fx(1, 1, 3)], ['K·B←1', fx(3, 1, 1)], ['P·B←1', fx(1, 3, 1)]]) console.log(`       ${lab} ${stat(m).any.toFixed(1)}장 ${dci(pr(b3, m))}`);
       }
     }
-    const pb = ['c|1|t0z', 'r|flat|P1K1B1|q0.85|dy-0.25|s7.5', 'r|flat|P2K2B2|q0.85|dy-0.25|s-7.5', 'r|flat|P3K3B3|q0.85|dy-0.25|s-7.5'].filter((k) => K.has(k));
+    if (keys.some((k) => /\|j[\d.]+$/.test(k))) jdReport(K);
+    const pb = ['c|1|t0z','r|flat|P1K1B1|q0.85|dy-0.25|s7.5', 'r|flat|P2K2B2|q0.85|dy-0.25|s-7.5', 'r|flat|P3K3B3|q0.85|dy-0.25|s-7.5'].filter((k) => K.has(k));
     if (pb.length) { console.log('-- 보조 탐침 (STAGES=pb)'); for (const k of pb) console.log(lineO(k, K.get(k))); orderLine('flat dy−0.25 · 1 늦게/2·3 일찍', K, pb[1], pb[2], pb[3]); }
     if (grp('c|').length) {
       console.log('-- (2) v1 문법 {A, w, t0} 로 옮김 (입이 목 축 둘레로 오르고 제트가 함께 꺾임, 숨 = 실측 봉투)');
@@ -481,6 +653,104 @@ function report(files) {
   }
 }
 
+// ───────────────────────── 물리 보정 보고 ─────────────────────────
+const fm = (v, d = 0) => (Number.isFinite(v) ? v.toFixed(d) : '-');
+function takeLine(tag, st, sc) {
+  const p = (ci) => `${Math.round(100 * st[ci].rate)}%`.padStart(4);
+  return `  ${tag.padEnd(26)} P1 ${p(1)} P2 ${p(2)} P3 ${p(3)} | 장 ${[1, 2, 3].map((ci) => st[ci].any.toFixed(1)).join(' / ')} (2번 위반 ${st[2].top.toFixed(1)}·아래반 ${st[2].bot.toFixed(1)})`
+    + ` | 위¼10° ${[1, 2, 3].map((ci) => fm(st[ci].t10)).join('/')} ms | 1번 이륙 ${Math.round(100 * st[1].pLo)}% ${fm(st[1].lo)} ms 상승 ${fm(st[1].rise, 1)} u 착지 ${fm(st[1].dist, 1)} u`
+    + (sc ? ` | P ${sc.nP}/3 여유 ${sc.margin.toFixed(2)} S ${sc.nS}/6` : '');
+}
+const byKey = (rows) => { const M = new Map(); for (const r of rows) { if (!M.has(r.key)) M.set(r.key, new Map()); M.get(r.key).set(r.seed, r); } return M; };
+const st3 = (K, pre) => { const o = {}; for (const ci of [1, 2, 3]) { const m = K.get(`${pre}|T${ci}`); if (!m) return null; o[ci] = takeStats(ci, [...m.values()]); } return o; };
+function orderCI(A, B, C) { // 1−2, 2−3 같은 시드 짝 차 95%
+  const d12 = pr(B, A), d23 = pr(C, B);
+  return { d12, d23, ok: !!(d12 && d23 && d12.dlo > 0 && d23.dlo > 0) };
+}
+function calReport(files) {
+  const rows = readRows(files).filter((r) => r.n === 15 || r.key.startsWith('gate|'));
+  const K = byKey(rows.filter((r) => !r.key.startsWith('gate|')));
+  const pil = [...new Set([...K.keys()].filter((k) => k.startsWith('pilot|')).map((k) => k.replace(/\|T\d$/, '')))];
+  if (pil.length) { console.log('-- 시범(시드 391~393, 구현 점검만)'); for (const p of pil) { const s = st3(K, p); if (s) console.log(takeLine(p.slice(6), s, scoreOf(s))); } }
+  if ([...K.keys()].some((k) => k.startsWith('cal|'))) {
+    const L = chooseCal(files);
+    console.log(`\n-- 고르기 격자 (시드 401~412, ${L.length}칸, 사전 등록 규칙 순) · 목표 P1 ≥ 60% · P2 ≥ 60% · P3 ≥ 70%`);
+    const nMet = [0, 0, 0, 0]; for (const g of L) nMet[g.sc.nP]++;
+    console.log(`   P 맞춘 수 분포: 0개 ${nMet[0]} · 1개 ${nMet[1]} · 2개 ${nMet[2]} · 3개 ${nMet[3]}칸 · 판별 최고율 P1 ${Math.max(...L.map((g) => g.st[1].rate)).toFixed(2)} · P2 ${Math.max(...L.map((g) => g.st[2].rate)).toFixed(2)} · P3 ${Math.max(...L.map((g) => g.st[3].rate)).toFixed(2)}`);
+    L.slice(0, 12).forEach((g, i) => console.log(takeLine(`${i === 0 ? '★' : ' '}${ctag(g.s)}`, g.st, g.sc)));
+    const v = L.find((g) => ctag(g.s) === 'v1'); if (v) console.log(takeLine(' v1 (손잡이 0)', v.st, v.sc) + `  (순위 ${L.indexOf(v) + 1})`);
+    for (const k of KN) { // 손잡이 하나만 켠 칸
+      for (const val of CAL_GRID[k].slice(1)) { const g = L.find((x) => ctag(x.s) === ctag({ [k]: val })); if (g) console.log(takeLine(` ${k}=${val} 만`, g.st, g.sc)); }
+    }
+    // P1 이 가장 높은 칸 (다 넘김이 어디까지 가능한가)
+    const b1 = [...L].sort((x, y) => y.st[1].rate - x.st[1].rate || y.st[1].any - x.st[1].any)[0];
+    console.log(takeLine(` P1 최고 ${ctag(b1.s)}`, b1.st, b1.sc));
+    const b2 = [...L].sort((x, y) => y.st[2].rate - x.st[2].rate || y.st[3].rate - x.st[3].rate)[0];
+    console.log(takeLine(` P2 최고 ${ctag(b2.s)}`, b2.st, b2.sc));
+    // 06 §5.2 배타성: P1 이 되는 칸과 P2 가 되는 칸이 겹치지 않는가 · 낮은 이륙 칸
+    const corr = (a, b) => { const ma = mean(a), mb = mean(b); let sab = 0, saa = 0, sbb = 0; a.forEach((v, i) => { sab += (v - ma) * (b[i] - mb); saa += (v - ma) ** 2; sbb += (b[i] - mb) ** 2; }); return sab / Math.sqrt(saa * sbb); };
+    const hp1 = L.filter((g) => g.st[1].rate >= 0.5), hp2 = L.filter((g) => g.st[2].rate >= 0.25);
+    const nOrd = L.filter((g) => g.st[1].any > g.st[2].any && g.st[2].any > g.st[3].any).length;
+    console.log(`   배타: P1 ≥ 50% ${hp1.length}칸 → 첨부2 최소 ${fm(Math.min(...hp1.map((g) => g.st[2].any)), 1)}장·P2 최대 ${p0(Math.max(0, ...hp1.map((g) => g.st[2].rate)))} · P2 ≥ 25% ${hp2.length}칸 → 첨부1 최대 ${fm(Math.max(...hp2.map((g) => g.st[1].any)), 1)}장`
+      + ` · 칸 평균 첨부1·2 장수 상관 ${corr(L.map((g) => g.st[1].any), L.map((g) => g.st[2].any)).toFixed(2)} · 1−2 최대 ${fm(Math.max(...L.map((g) => g.st[1].any - g.st[2].any)), 1)}장 · 점 추정 순서(1>2>3) ${nOrd}/${L.length}칸`);
+    const low = L.filter((g) => g.st[1].pLo >= 0.5 && g.st[1].rise <= 1.5).sort((x, y) => x.st[1].rise - y.st[1].rise);
+    console.log(`   낮은 이륙(1번 이륙 ≥ 50%·상승 ≤ 1.5 u) ${low.length}칸: ${low.map((g) => `${ctag(g.s)} ${p0(g.st[1].pLo)} ${fm(g.st[1].lo)} ms ${fm(g.st[1].rise, 1)} u 2번 ${g.st[2].any.toFixed(1)}장`).join(' · ')} · S4·S5 함께 맞춘 칸 ${L.filter((g) => g.sc.S[3] && g.sc.S[4]).length}`);
+    console.log(`   ★ 고른 칸 = ${JSON.stringify(L[0].s)}`);
+  }
+  const hoK = [...K.keys()].filter((k) => k.startsWith('ho|') && !k.startsWith('ho|v1')).map((k) => k.replace(/\|T\d$/, ''))[0];
+  if (hoK) {
+    console.log('\n-- 평가(보류 시드 413~436, 24)');
+    for (const pre of [hoK, 'ho|v1']) {
+      const s = st3(K, pre); if (!s) continue;
+      const sc = scoreOf(s); console.log(takeLine(pre.slice(3), s, sc));
+      const ord = orderCI(K.get(`${pre}|T1`), K.get(`${pre}|T2`), K.get(`${pre}|T3`));
+      console.log(`     P 윌슨 95%: ${[1, 2, 3].map((ci) => { const [lo, hi] = wilson(s[ci].hit, s[ci].n); return `P${ci} ${s[ci].hit}/${s[ci].n} [${p0(lo)}, ${p0(hi)}]`; }).join(' · ')} · 순서 1−2 ${dci(ord.d12)} 2−3 ${dci(ord.d23)} → ${ord.ok ? '재현(구간)' : '아님'}`);
+      console.log(`     S: 위¼10° ${sc.S.slice(0, 3).map((b) => (b ? 'O' : 'X')).join('')} · 이륙 ${sc.S[3] ? 'O' : 'X'} · 상승 ${sc.S[4] ? 'O' : 'X'} · 착지 ${sc.S[5] ? 'O' : 'X'} · 1번 맨아래 최대 상승 중앙 ${fm(s[1].maxRise, 2)} u`);
+    }
+    const robs = [...new Set([...K.keys()].filter((k) => k.startsWith('rob|')).map((k) => k.replace(/\|T\d$/, '')))];
+    if (robs.length) {
+      console.log('-- 견고성 (평가 시드): 순서 1−2·2−3 [95%] · P 비율');
+      const base = (ci) => K.get(`${hoK}|T${ci}`);
+      let alive = 0, tot = 0;
+      for (const rk of robs) {
+        const only = rk.match(/@(\d)$/); const m = (ci) => (only ? (+only[1] === ci ? K.get(`${rk}|T${ci}`) : base(ci)) : K.get(`${rk}|T${ci}`));
+        if (![1, 2, 3].every((ci) => m(ci))) continue;
+        const o = orderCI(m(1), m(2), m(3)); tot++; if (o.ok) alive++;
+        const s = { 1: takeStats(1, [...m(1).values()]), 2: takeStats(2, [...m(2).values()]), 3: takeStats(3, [...m(3).values()]) };
+        console.log(`  ${rk.slice(4).padEnd(16)} 장 ${[1, 2, 3].map((ci) => s[ci].any.toFixed(1)).join(' / ')} · 1−2 ${dci(o.d12)} · 2−3 ${dci(o.d23)} → ${o.ok ? '유지' : '깨짐'} · P ${[1, 2, 3].map((ci) => `${Math.round(100 * s[ci].rate)}%`).join('/')}`);
+      }
+      console.log(`  순서 유지 ${alive}/${tot}`);
+    }
+  }
+  const sks = [...new Set([...K.keys()].filter((k) => k.startsWith('sk|')).map((k) => k.slice(3, k.indexOf('|rs'))))];
+  for (const cn of sks) {
+    console.log(`\n-- 실력 구조 (첨부1 기하, 평가 시드) ${cn}: 행 = 입술 상승 시작(숨 시작 뒤 ms), 열 = 숨 길이 100/200/310 ms · 어디든 장 (위반/아래반) [0장≤1 비율]`);
+    const g = (rs, bl) => K.get(`sk|${cn}|rs${rs}|bl${bl}`);
+    for (const rs of [0, 40, 85, 130]) console.log(`  +${String(rs).padStart(3)} ms  ` + [100, 200, 310].map((bl) => { const m = g(rs, bl); if (!m) return '-'; const R2 = [...m.values()]; return `${mean(R2.map((r) => r.x.any)).toFixed(1).padStart(4)} (${mean(R2.map((r) => r.x.anyTop)).toFixed(1)}/${mean(R2.map((r) => r.x.anyBot)).toFixed(1)}) [${Math.round(100 * R2.filter((r) => r.x.any <= 1).length / R2.length)}%] 이륙 ${Math.round(100 * R2.filter((r) => r.x.on.lo > 0).length / R2.length)}%`; }).join(' | '));
+    const pk = g(85, 310), e0 = g(0, 310), l130 = g(130, 310);
+    if (pk && e0 && l130) {
+      const a = pr(e0, pk), b = pr(l130, pk);
+      const e0s = [...e0.values()], part = e0s.filter((r) => r.x.any >= 1 && r.x.any < 0.8 * r.n && r.x.anyTop > r.x.anyBot).length / e0s.length;
+      const sh = [...g(85, 100).values()], sh0 = sh.filter((r) => r.x.any <= 1).length / sh.length;
+      console.log(`  산: +85 − +0 ${dci(a)} · +85 − +130 ${dci(b)} → ${a.dlo > 0 && b.dlo > 0 ? '산(구간)' : a.d > 0 && b.d > 0 ? '산(점 추정만)' : '산 아님'} · +0 '위 일부' ${Math.round(100 * part)}% · 숨 100 ms(+85) ≤1장 ${Math.round(100 * sh0)}%`);
+    }
+  }
+  const GK = byKey(rows.filter((r) => r.key.startsWith('gate|')).map((r) => ({ ...r, key: `${r.n}|${r.key}` })));
+  if (GK.size) {
+    console.log('\n-- 코어 게이트 (시드 601~612): 원 안 뒤집힘 flip · 최선 고정(rel 4×5, 같은 시드에서 고름) ÷ 튕김(flick)');
+    const cns = [...new Set([...GK.keys()].map((k) => k.split('|').slice(2).join('|').replace(/\|(relfix\|.*|flick)$/, '')))];
+    for (const n of [20, 30, 40]) for (const cn of cns) {
+      const ks = [...GK.keys()].filter((k) => k.startsWith(`${n}|gate|${cn}|relfix|`));
+      if (!ks.length || !GK.get(`${n}|gate|${cn}|flick`)) continue;
+      const mf = (k) => mean([...GK.get(k).values()].map((r) => r.flip));
+      const best = ks.sort((a, b) => mf(b) - mf(a))[0], fk = `${n}|gate|${cn}|flick`;
+      const p = pairOf(GK.get(best), GK.get(fk));
+      const ex = (k, f) => mean([...GK.get(k).values()].map(f));
+      console.log(`  ${n}장 ${cn.padEnd(18)} 최선 고정 ${best.slice(best.indexOf('relfix|') + 7).replace('|', ' ')} ${mf(best).toFixed(1)}장 (원밖 ${ex(best, (r) => r.out).toFixed(1)}) · 튕김 ${mf(fk).toFixed(1)}장 (원밖 ${ex(fk, (r) => r.out).toFixed(1)}, 통째 ${Math.round(100 * ex(fk, (r) => r.whole))}%) · 튕김 ÷ 고정 ${f2(p.r)} [${f2(p.lo)}, ${f2(p.hi)}] · 0장 고정/튕김 ${Math.round(100 * ex(best, (r) => (r.flip === 0 ? 1 : 0)))}%/${Math.round(100 * ex(fk, (r) => (r.flip === 0 ? 1 : 0)))}%`);
+    }
+  }
+}
+
 // ───────────────────────── 진입 ─────────────────────────
 if (!isMainThread && workerData?.ownclipsWorker) {
   await SW.initPhysics();
@@ -492,6 +762,8 @@ if (!isMainThread && workerData?.ownclipsWorker) {
   else if (cmd === 'list') { await SW.initPhysics(); const J = makeJobs(); const c = {}; for (const j of J) { const s = j.key.split('|')[0]; c[s] = (c[s] || 0) + 1; } console.log(J.length, c); }
   else if (cmd === 'run') { if (!a[0]) throw new Error('run <out.jsonl> [W]'); await SW.initPhysics(); await runJobs(makeJobs(), a[0], +(a[1] || 2)); report(a[0]); }
   else if (cmd === 'report') report(a[0]);
+  else if (cmd === 'calreport') calReport(a[0]);
+  else if (cmd === 'choose') console.log(JSON.stringify(chooseCal(a[0])[0].s));
   else if (cmd === 'path') await pathDump(+a[0], a[1]);
   else console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'));
 }
