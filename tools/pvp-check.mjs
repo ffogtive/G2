@@ -15,6 +15,10 @@
 //   NET=artifact  아티팩트 빌드(dist/puff-artifact.html, CDN → node_modules) + 가짜 claude 호스트(tools/fake-claude.js: LocalNet 위에 db·room·user 모양)
 //                 → ArtifactNet 경로(claude.use · 6자 코드 · 로비 room 빠른 길 · 검증 기록)를 같은 게이트로. 상한 위반은 페이지 계량 + 가짜 호스트 계량 둘 다
 //   SNAPPOLL=ms   (NET=artifact) db onSnapshot 이 실시간을 잃고 폴링으로 떨어진 상태(실제 약 30000). room 빠른 길·3초 안전망 읽기로 버티는가
+//   QX='jetlag=0.02&airfx=1&hscut=1&airlog=1'  두 탭 주소에 더 붙일 것(솔로 실험 토글 '바람 도달 시간', 06 §8.10·§8.11 · G12)
+//   EXPFEEL=1   같은 실험 토글을 ⚙ 에서 켜고 '완료'로 저장한 것처럼 프로필(localStorage)에 넣고 두 탭을 다시 띄워 시작(재윤님 실제 경로)
+//               QX·EXPFEEL 이면: 해시·뒤 검증 100% 에 더해, 폴링마다 두 탭에 실험 흔적이 없어야 함 — 이 숨의 지연 0(expLag)·숨 기록 없음·
+//               공기 앞머리 숨 줄기·와류 고리 0·화면 수치/켬 표시 숨김. 실험이 정말 켜져 있었는지(feel.jetLag 0.02)도 확인
 //   RESIGN=a|b  그 탭이 RESIGNAT(기본 2) 턴쯤 뒤 HOME 을 두 번 눌러 기권 → 상대 화면이 2초 안에 '기권승'이고 '연결 끊김 — 기다리는 중'은 한 번도 안 뜬다.
 //               기권한 쪽은 홈 · 매치 문서 abandoned(result.by) · 자리 문서 resign. 기권 전 턴은 평소대로 비교(기권 때 날던 마지막 턴 하나는 빼고).
 //               매치 문서 구독이 폴링이면(NET=artifact SNAPPOLL=30000) presence 빠른 길만 남는다 — 옛 순서(문서 먼저 → presence → 곧바로 leave)는 여기서 걸렸다
@@ -39,12 +43,33 @@ const RESIGN = { 1: 'a', a: 'a', b: 'b' }[(process.env.RESIGN || '').toLowerCase
 if (!process.env.NOBUILD) execFileSync('node', [join(root, 'tools/build.mjs')], { stdio: 'inherit' });
 const file = ART ? wrapArtifact() : join(root, 'dist/puff.html');
 if (!existsSync(file)) throw new Error('dist/puff.html 없음 — npm run build');
-const q = (extra = '') => `file://${file}?${ART ? '' : 'pvplocal&'}pvpbot${LAG && !ART ? `&pvplag=${LAG}` : ''}${CLOCK ? `&pvpclock=${CLOCK}` : ''}${extra}`;
+const QX = process.env.QX ? '&' + process.env.QX.replace(/^[?&]+/, '') : '';
+const EXPFEEL = !!process.env.EXPFEEL, EXPCHK = !!(QX || EXPFEEL);
+const q = (extra = '') => `file://${file}?${ART ? '' : 'pvplocal&'}pvpbot${LAG && !ART ? `&pvplag=${LAG}` : ''}${CLOCK ? `&pvpclock=${CLOCK}` : ''}${QX}${extra}`;
 
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await browser.newContext();
 const cdnLogs = [];
 if (ART) { await routeCdn(ctx, cdnLogs); await ctx.addInitScript({ content: await fakeClaude({ mode: 'full', lag: LAG, snapPoll: +(process.env.SNAPPOLL || 0) }) }); }
+// EXPFEEL: ⚙ 실험 칸에서 넷 다 켜고 '완료'를 누른 것과 같은 저장값(프로필 settings.feel)으로 두 탭을 띄운다.
+//   첫 부팅이 프로필을 만들고(store.js 는 v·inv 없는 프로필을 버림), 탭마다 자기 화면에서 저장값을 고친 뒤 새로고침 →
+//   손맛 값은 부팅 때 한 번 읽으므로 그 탭은 켜진 채로 뜬다(두 탭 localStorage 는 탭 사이에 늦게 맞춰질 수 있어 init 스크립트로는 안 함)
+const EXP_FEEL = { jetLag: 0.02, airFx: 1, hsCut: 1, airLog: 1 };
+const expFeelOn = async (p) => {
+  for (let i = 0; i < 3; i++) {
+    await p.evaluate((f) => {
+      const k = 'g2-ddakji-profile-v1', pr = JSON.parse(localStorage.getItem(k) || 'null');
+      if (!pr || pr.v !== 1 || !pr.inv) return;
+      pr.settings = { ...(pr.settings || {}) }; pr.settings.feel = { ...(pr.settings.feel || {}), ...f };
+      localStorage.setItem(k, JSON.stringify(pr));
+    }, EXP_FEEL);
+    await p.reload();
+    await p.waitForFunction(() => window.__puffBooted && !document.querySelector('#home').hidden && !document.querySelector('#pvpBtn').hidden, null, { timeout: 90000 });
+    const f = await p.evaluate(() => window.__puffExp?.().feel);
+    if (f?.jetLag === 0.02 && f.airFx === 1) return f;
+  }
+  return await p.evaluate(() => window.__puffExp?.().feel);
+};
 // 화면 크기를 다르게(세로 폰 · 가로) — 물리·판정은 카메라와 무관해야 한다
 const A = await ctx.newPage(), B = await ctx.newPage();
 // 헤드리스 소프트웨어 렌더(swiftshader)는 두 탭이면 fps 가 낮다 → 작게. 가로·세로는 다르게 둔다
@@ -61,6 +86,10 @@ await A.goto(q());
 await B.goto(q(DROP ? `&pvpdrop=${DROP}` : ''));
 const homeOk = async (p) => p.waitForFunction(() => window.__puffBooted && !document.querySelector('#home').hidden && !document.querySelector('#pvpBtn').hidden, null, { timeout: 90000 }); // 다른 작업과 CPU 를 나눠 쓰면 부팅이 느리다. PvP 버튼은 Net 이 정해진 뒤(부팅 뒤)에 켜진다
 await homeOk(A); await homeOk(B);
+if (EXPFEEL) {
+  const fa = await expFeelOn(A), fb = await expFeelOn(B);
+  console.log(`[${sec()}] EXPFEEL: 저장된 실험 값으로 다시 띄움 A ${JSON.stringify(fa)} B ${JSON.stringify(fb)}`);
+}
 console.log(`[${sec()}] Net: A ${await A.evaluate(() => window.__pvpNet)} B ${await B.evaluate(() => window.__pvpNet)}${ART ? ' (아티팩트 빌드 + 가짜 claude 호스트)' : ''}`);
 console.log(`[${sec()}] 두 탭 부팅. PvP 버튼 보임: A ${await A.$eval('#pvpBtn', (e) => !e.hidden)} B ${await B.$eval('#pvpBtn', (e) => !e.hidden)}`);
 // 로비 버튼은 DOM click(작은 가로 화면에선 홈 아래 줄이 화면 밖 — 배치 시험이 아니라 흐름 시험)
@@ -85,8 +114,18 @@ let last = '';
 let doneA = null, doneB = null;
 const RP = RESIGN === 'b' ? B : A, OP = RESIGN === 'b' ? A : B; // 기권하는 탭 · 상대 탭
 let resignAt = 0, resignSeat = null;
+const exp = { polls: 0, inMatch: 0, on: { a: 0, b: 0 }, trace: [] }; // QX·EXPFEEL: 대결 중 실험 흔적
+const expPoll = async (p, k) => {
+  const e = await p.evaluate(() => (window.__pvp?.()?.state === 'match' ? window.__puffExp?.() ?? null : null)).catch(() => null);
+  if (!e) return;
+  exp.inMatch++;
+  if (e.feel?.jetLag === 0.02 && e.feel.airFx === 1) exp.on[k]++;
+  const why = [e.lagNow !== 0 && `지연 ${e.lagNow}`, e.last && '실험 숨 기록', e.breathAir && '공기 앞머리 숨 줄기', e.rings && `고리 ${e.rings}`, e.readout != null && `화면 수치 '${e.readout}'`].filter(Boolean);
+  if (why.length && exp.trace.length < 10) exp.trace.push(`${k.toUpperCase()}: ${why.join(' · ')}`);
+};
 while (Date.now() - t0 < LIMIT) {
   await A.waitForTimeout(1500);
+  if (EXPCHK) { exp.polls++; await Promise.all([expPoll(A, 'a'), expPoll(B, 'b')]); }
   const sa = await A.evaluate(() => window.__pvp?.() ?? null).catch(() => null);
   const sb = await B.evaluate(() => window.__pvp?.() ?? null).catch(() => null);
   doneA = await A.evaluate(() => window.__pvpDone ?? null).catch(() => null);
@@ -219,7 +258,13 @@ if (RESIGN) {
     r.matchDoc?.status === 'abandoned' && r.matchDoc?.result?.reason === 'resign' && r.matchDoc.result.by === r.seat && r.seatDoc?.resign === true && setTag === `resign:${dO.seat}`);
   if (!resignOk) bad.push('기권 흐름 실패');
 }
+let expOk = true;
+if (EXPCHK) {
+  expOk = exp.inMatch > 0 && exp.on.a > 0 && exp.on.b > 0 && !exp.trace.length;
+  console.log(`실험 토글(${[QX && 'QX' + QX, EXPFEEL && 'EXPFEEL 프로필 저장값'].filter(Boolean).join(' + ')}): 대결 화면 폴링 ${exp.inMatch}회 · 켜져 있음 A ${exp.on.a}·B ${exp.on.b}회 · 대결 중 실험 흔적 ${exp.trace.length}${exp.trace.length ? ' ' + exp.trace.join(' / ') : ''}`);
+  if (!expOk) bad.push('실험 토글이 대결에 샘(또는 켜진 채 시험되지 않음)');
+}
 if (bad.length) console.log('불일치:\n  ' + bad.slice(0, 20).join('\n  '));
-const pass = (RESIGN ? resignOk : doneA && doneB && sameSet) && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && verDocsOk && !viol.length && !errs.a.length && !errs.b.length && !bad.length && !cdnLogs.length;
+const pass = (RESIGN ? resignOk : doneA && doneB && sameSet) && expOk && turns > 0 && both === turns && tagSame === both && resSame === both && shownOk === shownN && verSame === verN && verDocsOk && !viol.length && !errs.a.length && !errs.b.length && !bad.length && !cdnLogs.length;
 console.log(`\n${pass ? 'PASS' : 'FAIL'} — ${sec()}`);
 process.exit(pass ? 0 : 1);

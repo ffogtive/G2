@@ -460,6 +460,21 @@ export class Sfx {
   }
 
 
+  // 실험 '공기 앞머리 연출'(06 §8.10 · BLOCKERS G12, feel.airFx)에서만: 바람이 더미에 닿는 '퍽'.
+  // 입의 '푸'(숨 시작)와 다른 자리·다른 때(물리 도달 스텝) — 짧은 저역 숨 덩어리(높은 '탁' 성분 없음, 재윤님 6차 '탁이 아니라')
+  airHit(power = 1) {
+    if (!this.ok) return;
+    const t0 = this.ctx.currentTime;
+    const src = this.noise(0.12);
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1500, t0);
+    lp.frequency.exponentialRampToValueAtTime(240, t0 + 0.1);
+    const g = this.ctx.createGain();
+    this.env(g, t0, 0.004, 0.08 + 0.12 * Math.min(1.2, power), 0.09);
+    src.connect(lp).connect(g).connect(this.master);
+  }
+
   // 딱지가 책상에 '탁' 떨어지는 소리
   clack(intensity = 1) {
     if (!this.ok) return;

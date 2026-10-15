@@ -306,6 +306,9 @@ function nlerp(a, b, k) {
 //   input 을 생성자에 주면 곧바로 fire (P0 와 같은 한 번 호출, 호출 순서·난수 소비가 같아 기록이 바이트 단위로 같다 — pvpsync 로 확인)
 export class ShotRun {
   constructor({ ids, seeds, input, cardOf, heavy, tune, overShake = 1, track }) {
+    // 실험 jetLag(바람 도달 시간, 06 §8.10 · BLOCKERS G12)는 솔로 시험 토글 전용. shotSimV 는 전역 TUNE 만 해시하고 여기는 tune 을 안 넘기므로
+    // 한쪽만 켜면 버전은 같은데 해시가 갈라진다(E10 뒤 검증이 조용히 실패) → PvP 에 넣으려면 방 문서·두 쪽 tune·shotSimV·pvp-check 를 먼저 바꿀 것
+    if (tune && tune.jetLag != null) throw new Error('ShotRun: jetLag 는 솔로 시험 전용 — PvP 금지');
     const t = (this.table = Table.fromTurnState([...ids].sort((a, b) => a - b), seeds.stack, { cardOf, heavy, tune }));
     this.ids = t.discs.map(pidOf);
     this.seeds = { ...seeds };
@@ -320,6 +323,7 @@ export class ShotRun {
   // 놓는 순간: 녹화 시작(pre) → 숨 해석(puffSeed) → 바람
   fire(input) {
     if (this.fired) throw new Error('ShotRun.fire: 이미 쐈다');
+    if (input && input.jetLag != null) throw new Error('ShotRun.fire: jetLag 는 솔로 시험 전용 — PvP 금지');
     this.fired = true;
     const t = this.table;
     this.input = { ...input };
@@ -336,6 +340,7 @@ export class ShotRun {
     const aim = { x: c.x - D.x * back + side.x * lat, y: shot.h, z: c.z - D.z * back + side.z * lat };
     this.aim = aim;
     t.blow({ aim, dir: { x: D.x, z: D.z }, power: shot.power, blast: shot.blast || 0, ...(input.mouthY != null ? { mouthY: input.mouthY } : {}) });
+    if (t.air || t.puff?.lag) throw new Error('ShotRun.fire: jetLag 가 켜진 숨 — PvP 금지'); // 위 blow 는 jetLag 를 안 넘긴다(방어)
     this.judge = { n: 0, quiet: 0 };
     return this;
   }

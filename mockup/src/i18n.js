@@ -62,6 +62,13 @@ const D = {
     diagChannel: 'Haptic channel', diagSentAck: 'sent / answered', diagDrops: 'dropped', diagNoAck: 'no answer', diagNoVib: 'not supported on this device',
     diagAppSess: 'App-side session (ref.)', diagRoute: 'App-side output (ref.)', diagVol: 'volume', diagHapRec: 'Haptics while recording (app side)', diagOther: 'Other audio playing (ref.)',
     diagHw: 'Device', diagHaptics: 'haptics', diagLowPower: 'Low Power', diagAt: 'Tested at',
+    // 실험 '바람 도달 시간'(06 §8.10·§8.11 · BLOCKERS G12, ⚙ 맨 위 · 화면 수치 표시)
+    expTitle: 'Experiment: wind travel time', expHow: 'Adds the time the breath takes to travel from your mouth to the pile (physics ~0.08 s) so you can feel it. Solo, touch only: always off in Friend matches (PvP) and in mic mode.',
+    exp_jetLag: 'Travel delay', exp_airFx: 'Air-front effects', exp_hsCut: 'Shorter freeze', exp_airLog: 'Show release→move ms', expOn: 'ON', expOff: 'OFF',
+    expNote: 'Effects ON: at release you hear "puff" and a ring leaves your mouth; when it reaches the pile the hit-freeze, shockwave, strong vibration, hit sound and slow-mo happen (OFF = everything at breath start, as now). Shorter freeze: the freeze is cut by the travel time. Over-blow (1.2) sends about 3–4%p more out of the circle (model flaw, not adopted yet).',
+    expFxNeedsLag: 'Effects only show while the delay is ON.', expCutNeedsFx: 'Shorter freeze only works with delay + effects ON.', expMicNote: 'Off in mic mode.',
+    expRead: 'Release→first visible move', expHs: 'freeze', expHsHit: 'hit-freeze', expPhys: 'physics', expHit: 'wind hit', expMove: 'first move', expLagShort: 'delay', expFxAir: 'air front', expFxNow: 'current fx', expCutShort: 'shorter freeze',
+    expNone: 'no motion', expRecent: 'recent', expBadge: 'Experiment ON', expMicOff: 'delay off (mic mode)', expFxNeedsLagShort: 'fx needs delay',
     rivals: ['Minsu', 'Jiwoo', 'Haneul', 'Dojun', 'Seoyeon'],
   },
   ko: {
@@ -123,6 +130,13 @@ const D = {
     diagChannel: '햅틱 채널', diagSentAck: '보냄 / 응답', diagDrops: '못 보냄', diagNoAck: '응답 없음', diagNoVib: '이 기기 미지원',
     diagAppSess: '앱 쪽 세션(참고)', diagRoute: '앱 쪽 출력(참고)', diagVol: '음량', diagHapRec: '녹음 중 햅틱 허용(앱 쪽)', diagOther: '다른 소리 재생 중(참고)',
     diagHw: '기기', diagHaptics: '햅틱', diagLowPower: '저전력 모드', diagAt: '시험 시각',
+    // 실험 '바람 도달 시간'(06 §8.10·§8.11 · BLOCKERS G12, ⚙ 맨 위 · 화면 수치 표시)
+    expTitle: '실험: 바람 도달 시간', expHow: '바람이 입에서 더미까지 가는 시간(물리 약 0.08초)을 넣어 손맛을 봐요. 혼자 하기·터치 전용이에요 — 대결(PvP)과 마이크 모드에선 늘 꺼져요.',
+    exp_jetLag: '도달 지연', exp_airFx: '공기 앞머리 연출', exp_hsCut: '멈칫 줄이기', exp_airLog: '놓기→움직임 ms 보기', expOn: '켬', expOff: '끔',
+    expNote: '연출 켬: 놓는 순간 "푸"와 함께 입에서 고리가 날아가고, 더미에 닿을 때 멈칫·충격파·강한 진동·퍽·슬로모가 나와요(끔 = 지금처럼 숨 시작에 한꺼번에). 멈칫 줄이기: 공기가 가는 시간만큼 멈칫을 줄여요. 과한 숨(1.2)은 원 밖이 약 3~4%p 늘어요(모델 결함, 아직 물리 채택 전).',
+    expFxNeedsLag: '연출은 도달 지연을 켰을 때만 보여요.', expCutNeedsFx: '멈칫 줄이기는 지연·연출을 둘 다 켰을 때만 돼요.', expMicNote: '마이크 모드에선 꺼져요.',
+    expRead: '놓기→보이는 첫 움직임', expHs: '멈칫', expHsHit: '충돌 멈칫', expPhys: '물리', expHit: '바람 닿음', expMove: '첫 움직임', expLagShort: '지연', expFxAir: '공기 앞머리', expFxNow: '지금 연출', expCutShort: '멈칫 줄임',
+    expNone: '움직임 없음', expRecent: '최근', expBadge: '실험 켬', expMicOff: '지연 꺼짐(마이크 모드)', expFxNeedsLagShort: '연출은 지연 켤 때만',
     rivals: ['민수', '지우', '하늘', '도준', '서연'],
   },
 };

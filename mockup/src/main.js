@@ -65,11 +65,38 @@ let profile = Store.load();
 profile.cue = Object.assign({ breath: 0, bBig: 0, height: 0, side: 0, star: 0, prev: null }, profile.cue || {});
 profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.cue.relapse || {});
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1 };
+// jetLag·airFx·hsCut·airLog = 실험 '바람 도달 시간'(아래 '실험' 절). 슬라이더가 아니라 ⚙ 맨 위 실험 칸의 스위치로 바꾼다(EXP_KEYS). 초기화하면 끔
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0 };
+const EXP_KEYS = new Set(['jetLag', 'airFx', 'hsCut', 'airLog']);
 const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
 // 9차: 콩닥 숨 1(차분)을 기본으로(재윤님 '1 차분이 지금보다 괜찮다') — 저장된 튜닝값도 한 번 옮긴다
 if ((profile.settings.feelV || 0) < 9) { profile.settings.feel = { ...(profile.settings.feel || {}), beat: 1 }; profile.settings.feelV = 9; Store.save(profile); }
 const feel = { ...TUNE_DEFAULTS, ...(profile.settings.feel || {}) };
+// ── 실험: 바람 도달 시간 (docs/research/06-own-slowmo.md §8.10·§8.11 · BLOCKERS G12 — 사전 등록 판정 통과, 물리 채택 아님) ──
+// 재윤님이 손맛을 보고 게임 물리에 넣을지 정하는 솔로 전용 시험 토글(기본 끔). 지연(끔/켬) × 연출(지금 그대로/공기 앞머리) + 멈칫 줄이기.
+//  feel.jetLag 0 | 0.02(화면 s/u): 솔로 blow() 만 table.blow 에 숨 인자로 넘긴다(sim.js armJetLag = simsweep 상수 자세 경로 비트 동일, tools/jetlagcheck.mjs).
+//    값은 사전 등록이 고른 0.02 하나만 받는다(저장값·주소 모두 — 그 밖은 0). 판정을 통과한 것은 이 값뿐이다.
+//    PvP(ShotRun)·봇·레벨 보정은 언제나 v1 — turn.js 가 jetLag 를 단언으로 막고, 대결 화면에선 expLag() 가 0.
+//    마이크 모드도 0(06 §8.10 '마이크는 끔부터, 터치에서 먼저 시험' — 실제 숨이 놓기보다 먼저라 지연이 겹친다).
+//    게임 기하(입 거리 2.6 고정)에서는 도달이 늘 물리 약 83 ms = '+9스텝 상수 지연'과 같다. 돌풍 1.2 원 밖 약 +3~4%p(모델 결함, 안 고침).
+//  feel.airFx 0 | 1: 공기 앞머리 연출(지연이 켜졌을 때만 뜻이 있다). 놓는 순간(0 ms) 입 쪽 단서(입술·볼·'푸'·가벼운 진동)와 물리·와류 고리가 함께 출발,
+//    더미 쪽 단서(충격파·반짝이·번쩍·흔들림·강한 진동·'퍽')·카메라 물러남·슬로모는 물리 도달 스텝에. 히트스톱(멈칫)도 놓을 때가 아니라 도달(충돌 멈칫)에.
+//    0 이면 지금 연출 그대로(지연만 켜면 '지금 연출 + 지연'을 비교할 수 있게).
+//  feel.hsCut 0 | 1: 멈칫 줄이기(공기 앞머리 연출에서만). 충돌 멈칫 = max(0, 멈칫 − 공기 이동 벽시계) → 놓기~움직임이 지금과 비슷해진다(06 §8.10 '이동 시간만큼 줄이기')
+//  feel.airLog 0 | 1: 마지막 내 숨의 '놓기 → 보이는 첫 움직임' 벽시계 ms 를 화면 위에 표시(재윤님이 수치를 인용할 수 있게)
+//  브라우저: 주소 ?jetlag=0.02&airfx=1&hscut=1&airlog=1 (이번 실행에만. ⚙ 완료를 누르면 저장). ?jetlag 만 쓰면 0.02
+const JET_LAG_TEST = 0.02; // 사전 등록이 고른 값(tools/coresweep/data/react3/choice3.json) — 받는 값은 이것과 0 뿐
+const expBit = (v) => (+v >= 0.5 ? 1 : 0);
+function expSanitize() { // 저장값·주소·옛 빌드 값이 무엇이든 숨을 막지 않게: jetLag ∈ {0, 0.02}, 스위치 ∈ {0, 1}
+  feel.jetLag = +feel.jetLag === JET_LAG_TEST ? JET_LAG_TEST : 0;
+  for (const k of ['airFx', 'hsCut', 'airLog']) feel[k] = expBit(feel[k]);
+}
+{
+  const jl = param('jetlag');
+  if (jl != null) { if (jl === '' || +jl === JET_LAG_TEST) feel.jetLag = JET_LAG_TEST; else if (+jl === 0) feel.jetLag = 0; else console.warn('[실험] jetlag 값 무시(0 · 0.02 만 받음):', jl); }
+  for (const [q, k] of [['airfx', 'airFx'], ['hscut', 'hsCut'], ['airlog', 'airLog']]) { const v = param(q); if (v != null) feel[k] = v === '' ? 1 : expBit(v); }
+  expSanitize();
+}
 // 9차 물안경(재윤님: '초록 가이드는 아이템을 쓰면 보이게'): 이번 숨에 초록 구간이 보이는 아이템. 평생 첫 3숨은 무료(튜토리얼)
 profile.items = Object.assign({ goggles: 3 }, profile.items || {});
 let gogglesOn = false;
@@ -1115,7 +1142,7 @@ function hideGizmo() {
 // ── 숨 줄기 (재윤님 피드백 2: '입 → 바람 → 딱지' 인과를 눈으로) ─────────────
 // 당기는 동안: 입과 조준점 사이에 숨 줄기가 생기고 공기가 입으로 빨려 들어간다(들숨).
 // 놓으면: 줄기가 번쩍이며 공기가 조준점으로 쏟아진다(날숨). 이후 3D 에선 가장자리 밑으로 공기가 파고드는 입자.
-const breath = { mode: 'off', p: 0, t: 0, who: 'me', aim: null, ratio: 1 };
+const breath = { mode: 'off', p: 0, t: 0, who: 'me', aim: null, ratio: 1, air: null }; // air = 실험 공기 앞머리 연출의 숨(airShot)
 function drawBreath(dt) {
   const cv = $('#breath');
   const ctx = cv.getContext('2d');
@@ -1127,16 +1154,28 @@ function drawBreath(dt) {
   const r = $('#puffWrap').getBoundingClientRect();
   let mx = (r.left + r.width * 0.5) * dpr, my = (r.top + r.height * 0.68) * dpr;
   if (fpvOn() && puffer.who === 'me' && breath.who === 'me') { mx = W / 2; my = H - 0.05 * H; } // 1인칭: 내 입술에서 (얼굴 숨김과 같은 조건)
-  const v = breath.aim.clone().project(camera);
-  const ax = (v.x * 0.5 + 0.5) * W, ay = (-v.y * 0.5 + 0.5) * H;
+  // 실험 공기 앞머리 연출(airShot): 줄기 머리 = 와류 고리(공기 앞머리)의 화면 자리 → 앞머리가 하나(고리와 같은 시계·같은 자리).
+  //   흐려짐·'퍽' 방사선 시계는 충돌 멈칫이 끝난 뒤부터. 약한 숨은 고리가 흩어진 자리(aStop)에서 위로 흩어짐. 연출 끔이면 아래는 예전 그대로
+  const A = breath.mode === 'blow' && breath.air && breath.air === airShot && airShot.aStop ? airShot : null;
+  let ax, ay, U = 1, bt = breath.t;
+  if (A) {
+    const aD = airFront(A);
+    expP.set(A.o.x + A.d.x * aD, A.o.y + A.d.y * aD, A.o.z + A.d.z * aD).project(camera);
+    ax = (expP.x * 0.5 + 0.5) * W; ay = (-expP.y * 0.5 + 0.5) * H;
+    U = clamp(aD / A.aFront, 0, 1);
+    bt = A.arrAt == null ? 0 : Math.max(0, (performance.now() - A.arrAt - (A.hsImpact || 0)) / 1000);
+  } else {
+    const v = breath.aim.clone().project(camera);
+    ax = (v.x * 0.5 + 0.5) * W; ay = (-v.y * 0.5 + 0.5) * H;
+  }
   const p = clamp(breath.p, 0, 1.3);
   const dx = ax - mx, dy = ay - my, L = Math.hypot(dx, dy) || 1;
   const nx = -dy / L, ny = dx / L;
-  const w0 = (4 + p * 8) * dpr, w1 = (12 + p * 34) * dpr;
+  const w0 = (4 + p * 8) * dpr, w1 = (12 + p * 34) * dpr, wh = A ? w0 + (w1 - w0) * U : w1;
   let alpha;
   if (breath.mode === 'charge') alpha = 0.08 + 0.2 * Math.min(1, p);
   else {
-    const k = breath.t / 0.55;
+    const k = bt / 0.55;
     if (k >= 1) { breath.mode = 'off'; return; }
     alpha = 0.6 * (1 - k);
   }
@@ -1146,34 +1185,35 @@ function drawBreath(dt) {
   grad.addColorStop(1, `rgba(215,243,255,${alpha * 0.55})`);
   ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.moveTo(mx + nx * w0, my + ny * w0); ctx.lineTo(ax + nx * w1, ay + ny * w1);
-  ctx.lineTo(ax - nx * w1, ay - ny * w1); ctx.lineTo(mx - nx * w0, my - ny * w0);
+  ctx.moveTo(mx + nx * w0, my + ny * w0); ctx.lineTo(ax + nx * wh, ay + ny * wh);
+  ctx.lineTo(ax - nx * wh, ay - ny * wh); ctx.lineTo(mx - nx * w0, my - ny * w0);
   ctx.closePath(); ctx.fill();
   const blow = breath.mode === 'blow';
   const N = blow ? 26 : 16;
   ctx.lineCap = 'round';
   // 실패 서명(글자 없이 원인 보이기): 숨 부족 = 닿기 전에 흐려지며 위로 흩어짐 / 과호흡 = 지그재그로 흔들림
   const weak = blow && breath.ratio < 0.75;
-  const reach = weak ? 0.45 + 0.55 * (breath.ratio / 0.75) : 1;
+  const reach = A ? 1 : weak ? 0.45 + 0.55 * (breath.ratio / 0.75) : 1; // 공기 앞머리: reach 는 머리(고리) 자리에 이미 들어 있음
   const zig = blow && breath.ratio > 1.1 ? Math.min(1, (breath.ratio - 1.1) * 4) : 0;
   for (let i = 0; i < N; i++) {
-    let u = blow ? Math.min(reach, breath.t * 3 + (i / N) * 0.55) : 1 - ((breath.t * (0.5 + p * 0.6) + i / N) % 1);
+    const uRaw = A ? 1 - 0.55 * (i / N) + bt * 3 : breath.t * 3 + (i / N) * 0.55; // 공기 앞머리: 줄기들이 머리 뒤에 늘어섬
+    let u = blow ? Math.min(reach, uRaw) : 1 - ((breath.t * (0.5 + p * 0.6) + i / N) % 1);
     const off = Math.sin(i * 12.9898) * 0.85 + zig * Math.sin(u * 18 + breath.t * 40) * 1.4;
-    const wl = w0 + (w1 - w0) * u;
+    const wl = w0 + ((A ? wh : w1) - w0) * u;
     let x = mx + dx * u + nx * off * wl, y = my + dy * u + ny * off * wl;
-    if (weak && u >= reach - 0.02) y -= (breath.t * 3 + (i / N) * 0.55 - reach) * 120 * dpr; // 힘이 빠져 위로 흩어짐
+    if (weak && u >= reach - 0.02) y -= (uRaw - reach) * 120 * dpr; // 힘이 빠져 위로 흩어짐
     const len = (blow ? 30 : 9) * dpr * (0.5 + p);
     const sgn = blow ? 1 : -1;
-    ctx.strokeStyle = `rgba(255,255,255,${blow ? 0.95 * (1 - breath.t / 0.55) : 0.55})`;
+    ctx.strokeStyle = `rgba(255,255,255,${blow ? 0.95 * (1 - bt / 0.55) : 0.55})`;
     ctx.lineWidth = (blow ? 3.2 : 2) * dpr;
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - (dx / L) * len * sgn, y - (dy / L) * len * sgn); ctx.stroke();
   }
-  if (blow && breath.t < 0.3) {
-    // 조준점에 '퍽' 방사선
-    ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - breath.t / 0.3)})`;
+  if (blow && bt < 0.3 && (!A || (A.arrAt != null && !A.weak))) {
+    // 조준점에 '퍽' 방사선 (공기 앞머리 연출이면 공기가 더미에 닿은 뒤, 충돌 멈칫 동안은 첫 모습 그대로)
+    ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - bt / 0.3)})`;
     ctx.lineWidth = 3 * dpr;
     for (let i = 0; i < 10; i++) {
-      const a = (i / 10) * Math.PI * 2, r0 = (10 + breath.t * 160) * dpr, r1 = r0 + 14 * dpr;
+      const a = (i / 10) * Math.PI * 2, r0 = (10 + bt * 160) * dpr, r1 = r0 + 14 * dpr;
       ctx.beginPath(); ctx.moveTo(ax + Math.cos(a) * r0, ay + Math.sin(a) * r0); ctx.lineTo(ax + Math.cos(a) * r1, ay + Math.sin(a) * r1); ctx.stroke();
     }
   }
@@ -1329,6 +1369,7 @@ function frame(now) {
   let dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   if (now < hitStopUntil) dt = 0;
+  expSlowKick(now); // 실험 공기 앞머리 연출: 충돌 멈칫이 끝난 첫 프레임에 슬로모(끄면 아무것도 안 함)
   // 슬로모
   const targetScale = now < slowUntil ? feel.slow : 1;
   timeScale = lerp(timeScale, targetScale, targetScale < timeScale ? 0.5 : 0.08);
@@ -1342,6 +1383,12 @@ function frame(now) {
       acc -= table.T.dt;
       simWatch.simTime += table.T.dt;
       n++;
+      // 실험(바람 도달 시간): 첫 바람·첫 움직임 측정, 공기가 처음 닿은 스텝에서 더미 쪽 단서(공기 앞머리 연출이면 충돌 멈칫 → 이 프레임 스텝을 여기서 멈춤)
+      const A = airShot;
+      if (A?.started && !match?.net) {
+        expStep(A, now);
+        if (A.lag && A.arrPhys == null && table.air?.arrivedT != null && expArrive(A)) break;
+      }
     }
     syncMeshes();
     // 가장자리 밑으로 파고든 공기 → 위로 들어 올리는 입자 (왜 넘어가는지 보이게)
@@ -1359,6 +1406,7 @@ function frame(now) {
     watchSim();
   }
   if (match?.net) netFrame(dt, now); // PvP: 미리 시뮬·궤적 재생(솔로는 안 지나감)
+  expFrame(); // 실험(바람 도달 시간): 와류 고리·부는 얼굴 유지·수치 표시. 끄면 표시만 숨김
   // 트윈
   stepTweens(dt);
   fx.update(dt * (0.4 + 0.6 * timeScale));
@@ -1938,8 +1986,8 @@ function playerShot() {
       myTurn.on = false;
       myTurn.until = shot ? performance.now() + 650 : 0; // 불고 난 뒤 잠깐 볼이 꺼지는 모습까지
       hideCues();
-      camAimGoal = 0; // 불고 나면 뒤집히는 장면을 보도록 원래 시점으로
-      camStrafeGoal = 0;
+      // 불고 나면 뒤집히는 장면을 보도록 원래 시점으로. 실험 공기 앞머리 연출이면 공기가 더미에 닿을 때부터(blow → A.onArrive)
+      if (!(shot && expAirOn())) { camAimGoal = 0; camStrafeGoal = 0; }
       cancelAnimationFrame(raf);
       resetPouch();
       document.removeEventListener('visibilitychange', onVis);
@@ -2142,7 +2190,204 @@ function breathFeedback(ratio, who, forceKey) {
   el._t = setTimeout(() => { el.hidden = true; }, 1600);
 }
 
+// ── 실험: 바람 도달 시간 — 숨 하나의 상태 (위 TUNE_DEFAULTS 아래 '실험' 주석 · 06 §8.10·§8.11 · BLOCKERS G12) ──
+let shotSeq = 0;
+let airShot = null; // 지금(마지막) 솔로 숨: { seq, who, lag, air, cut, relT, hs, started, arrPhys, arrAt, hsImpact, hitPhys, movePhys, moveWall, ring, meas, ... }
+let expMine = null; // 수치 표시는 '내' 마지막 숨(상대 차례에도 그대로 보임)
+const expHist = []; // 최근 '내' 숨의 '놓기 → 보이는 첫 움직임' 벽시계 ms (없음 = null). 상대(AI) 숨은 안 넣는다(기준이 '놓기'가 아니라 조준 연출 뒤)
+const EXP_MOVE_PX = 3; // 보이는 첫 움직임: 기준 자리(아래 expStep) 테두리 점이 지금 카메라로 화면에서 3 CSS px 움직인 첫 스텝(슬로모 중에도 같은 눈금)
+const EXP_MOVE_D = 0.03; // 물리 첫 움직임(u, 3D) = react3 첫 움직임 FM 과 같은 크기 — 수치 둘째 줄(물리 ms)
+function expMicOn() { return micEnabled && mic.ready; }
+// 이 숨에 실제로 쓸 지연: 대결(PvP)·마이크 모드면 언제나 0(turn.js 도 단언). 값은 0.02 하나(expSanitize)
+function expLag() { return match?.net || expMicOn() ? 0 : feel.jetLag === JET_LAG_TEST ? JET_LAG_TEST : 0; }
+function expAirOn() { return expLag() > 0 && feel.airFx >= 0.5; }
+// 이 숨의 물리 시각(화면 초): 숨 시작(table.blow) 전 0 · 다음 숨이 시작되거나 버리면 Infinity(옛 연출 끝). 스텝 사이는 acc 로 보간
+function airClock(A) {
+  if (A !== airShot) return Infinity;
+  if (!A.started) return 0;
+  return simWatch.simTime + (table ? Math.min(acc, table.T.dt) : 0);
+}
+// 화면에 보이는 공기 앞머리(제트 축 거리 u): 물리 시계 × A.vDisp, aStop(더미 앞면 = 조준점, 약한 숨은 그 reach 비율)에서 멈춤.
+//   도달 규칙(sim.js)은 딱지 '중심'(앞면보다 약 1~1.5 u 뒤, aMin)이라 1/jetLag 그대로 날리면 고리가 앞면에 먼저 닿아 약 2프레임 서 있다가 충돌한다
+//   → 그 멈춤이 렉처럼 읽히지 않게 vDisp = 앞면 거리 / 물리 도달 스텝 끝 시각(≈ aMin·jetLag + 1스텝) ≈ 0.6/jetLag: 고리가 도달 프레임에 앞면에 닿는다(시각은 물리 그대로)
+function airFront(A) { return Math.min(airClock(A) * A.vDisp, A.aStop); }
+function pufferIdle() { puffer.mode = 'idle'; puffer.p = 0; puffer.aimX = 0; $('#puffWrap').classList.remove('ai'); puffer.who = 'me'; }
+// 첫 움직임 측정(feel.airLog): 숨 전(정지) 테두리 점(위·아래 면 × 8 방향)
+const EXP_RIM = Array.from({ length: 16 }, (_, j) => new THREE.Vector3(Math.cos((j >> 1) * Math.PI / 4) * DISC_R, (j & 1 ? 0.5 : -0.5) * DISC_H, Math.sin((j >> 1) * Math.PI / 4) * DISC_R));
+const expQ = new THREE.Quaternion(), expV = new THREE.Vector3(), expP = new THREE.Vector3();
+function expRim(d) { const p = d.body.translation(), q = d.body.rotation(); expQ.set(q.x, q.y, q.z, q.w); return EXP_RIM.map((v) => v.clone().applyQuaternion(expQ).add(expV.set(p.x, p.y, p.z))); }
+function expPx(v) { expP.copy(v).project(camera); return [(expP.x * 0.5 + 0.5) * window.innerWidth, (-expP.y * 0.5 + 0.5) * window.innerHeight]; }
+function expStep(A, now) {
+  if (A.hitPhys == null && table.lastHits?.some((h) => h.s > 0)) A.hitPhys = simWatch.simTime; // 바람(세기 > 0)이 처음 닿은 스텝 끝(react3 'arr' 와 같은 뜻)
+  const M = A.meas;
+  if (!M) return;
+  // 화면 기준 자리: 지연 숨이면 '공기가 처음 닿은 스텝의 시작' 자리(그 전 83 ms 동안 정지 더미가 약 1.5 px 기어가는 것을 공기 탓으로 세지 않게).
+  //   지연 없음이면 숨 시작 자리(바람이 첫 스텝부터 닿으니 같은 뜻). 물리 ms(3D 0.03 u)는 react3 처럼 늘 숨 시작 자리 기준
+  const wait = A.lag > 0 && !A.measPx;
+  if (wait && table.air?.arrivedT != null) A.measPx = A.pre || M; // 이 스텝이 도달 스텝
+  if (A.moveWall != null && A.movePhys != null) return;
+  const PX = A.lag > 0 ? A.measPx : M;
+  const pre = A.lag > 0 && !A.measPx ? new Map() : null;
+  for (const d of table.liveDiscs()) {
+    const ref = M.get(d.id);
+    if (!ref || d.off) continue;
+    const cur = expRim(d);
+    if (pre) pre.set(d.id, cur);
+    const refPx = PX?.get(d.id);
+    for (let j = 0; j < cur.length; j++) {
+      if (A.movePhys == null && cur[j].distanceTo(ref[j]) >= EXP_MOVE_D) A.movePhys = simWatch.simTime;
+      if (A.moveWall == null && refPx) { // 같은 (지금) 카메라로 기준·지금 자리를 투영 → 카메라가 움직여도 딱지 움직임만 잰다
+        const p0 = expPx(refPx[j]), p1 = expPx(cur[j]);
+        if (Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) >= EXP_MOVE_PX) A.moveWall = now - A.relT;
+      }
+    }
+  }
+  if (pre) A.pre = pre;
+  if (A.moveWall != null) expRecord(A);
+}
+function expRecord(A) {
+  if (A.logged) return;
+  A.logged = true;
+  if (A.who !== 'me') return;
+  expHist.unshift(A.moveWall != null ? Math.round(A.moveWall) : null);
+  if (expHist.length > 6) expHist.length = 6;
+}
+// 공기가 처음 더미에 닿은 스텝(sim.js table.air.arrivedT). 공기 앞머리 연출이면 더미 쪽 단서·충돌 멈칫을 여기서 → true(이 프레임 스텝을 멈춤)
+function expArrive(A) {
+  A.arrPhys = simWatch.simTime;
+  A.arrAt = performance.now();
+  if (!A.air || !A.onArrive) return false;
+  A.onArrive();
+  return true;
+}
+// 시동 와류 고리: 놓는 순간 입(제트 원점)에서 나가 물리 시계로(airFront) 날아가 도달 스텝에 더미 앞면에 닿는다. 반경 = 제트 폭(jetR0 + a·jetSpread).
+// 충돌 멈칫 동안 앞면에 그대로 → 멈칫이 끝나면 퍼지며 사라짐. 약한 숨은 reach 에서 흩어짐.
+// 밝은 하늘색 + 얇은 남색 테두리(밝은 나무 바닥·흰 딱지 위 대비, 흰 조준 고리와 다르게)
+let ringLive = 0; // 장면에 있는 고리 수(시험용: 대결 중엔 늘 0)
+function ringStart(A) {
+  const T = table.T;
+  const mk = (tube, color) => new THREE.Mesh(new THREE.TorusGeometry(1, tube, 10, 48), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false }));
+  const edge = mk(0.2, 0x123a5c), core = mk(0.12, 0xc8f0ff);
+  edge.renderOrder = 3; core.renderOrder = 4;
+  const grp = new THREE.Group();
+  grp.add(edge, core);
+  grp.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(A.d.x, A.d.y, A.d.z));
+  grp.visible = false;
+  scene.add(grp);
+  ringLive++;
+  A.ring = { grp, edge, core, r0: T.jetR0, sp: T.jetSpread };
+}
+function ringStop(A) {
+  const R = A?.ring;
+  if (!R) return;
+  scene.remove(R.grp);
+  for (const m of [R.edge, R.core]) { m.geometry.dispose(); m.material.dispose(); }
+  ringLive--;
+  A.ring = null;
+}
+function ringUpdate(A) {
+  const R = A.ring, w = performance.now();
+  const aRaw = airClock(A) * A.vDisp, a = Math.min(aRaw, A.aStop);
+  let op = 0.66 * Math.min(1, a / 0.35), sc = 1;
+  if (A.weak) {
+    op *= clamp((A.aStop - aRaw) / (0.2 * A.aStop), 0, 1); // 힘이 빠져 더미 앞에서 흩어짐
+    if (aRaw >= A.aStop || A.arrAt != null) return ringStop(A);
+  } else if (A.arrAt != null) {
+    const k = (w - A.arrAt - (A.hsImpact || 0)) / 160; // 충돌 멈칫 동안 0 이하(앞면에 붙은 채), 끝나면 퍼지며 사라짐
+    if (k >= 1) return ringStop(A);
+    if (k > 0) { op *= 1 - k; sc = 1 + 0.7 * k; }
+  }
+  if (!(aRaw < Infinity) || w - A.relT > 4000) return ringStop(A);
+  R.grp.position.set(A.o.x + A.d.x * a, A.o.y + A.d.y * a, A.o.z + A.d.z * a);
+  R.grp.scale.setScalar((R.r0 + a * R.sp) * sc);
+  R.core.material.opacity = op;
+  R.edge.material.opacity = op * 0.5;
+  R.grp.visible = a > 0 && op > 0.005;
+}
+// 프레임 맨 위(슬로모 계산 전): 공기 앞머리 연출의 충돌 멈칫이 끝난 첫 프레임에 슬로모를 건다(지금 연출이 히트스톱 끝에 거는 것과 같은 자리)
+//   카메라 물러남도 여기서(지금 연출이 놓을 때 거는 것을 공기 앞머리 연출은 충돌 멈칫 뒤로 — 멈칫 동안 화면이 미끄러지지 않게)
+function expSlowKick(now) {
+  const A = airShot;
+  if (A?.resumeAt != null && now >= A.resumeAt) {
+    slowUntil = Math.max(slowUntil, A.resumeAt + 120 + 380);
+    A.resumeAt = null;
+    if (A.camHold) { A.camHold = false; camAimGoal = 0; camStrafeGoal = 0; }
+  }
+}
+// 프레임마다: 고리·부는 얼굴 유지·측정 마무리·수치 표시
+function expFrame() {
+  const A = airShot;
+  if (A && (state !== 'match' || match?.net || !table)) { // 판을 떠남·대결 → 버림(얼굴은 화면 전환이 맡음)
+    ringStop(A);
+    if (A.camHold) { camAimGoal = 0; camStrafeGoal = 0; }
+    airShot = null;
+  }
+  if (state !== 'match' || match?.net) expMine = null;
+  if (A && airShot === A && A.started) {
+    if (A.ring) ringUpdate(A);
+    // 부는 얼굴: 공기 앞머리 연출이면 도달 + 숨 끝(물리)까지, 그리고 지금처럼 최소 450 ms
+    if (A.air && !A.faceDone) {
+      const w = performance.now(), end = A.arrPhys != null ? A.arrPhys + table.T.puffDuration : Infinity;
+      if ((w >= A.faceMin && airClock(A) >= end) || w - A.relT > 3000) { A.faceDone = true; pufferIdle(); }
+    }
+    if (A.meas && !A.logged && !simOn) expRecord(A); // 판정까지 안 움직임(약한 숨)
+  }
+  expReadout();
+}
+function expReadout() {
+  const el = (expReadout.el ||= $('#expLog')); // 매 프레임 부름 → 한 번만 찾음
+  if (!el) return;
+  const solo = state === 'match' && !match?.net;
+  const active = solo && (feel.jetLag > 0 || feel.airFx >= 0.5 || feel.hsCut >= 0.5); // 실험이 켜진 채 저장돼 있으면 판 화면에 늘 표시(잊고 손맛을 보지 않게)
+  const show = solo && (feel.airLog >= 0.5 || active);
+  if (el.hidden === show) el.hidden = !show;
+  if (!show) return;
+  const lag = expLag();
+  const mode = lag > 0
+    ? `${t('expLagShort')} ${lag} · ${feel.airFx >= 0.5 ? t('expFxAir') + (feel.hsCut >= 0.5 ? ' · ' + t('expCutShort') : '') : t('expFxNow')}`
+    : feel.jetLag > 0 && expMicOn() ? t('expMicOff') : `${t('expLagShort')} ${t('expOff')}${feel.airFx >= 0.5 ? ' · ' + t('expFxNeedsLagShort') : ''}`;
+  let txt;
+  if (feel.airLog < 0.5) txt = `<span>${t('expBadge')} · ${mode}</span>`; // 수치 끔: 한 줄 표시만
+  else {
+    const A = expMine; // 수치는 내 숨만(상대 숨은 '놓기' 기준이 아님)
+    const ms = (v) => (v == null ? '…' : Math.round(v * 1000));
+    if (!A || !A.meas) txt = `<b>${t('expRead')} —</b><span>${mode}</span>`;
+    else {
+      const mv = A.moveWall != null ? `${Math.round(A.moveWall)} ms` : A.logged ? t('expNone') : '…';
+      const hsTxt = A.air ? `${t('expHsHit')} ${A.hsImpact ?? '…'}/${A.hs}` : `${t('expHs')} ${A.hs}`;
+      txt = `<b>${t('expRead')} ${mv}</b>`
+        + `<span>${hsTxt} · ${t('expPhys')} ${t('expHit')} ${ms(A.arrPhys ?? A.hitPhys)} · ${t('expMove')} ${A.logged && A.movePhys == null ? '–' : ms(A.movePhys)} ms</span>`
+        + `<span>${mode}</span>`
+        + `<span>${t('expRecent')} ${expHist.map((v) => (v == null ? '–' : v)).join(' · ') || '—'}</span>`;
+    }
+  }
+  if (el._txt !== txt) { el._txt = txt; el.innerHTML = txt; }
+}
+
+// 자동 시험용(실험 토글): 마지막 숨의 측정·상태
+window.__puffExp = () => {
+  const A = airShot, el = $('#expLog');
+  return {
+    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
+    breathAir: !!breath.air, rings: ringLive,
+    last: A && { seq: A.seq, who: A.who, lag: A.lag, air: A.air, cut: !!A.cut, hs: A.hs, hsImpact: A.hsImpact ?? null, arrPhys: A.arrPhys ?? null, hitPhys: A.hitPhys ?? null, movePhys: A.movePhys ?? null, moveWall: A.moveWall ?? null,
+      arrWall: A.arrAt != null ? A.arrAt - A.relT : null, faceDone: !!A.faceDone, ring: !!A.ring, logged: !!A.logged, slowLeft: Math.max(0, slowUntil - performance.now()) },
+  };
+};
+// 실험 숨으로 table.blow: 지연은 숨 인자로만(안 넘기면 v1 비트 동일). 값은 expLag() 가 거른 0.02 뿐이라 throw 는 없어야 하지만, 실험 값이 판을 멈추지는 않게 v1 로 다시 분다
+function expBlowTable(args, lag) {
+  if (!(lag > 0)) return table.blow(args);
+  try { return table.blow({ ...args, jetLag: lag }); } catch (e) { console.warn('[실험] jetLag 숨 실패 → v1 로 다시', e); return table.blow(args); }
+}
+
 async function blow(rawShot, who) {
+  // 실험(바람 도달 시간): 솔로만. 지연 끔·연출 끔이면 아래는 예전 그대로(물리도 v1 비트 동일)
+  const lag = expLag();
+  const airOn = lag > 0 && feel.airFx >= 0.5; // 공기 앞머리 연출: 놓는 순간 출발, 더미 쪽 단서·충돌 멈칫·슬로모·카메라는 물리 도달 스텝에
+  ringStop(airShot); // 지난 숨 고리가 남았으면(정상이면 이미 없음)
+  const A = (airShot = { seq: ++shotSeq, who, lag, air: airOn, cut: airOn && feel.hsCut >= 0.5, relT: performance.now(), started: false, camHold: airOn && who === 'me' });
+  if (who === 'me') expMine = A;
+  if (feel.airLog >= 0.5 && !match?.net) A.meas = new Map(table.liveDiscs().filter((d) => !d.off).map((d) => [d.id, expRim(d)])); // 숨 전(정지) 자리
   const shot = resolveShot(rawShot, match.rng);
   const g = shotGeometry(shot);
   if (who === 'me') takeCueSnap(rawShot, shot, g);
@@ -2153,6 +2398,7 @@ async function blow(rawShot, who) {
   }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);
   breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, rawShot.power / sweetHiFor(liveCount())); breath.who = who; breath.ratio = shot.ratio;
+  breath.air = airOn ? A : null; // 숨 줄기(2D) 머리를 고리(공기 앞머리)에 붙임(drawBreath)
   puffer.mode = 'blow';
   puffer.p = shot.power;
   puffer.fill = clamp(rawShot.power / Rules.POUCH_FULL, 0, 1);
@@ -2160,27 +2406,77 @@ async function blow(rawShot, who) {
   puffer.strain = 0; puffer.full = false;
   breath.press = null; breath.full = false; breath.over = false; breath.strain = 0;
   const hs = Math.round(60 + 60 * clamp(shot.ratio ?? 0.8, 0, 1)); // 히트스톱 60~120ms, 숨 세기에 비례 (2라운드 리서치)
-  hitStopUntil = performance.now() + hs;
-  await wait(hs);
-  hideGizmo();
-  sfx.puff(Math.min(1.2, rawShot.power), shot.ratio ?? 1); // '푸' — 약함·초록·셈에 따라 길이·거칠기
-  navigator.vibrate?.(Math.round(20 + shot.power * 30));
-  if (who === 'me') window.__lastShot = { pose: rawShot.pose || 'eye', mouthY: rawShot.mouthY ?? null, power: rawShot.power }; // 테스트용
-  const windFrom = rawShot.mouthY != null ? new THREE.Vector3(g.aim.x - g.dir.x * Rules.LIP_BACK, rawShot.mouthY, g.aim.z - g.dir.z * Rules.LIP_BACK) : g.origin; // 책상 입: 낮은 곳에서 올려 붊
-  fx.wind(windFrom, g.aim, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
-  if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 }); // 너무 낮게: 바닥 먼지
-  fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, g.aim.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
-  shake = 0.18 + rawShot.power * 0.22;
-  flash(0.55 * Math.min(1, rawShot.power));
-  shockwave(table.pileCenter(), rawShot.power);
-  // 물리에 바람 적용
-  table.blow({ aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power, blast: shot.blast || 0, ...(rawShot.mouthY != null ? { mouthY: rawShot.mouthY } : {}) });
-  if (shot.blast > 0.15) {
-    // 너무 센 숨 = 돌풍: 휘잉~ 먼지바람이 더미를 통째로 밀어 버린다 (들어 올리지 못하고 날려 버림)
-    sfx.whoosh();
-    shake += 0.25 * Math.min(1, shot.blast);
-    for (let i = 0; i < 3; i++) fx.emit({ at: { x: g.aim.x, y: 0.15 + i * 0.4, z: g.aim.z }, n: 22, color: 0xd9c7a8, speed: 7 * Math.min(1.2, shot.blast), up: 0.6, life: 0.9, size: 0.38, gravity: 0.5, dir: { x: g.dir.x, y: 0, z: g.dir.z } });
+  A.hs = hs;
+  // 더미 쪽 단서: 지금 연출은 숨 시작(히트스톱 뒤)에. 공기 앞머리 연출이면 물리 도달 스텝에(A.onArrive ← 프레임 루프 expArrive)
+  const pileHit = () => {
+    if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 }); // 너무 낮게: 바닥 먼지
+    fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, g.aim.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
+    shake = 0.18 + rawShot.power * 0.22;
+    flash(0.55 * Math.min(1, rawShot.power));
+    shockwave(table.pileCenter(), rawShot.power);
+  };
+  const pileBlast = () => {
+    if (shot.blast > 0.15) {
+      // 너무 센 숨 = 돌풍: 휘잉~ 먼지바람이 더미를 통째로 밀어 버린다 (들어 올리지 못하고 날려 버림)
+      sfx.whoosh();
+      shake += 0.25 * Math.min(1, shot.blast);
+      for (let i = 0; i < 3; i++) fx.emit({ at: { x: g.aim.x, y: 0.15 + i * 0.4, z: g.aim.z }, n: 22, color: 0xd9c7a8, speed: 7 * Math.min(1.2, shot.blast), up: 0.6, life: 0.9, size: 0.38, gravity: 0.5, dir: { x: g.dir.x, y: 0, z: g.dir.z } });
+    }
+  };
+  const blowArgs = { aim: { x: g.aim.x, y: g.aim.y, z: g.aim.z }, dir: { x: g.dir.x, z: g.dir.z }, power: shot.power, blast: shot.blast || 0, ...(rawShot.mouthY != null ? { mouthY: rawShot.mouthY } : {}) };
+  const windColor = who === 'me' ? 0xffffff : 0xffe7a0;
+  if (!airOn) {
+    // 지금 연출(지연만 켰으면 물리만 늦음): 놓은 뒤 히트스톱 → 숨 시작에 입·더미 단서 모두
+    hitStopUntil = performance.now() + hs;
+    await wait(hs);
+    hideGizmo();
+    sfx.puff(Math.min(1.2, rawShot.power), shot.ratio ?? 1); // '푸' — 약함·초록·셈에 따라 길이·거칠기
+    navigator.vibrate?.(Math.round(20 + shot.power * 30));
+    if (who === 'me') window.__lastShot = { pose: rawShot.pose || 'eye', mouthY: rawShot.mouthY ?? null, power: rawShot.power }; // 테스트용
+    const windFrom = rawShot.mouthY != null ? new THREE.Vector3(g.aim.x - g.dir.x * Rules.LIP_BACK, rawShot.mouthY, g.aim.z - g.dir.z * Rules.LIP_BACK) : g.origin; // 책상 입: 낮은 곳에서 올려 붊
+    fx.wind(windFrom, g.aim, shot.power, windColor);
+    pileHit();
+    // 물리에 바람 적용 (실험 jetLag 는 솔로 시험 토글이 켜졌을 때만 숨 인자로 — 안 넘기면 v1 비트 동일)
+    expBlowTable(blowArgs, lag);
+    pileBlast();
+  } else {
+    // 공기 앞머리 연출: 놓는 순간(0 ms) 입 쪽 단서('푸'·가벼운 톡)·물리·와류 고리·바람 줄기가 함께 출발. 조준 고리는 곧바로 숨김(공기 고리와 헷갈리지 않게)
+    hideGizmo();
+    sfx.puff(Math.min(1.2, rawShot.power), shot.ratio ?? 1);
+    navigator.vibrate?.(10);
+    if (who === 'me') window.__lastShot = { pose: rawShot.pose || 'eye', mouthY: rawShot.mouthY ?? null, power: rawShot.power }; // 테스트용
+    expBlowTable(blowArgs, lag);
+    const air = table.air;
+    const ratio = shot.ratio ?? 1;
+    A.weak = ratio < 0.75; // 숨 줄기(2D)의 '약함' 서명과 같은 기준: 고리가 더미 앞에서 흩어지고 '퍽'·강한 진동 없음
+    if (air) {
+      A.o = air.o; A.d = air.d;
+      A.aFront = Math.max(0.3, (g.aim.x - air.o.x) * air.d.x + (g.aim.y - air.o.y) * air.d.y + (g.aim.z - air.o.z) * air.d.z); // 입 → 조준점(더미 앞면) 축 거리
+      A.aStop = A.aFront * (A.weak ? 0.45 + 0.55 * (ratio / 0.75) : 1);
+      // 화면 공기 앞머리 속도(airFront 주석): 도달 스텝이 끝나는 물리 시각(숨 시각이 aMin·jetLag 를 넘는 첫 스텝 + 1스텝 = jetlagcheck (e))에 앞면
+      const dt = table.T.dt, tArr = (Math.ceil(Math.max(air.aMin, A.aFront) * lag / dt - 1e-9) + 1) * dt;
+      A.vDisp = A.aFront / tArr;
+      A.onArrive = () => {
+        const w = performance.now();
+        A.hsImpact = A.cut ? Math.max(0, Math.round(hs - (w - A.relT))) : hs; // 충돌 멈칫(멈칫 줄이기면 공기 이동 벽시계만큼 뺌)
+        hitStopUntil = w + A.hsImpact;
+        A.resumeAt = w + A.hsImpact; // 멈칫이 끝난 첫 프레임에 슬로모(expSlowKick)
+        pileHit(); pileBlast();
+        if (A.weak) navigator.vibrate?.(15);
+        else { navigator.vibrate?.(Math.round(20 + shot.power * 30)); sfx.airHit(Math.min(1.2, rawShot.power)); }
+      };
+      ringStart(A);
+      // 바람 줄기(3D): 고리와 같은 시계·속도로 고리 뒤에 가늘게 5줄 — 더미 앞면(aStop)을 지나면 0.4 u 안에 녹아 사라지고 고리만 남는다
+      const o3 = new THREE.Vector3(air.o.x, air.o.y, air.o.z), d3 = new THREE.Vector3(air.d.x, air.d.y, air.d.z);
+      fx.wind(o3, o3.clone().addScaledVector(d3, A.aStop), shot.power, windColor, { clock: () => airClock(A), speed: A.vDisp, n: 5, thin: 0.55 });
+    } else { // 지연 숨이 v1 로 떨어짐(expBlowTable) → 지금 연출로 마무리
+      A.air = false; breath.air = null;
+      if (A.camHold) { A.camHold = false; camAimGoal = 0; camStrafeGoal = 0; }
+      pileHit(); pileBlast();
+      navigator.vibrate?.(Math.round(20 + shot.power * 30));
+    }
   }
+  if (A.lag && !table.air) A.lag = 0; // 지연 숨이 v1 로 떨어졌으면(expBlowTable) 측정·표시도 v1 로
   simWatch.revealed = new Set(table.liveDiscs().filter((d) => table.faceUp(d) > 0.5).map((d) => d.id));
   simWatch.count = 0;
   simWatch.glowed = new Set();
@@ -2190,10 +2486,14 @@ async function blow(rawShot, who) {
   simWatch.simTime = 0;
   simWatch.quiet = 0;
   simWatch.vy.clear();
-  slowUntil = performance.now() + 120 + 380; // 날아오르는 순간만 짧게 슬로모(대박 조짐이면 watchSim 에서 연장)
+  // 날아오르는 순간만 짧게 슬로모(대박 조짐이면 watchSim 에서 연장). 공기 앞머리 연출이면 공기가 가는 동안 1배, 충돌 멈칫이 끝나면(expSlowKick)
+  slowUntil = A.air ? 0 : performance.now() + 120 + 380;
   acc = 0;
   simOn = true;
-  setTimeout(() => { puffer.mode = 'idle'; puffer.p = 0; puffer.aimX = 0; $('#puffWrap').classList.remove('ai'); puffer.who = 'me'; }, 450);
+  A.started = true;
+  // 부는 얼굴: 지금은 450 ms 뒤 쉼. 공기 앞머리 연출이면 도달 + 숨 끝(물리)까지 유지(expFrame), 최소 450 ms
+  if (A.air) A.faceMin = performance.now() + 450;
+  else setTimeout(pufferIdle, 450);
 }
 
 function simulate() {
@@ -2713,7 +3013,9 @@ function openTune() {
   sfx.unlock(); sfx.pop();
   const box = $('#tuneRows');
   box.innerHTML = '';
+  box.appendChild(expSection()); // 맨 위: 실험 '바람 도달 시간'(스위치) — 아래 슬라이더 목록에선 뺀다
   for (const k of Object.keys(TUNE_DEFAULTS)) {
+    if (EXP_KEYS.has(k)) continue;
     const [mn, mx, st] = TUNE_RANGE[k];
     const row = document.createElement('label');
     row.className = 'trow';
@@ -2735,14 +3037,37 @@ function openTune() {
   });
   $('#tune').hidden = false;
 }
+// ⚙ 맨 위 실험 칸: '바람 도달 시간'(06 §8.10·§8.11 · BLOCKERS G12). 지연·연출·멈칫 줄이기를 따로 켜서 비교, 수치 표시. 완료를 눌러야 저장(다른 손맛 값과 같음)
+function expSection() {
+  const wrap = document.createElement('div');
+  wrap.className = 'exp';
+  const sw = (k, on, val) => `<button type="button" class="exp-sw${on ? ' on' : ''}" id="exp-${k}" data-k="${k}" aria-pressed="${on}">${t('exp_' + k)} <b>${on ? t('expOn') + (val ? ` · ${val}` : '') : t('expOff')}</b></button>`;
+  const render = () => {
+    const lag = feel.jetLag > 0, fx = feel.airFx >= 0.5, cut = feel.hsCut >= 0.5;
+    const warn = [fx && !lag ? t('expFxNeedsLag') : '', cut && !(lag && fx) ? t('expCutNeedsFx') : '', lag && expMicOn() ? t('expMicNote') : ''].filter(Boolean).join(' ');
+    wrap.innerHTML = `<h3>${t('expTitle')}</h3><p class="exp-how">${t('expHow')}</p>`
+      + `<div class="exp-btns">${sw('jetLag', lag, lag ? feel.jetLag : '')}${sw('airFx', fx)}${sw('hsCut', cut)}${sw('airLog', feel.airLog >= 0.5)}</div>`
+      + `<p class="exp-how">${warn ? `<b>${warn}</b> ` : ''}${t('expNote')}</p>`;
+    wrap.querySelectorAll('.exp-sw').forEach((b) => b.addEventListener('click', () => {
+      sfx.pop();
+      const k = b.dataset.k;
+      if (k === 'jetLag') feel.jetLag = feel.jetLag > 0 ? 0 : JET_LAG_TEST;
+      else feel[k] = feel[k] >= 0.5 ? 0 : 1;
+      render();
+    }));
+  };
+  render();
+  return wrap;
+}
 function closeTune(reset) {
   if (reset) Object.assign(feel, TUNE_DEFAULTS);
+  expSanitize();
   profile.settings.feel = { ...feel };
   Store.save(profile);
   if (reset) openTune(); else $('#tune').hidden = true;
 }
 function tuneSummary() {
-  return Object.entries(feel).map(([k, v]) => `${k}=${(+v).toFixed(2)}`).join(' ');
+  return Object.entries(feel).map(([k, v]) => `${k}=${k === 'jetLag' ? +v : (+v).toFixed(2)}`).join(' ');
 }
 
 // ── 앨범 ───────────────────────────────────────────────
@@ -3204,6 +3529,7 @@ async function netBlowFx(M, raw, shot, who, mine) {
   }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);
   breath.mode = 'blow'; breath.t = 0; breath.p = Math.min(1.2, raw.power / sweetHiFor(liveCount())); breath.who = who; breath.ratio = shot.ratio;
+  breath.air = null; // 대결: 실험 연출 없음(지금 연출 그대로)
   puffer.who = who;
   if (who === 'ai') $('#puffWrap').classList.add('ai');
   puffer.mode = 'blow'; puffer.p = shot.power; puffer.fill = clamp(raw.power / Rules.POUCH_FULL, 0, 1); puffer.ratio = shot.ratio ?? 1;

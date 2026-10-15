@@ -54,11 +54,15 @@ export class Fx {
   }
 
   // 입 → 조준점으로 바람 줄기
-  wind(from, to, power = 1, color = 0xffffff) {
+  // opt.clock·opt.speed(실험 '공기 앞머리 연출', 06 §8.10·§8.11 · G12): 줄기 머리가 fx 시계가 아니라 clock()(물리 시각, 초) × speed(u/s) 를 따라간다
+  //   → 맨 앞 줄기 끝 = 공기 앞머리(입에서 clock·speed u). clock() 이 Infinity 면(다음 숨) 바로 지운다. opt.n 줄기 수(기본 14), opt.thin 굵기 배율.
+  //   안 넘기면 예전 그대로
+  wind(from, to, power = 1, color = 0xffffff, opt = null) {
     const dir = new THREE.Vector3().subVectors(to, from);
     const len = dir.length();
     dir.normalize();
-    for (let i = 0; i < 14; i++) {
+    const N = opt?.n ?? 14;
+    for (let i = 0; i < N; i++) {
       const g = new THREE.CylinderGeometry(0.025, 0.025, 1, 5, 1, true);
       g.rotateZ(Math.PI / 2);
       const m = new THREE.Mesh(g, this.streakMat.clone());
@@ -66,9 +70,10 @@ export class Fx {
       const side = new THREE.Vector3(-dir.z, 0, dir.x);
       const off = side.multiplyScalar((Math.random() - 0.5) * 0.9).add(new THREE.Vector3(0, (Math.random() - 0.5) * 0.5, 0));
       m.userData = { from: from.clone().add(off), dir: dir.clone(), len, t: -i * 0.012, dur: 0.22 + Math.random() * 0.08, power };
+      if (opt?.clock) Object.assign(m.userData, { clock: opt.clock, speed: opt.speed, gap: i * 0.3, half: (0.8 + power * 1.4) / 2, t: 0 });
       m.lookAt(m.position.clone().add(dir));
       m.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dir);
-      m.scale.set(0.8 + power * 1.4, 1, 1);
+      m.scale.set(0.8 + power * 1.4, opt?.thin ?? 1, opt?.thin ?? 1);
       this.scene.add(m);
       this.streaks.push(m);
     }
@@ -112,6 +117,15 @@ export class Fx {
       const m = this.streaks[i];
       const u = m.userData;
       u.t += dt;
+      if (u.clock) {
+        const tip = u.clock() * u.speed - u.gap; // 이 줄기 앞 끝이 입에서 간 거리(u)
+        if (!(tip < u.len + 0.4) || u.t > 3) { this.scene.remove(m); m.geometry.dispose(); m.material.dispose(); this.streaks.splice(i, 1); continue; }
+        if (tip <= 0) { m.visible = false; continue; }
+        m.visible = true;
+        m.position.copy(u.from).addScaledVector(u.dir, tip - u.half);
+        m.material.opacity = 0.6 * (1 - 0.35 * Math.min(1, tip / u.len)) * Math.min(1, Math.max(0, 1 - (tip - u.len) / 0.4));
+        continue;
+      }
       const k = u.t / u.dur;
       if (k >= 1) { this.scene.remove(m); m.geometry.dispose(); m.material.dispose(); this.streaks.splice(i, 1); continue; }
       if (k < 0) { m.visible = false; continue; }

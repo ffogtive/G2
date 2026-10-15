@@ -237,6 +237,19 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .trow b { font-family: var(--display); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
 #tune h2 { margin: 0 0 6px; font-family: var(--display); }
 .diag { border-top: 2px dashed rgba(0,0,0,0.18); margin-top: 12px; padding-top: 2px; }
+/* 실험 '바람 도달 시간'(⚙ 맨 위) + 화면 수치(놓기→보이는 첫 움직임)·켬 표시 — 06 §8.10·§8.11 · BLOCKERS G12 */
+.exp { border: 2px dashed #b9772a; border-radius: 14px; background: rgba(255,214,140,0.25); padding: 6px 10px 4px; margin: 4px 0 10px; text-align: left; }
+.exp h3 { margin: 2px 0 4px; font-family: var(--display); font-size: 1.02rem; }
+.exp-how { font-size: 0.8rem; margin: 2px 0 6px; opacity: 0.85; line-height: 1.35; }
+.exp-btns { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.exp-sw { font-family: var(--body); font-size: 0.88rem; color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; box-shadow: 0 2px 0 var(--ink); cursor: pointer; }
+.exp-sw.on { background: #ffd23f; }
+.exp-sw b { margin-left: 4px; }
+.exp-sw:active { transform: translateY(2px); box-shadow: none; }
+.exp-log { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 78px); left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none; width: max-content; max-width: 94vw;
+  background: rgba(20,12,8,0.72); color: #fff; border-radius: 10px; padding: 4px 9px; font-size: 0.74rem; line-height: 1.3; text-align: center; font-variant-numeric: tabular-nums; }
+.exp-log b { display: block; font-size: 0.95rem; color: #ffd23f; word-break: keep-all; }
+.exp-log span { display: block; opacity: 0.9; word-break: keep-all; overflow-wrap: break-word; }
 .diag-how { font-size: 0.82rem; text-align: left; margin: 2px 0 8px; opacity: 0.85; line-height: 1.35; white-space: pre-line; }
 .diag-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 6px 0; }
 .diag-btns button { font-family: var(--body); font-size: 0.9rem; color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; box-shadow: 0 2px 0 var(--ink); cursor: pointer; }
@@ -356,6 +369,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     </div>
     <div id="puffWrap"><canvas id="puffCanvas" width="340" height="340"></canvas></div>
     <div id="breathFb" class="breath-fb" hidden></div>
+    <div id="expLog" class="exp-log" hidden></div>
     <div id="hint" class="hint" hidden><div class="hand"></div><span id="hintText"></span></div>
     <div id="banner" class="banner" hidden></div>
     <div id="big" class="big" hidden></div>
