@@ -446,10 +446,15 @@ export class Table {
     else env = Math.sin(Math.min(1, P.t / T.puffDuration) * Math.PI); // 0→1→0
     // ── 보정 손잡이(연구용, 06 실물 3판 보정 · ownclips.mjs STAGES=cal). TUNE 에 없음 → 안 넘기면 아래 분기 전부 건너뜀(비트 동일) ──
     //  jetLag (화면 s / u): 제트 수송 지연(얼린 경로). 지금 더미에 닿는 공기는 '축 거리 a × jetLag' 전에 그때의 입 자리·방향·세기로 나온 것.
-    //          prog 경로만. 딱지마다 prog(t − a·jetLag) 의 자세·세기를 쓴다(자세만 앞당기는 'jd' 와 달리 자세도 함께 늦음)
+    //          prog 경로: 딱지마다 prog(t − a·jetLag) 의 자세·세기를 쓴다(자세만 앞당기는 'jd' 와 달리 자세도 함께 늦음)
+    //          상수 자세 경로(blow 기본·blowLip = 게임 Table.blow · 06 §8 반응 시각 회차): 자세가 늘 같으니 늦는 것은 세기뿐 →
+    //            env(t − a·jetLag), t − a·jetLag < 0 이면 그 딱지는 건너뜀(아직 공기가 안 닿음), ≥ puffDuration 이면 0(숨이 끝난 공기).
+    //            a = 같은 규칙(지금 축 위 딱지 '중심'까지 거리). 그래서 blowLip + jetLag ≡ 같은 입·각의 상수 prog(env 는 끝 뒤 0) + jetLag (비트 동일, react3 self3)
+    //          숨은 puffDuration(prog 는 dur) + 12·jetLag 까지 이어진다(축 거리 12 u 의 마지막 공기까지). 키가 없거나 0 이면 아래 분기를 전부 건너뜀(비트 동일)
+    //          잠든 8차 blowTable(반사 바람)은 미지원: 직선 축 거리 (c − o)·d 가 실제 경로(M → F → 테두리) 길이가 아니다 → jetLag 와 함께면 throw
     //  tableCushion (배): 테두리 밑 틈 광선이 책상(고정체)에 닿는 딱지 = 책상과 사이의 공기 쿠션 → tableCushion × lift × exp(−틈/길이) 를 그 위 기둥에 나눠 줌(아래 참고)
     //  cushionFar (u): 들기가 틈이 gapRef 를 넘으면 exp(−(틈 − gapRef)/cushionFar) 로 줄어듦(바닥 효과 — 공중 높이 뜬 딱지는 쿠션이 없다, 로켓 방지)
-    const lag = P.prog && T.jetLag > 0 ? T.jetLag : 0;
+    const lag = T.jetLag > 0 ? T.jetLag : 0;
     const o0 = lag ? { ...P.o } : null, d0 = lag ? { ...P.d } : null;
     // ── 보정 2차 손잡이(연구용, 06 §7 · ownclips.mjs STAGES=pilot2…gate2). TUNE 에 없음 → tune 으로만. 안 넘기면 아래 2차 분기 전부 건너뜀(비트 동일) ──
     // 가설(미검증): 즉시 테두리 들기를 rimShare(6.5~10%)만 남기고, 나머지 들기는 맨 아래 틈의 '상태 있는 공기 쿠션'(cushTau 0.5 화면 s ≈ 실물 156 ms
@@ -460,6 +465,7 @@ export class Table {
     const CF = T.cushTau > 0 ? new Map() : null;
     if (CF && (!this.cush || P.t === 0)) this.cush = new Map();
     const R = P.refl; // 8차 책상 퍼올림(반사 바람). 없으면 아래는 기존 경로 그대로
+    if (lag && R) throw new Error('jetLag: blowTable(반사 바람) 미지원 — 축 거리가 반사 경로 길이가 아님');
     const hits = [];
     for (const d of this.liveDiscs()) {
       const b = d.body;
@@ -469,7 +475,8 @@ export class Table {
         const aC = (c.x - o0.x) * d0.x + (c.y - o0.y) * d0.y + (c.z - o0.z) * d0.z; // 지금 자세 기준 딱지 중심 축 거리
         const te = P.t - Math.max(0, aC) * lag;
         if (te < 0) continue; // 아직 공기가 안 닿음
-        const gl = P.prog(te); this.jetPose(P, gl); env = gl.env;
+        if (P.prog) { const gl = P.prog(te); this.jetPose(P, gl); env = gl.env; }
+        else env = te < T.puffDuration ? Math.sin(Math.min(1, te / T.puffDuration) * Math.PI) : 0; // 상수 자세: v1 봉투를 그 딱지의 도달 시각으로 옮김
       }
       // 입 쪽으로 가장 가까운 가장자리 점: (O - c)를 원판 평면에 투영
       let vx = P.o.x - c.x, vy = P.o.y - c.y, vz = P.o.z - c.z;
@@ -631,7 +638,7 @@ export class Table {
       }
       hits.push({ id: d.id, s, gap, liftF, e, dir: { x: fx, y: P.d.y, z: fz } });
     }
-    if (lag) this.jetPose(P, g0); // 지금 자세로 되돌림(측정 도구가 읽는 P.o·P.d)
+    if (lag && P.prog) this.jetPose(P, g0); // 지금 자세로 되돌림(측정 도구가 읽는 P.o·P.d). 상수 자세는 바뀐 적 없음
     if (CF) this.cushionPass(CF);
     P.t += T.dt;
     if (P.t >= (P.dur ?? T.puffDuration) + (lag ? lag * 12 : 0)) this.puff = null; // 지연이면 마지막 공기(축 거리 12 u)까지 기다림

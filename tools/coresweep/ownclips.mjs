@@ -330,7 +330,8 @@ function rot(q, v) { // sweepmap.mjs rot() 와 같은 식
 
 // ───────────────────────── 한 샷 (sweepmap shot() 과 같은 코드 + 프로그램 주입 + 읽기 전용 기록) ─────────────────────────
 // job = sweepmap job 그대로(표준) 또는 { n, seed, q, spec } (옮김)
-export function shotO(job) {
+// obs(선택, 06 §8 react3): 읽기만 하는 관찰자 { start(t, c0), step(t, k), done() → r.rx }. 안 넘기면 r 은 옛 줄과 바이트 동일
+export function shotO(job, obs) {
   SW.setDiscH(job.H || 0.11);
   const t = new SW.Table(job.seed * 7907 + job.n, job.tune || {});
   t.addPile(Array.from({ length: job.n }, (_, i) => i));
@@ -349,6 +350,7 @@ export function shotO(job) {
     prog = (tt) => { const p = poseAt(al(tt), 'c', geo, M0); return { o: p.o, phi: p.phi, ux: 0, uz: -1, env: br.env(tt) }; };
   }
   t.blowProg({ prog, power: job.q, dur: br.dur });
+  obs?.start(t, c0);
   const live = t.liveDiscs();
   const bottom = live[0];
   const half = Math.floor(job.n / 2);
@@ -378,6 +380,7 @@ export function shotO(job) {
     let crossed = false;
     if (P && P.t > 0 && tTop < 0 && P.d && P.d.z < -1e-6) { const s = (zf - P.o.z) / P.d.z; if (P.o.y + s * P.d.y <= top0) below = true; else if (below) crossed = true; }
     t.step();
+    obs?.step(t, i + 1);
     const up = rot(bottom.body.rotation(), { x: 0, y: 1, z: 0 });
     const tilt = Math.acos(Math.min(1, Math.abs(up.y)));
     if (tilt > maxTiltBottom) maxTiltBottom = tilt;
@@ -431,6 +434,7 @@ export function shotO(job) {
     qmax: qmax.map((v) => +v.toFixed(1)), on: { b10: +on.b10.toFixed(3), t10: +on.t10.toFixed(3), ...(job.cal ? { lo: +on.lo.toFixed(3) } : {}) }, botRise: +botRise.toFixed(3), maxDisc: +maxDisc.toFixed(1),
     dist: +mean(onDesk.map((d) => -(d.body.translation().z - c0.z))).toFixed(2),
   };
+  if (obs) r.rx = obs.done();
   return r;
 }
 
