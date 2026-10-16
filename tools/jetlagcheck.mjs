@@ -1,4 +1,4 @@
-// tools/jetlagcheck.mjs — 실험 '바람 도달 시간'(jetLag, 06 §8.10 · BLOCKERS G12) 게임 이식 대조. 약 20초.
+// tools/jetlagcheck.mjs — 실험 '바람 도달 시간'(jetLag, 06 §8.10 · BLOCKERS G12) 게임 이식 대조. 약 30초.
 //
 // 🧭 가설(확인 대상): mockup/src/sim.js 에 숨 하나짜리 인자로 옮긴 jetLag 는 사전 등록·판정에 쓴 연구 사본
 //   tools/coresweep/simsweep.js(tune.jetLag, 상수 자세 경로)와 게임 경로에서 비트까지 같다. 안 넘기거나 0 이면 v1 과 비트까지 같다.
@@ -16,6 +16,11 @@
 // (d) blowTable(반사 바람) + jetLag 거부 · 범위 밖 jetLag 거부 · PvP ShotRun 에 jetLag(입력·tune) 거부
 // (e) 렌더러용 도달 정보(table.air)는 읽기만: 도달 스텝 전에는 숨 없는 쌍둥이와 매 스텝 같음 · arrivedT = 처음 바람이 처리된 스텝 · 예상 도달(aMin·jetLag)과 1스텝 안
 // (f) 숨 길이 = puffDuration + 12·jetLag 스텝 수
+// 음성 대조(검토 반영 — 위 비교가 다름을 실제로 잡는지, 늘 돈다): 한쪽만 흔들고 (a)·(a2)·(b) 를 그대로 다시 돌려 '같음 0' 이어야 한다.
+//   1 = simsweep tune.jetLag ×1.0001(sim.js 0.02 그대로) · 2 = sim.js blow jetLag ×1.0001(simsweep 0.02 그대로)
+//   3 = (c) 꼴: sim.js jetLag 0.0001 ≢ v1(sim.js 안 넘김) · ≢ simsweep 키 없음 — 숨 인자가 실제로 먹히는지. 같음이 하나라도 있으면 틀림
+// 무딘 비교 시험(BLUNT=허용 오차, 예 `BLUNT=1e-3 node tools/jetlagcheck.mjs`): 자세 비교(eq)를 Object.is 대신 |차이| ≤ 허용 오차로 무디게 하고
+//   기대를 뒤집는다 — 음성 대조 중 하나라도 '못 잡음'이 나와야 맞음(= 음성 대조가 무뎌진 비교를 드러낸다). 모두 잡으면 틀림. 기본(없음) = Object.is
 import * as SW from './coresweep/simsweep.js';
 import * as V1 from '../mockup/src/sim.js';
 import * as Rules from '../mockup/src/rules.js';
@@ -25,7 +30,9 @@ const J0 = 0.02; // 사전 등록이 고른 값(choice3.json)
 const rng32 = (seed) => { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const snap = (t) => t.liveDiscs().flatMap((d) => { const p = d.body.translation(), q = d.body.rotation(); return [p.x, p.y, p.z, q.x, q.y, q.z, q.w, d.off ? 1 : 0]; });
-const eq = (a, b) => a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+const BLUNT = process.env.BLUNT ? Number(process.env.BLUNT) : 0;
+if (process.env.BLUNT && !(BLUNT > 0)) throw new Error(`jetlagcheck: BLUNT 는 양수 허용 오차(예 1e-3): ${process.env.BLUNT}`);
+const eq = BLUNT ? (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) <= BLUNT) : (a, b) => a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
 const thr = (f) => { try { f(); return false; } catch { return true; } };
 
 // 게임 샷 준비(react3 shotG 와 같은 식). lagSW = simsweep 에 tune 으로, lagV1 = sim.js 에 숨 인자로
@@ -74,8 +81,8 @@ await V1.initPhysics();
 const out = [];
 const t0 = Date.now();
 
-// (a) 게임 경로 jetLag 0.02: sim.js(숨 인자) ≡ simsweep(tune)
-{ let ok = 0, tot = 0; const fl = { v1: 0, j: 0 };
+// (a) 게임 경로 jetLag 0.02: sim.js(숨 인자) ≡ simsweep(tune). sw·v1 = 음성 대조용 배수(기본 1 = 그대로), quiet = 실패 줄 안 찍음
+function caseA({ sw = 1, v1 = 1, quiet = false } = {}) { let ok = 0, tot = 0; const fl = { v1: 0, j: 0 };
   const NS = [1, 2, 3, 4, 6, 8, 10, 12, 15, 18, 20, 22];
   const AIMS = [[0.82, 0], [0.6, 0.4], [0.95, -0.4]];
   NS.forEach((n, i) => {
@@ -85,21 +92,22 @@ const t0 = Date.now();
         const seed = 361 + ((i * 7 + r * 13 + (pose === 'low' ? 5 : 0)) % 30);
         const [hf, lat] = AIMS[(i + r + (pose === 'low' ? 1 : 0)) % AIMS.length];
         const job = { n, seed, pose, hf, lat };
-        const res = lockstep(mk(V1, job), mk(SW, job, J0), job, { lagA: J0 });
-        tot++; if (res.ok) { ok++; fl.j += res.flip; } else console.log('  (a) 실패', job, res.why);
+        const res = lockstep(mk(V1, job), mk(SW, job, J0 * sw), job, { lagA: J0 * v1 });
+        tot++; if (res.ok) { ok++; fl.j += res.flip; } else if (!quiet) console.log('  (a) 실패', job, res.why);
       }
     }
   });
   // 숨 규칙(약함·돌풍): 돌풍은 조준 흔들림 난수까지 같은 줄기
   for (const [n, ratio, seed] of [[4, 0.6, 362], [9, 1.1, 371], [14, 1.2, 377], [20, 1.2, 385], [22, 1.05, 390]]) {
     const job = { n, seed, pose: 'eye', hf: 0.82, lat: 0, ratio };
-    const res = lockstep(mk(V1, job), mk(SW, job, J0), job, { lagA: J0 });
-    tot++; if (res.ok) ok++; else console.log('  (a) 실패(숨 규칙)', job, res.why);
+    const res = lockstep(mk(V1, job), mk(SW, job, J0 * sw), job, { lagA: J0 * v1 });
+    tot++; if (res.ok) ok++; else if (!quiet) console.log('  (a) 실패(숨 규칙)', job, res.why);
   }
-  out.push([`(a) 게임 경로 jetLag ${J0}: sim.js(숨 인자) ≡ simsweep(tune) — 매 스텝 위치·회전 비트 동일 · 숨 길이 · 판정`, ok, tot]); }
+  return [ok, tot]; }
+{ const [ok, tot] = caseA(); out.push([`(a) 게임 경로 jetLag ${J0}: sim.js(숨 인자) ≡ simsweep(tune) — 매 스텝 위치·회전 비트 동일 · 숨 길이 · 판정`, ok, tot]); }
 
 // (a2) 게임 실제 경로의 변형
-{ let ok = 0, tot = 0;
+function caseA2({ sw = 1, v1 = 1, quiet = false } = {}) { let ok = 0, tot = 0;
   const mk2 = (Mo, job, lag) => {
     if (Mo.setDiscH) Mo.setDiscH(0.11);
     const t = new Mo.Table(job.seed * 7907 + job.n, { lift: 519.59 * (job.wind ?? 1), ...(lag ? { jetLag: lag } : {}) });
@@ -118,7 +126,7 @@ const t0 = Date.now();
   const run2 = (A, B, job, k) => { // A = sim.js(숨 인자), B = simsweep(tune)
     const sh = shot2(A, job, k);
     if (JSON.stringify(sh) !== JSON.stringify(shot2(B, job, k))) return 'shot 다름';
-    A.blow({ ...sh, jetLag: J0 }); B.blow(sh);
+    A.blow({ ...sh, jetLag: J0 * v1 }); B.blow(sh);
     if (!eq(snap(A), snap(B))) return 'blow 직후';
     const ja = { n: 0, quiet: 0 }, jb = { n: 0, quiet: 0 };
     let st = 0, pa = 0, pb = 0;
@@ -143,30 +151,32 @@ const t0 = Date.now();
     { n: 14, seed: 388, hf: 0.82, lat: 0.6, mouthY: 0.9 },
     { n: 18, seed: 389, hf: 0.82, lat: 0, ratio: 1.2, th: 2.2, heavy: [17] },
   ]) {
-    const A = mk2(V1, job), B = mk2(SW, job, J0);
-    tot++; if (!eq(snap(A), snap(B))) { console.log('  (a2) 더미 다름', job); continue; }
+    const A = mk2(V1, job), B = mk2(SW, job, J0 * sw);
+    tot++; if (!eq(snap(A), snap(B))) { if (!quiet) console.log('  (a2) 더미 다름', job); continue; }
     const r1 = run2(A, B, job, 0);
-    if (r1) { console.log('  (a2) 1샷 실패', job, r1); continue; }
+    if (r1) { if (!quiet) console.log('  (a2) 1샷 실패', job, r1); continue; }
     ok++;
     restack(A); restack(B);
     if (!A.liveDiscs().length) continue;
     tot++;
     const r2 = eq(snap(A), snap(B)) ? run2(A, B, job, 1) : 'restack 다름';
-    if (r2) { console.log('  (a2) restack 뒤 2샷 실패', job, r2); continue; }
+    if (r2) { if (!quiet) console.log('  (a2) restack 뒤 2샷 실패', job, r2); continue; }
     ok++;
     restack(A);
-    if (A.liveDiscs().length) { tot++; A.blow(shot2(A, job, 2)); if (A.air === null && !A.puff.lag) ok++; else console.log('  (a2) v1 숨에 air·lag 남음', job); }
+    if (A.liveDiscs().length) { tot++; A.blow(shot2(A, job, 2)); if (A.air === null && !A.puff.lag) ok++; else if (!quiet) console.log('  (a2) v1 숨에 air·lag 남음', job); }
   }
-  out.push([`(a2) 게임 변형(방향 π·0.65·3.6 · wind 0.6·1.35 · 테이프 · heap · mouthY 0.4·0.9 · 돌풍) + restack 뒤 2샷 + v1 숨 잔여 없음`, ok, tot]); }
+  return [ok, tot]; }
+{ const [ok, tot] = caseA2(); out.push([`(a2) 게임 변형(방향 π·0.65·3.6 · wind 0.6·1.35 · 테이프 · heap · mouthY 0.4·0.9 · 돌풍) + restack 뒤 2샷 + v1 숨 잔여 없음`, ok, tot]); }
 
 // (b) 격자의 다른 값
-{ let ok = 0, tot = 0;
+function caseB({ sw = 1, v1 = 1, quiet = false } = {}) { let ok = 0, tot = 0;
   for (const L of [0.01, 0.03]) for (const [n, pose, seed] of [[5, 'eye', 364], [12, 'low', 368], [21, 'eye', 373]]) {
     const job = { n, seed, pose, hf: 0.82, lat: 0 };
-    const res = lockstep(mk(V1, job), mk(SW, job, L), job, { lagA: L });
-    tot++; if (res.ok) ok++; else console.log('  (b) 실패', L, job, res.why);
+    const res = lockstep(mk(V1, job), mk(SW, job, L * sw), job, { lagA: L * v1 });
+    tot++; if (res.ok) ok++; else if (!quiet) console.log('  (b) 실패', L, job, res.why);
   }
-  out.push(['(b) jetLag 0.01 · 0.03 도 같음(연구 격자 — 게임 토글은 0.02 만)', ok, tot]); }
+  return [ok, tot]; }
+{ const [ok, tot] = caseB(); out.push(['(b) jetLag 0.01 · 0.03 도 같음(연구 격자 — 게임 토글은 0.02 만)', ok, tot]); }
 
 // (c) jetLag 0 · 안 넘김 · undefined ≡ v1 ≡ simsweep 키 없음
 { let ok = 0, tot = 0;
@@ -222,7 +232,26 @@ const t0 = Date.now();
   }
   out.push(['(f) 숨 길이 = puffDuration + 12·jetLag', ok, tot]); }
 
-let all = true;
+let all = true, missed = 0;
+if (BLUNT) console.log(`  [무딘 비교 시험 BLUNT=${BLUNT}: 자세 비교 = |차이| ≤ ${BLUNT} — 음성 대조가 하나라도 '못 잡음'이어야 맞음]`);
 for (const [nm, ok, tot] of out) { console.log(`  ${nm}: ${ok}/${tot}`); if (ok !== tot) all = false; }
+// 음성 대조: 한쪽만 ×1.0001 → 위 비교가 모두 '다름'을 잡아야 한다(같음 0). 같음이 하나라도 있으면 비교가 무뎌진 것 = 틀림
+{ const NEG = 1.0001;
+  for (const [nm, o] of [['1 — simsweep tune.jetLag ×1.0001(sim.js 0.02 그대로)', { sw: NEG }], ['2 — sim.js blow jetLag ×1.0001(simsweep 0.02 그대로)', { v1: NEG }]]) {
+    const r = [['(a)', caseA({ ...o, quiet: true })], ['(a2)', caseA2({ ...o, quiet: true })], ['(b)', caseB({ ...o, quiet: true })]];
+    const caught = r.every(([, [ok, tot]]) => ok === 0 && tot > 0);
+    console.log(`  음성 대조 ${nm}: ${r.map(([k, [ok, tot]]) => `${k} 같음 ${ok}/${tot}`).join(' · ')} → ${caught ? '다름을 잡음' : '못 잡음'}`);
+    if (!caught) missed++;
+  }
+  // (c) 꼴: 아주 작은 jetLag 도 v1·simsweep 키 없음과 달라야(숨 인자가 실제로 먹힘)
+  let same = 0, tot = 0;
+  for (const [n, pose, seed, ratio] of [[1, 'eye', 365, undefined], [7, 'low', 366, undefined], [16, 'eye', 369, 1.2], [22, 'low', 380, undefined]]) {
+    const job = { n, seed, pose, hf: 0.82, lat: 0.4, ...(ratio ? { ratio } : {}) };
+    for (const B of [mk(V1, job), mk(SW, job)]) { tot++; if (lockstep(mk(V1, job), B, job, { lagA: 1e-4 }).ok) same++; }
+  }
+  console.log(`  음성 대조 3 — (c) 꼴 sim.js jetLag 0.0001 vs v1(안 넘김)·simsweep 키 없음: 같음 ${same}/${tot} → ${same === 0 ? '다름을 잡음' : '못 잡음'}`);
+  if (same !== 0) missed++; }
+if (BLUNT) { console.log(`  무딘 비교 시험: 음성 대조 못 잡음 ${missed}/3 → ${missed > 0 ? '무뎌진 비교를 드러냄' : '못 드러냄(음성 대조가 너무 거침)'}`); if (missed === 0) all = false; }
+else if (missed > 0) all = false;
 console.log(`jetlagcheck ${all ? '맞음' : '틀림'} (${((Date.now() - t0) / 1000).toFixed(1)}초)`);
 if (!all) process.exitCode = 1;
