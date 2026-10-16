@@ -8,7 +8,9 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { initPhysics, Table, DISC_R, DISC_H, mulberry32 } from './sim.js';
-import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, drawEdge, drawTape, rollCard } from './art.js';
+import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, rollCard } from './art.js';
+// 딱지의 보이는 몸: 두꺼운 도화지(물리 두께 0.11 그대로, 그림만 절반 · 아랫장에 기대 휨 · 착지 휘청) — paper.js
+import { PaperLook, makeDiscMesh, initDiscTextures, VIS_H, VIS_OFF, pileY, setBend } from './paper.js';
 import { Sfx, AppAudio } from './audio.js';
 import { Mic } from './mic.js';
 import { mountSoundTest } from './diag.js';
@@ -136,6 +138,7 @@ const MIC_BLOW_LV = 0.12; // 마이크 세기(0~1.25)가 이만큼 120ms 이상�
 let renderer, scene, camera, fx;
 let table = null; // 물리 테이블 (매치 중)
 const meshes = new Map(); // disc.id → mesh
+const paper = new PaperLook(); // 종이 그림(얇은 몸·휨·착지 휘청). 물리는 읽기만
 let homeMeshes = [];
 let state = 'boot';
 let simOn = false;
@@ -166,22 +169,8 @@ let aimCtl = null; // 플레이어 조준 컨트롤러
 const piles = { me: [], ai: [] };
 
 // ── 텍스처 ──────────────────────────────────────────────
-const texCache = new Map();
+// 3D 딱지 텍스처·재질·기하는 paper.js(두꺼운 도화지). 여기는 UI 그림(카드 이미지)만
 const imgCache = new Map();
-let backTex, backTapeTex;
-const edgeTex = {};
-
-function faceTexture(id) {
-  if (texCache.has(id)) return texCache.get(id);
-  const cv = document.createElement('canvas');
-  cv.width = cv.height = 512;
-  drawFace(cv.getContext('2d'), 512, CARD_BY_ID[id]);
-  const tx = new THREE.CanvasTexture(cv);
-  tx.colorSpace = THREE.SRGBColorSpace;
-  tx.anisotropy = 4;
-  texCache.set(id, tx);
-  return tx;
-}
 
 function faceImage(id, size = 160) {
   const key = id + ':' + size;
@@ -192,67 +181,6 @@ function faceImage(id, size = 160) {
   const url = cv.toDataURL('image/png');
   imgCache.set(key, url);
   return url;
-}
-
-function makeShared() {
-  const bc = document.createElement('canvas');
-  bc.width = bc.height = 512;
-  drawBack(bc.getContext('2d'), 512);
-  backTex = new THREE.CanvasTexture(bc);
-  backTex.colorSpace = THREE.SRGBColorSpace;
-  const tc = document.createElement('canvas');
-  tc.width = tc.height = 512;
-  drawBack(tc.getContext('2d'), 512);
-  drawTape(tc.getContext('2d'), 512);
-  backTapeTex = new THREE.CanvasTexture(tc);
-  backTapeTex.colorSpace = THREE.SRGBColorSpace;
-  for (const [rar, info] of [...Object.entries(RARITY), ['tape', { side: '#c9d3dc' }], ['golden', { side: '#ffcf33' }]]) {
-    const ec = document.createElement('canvas');
-    ec.width = 256; ec.height = 32;
-    drawEdge(ec.getContext('2d'), 256, 32, info.side);
-    const tx = new THREE.CanvasTexture(ec);
-    tx.colorSpace = THREE.SRGBColorSpace;
-    tx.wrapS = THREE.RepeatWrapping;
-    tx.repeat.set(6, 1);
-    edgeTex[rar] = tx;
-  }
-}
-
-const discGeo = new THREE.CylinderGeometry(DISC_R, DISC_R, DISC_H, 56, 1);
-const matCache = new Map();
-function discMaterials(id, heavy = false) {
-  const key = id + (heavy ? ':h' : '');
-  if (matCache.has(key)) return matCache.get(key);
-  const c = CARD_BY_ID[id];
-  if (id === 'golden') {
-    // 황금 딱지: 옆면이 금빛으로 번쩍 → 더미 속 위치가 보인다(어디를 노릴지)
-    const mats = [
-      new THREE.MeshStandardMaterial({ map: edgeTex.golden, color: 0xffd34d, roughness: 0.25, metalness: 0.85, emissive: 0x3a2500, envMapIntensity: 1.2 }),
-      new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.25, metalness: 0.4, clearcoat: 0.8 }),
-      new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.6, color: 0xffe9a0, envMapIntensity: 0.6 }),
-    ];
-    matCache.set(key, mats);
-    return mats;
-  }
-  const fancy = c.rarity === 'epic' || c.rarity === 'legendary';
-  const top = fancy
-    ? new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.35, metalness: 0.1, iridescence: 0.9, iridescenceIOR: 1.6, clearcoat: 0.6, clearcoatRoughness: 0.25 })
-    : new THREE.MeshStandardMaterial({ map: faceTexture(id), roughness: 0.5, metalness: 0, envMapIntensity: 0.35 });
-  const side = heavy
-    ? new THREE.MeshStandardMaterial({ map: edgeTex.tape, roughness: 0.35, metalness: 0.3, envMapIntensity: 0.8 })
-    : new THREE.MeshStandardMaterial({ map: edgeTex[c.rarity], roughness: c.rarity === 'legendary' ? 0.3 : 0.8, metalness: c.rarity === 'legendary' ? 0.5 : 0, envMapIntensity: c.rarity === 'legendary' ? 1 : 0.3 });
-  const bottom = new THREE.MeshStandardMaterial({ map: heavy ? backTapeTex : backTex, roughness: 0.7, envMapIntensity: 0.3 });
-  const mats = [side, top, bottom];
-  matCache.set(key, mats);
-  return mats;
-}
-
-function makeDiscMesh(id, heavy = false) {
-  const m = new THREE.Mesh(discGeo, discMaterials(id, heavy));
-  m.castShadow = true;
-  m.receiveShadow = true;
-  m.userData.cardId = id;
-  return m;
 }
 
 // ── 장면 ────────────────────────────────────────────────
@@ -400,7 +328,7 @@ function buildScene() {
   scene.add(classroomBackdrop());
 
   fx = new Fx(scene, camera, $('#fxl'));
-  makeShared();
+  initDiscTextures();
   buildAimGizmo();
   layout();
 }
@@ -1333,7 +1261,7 @@ function ownerGlow(d, color) {
     new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false }),
   );
   ring.rotation.x = Math.PI / 2;
-  ring.position.y = DISC_H / 2 + 0.01;
+  ring.position.y = VIS_H / 2 + 0.01;
   m.add(ring);
   addTween(0.9, (k) => { ring.material.opacity = 0.95 * (1 - k * k); ring.scale.setScalar(1 + k * 0.15); }, () => { m.remove(ring); ring.geometry.dispose(); ring.material.dispose(); });
 }
@@ -1372,14 +1300,13 @@ function addTween(dur, update, done) {
 
 function syncMeshes() {
   if (!table) return;
+  const items = [];
   for (const d of table.liveDiscs()) {
     const m = meshes.get(d.id);
     if (!m || m.userData.anim) continue;
-    const p = d.body.translation();
-    const q = d.body.rotation();
-    m.position.set(p.x, p.y, p.z);
-    m.quaternion.set(q.x, q.y, q.z, q.w);
+    items.push({ id: d.id, body: d.body, mesh: m });
   }
+  paper.apply(items); // 자리·자세 = 물리 그대로(얇은 몸만 아래 면 쪽으로), 아랫장에 기대 휨
 }
 
 const simWatch = { revealed: new Set(), count: 0, lastClack: 0, vy: new Map(), resolve: null, simTime: 0, quiet: 0, glowed: new Set(), outShown: new Set(), outs: 0 };
@@ -1434,6 +1361,7 @@ function frame(now) {
   expFrame(); // 실험(바람 도달 시간): 와류 고리·부는 얼굴 유지·수치 표시. 끄면 표시만 숨김
   // 트윈
   stepTweens(dt);
+  paper.tick(now, dt * timeScale); // 종이 휨 따라가기(실제 시간)·착지 휘청(게임 시간: 슬로모·멈칫 따라감)
   fx.update(dt * (0.4 + 0.6 * timeScale));
   // 카메라
   shake *= Math.pow(0.02, dt);
@@ -1514,6 +1442,9 @@ function watchSim() {
     if (prev < -1.2 && v.y > -0.3 && now - simWatch.lastClack > 35) {
       sfx.clack(Math.min(1, -prev / 6));
       simWatch.lastClack = now;
+    }
+    if (prev < -1.2 && v.y > -0.3) { // 종이 탄성: 착지한 장마다 가장자리 휘청(그림만)
+      paper.land(meshes.get(d.id), Math.min(1, -prev / 6));
     }
     simWatch.vy.set(d.id, v.y);
     const up = table.faceUp(d);
@@ -1686,7 +1617,7 @@ function goHome() {
   for (let i = 0; i < towerN; i++) {
     const id = ids[Math.floor(rng() * ids.length)] || 'mandu';
     const m = makeDiscMesh(id);
-    m.position.set((rng() - 0.5) * 0.12, DISC_H / 2 + i * (DISC_H + 0.004), (rng() - 0.5) * 0.12);
+    m.position.set((rng() - 0.5) * 0.12, pileY(i), (rng() - 0.5) * 0.12);
     m.rotation.y = rng() * 6.28;
     m.rotation.x = i === towerN - 1 ? 0 : Math.PI;
     scene.add(m);
@@ -1697,8 +1628,9 @@ function goHome() {
   showIds.forEach((id, i) => {
     const m = makeDiscMesh(id);
     const a = (i / showIds.length) * Math.PI * 2;
-    m.position.set(Math.cos(a) * 3.2, DISC_H / 2, Math.sin(a) * 3.2);
+    m.position.set(Math.cos(a) * 3.2, VIS_H / 2, Math.sin(a) * 3.2);
     m.rotation.y = -a + Math.PI / 2;
+    setBend(m, -0.012 - 0.004 * (i % 3), i * 1.3); // 쓰던 도화지 딱지: 가장자리가 살짝 들림
     scene.add(m);
     homeMeshes.push(m);
   });
@@ -2647,7 +2579,7 @@ async function collect(flipped, who) {
     const q0 = m.quaternion.clone();
     const idx = piles[who].length;
     piles[who].push(m);
-    const to = dest.clone().add(new THREE.Vector3(0, DISC_H / 2 + idx * (DISC_H + 0.004), 0));
+    const to = dest.clone().add(new THREE.Vector3(0, pileY(idx), 0));
     const q1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, (Math.random() - 0.5) * 0.6, 0));
     const k0 = i;
     addTween(0.42, (k) => {
@@ -2677,7 +2609,7 @@ async function restack() {
   table.settle(240);
   const anims = live.map((d) => {
     const m = meshes.get(d.id), b = before.get(d.id), p = d.body.translation(), q = d.body.rotation();
-    return { m, from: b.p, q0: b.q, to: new THREE.Vector3(p.x, p.y, p.z), q1: new THREE.Quaternion(q.x, q.y, q.z, q.w) };
+    return { m, from: b.p, q0: b.q, to: new THREE.Vector3(p.x, p.y - VIS_OFF, p.z), q1: new THREE.Quaternion(q.x, q.y, q.z, q.w) }; // 눕힌 장: 얇은 몸이 아래 면 쪽(paper.js) → 끝에서 안 튐
   });
   sfx.whoosh();
   await addTween(0.55, (k) => {
@@ -3483,7 +3415,7 @@ async function netGameStart(M, g, st) {
 function netPileAdd(M, pid, who) {
   const m = makeDiscMesh(M.cardOf(pid));
   const dest = who === 'me' ? new THREE.Vector3(-pileX, 0, 2.4) : new THREE.Vector3(pileX, 0, -3.6);
-  m.position.copy(dest).add(new THREE.Vector3(0, DISC_H / 2 + piles[who].length * (DISC_H + 0.004), 0));
+  m.position.copy(dest).add(new THREE.Vector3(0, pileY(piles[who].length), 0));
   m.userData.anim = true;
   scene.add(m);
   piles[who].push(m);
@@ -5112,7 +5044,7 @@ function drawSweepSide(on) {
   c.fillStyle = 'rgba(180,140,100,0.25)'; c.fillRect(0, Y(0), w, h - Y(0));
   c.strokeStyle = 'rgba(42,26,18,0.6)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, Y(0)); c.lineTo(w, Y(0)); c.stroke();
   c.strokeStyle = 'rgba(255,255,255,0.95)'; c.lineWidth = 2; c.beginPath(); c.moveTo(X(pc.z + 3.2), Y(0) - 1); c.lineTo(X(pc.z + 3.2), Y(0) + 5); c.stroke();
-  // 더미 단면: 딱지마다 x = 중심 평면 단면(길이 2R, 두께 DISC_H). 뒤집힘 = 금색
+  // 더미 단면: 딱지마다 x = 중심 평면 단면(길이 2R, 보이는 두께 VIS_H · 중심은 물리 그대로). 뒤집힘 = 금색
   const top0 = ctl ? ctl.top0 : table.columnTop();
   c.lineCap = 'butt';
   for (const d of table.liveDiscs()) {
@@ -5121,7 +5053,7 @@ function drawSweepSide(on) {
     const L = Math.hypot(ny, nz) || 1, vz = -ny / L, vy = nz / L;
     c.strokeStyle = table.faceUp(d) > 0.5 ? '#f2a91e' : '#8a5a3c';
     c.globalAlpha = table.inCircle(d) ? 1 : 0.45;
-    c.lineWidth = Math.max(2, DISC_H * s * 0.9);
+    c.lineWidth = Math.max(2, VIS_H * s * 0.9); // 보이는 두께(paper.js) — 물리 중심 그대로
     c.beginPath(); c.moveTo(X(p.z - vz * DISC_R), Y(p.y - vy * DISC_R)); c.lineTo(X(p.z + vz * DISC_R), Y(p.y + vy * DISC_R)); c.stroke();
   }
   c.globalAlpha = 1;

@@ -521,19 +521,55 @@ export function drawTape(ctx, size) {
   ctx.restore();
 }
 
-export function drawEdge(ctx, w, h, stripe) {
-  // 종이 단면: 여러 겹 레이어 + 가운데 희귀도 색 띠 (더미 옆면만 봐도 레어가 몇 장인지 보이게 → 어디를 노릴지 전략)
-  ctx.fillStyle = '#e2c793';
+// 작은 결정적 난수(텍스처가 열 때마다 바뀌지 않게)
+function rng32(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+// 두꺼운 도화지 단면 (재윤님: '두꺼운 플라스틱 말고 두꺼운 도화지'): 위 인쇄층(앞면 잉크) · 종이 심지 · 아래 인쇄층(뒷면 마분지 갈색).
+// 심지에 희귀도 색을 먹인다(색 마분지) → 더미 옆면만 봐도 레어가 몇 장인지 보인다(어디를 노릴지 전략, 예전 색 띠 그대로의 뜻).
+// 캔버스 위쪽 = 원판 +Y(그림 면) 쪽. kind: 'golden' = 금박, 'tape' = 테이프 감은 옆면
+export function drawEdge(ctx, w, h, stripe, kind) {
+  const r = rng32(0xd1ce + (stripe || '').length * 97 + (kind || '').length);
+  ctx.fillStyle = '#f4ecda'; // 크림색 종이
   ctx.fillRect(0, 0, w, h);
-  for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = i % 2 ? 'rgba(140,100,50,0.25)' : 'rgba(255,255,255,0.2)';
-    ctx.fillRect(0, (i / 6) * h, w, h / 12);
-  }
   if (stripe) {
+    ctx.globalAlpha = kind === 'common' ? 0.55 : kind === 'golden' || kind === 'tape' ? 0.9 : 0.74; // 색 마분지(물든 종이) — 통짜 플라스틱 띠가 아니게 크림이 비침
     ctx.fillStyle = stripe;
-    ctx.fillRect(0, h * 0.3, w, h * 0.4);
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.fillRect(0, h * 0.3, w, h * 0.06);
+    ctx.fillRect(0, h * 0.2, w, h * 0.62);
+    ctx.globalAlpha = 1;
+  }
+  // 종이 섬유(가로로 짧은 결) + 눌린 겹 두 줄
+  for (let i = 0; i < w * 2; i++) {
+    ctx.fillStyle = r() < 0.5 ? 'rgba(90,60,30,0.12)' : 'rgba(255,255,255,0.22)';
+    ctx.fillRect(r() * w, r() * h, 2 + r() * 7, 1);
+  }
+  ctx.fillStyle = 'rgba(80,55,30,0.14)';
+  for (const f of [0.4, 0.62]) ctx.fillRect(0, Math.round(h * f), w, 1);
+  if (kind === 'tape') return; // 테이프 띠는 인쇄층 없이 은색
+  // 위: 앞면 테두리 잉크 한 줄 / 아래: 뒷면 마분지 갈색 + 잉크
+  ctx.fillStyle = 'rgba(42,26,18,0.75)';
+  ctx.fillRect(0, 0, w, Math.max(2, Math.round(h * 0.07)));
+  ctx.fillStyle = '#b07a44';
+  ctx.fillRect(0, Math.round(h * 0.86), w, h);
+  ctx.fillStyle = 'rgba(42,26,18,0.6)';
+  ctx.fillRect(0, h - Math.max(1, Math.round(h * 0.04)), w, h);
+}
+
+// 인쇄된 도화지 결: 옅은 섬유 + 잔점. 그림 면 텍스처 위에 덧칠(카드 그림 UI 아이콘에는 안 씀). k = 진하기
+export function paperGrain(ctx, size, k = 1) {
+  const r = rng32(0x9a9e7 + size);
+  const n = Math.round(size * size * 0.006);
+  for (let i = 0; i < n; i++) {
+    const x = r() * size, y = r() * size, a = r() * Math.PI, len = size * (0.006 + r() * 0.018);
+    ctx.strokeStyle = r() < 0.55 ? `rgba(70,50,30,${(0.05 * k).toFixed(3)})` : `rgba(255,255,255,${(0.07 * k).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1, size / 512);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); ctx.stroke();
+  }
+  for (let i = 0; i < n; i++) {
+    ctx.fillStyle = r() < 0.5 ? `rgba(60,40,20,${(0.04 * k).toFixed(3)})` : `rgba(255,255,255,${(0.05 * k).toFixed(3)})`;
+    ctx.fillRect(r() * size, r() * size, 1.5, 1.5);
   }
 }
 
