@@ -17,7 +17,7 @@
 // 측정(시드 801~824, 작업 = (변형, 장수, 시드, …), Table 시드 = seed·7907 + n — react3 shotG·sweep planShot 과 같은 규칙):
 //   drop  — 딱지 1장을 0.6~1.4 u(15~35 mm) 다섯 높이에서 책상에(납작·20° 기울여)·10장 더미 위에 떨어뜨림: 튀는 비(v 후/전)·튄 높이·정지까지 스텝(중앙값)
 //   pile  — 1·2·3·4·6·8·10·12·15·18·22·30·40장 더미: settle() 판정 스텝(게임 규칙) · 엄격 정지(최대 속도 < 0.01 이 24스텝) ·
-//           600스텝 뒤 높이·장당 간격·맨 아래 장 · 600→720스텝(1초) 최대 이동(흔들림)·최대 속도
+//           600스텝 뒤 높이·간격(높이 기준 = (꼭대기 − 0.11)/(n−1) · 중심 = (맨 위 중심 − 맨 아래 중심)/(n−1), 둘은 다름: 높이 기준은 책상 속에 묻힌 바닥 장을 무시)·맨 아래 장 · 600→720스텝(1초) 최대 이동(흔들림)·최대 속도
 //   game  — 고전 경로(react3 shotG = turn.js fire 기하, 초록 0.89 → resolveShot): eye 1~22장 × 조준 3 · low 6~22장 × 조준 2 ·
 //           숨 규칙 0.6/1.2 × 2~22장 짝수(eye·0.82·옆 0). 변형 10개(r7a·e2r7a 뺌, 아래 GAME_VIDS). 판정 = PvP stepJudge·judgeResult. + 판정 뒤 60스텝(0.5초) 더 돌려 움직임·판정 바뀜
 //   sweep — 쓸기판(sweep.js planShot 과 같은 호출 순서, 30장 q0.7 · 40장 q0.85): 문법 B 휙(t0 0.3, D(q)) · 버티기(A 0) · 퍽 · 꽉 휙(q 1.0)
@@ -372,6 +372,7 @@ function report() {
   if (drop.length) {
     console.log('\n## 낙하 (0.6~1.4 u = 15~35 mm 다섯 높이의 중앙값. 튀는 비 = 위로 튄 최고 속도 ÷ 떨어진 속도 · 튄 높이 u(쉼 자리 위) · 정지 = 닿은 뒤 엄격 정지 스텝)');
     console.log('변형      | 책상 납작 비·높이·정지 | 책상 20° 비·높이·정지 | 10장 위 비·높이·정지');
+    console.log('  (10장 위 \'높이\'는 더미가 눌렸다 펴지는 양이 섞여 튐 높이가 아님 — v1(e 0)도 비 0.00 에 높이 0.016. 더미 위는 비만 볼 것)');
     for (const v of vs) { const g = (c) => drop.find((r) => r.v === v && r.c === c); const s = (r) => (r ? `${f(r.ratio)} · ${f(r.hUp, 3)} · ${r.still}` : '—'); console.log(`${vname(v).padEnd(9)} | ${s(g('flat'))} | ${s(g('tilt20'))} | ${s(g('pile10'))}`); }
   }
   if (pile.length) {
@@ -386,12 +387,12 @@ function report() {
       console.log(`${vname(v).padEnd(14)} settle ${quant(R(22).map((r) => r.settleK), 0.5)}·${quant(R(40).map((r) => r.settleK), 0.5)} | 엄격 40장 ${quant(st40, 0.5)}[${Math.max(...st40)}] | 못함 ${R().filter((r) => r.stillK < 0).length}/${R().length} | 높이 30장 ${f(h(30), 3)}(${sg((100 * (h(30) - hv(30))) / hv(30), 1)}%) 40장 ${f(h(40), 3)}(${sg((100 * (h(40) - hv(40))) / hv(40), 1)}%) | 흔들림 ${Math.max(...R().map((r) => r.jit)).toExponential(1)} · 속도 ${Math.max(...R().map((r) => r.jitV)).toExponential(1)}`);
     }
     if (process.env.DETAIL) {
-      console.log('변형      | 장수 | settle 중앙[최대] | 엄격 정지 중앙[최대·못함] | 높이 | 간격 | 흔들림 최대 | 속도 최대');
+      console.log('변형      | 장수 | settle 중앙[최대] | 엄격 정지 중앙[최대·못함] | 높이 | 간격 높이 기준·중심 | 흔들림 최대 | 속도 최대');
       for (const v of vs) for (const n of PILE_N) {
         const R = pile.filter((r) => r.v === v && r.n === n);
         if (!R.length) continue;
         const st = R.map((r) => (r.stillK < 0 ? Infinity : r.stillK));
-        console.log(`${vname(v).padEnd(9)} | ${String(n).padStart(2)} | ${quant(R.map((r) => r.settleK), 0.5)} [${Math.max(...R.map((r) => r.settleK))}] | ${quant(st, 0.5)} [${Math.max(...st.filter(Number.isFinite), 0)}·${st.filter((x) => !Number.isFinite(x)).length}] | ${f(mean(R.map((r) => r.top)), 3)} | ${n > 1 ? f(mean(R.map((r) => r.gap)), 4) : '—'} | ${Math.max(...R.map((r) => r.jit)).toExponential(1)} | ${Math.max(...R.map((r) => r.jitV)).toExponential(1)}`);
+        console.log(`${vname(v).padEnd(9)} | ${String(n).padStart(2)} | ${quant(R.map((r) => r.settleK), 0.5)} [${Math.max(...R.map((r) => r.settleK))}] | ${quant(st, 0.5)} [${Math.max(...st.filter(Number.isFinite), 0)}·${st.filter((x) => !Number.isFinite(x)).length}] | ${f(mean(R.map((r) => r.top)), 3)} | ${n > 1 ? `${f(mean(R.map((r) => r.gap)), 4)} · ${f(mean(R.map((r) => (r.top - Sim.DISC_H / 2 - r.bot) / (n - 1))), 4)}` : '—'} | ${Math.max(...R.map((r) => r.jit)).toExponential(1)} | ${Math.max(...R.map((r) => r.jitV)).toExponential(1)}`);
       }
     }
   }
@@ -450,7 +451,10 @@ function report() {
       }
       if (sweep.some((r) => r.v === v)) {
         const s = (N, plan) => (r) => r.N === N && r.plan === plan;
-        parts.push(`쓸기 40 휙 ${ci(pairedCI(sweep, v, s(40, 'flick'), (r) => r.flip))} · 버티기 ${ci(pairedCI(sweep, v, s(40, 'hold'), (r) => r.flip))} · 30 휙 ${ci(pairedCI(sweep, v, s(30, 'flick'), (r) => r.flip))} · 원 밖(전체) ${ci(pairedCI(sweep, v, () => true, (r) => r.out))}장`);
+        // 비율(v1 평균 대비 %)도 구간째: 점 추정만 쓰면 넓은 구간이 가려진다(검토 — 30장 버티기 e0.2+공기 −34% 는 [−51, −16]%)
+        const pc = (N, plan) => { const c = pairedCI(sweep, v, s(N, plan), (r) => r.flip), m0 = mean(sweep.filter((r) => r.v === 'v1' && s(N, plan)(r)).map((r) => r.flip)); return `${ci(c)} (${sg((100 * c.d) / m0, 0)}% [${sg((100 * c.lo) / m0, 0)}, ${sg((100 * c.hi) / m0, 0)}]%)`; };
+        parts.push(`쓸기 40 휙 ${pc(40, 'flick')} · 버티기 ${pc(40, 'hold')}`);
+        parts.push(`쓸기 30 휙 ${pc(30, 'flick')} · 버티기 ${pc(30, 'hold')} · 원 밖(전체) ${ci(pairedCI(sweep, v, () => true, (r) => r.out))}장`);
         // 휙 ÷ 버티기(같은 판, 평균의 비): 쓸기가 버티기보다 얼마나 나은가 — 코어 손잡이(core-sweep §9 0번)와 같은 방향의 참고값(판정 아님)
         const fh = (vv, N) => mean(sweep.filter((r) => r.v === vv && s(N, 'flick')(r)).map((r) => r.flip)) / mean(sweep.filter((r) => r.v === vv && s(N, 'hold')(r)).map((r) => r.flip));
         parts.push(`휙÷버티기 40장 ${f(fh(v, 40))}(v1 ${f(fh('v1', 40))}) · 30장 ${f(fh(v, 30))}(v1 ${f(fh('v1', 30))})`);

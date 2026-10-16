@@ -535,7 +535,7 @@ export function drawEdge(ctx, w, h, stripe, kind) {
   ctx.fillStyle = '#f4ecda'; // 크림색 종이
   ctx.fillRect(0, 0, w, h);
   if (stripe) {
-    ctx.globalAlpha = kind === 'common' ? 0.55 : kind === 'golden' || kind === 'tape' ? 0.9 : 0.74; // 색 마분지(물든 종이) — 통짜 플라스틱 띠가 아니게 크림이 비침
+    ctx.globalAlpha = kind === 'common' ? 0.6 : kind === 'golden' || kind === 'tape' ? 0.92 : 0.86; // 색 마분지(물든 종이) — 크림이 살짝 비치되 희귀도 색은 1인칭 거리에서 또렷이(검토: 0.74 는 파랑·보라·금이 흐렸음)
     ctx.fillStyle = stripe;
     ctx.fillRect(0, h * 0.2, w, h * 0.62);
     ctx.globalAlpha = 1;
