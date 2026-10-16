@@ -492,24 +492,41 @@ export class Sfx {
     src.connect(lp).connect(g).connect(this.master);
   }
 
-  // 딱지가 책상에 '탁' 떨어지는 소리
+  // 딱지가 책상에 '탁' 떨어지는 소리 — 두꺼운 도화지가 책상을 치는 '착/툭'(재윤님: 두꺼운 플라스틱 말고 도화지).
+  // 예전 = 1.8~3.4 kHz 좁은 띠(Q 3)에 2 ms 클릭 → 플라스틱 '딱'. 지금 = 몸통 '톡'(650~800 Hz) + 넓은 띠(Q 낮음) 종이 '착' + 짧은 바스락 꼬리
   clack(intensity = 1) {
     if (!this.ok) return;
     this.mark('clack');
-    const t0 = this.ctx.currentTime;
-    const src = this.noise(0.08);
-    const hp = this.ctx.createBiquadFilter();
-    hp.type = 'bandpass';
-    hp.frequency.value = 1800 + Math.random() * 1600;
-    hp.Q.value = 3;
-    const g = this.ctx.createGain();
-    this.env(g, t0, 0.002, 0.15 + 0.25 * Math.min(1, intensity), 0.05);
-    src.connect(hp).connect(g).connect(this.master);
+    const ctx = this.ctx, t0 = ctx.currentTime, k = Math.min(1, intensity);
+    const layer = (dur, type, freq, q, a, peak, d) => {
+      const src = this.noise(dur);
+      const f = ctx.createBiquadFilter();
+      f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = ctx.createGain();
+      this.env(g, t0, a, peak, d);
+      src.connect(f).connect(g).connect(this.master);
+    };
+    // 폰 스피커는 500 Hz 아래를 거의 못 낸다(검토) → 몸통을 650~800 Hz 넓은 띠로, '착'을 조금 키움(예전 클릭 0.15~0.40 과 비슷한 크기)
+    layer(0.06, 'bandpass', 650 + Math.random() * 150, 0.7, 0.0015, 0.15 + 0.2 * k, 0.035); // 몸통 '톡'
+    layer(0.06, 'bandpass', 1100 + Math.random() * 600, 0.9, 0.001, 0.13 + 0.2 * k, 0.03); // 종이 '착'
+    layer(0.09, 'highpass', 4200 + Math.random() * 1500, 0.7, 0.004, 0.02 + 0.03 * k, 0.06); // 바스락 꼬리
   }
 
-  // n번째 뒤집힘 — 음이 한 칸씩 올라감 (펜타토닉)
+  // 종이가 뒤집히며 펄럭 — 짧고 부드러운 바람 소리(뒤집힘 음 밑에 깔림)
+  flap() {
+    if (!this.ok) return;
+    const ctx = this.ctx, t0 = ctx.currentTime;
+    const src = this.noise(0.1);
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.setValueAtTime(2600, t0); f.frequency.exponentialRampToValueAtTime(900, t0 + 0.07); f.Q.value = 0.6;
+    const g = ctx.createGain();
+    this.env(g, t0, 0.006, 0.05, 0.06);
+    src.connect(f).connect(g).connect(this.master);
+  }
+
+  // n번째 뒤집힘 — 음이 한 칸씩 올라감 (펜타토닉) + 종이 펄럭
   flip(n) {
-    if (this.ok) this.mark('flip');
+    if (this.ok) { this.mark('flip'); this.flap(); }
     const scale = [0, 2, 4, 7, 9];
     const step = scale[n % 5] + 12 * Math.floor(n / 5);
     const f = 523.25 * Math.pow(2, step / 12);

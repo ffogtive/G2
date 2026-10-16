@@ -31,6 +31,7 @@ mockup/src/      목업 소스 (ES 모듈)
   levels.js 레벨 1~10,000 생성 규칙(10판 톱니, 50판 동네) + levels-cal.json(봇 보정표)
   creatures.js 수집 테마 시안(동물 크리처 × 시즌 의상 9+1)
   art.js    딱지 앞/뒷면 캐릭터 아트 절차 생성 (외부 이미지 0)
+  paper.js  딱지의 '보이는' 종이 몸(두꺼운 도화지, 재윤님): 보이는 두께 0.055 = 물리 DISC_H 0.11 의 절반 · 아래 면 쪽으로 0.0155 · **받침에 닿게 위아래로 옮기는 배치**(판이 있으면 매 프레임, 높이 순 · 받침과 6° 안이면 나란히 눕힘(물리에서 ≤3°) · 기대 누운 장 피벗 · 두 번째 받침 쪽 처짐 · 책상 밑 금지) → 보이는 더미는 물리보다 0.07~0.18 u 낮다. 그래서 화면 조준 표시(누른 곳·표적 고리·소매·금 띠·숨 물결)는 `paper.visY`/`physY` 대응표를 거친다(물리 조준·lidCount·해시 무변화 — 물리 높이에 3D 표시를 새로 그리면 visY 필수). 착지 휘청·살짝 통(위에 얹힌 장 없을 때만)·무광 재질·희귀도 색 마분지 옆면. 판에서 빠지면 `paper.release`, 다시 쌓기 트윈 목표 = `paper.restPositions`. 모은 더미·홈 탑은 pileY(i). 1판 '아랫장에 기대 휨'은 틀렸음(core-sweep §7 1번)
   main.js   three.js 장면·입력·연출·매치 흐름 (분필 원, 엄지 멈춤 눈금, 1인칭 볼·입술, 손가락 시범, 방금 숨 카드)
   face.js   부는 얼굴(시안 B '뽀뽀 입') + 숨 주머니 고리
   cues.js   공략 단서 계산(숨 물결 = sweetHiFor 역함수, 2~4장째 창, 원인 분류) — 렌더러 독립
@@ -61,6 +62,8 @@ tools/sweepgc.mjs  문법 C '영점 조준' Node 측정(게임 물리 그대로,
 tools/sweepgb.mjs  문법 B '놓고 쓸기' Node 측정(게임 물리 그대로): self(기록 훅 ≡ planShot) · run sweep·grid·held·cue(휙 시각 산·D(q)·쓸기 속도/폭·단서 + 반응·기준선) · same(원자료 비트 재현) · report(⑩ 원인 칩 chipOf 포함), 원자료 coresweep/data/gb/ (core-sweep §4.1). sweep.js GB·칩 바꾸면 report·`sweepgame ctl` 필수
 tools/coresweep/react3.mjs  제트 도달 지연 회차(jetLag, 06 §8 — 판정 통과·물리 채택 아님, 솔로 시험 토글 있음 06 §8.11 → 채택은 재윤님 손맛 결정 G12): self3·list·run·choose3·verdict3·report, 단계·시드·동결을 코드가 강제(커밋된 choice3.json 없으면 평가·가드 거부), 원자료 coresweep/data/react3/. simsweep·ownclips·sweepmap·rules·sim 바꾸면 `node tools/coresweep/react3.mjs self3` 필수
 native/puff_v2/ + scripts/flatfloor.mjs  정직 엔진(3D 제트) 평평한 바닥 게이트(run·report, 원자료 data/flatfloor/ → docs/research/v2-flatfloor.md). 고치면 `CARGO_TARGET_DIR=../puff_sim/target cargo test --release --offline`
+tools/papercheck.mjs  종이 딱지 그림 게이트(진짜 paper.js · sim.js, 브라우저 없음, 약 30초): pile(가만히 쌓인 2~40장 × 5시드 이웃 장 테두리 36방향 최대 틈 ≤ 0.035 · 묻힌 장 0 · 얹힌 장 들림 0 · visY 대응표) · shot(쏜 뒤 6~22장 × 24판, 보이는 판 SDF: 뜬 장 ≤ 2% · 책상 밑 0, 빈 틈 받침 쌍은 참고) · THICK=1 = 예전 두꺼운 그림 기준선. paper.js·sim.js 바꾸면 필수
+tools/paperphys.mjs  종이 딱지 물리 선택지(탄성 e 딱지+책상·밀도·공기 감쇠·정직한 가벼움) 측정만 — self·list·run drop|pile|game|sweep·report(DETAIL=1 장수별), 원자료 coresweep/data/paper/ (게임 기본값 무변경, core-sweep §7)
 tools/balloon-check.mjs  rules.js 숨 풍선(BALLOON·balloonCost·balloonStep) ≡ coresweep/econ.mjs 'new' 비트 대조(비용 격자·3판 DP) + econ gate 네 판정 (풍선 식·econ 바꾸면 필수, 1초)
 tools/botlib.mjs / levelbot.mjs / calibrate.mjs  물리 봇 레벨 클리어율 측정·난이도 손잡이 자동 보정
 tools/artifact-check.mjs  아티팩트(공개) 버전 부팅 재현 — 게시 전에 반드시 실행. claude 없음·use()=null·보기 전용 → PvP 숨김 / 가짜 호스트 → 'VS 친구'·방 만들기

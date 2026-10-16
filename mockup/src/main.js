@@ -8,7 +8,10 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { initPhysics, Table, DISC_R, DISC_H, mulberry32 } from './sim.js';
-import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, drawEdge, drawTape, rollCard } from './art.js';
+import { CARDS, CARD_BY_ID, RARITY, drawFace, drawBack, rollCard } from './art.js';
+// 딱지의 보이는 몸: 두꺼운 도화지(물리 두께 0.11 그대로, 그림만 절반 · 받침에 닿게 내린 배치 · 착지 휘청) — paper.js
+// 얇은 더미는 물리보다 낮게 보인다 → 화면 조준 표시는 paper.visY(물리 → 보이는 높이) / physY(누른 곳 → 물리 h) 를 거친다
+import { PaperLook, makeDiscMesh, initDiscTextures, VIS_H, pileY, setBend } from './paper.js';
 import { Sfx, AppAudio } from './audio.js';
 import { Mic } from './mic.js';
 import { mountSoundTest } from './diag.js';
@@ -145,6 +148,7 @@ const MIC_BLOW_LV = 0.12; // 마이크 세기(0~1.25)가 이만큼 120ms 이상�
 let renderer, scene, camera, fx;
 let table = null; // 물리 테이블 (매치 중)
 const meshes = new Map(); // disc.id → mesh
+const paper = new PaperLook(); // 종이 그림(얇은 몸·휨·착지 휘청). 물리는 읽기만
 let homeMeshes = [];
 let state = 'boot';
 let simOn = false;
@@ -175,22 +179,8 @@ let aimCtl = null; // 플레이어 조준 컨트롤러
 const piles = { me: [], ai: [] };
 
 // ── 텍스처 ──────────────────────────────────────────────
-const texCache = new Map();
+// 3D 딱지 텍스처·재질·기하는 paper.js(두꺼운 도화지). 여기는 UI 그림(카드 이미지)만
 const imgCache = new Map();
-let backTex, backTapeTex;
-const edgeTex = {};
-
-function faceTexture(id) {
-  if (texCache.has(id)) return texCache.get(id);
-  const cv = document.createElement('canvas');
-  cv.width = cv.height = 512;
-  drawFace(cv.getContext('2d'), 512, CARD_BY_ID[id]);
-  const tx = new THREE.CanvasTexture(cv);
-  tx.colorSpace = THREE.SRGBColorSpace;
-  tx.anisotropy = 4;
-  texCache.set(id, tx);
-  return tx;
-}
 
 function faceImage(id, size = 160) {
   const key = id + ':' + size;
@@ -201,67 +191,6 @@ function faceImage(id, size = 160) {
   const url = cv.toDataURL('image/png');
   imgCache.set(key, url);
   return url;
-}
-
-function makeShared() {
-  const bc = document.createElement('canvas');
-  bc.width = bc.height = 512;
-  drawBack(bc.getContext('2d'), 512);
-  backTex = new THREE.CanvasTexture(bc);
-  backTex.colorSpace = THREE.SRGBColorSpace;
-  const tc = document.createElement('canvas');
-  tc.width = tc.height = 512;
-  drawBack(tc.getContext('2d'), 512);
-  drawTape(tc.getContext('2d'), 512);
-  backTapeTex = new THREE.CanvasTexture(tc);
-  backTapeTex.colorSpace = THREE.SRGBColorSpace;
-  for (const [rar, info] of [...Object.entries(RARITY), ['tape', { side: '#c9d3dc' }], ['golden', { side: '#ffcf33' }]]) {
-    const ec = document.createElement('canvas');
-    ec.width = 256; ec.height = 32;
-    drawEdge(ec.getContext('2d'), 256, 32, info.side);
-    const tx = new THREE.CanvasTexture(ec);
-    tx.colorSpace = THREE.SRGBColorSpace;
-    tx.wrapS = THREE.RepeatWrapping;
-    tx.repeat.set(6, 1);
-    edgeTex[rar] = tx;
-  }
-}
-
-const discGeo = new THREE.CylinderGeometry(DISC_R, DISC_R, DISC_H, 56, 1);
-const matCache = new Map();
-function discMaterials(id, heavy = false) {
-  const key = id + (heavy ? ':h' : '');
-  if (matCache.has(key)) return matCache.get(key);
-  const c = CARD_BY_ID[id];
-  if (id === 'golden') {
-    // 황금 딱지: 옆면이 금빛으로 번쩍 → 더미 속 위치가 보인다(어디를 노릴지)
-    const mats = [
-      new THREE.MeshStandardMaterial({ map: edgeTex.golden, color: 0xffd34d, roughness: 0.25, metalness: 0.85, emissive: 0x3a2500, envMapIntensity: 1.2 }),
-      new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.25, metalness: 0.4, clearcoat: 0.8 }),
-      new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.6, color: 0xffe9a0, envMapIntensity: 0.6 }),
-    ];
-    matCache.set(key, mats);
-    return mats;
-  }
-  const fancy = c.rarity === 'epic' || c.rarity === 'legendary';
-  const top = fancy
-    ? new THREE.MeshPhysicalMaterial({ map: faceTexture(id), roughness: 0.35, metalness: 0.1, iridescence: 0.9, iridescenceIOR: 1.6, clearcoat: 0.6, clearcoatRoughness: 0.25 })
-    : new THREE.MeshStandardMaterial({ map: faceTexture(id), roughness: 0.5, metalness: 0, envMapIntensity: 0.35 });
-  const side = heavy
-    ? new THREE.MeshStandardMaterial({ map: edgeTex.tape, roughness: 0.35, metalness: 0.3, envMapIntensity: 0.8 })
-    : new THREE.MeshStandardMaterial({ map: edgeTex[c.rarity], roughness: c.rarity === 'legendary' ? 0.3 : 0.8, metalness: c.rarity === 'legendary' ? 0.5 : 0, envMapIntensity: c.rarity === 'legendary' ? 1 : 0.3 });
-  const bottom = new THREE.MeshStandardMaterial({ map: heavy ? backTapeTex : backTex, roughness: 0.7, envMapIntensity: 0.3 });
-  const mats = [side, top, bottom];
-  matCache.set(key, mats);
-  return mats;
-}
-
-function makeDiscMesh(id, heavy = false) {
-  const m = new THREE.Mesh(discGeo, discMaterials(id, heavy));
-  m.castShadow = true;
-  m.receiveShadow = true;
-  m.userData.cardId = id;
-  return m;
 }
 
 // ── 장면 ────────────────────────────────────────────────
@@ -409,7 +338,7 @@ function buildScene() {
   scene.add(classroomBackdrop());
 
   fx = new Fx(scene, camera, $('#fxl'));
-  makeShared();
+  initDiscTextures();
   buildAimGizmo();
   layout();
 }
@@ -1067,10 +996,12 @@ function showCues(aiming) {
 function updateCues(now) {
   const st = cue.st;
   if (!st || state !== 'match' || !cue.sleeve) return;
-  const { c, top, h, ys } = st;
+  const { c, h, ys } = st;
+  const V = (y) => paper.visY(y, c); // 물리 높이 → 보이는 딱지 높이(얇은 종이 더미는 물리보다 낮다, paper.js 배치). 판정·lidCount 는 물리 그대로
+  const top = V(st.top);
   const pulling = st.p >= 0.05;
   // 소매(뚜껑): 조준 딱지 아래 경계 ~ 꼭대기
-  const y0 = Math.max(0, h - DISC_H / 2);
+  const y0 = Math.max(0, V(h) - VIS_H / 2);
   cue.sleeve.visible = true;
   cue.sleeve.position.set(c.x, (y0 + top) / 2, c.z);
   cue.sleeve.scale.set(1, Math.max(0.02, top - y0), 1);
@@ -1079,7 +1010,7 @@ function updateCues(now) {
   const showBand = !pulling && st.win && cueStage('height') === 0 && pose !== 'low';
   for (const m of Object.values(cue.band)) m.visible = !!showBand;
   if (showBand) {
-    const yTop = ys[st.win[0] - 1] + DISC_H / 2, yBot = ys[Math.min(ys.length, st.win[1]) - 1] - DISC_H / 2;
+    const yTop = V(ys[st.win[0] - 1]) + VIS_H / 2, yBot = V(ys[Math.min(ys.length, st.win[1]) - 1]) - VIS_H / 2; // 보이는 2~4장째 딱지 그대로
     cue.band.body.position.set(c.x, (yTop + yBot) / 2, c.z); cue.band.body.scale.set(1, Math.max(0.02, yTop - yBot), 1);
     cue.band.top.position.set(c.x, yTop, c.z); cue.band.bot.position.set(c.x, yBot, c.z);
     cue.band.body.material.opacity = st.inWin ? 0.28 + 0.22 * (0.5 + 0.5 * Math.sin(now * 0.025)) : 0.2;
@@ -1133,14 +1064,15 @@ function shotGeometry(shot) {
 function showGizmo(shot, color = 0xffffff) {
   const g = shotGeometry(shot);
   puffer.aimX = (shot.lat || 0) / DISC_R;
+  const va = visAim(g); // 화면에 그리는 조준점(보이는 딱지 높이). 물리는 g.aim
   if (breath.mode !== 'blow') {
-    breath.aim = g.aim.clone();
+    breath.aim = va.clone();
     breath.p = (shot.power || 0) / Rules.POUCH_FULL; // 절대값(주머니 비율). 정답 대비로 그리면 숨겨진 정답 게이지가 된다
     if (breath.mode !== 'charge') { breath.mode = 'charge'; breath.t = 0; }
   }
   reticle.visible = layerRing.visible = aimLine.visible = true;
-  reticle.position.copy(g.aim).addScaledVector(g.dir, -0.02);
-  reticle.lookAt(g.aim.clone().add(g.normal)); // 표적 고리가 원기둥 곡면에 붙어 보이게 (옆을 노리면 비스듬히 누움)
+  reticle.position.copy(va).addScaledVector(g.dir, -0.02);
+  reticle.lookAt(va.clone().add(g.normal)); // 표적 고리가 원기둥 곡면에 붙어 보이게 (옆을 노리면 비스듬히 누움)
   reticle.material.color.setHex(color);
   // 지난 숨 고스트: 직전 조준 자리 (내 차례일 때만)
   if (lastBreath.aim && puffer.who === 'me' && breath.mode === 'charge') {
@@ -1150,7 +1082,7 @@ function showGizmo(shot, color = 0xffffff) {
   }
   const s = 0.8 + (shot.power || 0) * 0.6;
   reticle.scale.setScalar(s);
-  layerRing.position.set(g.center.x, shot.h, g.center.z);
+  layerRing.position.set(g.center.x, va.y, g.center.z);
   // 기운 틈: 옆을 누르면 누른 쪽이 들리고 굴러갈 반대쪽이 내려간다 (좌우 단계 ≤ 1 이면 크게)
   const tiltA = (puffer.who === 'me' && cueStage('side') <= 1 ? 0.25 : 0.1) * clamp(shot.lat || 0, -1, 1);
   layerRing.quaternion.setFromAxisAngle(g.dir, -tiltA).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
@@ -1342,7 +1274,7 @@ function ownerGlow(d, color) {
     new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false }),
   );
   ring.rotation.x = Math.PI / 2;
-  ring.position.y = DISC_H / 2 + 0.01;
+  ring.position.y = VIS_H / 2 + 0.01;
   m.add(ring);
   addTween(0.9, (k) => { ring.material.opacity = 0.95 * (1 - k * k); ring.scale.setScalar(1 + k * 0.15); }, () => { m.remove(ring); ring.geometry.dispose(); ring.material.dispose(); });
 }
@@ -1381,15 +1313,16 @@ function addTween(dur, update, done) {
 
 function syncMeshes() {
   if (!table) return;
+  const items = [];
   for (const d of table.liveDiscs()) {
     const m = meshes.get(d.id);
     if (!m || m.userData.anim) continue;
-    const p = d.body.translation();
-    const q = d.body.rotation();
-    m.position.set(p.x, p.y, p.z);
-    m.quaternion.set(q.x, q.y, q.z, q.w);
+    items.push({ id: d.id, body: d.body, mesh: m });
   }
+  paper.apply(items); // 자세 = 물리 그대로, 높이 = 받침에 닿게 내린 배치(얇은 종이 더미에 틈이 안 뜨게, paper.js). 판이 있으면 매 프레임
 }
+// 화면용 조준점: 물리 조준점 g.aim(바람·판정은 이것 그대로)을 보이는 딱지 높이로 — 얇은 종이 더미는 물리보다 낮다(paper.js 배치)
+function visAim(g) { const a = g.aim.clone(); a.y = paper.visY(a.y, g.center); return a; }
 
 const simWatch = { revealed: new Set(), count: 0, lastClack: 0, vy: new Map(), resolve: null, simTime: 0, quiet: 0, glowed: new Set(), outShown: new Set(), outs: 0 };
 
@@ -1443,6 +1376,8 @@ function frame(now) {
   expFrame(); // 실험(바람 도달 시간): 와류 고리·부는 얼굴 유지·수치 표시. 끄면 표시만 숨김
   // 트윈
   stepTweens(dt);
+  if (table) syncMeshes(); // 물리가 쉬는 동안(조준·턴 사이·히트스톱·대결 대기)에도 배치를 유지 — 트윈에서 막 돌아온 장도 이번 프레임에 자리로
+  paper.tick(now, dt * timeScale); // 배치 높이·휨 따라가기(실제 시간)·착지 휘청(게임 시간: 슬로모·멈칫 따라감)
   fx.update(dt * (0.4 + 0.6 * timeScale));
   // 카메라
   shake *= Math.pow(0.02, dt);
@@ -1523,6 +1458,9 @@ function watchSim() {
     if (prev < -1.2 && v.y > -0.3 && now - simWatch.lastClack > 35) {
       sfx.clack(Math.min(1, -prev / 6));
       simWatch.lastClack = now;
+    }
+    if (prev < -1.2 && v.y > -0.3) { // 종이 탄성: 착지한 장마다 가장자리 휘청(그림만)
+      paper.land(meshes.get(d.id), Math.min(1, -prev / 6));
     }
     simWatch.vy.set(d.id, v.y);
     const up = table.faceUp(d);
@@ -1696,7 +1634,7 @@ function goHome() {
   for (let i = 0; i < towerN; i++) {
     const id = ids[Math.floor(rng() * ids.length)] || 'mandu';
     const m = makeDiscMesh(id);
-    m.position.set((rng() - 0.5) * 0.12, DISC_H / 2 + i * (DISC_H + 0.004), (rng() - 0.5) * 0.12);
+    m.position.set((rng() - 0.5) * 0.12, pileY(i), (rng() - 0.5) * 0.12);
     m.rotation.y = rng() * 6.28;
     m.rotation.x = i === towerN - 1 ? 0 : Math.PI;
     scene.add(m);
@@ -1707,8 +1645,9 @@ function goHome() {
   showIds.forEach((id, i) => {
     const m = makeDiscMesh(id);
     const a = (i / showIds.length) * Math.PI * 2;
-    m.position.set(Math.cos(a) * 3.2, DISC_H / 2, Math.sin(a) * 3.2);
+    m.position.set(Math.cos(a) * 3.2, VIS_H / 2, Math.sin(a) * 3.2);
     m.rotation.y = -a + Math.PI / 2;
+    setBend(m, -0.012 - 0.004 * (i % 3), i * 1.3); // 쓰던 도화지 딱지: 가장자리가 살짝 들림
     scene.add(m);
     homeMeshes.push(m);
   });
@@ -1814,7 +1753,7 @@ async function introDrop() {
     const f = finals[i];
     f.m.visible = true;
     const y0 = f.p.y + 4;
-    addTween(0.22, (k) => { f.m.position.y = lerp(y0, f.p.y, k * k); }, () => { f.m.userData.anim = false; sfx.clack(0.5); });
+    addTween(0.22, (k) => { f.m.position.y = lerp(y0, f.p.y, k * k); }, () => { f.m.userData.anim = false; sfx.clack(0.5); paper.land(f.m, 0.5); });
     await wait(Math.max(30, 110 - i * 3));
   }
   await wait(300);
@@ -1921,6 +1860,7 @@ function pointerAim(ev) {
   const dir = match?.net ? new THREE.Vector3(NET_CANON.x, 0, NET_CANON.z) : toCam.clone().negate();
   const side = new THREE.Vector3(-dir.z, 0, dir.x);
   const top = table.columnTop();
+  const vtop = paper.visY(top, c); // 보이는 꼭대기: 얇은 종이 더미는 물리보다 낮다(paper.js 배치) → 손가락은 보이는 딱지를, 조준 h 는 physY 로 물리 높이
   // 누른 곳 = 바람이 닿는 곳 (재윤님 4차: 좌우·상하 모두). 표적은 손가락 바로 밑, 당기는 동안 움직이지 않는다.
   // 터치 광선을 실제 원기둥(반지름 R, 높이 0~top)에 쏴서 맞은 점을 그대로 쓴다.
   // (전에는 더미 중심을 지나는 세로 평면에서 읽어서, 위에서 내려다보는 카메라로는 표적이 손가락보다 0.25~0.7 아래에 찍혔다 — 4차 교차 검토)
@@ -1932,10 +1872,10 @@ function pointerAim(ev) {
   if (qa > 1e-6 && disc >= 0) {
     const t = (-qb - Math.sqrt(disc)) / (2 * qa);
     const y = o.y + t * v.y;
-    if (y <= top) hit = new THREE.Vector3(o.x + t * v.x, Math.max(0.03, y), o.z + t * v.z); // 옆면(아래로 넘치면 맨 아래)
+    if (y <= vtop) hit = new THREE.Vector3(o.x + t * v.x, Math.max(0.015, y), o.z + t * v.z); // 옆면(아래로 넘치면 맨 아래)
     else if (v.y < 0) {
-      const tt = (top - o.y) / v.y; // 옆면 위로 넘치면 윗면을 누른 것 → 맨 위 층
-      hit = new THREE.Vector3(o.x + tt * v.x, top - 0.02, o.z + tt * v.z);
+      const tt = (vtop - o.y) / v.y; // 옆면 위로 넘치면 윗면을 누른 것 → 맨 위 층
+      hit = new THREE.Vector3(o.x + tt * v.x, vtop - 0.01, o.z + tt * v.z);
     }
   }
   if (!hit) {
@@ -1945,7 +1885,7 @@ function pointerAim(ev) {
     if (!ray.ray.intersectPlane(plane, hit)) return null;
   }
   const lat = clamp(new THREE.Vector3(hit.x - c.x, 0, hit.z - c.z).dot(side), -0.9 * DISC_R, 0.9 * DISC_R);
-  const h = clamp(hit.y, 0.03, Math.max(0.05, top - 0.02));
+  const h = clamp(paper.physY(hit.y, c), 0.03, Math.max(0.05, top - 0.02)); // 보이는 높이 → 물리 높이
   return { dir: { x: dir.x, z: dir.z }, lat, h, power: 0 };
 }
 
@@ -2449,9 +2389,10 @@ async function blow(rawShot, who) {
   const shot = resolveShot(rawShot, match.rng);
   const g = shotGeometry(shot);
   if (who === 'me') takeCueSnap(rawShot, shot, g);
+  const va = visAim(g); // 화면 연출용 조준점(보이는 딱지 높이) — 물리 바람은 아래 blowArgs = g.aim 그대로
   if (who === 'me') {
     puffer.snapUntil = performance.now() + 900; puffer.snapP = rawShot.power; puffer.snapN = liveCount();
-    lastBreath.p = rawShot.power; lastBreath.aim = g.aim.clone(); lastBreath.normal = g.normal.clone();
+    lastBreath.p = rawShot.power; lastBreath.aim = visAim(g); lastBreath.normal = g.normal.clone(); // 고스트 = 화면 자리(보이는 딱지 높이)
     profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile);
   }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);
@@ -2468,7 +2409,7 @@ async function blow(rawShot, who) {
   // 더미 쪽 단서: 지금 연출은 숨 시작(히트스톱 뒤)에. 공기 앞머리 연출이면 물리 도달 스텝에(A.onArrive ← 프레임 루프 expArrive)
   const pileHit = () => {
     if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 }); // 너무 낮게: 바닥 먼지
-    fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, g.aim.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
+    fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, va.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
     shake = 0.18 + rawShot.power * 0.22;
     flash(0.55 * Math.min(1, rawShot.power));
     shockwave(table.pileCenter(), rawShot.power);
@@ -2492,7 +2433,7 @@ async function blow(rawShot, who) {
     navigator.vibrate?.(Math.round(20 + shot.power * 30));
     if (who === 'me') window.__lastShot = { pose: rawShot.pose || 'eye', mouthY: rawShot.mouthY ?? null, power: rawShot.power }; // 테스트용
     const windFrom = rawShot.mouthY != null ? new THREE.Vector3(g.aim.x - g.dir.x * Rules.LIP_BACK, rawShot.mouthY, g.aim.z - g.dir.z * Rules.LIP_BACK) : g.origin; // 책상 입: 낮은 곳에서 올려 붊
-    fx.wind(windFrom, g.aim, shot.power, windColor);
+    fx.wind(windFrom, va, shot.power, windColor);
     pileHit();
     // 물리에 바람 적용 (실험 jetLag 는 솔로 시험 토글이 켜졌을 때만 숨 인자로 — 안 넘기면 v1 비트 동일)
     expBlowTable(blowArgs, lag);
@@ -2652,12 +2593,13 @@ async function collect(flipped, who) {
     const m = meshes.get(d.id);
     table.remove(d);
     meshes.delete(d.id);
+    paper.release(m); // 판에서 빠짐: 휨 펴고 배치에서 뺌(더미로 날아감)
     m.userData.anim = true;
     const from = m.position.clone();
     const q0 = m.quaternion.clone();
     const idx = piles[who].length;
     piles[who].push(m);
-    const to = dest.clone().add(new THREE.Vector3(0, DISC_H / 2 + idx * (DISC_H + 0.004), 0));
+    const to = dest.clone().add(new THREE.Vector3(0, pileY(idx), 0));
     const q1 = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, (Math.random() - 0.5) * 0.6, 0));
     const k0 = i;
     addTween(0.42, (k) => {
@@ -2685,9 +2627,10 @@ async function restack() {
   const before = new Map(live.map((d) => { const m = meshes.get(d.id); m.userData.anim = true; return [d.id, { p: m.position.clone(), q: m.quaternion.clone() }]; }));
   table.applyRestack(table.restackTargets({ x: 0, z: 0 }));
   table.settle(240);
+  const rest = paper.restPositions(live.map((d) => ({ id: d.id, body: d.body, mesh: meshes.get(d.id) }))); // 새 더미의 보이는 자리(얇은 몸 + 받침에 닿게 내림, paper.js) → 끝에서 안 튐
   const anims = live.map((d) => {
-    const m = meshes.get(d.id), b = before.get(d.id), p = d.body.translation(), q = d.body.rotation();
-    return { m, from: b.p, q0: b.q, to: new THREE.Vector3(p.x, p.y, p.z), q1: new THREE.Quaternion(q.x, q.y, q.z, q.w) };
+    const m = meshes.get(d.id), b = before.get(d.id), r = rest.get(d.id);
+    return { m, from: b.p, q0: b.q, to: r.p, q1: r.q };
   });
   sfx.whoosh();
   await addTween(0.55, (k) => {
@@ -2700,6 +2643,7 @@ async function restack() {
   });
   for (const a of anims) a.m.userData.anim = false;
   syncMeshes();
+  for (const a of anims) paper.land(a.m, 0.5); // 내려앉으며 종이 휘청(맨 위 장만 살짝 통)
   sfx.clack(0.6);
   await wait(200);
 }
@@ -3493,7 +3437,7 @@ async function netGameStart(M, g, st) {
 function netPileAdd(M, pid, who) {
   const m = makeDiscMesh(M.cardOf(pid));
   const dest = who === 'me' ? new THREE.Vector3(-pileX, 0, 2.4) : new THREE.Vector3(pileX, 0, -3.6);
-  m.position.copy(dest).add(new THREE.Vector3(0, DISC_H / 2 + piles[who].length * (DISC_H + 0.004), 0));
+  m.position.copy(dest).add(new THREE.Vector3(0, pileY(piles[who].length), 0));
   m.userData.anim = true;
   scene.add(m);
   piles[who].push(m);
@@ -3569,12 +3513,13 @@ async function netInstallPuppet(M, pup) {
   }
   // 다시 쌓기 연출: 지금 메시 자리 → 새 더미 자세 (솔로 restack 과 같은 0.55초)
   const anims = [];
-  for (const d of pup.liveDiscs()) {
+  const live = pup.liveDiscs().filter((d) => meshes.get(d.id));
+  const rest = paper.restPositions(live.map((d) => ({ id: d.id, body: d.body, mesh: meshes.get(d.id) }))); // 솔로 restack 과 같은 목표(보이는 자리) → 끝에서 안 튐
+  for (const d of live) {
     const m = meshes.get(d.id);
-    if (!m) continue;
     m.userData.anim = true;
-    const p = d.body.translation(), q = d.body.rotation();
-    anims.push({ m, from: m.position.clone(), q0: m.quaternion.clone(), to: new THREE.Vector3(p.x, p.y, p.z), q1: new THREE.Quaternion(q.x, q.y, q.z, q.w) });
+    const r = rest.get(d.id);
+    anims.push({ m, from: m.position.clone(), q0: m.quaternion.clone(), to: r.p, q1: r.q });
   }
   sfx.whoosh();
   await addTween(0.55, (k) => {
@@ -3583,6 +3528,7 @@ async function netInstallPuppet(M, pup) {
   });
   for (const a of anims) a.m.userData.anim = false;
   syncMeshes();
+  for (const a of anims) paper.land(a.m, 0.5);
   sfx.clack(0.6);
   await wait(200);
 }
@@ -3592,7 +3538,7 @@ async function netBlowFx(M, raw, shot, who, mine) {
   if (mine) {
     takeCueSnap(raw, shot, g);
     puffer.snapUntil = performance.now() + 900; puffer.snapP = raw.power; puffer.snapN = liveCount();
-    lastBreath.p = raw.power; lastBreath.aim = g.aim.clone(); lastBreath.normal = g.normal.clone();
+    lastBreath.p = raw.power; lastBreath.aim = visAim(g); lastBreath.normal = g.normal.clone();
     profile.tutorialPuffs = (profile.tutorialPuffs || 0) + 1; Store.save(profile);
   }
   setTimeout(() => breathFeedback(shot.ratio, who), 380);
@@ -3610,9 +3556,10 @@ async function netBlowFx(M, raw, shot, who, mine) {
   sfx.puff(Math.min(1.2, raw.power), shot.ratio ?? 1);
   if (mine) { navigator.vibrate?.(Math.round(20 + shot.power * 30)); window.__lastShot = { pose: raw.pose || 'eye', mouthY: raw.mouthY ?? null, power: raw.power }; }
   const windFrom = raw.mouthY != null ? new THREE.Vector3(g.aim.x - g.dir.x * Rules.LIP_BACK, raw.mouthY, g.aim.z - g.dir.z * Rules.LIP_BACK) : g.origin;
-  fx.wind(windFrom, g.aim, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
+  const va = visAim(g);
+  fx.wind(windFrom, va, shot.power, who === 'me' ? 0xffffff : 0xffe7a0);
   if (shot.h < table.columnTop() * 0.15) fx.emit({ at: { x: g.aim.x, y: 0.05, z: g.aim.z }, n: 40, color: 0xc9a77a, speed: 2.4, up: 1.2, life: 0.8, size: 0.32, gravity: 2 });
-  fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, g.aim.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
+  fx.emit({ at: { x: g.aim.x, y: Math.max(0.05, va.y), z: g.aim.z }, n: 18, color: 0xfff6e0, speed: 2.2 * shot.power, up: 1.2, life: 0.5, size: 0.3, gravity: 1 });
   shake = 0.18 + raw.power * 0.22;
   flash(0.55 * Math.min(1, raw.power));
   shockwave(table.pileCenter(), raw.power);
@@ -4003,7 +3950,7 @@ async function netBotShot(M) {
   if (!myTurn.on || myTurn.pressed || !table || match?.net !== M || M.ended) return;
   const n = liveCount(), top = table.columnTop(), c = table.pileCenter();
   const h = clamp(top * plan.hf, 0.04, Math.max(0.05, top - 0.03)), lat = plan.lat;
-  const wp = new THREE.Vector3(c.x + lat, h, c.z + Math.sqrt(1 - lat * lat)).project(camera); // 정규 좌표(바람 −z): 부는 쪽(+z) 곡면 위
+  const wp = new THREE.Vector3(c.x + lat, paper.visY(h, c), c.z + Math.sqrt(1 - lat * lat)).project(camera); // 정규 좌표(바람 −z): 부는 쪽(+z) 곡면 위 · 누르는 곳 = 보이는 딱지 높이(pointerAim 이 physY 로 h 로 되돌림)
   const x = (wp.x * 0.5 + 0.5) * window.innerWidth, y = (-wp.y * 0.5 + 0.5) * window.innerHeight;
   const pe = (type, px, py, target) => target.dispatchEvent(new PointerEvent(type, { clientX: px, clientY: py, pointerId: 7, pointerType: 'touch', isPrimary: true, bubbles: true, cancelable: true }));
   pe('pointerdown', x, y, renderer.domElement);
@@ -5613,7 +5560,8 @@ function sweepCoachDraw(ctx, dpr, now) {
   ctx.restore();
 }
 
-// 옆모습 그림 바탕(작은 창 #swSide · 큰 영점 창 #swZero 공용): 바닥 · 분필 원 가장자리 눈금(입 쪽 r 3.2) · 더미 단면(딱지마다 x = 중심 평면 단면, 뒤집힘 금색) · 꼭대기 점선
+// 옆모습 그림 바탕(작은 창 #swSide · 큰 영점 창 #swZero 공용): 바닥 · 분필 원 가장자리 눈금(입 쪽 r 3.2) · 더미 단면(딱지마다 x = 중심 평면 단면,
+//   길이 2R · 보이는 두께 VIS_H(paper.js) · 중심은 물리 그대로, 뒤집힘 금색) · 꼭대기 점선
 function drawSideBase(c, w, h, X, Y, s, pc, top0) {
   const zf = pc.z + 1;
   c.fillStyle = 'rgba(180,140,100,0.25)'; c.fillRect(0, Y(0), w, h - Y(0));
@@ -5626,7 +5574,7 @@ function drawSideBase(c, w, h, X, Y, s, pc, top0) {
     const L = Math.hypot(ny, nz) || 1, vz = -ny / L, vy = nz / L;
     c.strokeStyle = table.faceUp(d) > 0.5 ? '#f2a91e' : '#8a5a3c';
     c.globalAlpha = table.inCircle(d) ? 1 : 0.45;
-    c.lineWidth = Math.max(2, DISC_H * s * 0.9);
+    c.lineWidth = Math.max(2, VIS_H * s * 0.9); // 보이는 두께(paper.js) — 물리 중심 그대로
     c.beginPath(); c.moveTo(X(p.z - vz * DISC_R), Y(p.y - vy * DISC_R)); c.lineTo(X(p.z + vz * DISC_R), Y(p.y + vy * DISC_R)); c.stroke();
   }
   c.globalAlpha = 1;
@@ -6000,7 +5948,7 @@ async function bootInner() {
     const fr = (y) => { const v = new THREE.Vector3(c.x + tc.x * DISC_R, y, c.z + tc.z * DISC_R).project(camera); return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight }; };
     const rv = reticle?.visible ? reticle.position.clone().project(camera) : null;
     const ret = rv ? { x: (rv.x * 0.5 + 0.5) * window.innerWidth, y: (-rv.y * 0.5 + 0.5) * window.innerHeight } : null; // 표적 화면 좌표(터치 일치 검사용)
-    return { state, puffP: puffer.p, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), frontTop: fr(top), frontBottom: fr(0), reticle: ret, turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
+    return { state, puffP: puffer.p, live: table.liveDiscs().length, me: piles.me.length, ai: piles.ai.length, top: toScreen(top), bottom: toScreen(0), frontTop: fr(top), frontBottom: fr(0), vtop: fr(paper.visY(top, c)), reticle: ret, turn: match?.turn, level: match?.level?.n, puffsLeft: match?.puffsLeft, flipped: match?.flipped };
   };
 }
 
