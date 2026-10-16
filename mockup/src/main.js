@@ -1523,7 +1523,7 @@ function watchSim() {
     } else if (up > 0.5 && speed < 2.2 && !simWatch.revealed.has(d.id)) {
       simWatch.revealed.add(d.id);
       simWatch.count++;
-      sfx.flip(simWatch.count - 1);
+      if (!(sweepOn() && match.n >= 30 && now - sweep.lastFlipSnd < 40)) { sfx.flip(simWatch.count - 1); sweep.lastFlipSnd = now; } // 쓸기 연습판 30장 이상: 뒤집힘 틱은 40 ms 에 하나로 묶음
       const p = d.body.translation();
       const c = CARD_BY_ID[d.cardId];
       fx.emit({ at: { x: p.x, y: p.y + 0.1, z: p.z }, n: 14 + (c.rarity !== 'common' ? 16 : 0), color: new THREE.Color(RARITY[c.rarity].ring[1]).getHex(), speed: 2.5, up: 3, life: 0.7, size: 0.22 });
@@ -4177,7 +4177,7 @@ const sweep = {
   ctl: null, // 지금(마지막) 숨의 SweepCtl — 화면은 ctl.state 만 읽는다(prog 는 물리만 부름)
   shot: null, // 진행 중 샷 { kind, q, ctl, j, steps, fr, resolve, ... }
   clock: false, clockEnded: false, // 쓸기 숨 동안 0.5배 고정 · 끝난 첫 프레임에 바로 1배
-  snd: null, lastFlipVib: 0, guideUntil: 0, slowCancels: 0,
+  snd: null, lastFlipVib: 0, lastFlipSnd: 0, guideUntil: 0, slowCancels: 0,
   lastTrail: null, // 지난 숨의 엄지 궤적(화면 CSS px) — 회색 점선 1숨만
   frameMs: [], lastFrameT: 0, dispA: 0, lastQ: 0,
   card: null, ribbon: null,
@@ -4534,8 +4534,8 @@ function showSweepCard(raw, last, sum) {
     `${t('swNumBlow')} <b>${ms(st.blowMs)}</b>`, `${t('swNumOpen')} <b>${ms(st.openLatMs)}</b>`, `${t('swNumSpeed')} <b>${st.maxPxS == null ? '–' : st.maxPxS + ' px/s'}</b>`,
   ].map((x) => `<span>${x}</span>`).join('');
   $('#swRef').textContent = t('swRef');
+  box.hidden = false; // 먼저 보이게(캔버스 크기를 읽으려면)
   drawSweepTimeline($('#swTl'), raw.ctl, last);
-  box.hidden = false;
   return new Promise((resolve) => {
     const done = (v) => { box.hidden = true; sweep.card = null; resolve(v); };
     sweep.card = { resolve: done };
