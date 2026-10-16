@@ -1,0 +1,16 @@
+{
+  "name": "puff-enginecmp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PUFF! 물리 엔진 비교 틀 (Rapier 0.12 JS ↔ Jolt 5.6 WASM) — 게임 루트 package.json 과 따로",
+  "type": "module",
+  "scripts": {
+    "smoke": "node smoke.mjs 30 0.11 1",
+    "tune1": "node tune-jolt.mjs stage1",
+    "tune2": "node tune-jolt.mjs stage2",
+    "tune3": "node tune-jolt.mjs stage3"
+  },
+  "dependencies": {
+    "jolt-physics": "1.1.0"
+  }
+}

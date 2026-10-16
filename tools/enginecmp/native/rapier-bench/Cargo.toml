@@ -1,0 +1,17 @@
+[package]
+name = "rapier_bench"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Rapier 0.36 (enhanced-determinism) 네이티브 벤치 — joltbench(bench.cpp) 와 같은 판·같은 해시"
+
+[dependencies]
+# native/puff_sim 과 같은 버전·기능 (같은 CARGO_TARGET_DIR 에서 의존성 산출물 재사용)
+rapier3d = { version = "=0.36.0", features = ["enhanced-determinism"] }
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "thin"
+debug = false
+strip = "debuginfo"
