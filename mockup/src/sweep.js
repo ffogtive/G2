@@ -7,6 +7,10 @@
 //
 // 이 파일은 PvP 해시(turn.js·shotSimV) 밖이다: 솔로 '쓸기 연습판'만 쓴다. 고전 조작·고전 물리는 그대로(sim.js 고전 경로 비트 동일).
 // 시간: 숨 시각 t·D 는 물리(화면) 초 = sim.js 스텝 시각(P.t). 엄지(Gesture)는 벽시계 ms(손 판정). 둘을 잇는 것은 SweepCtl 의 u(px)뿐이다.
+//
+// 🧭 가설 수정(2026-10-16, 재윤님 실기기 기록 + 화면 녹화): 문법 A('툭 열고 → 누른 채 기다렸다 → 쓸며 떼기, 떼면 숨 끝')는 자연스러운 한 획
+//   (당김 → 빠른 휙 → 떼기)과 부딪힌다 — 40장 4숨 모두 푸 시작→떼기 4~108 ms · 0장. → 기본을 문법 B '놓고 쓸기'로 바꾼다(아래 GB 절, 측정 tools/sweepgb.mjs).
+//   A 는 SweepCtl 'thumb' 그대로 남겨 ⚙ '누른 채 쓸기(옛)'로 비교한다.
 
 export const D2R = Math.PI / 180;
 
@@ -123,6 +127,9 @@ export const GCFG = {
   capMs: 1600,     // 푸 상한(이 시제품 값. 문서 §4.1 은 화면 1.0 s)
 };
 export const GAME_GCFG = { slowCancel: 40, minBlowMs: 0, capMs: 1e9 };
+// 문법 B 의 당김: 같은 인식기(세기·꽉·옆 빼기·덜 당김 취소)인데 '푸'를 열지 않고(upStart ∞ → 떼기 = up() 의 'puff' = 놓기) 느린 밀기 취소도 없다
+//   (자연스러운 한 획은 놓기 전에 손가락이 위로 간다 — 그것을 취소로 보면 안 된다). 옆 빼기는 GestureB(아래, Gesture 뒤)
+export const GB_GCFG = { ...GAME_GCFG, slowCancel: 0, upStart: Infinity };
 export class Gesture {
   constructor(W, H, cfg = {}) { this.W = W; this.H = H; this.c = { ...GCFG, ...cfg }; this.reset(); }
   reset() { this.st = 'idle'; this.tr = []; this.sm = []; this.out = null; this.cumAt = null; this.why = null; this.relAt = null; }
@@ -191,15 +198,85 @@ export class Gesture {
   }
 }
 
+// 문법 B 당김 인식기: Gesture(gesture.mjs 그대로)에 옆 빼기 판정만 바꾼다 — 옆 빼기는 '당기는 동안'의 x(엄지가 최저점보다 GB.rise px 넘게
+//   오르기 전 마지막 x)로 본다. 같은 획의 위로 휙(엄지 호)에서 옆으로 흐른 것은 취소가 아니다(검토 2026-10-16: 휙 220 px 위 + 옆 120 px 이면
+//   5판 모두 숨이 조용히 취소됨). 취소 반환에 side(옆 빼기) 표시 → 게임이 이유를 토스트로
+export class GestureB extends Gesture {
+  constructor(W, H, cfg = {}) { super(W, H, { ...GB_GCFG, ...cfg }); }
+  down(x, y, t) { super.down(x, y, t); this.xPull = x; }
+  move(x, y, t) {
+    const r = super.move(x, y, t);
+    if (this.st === 'inhale' && this.lowRaw - y < GB.rise) this.xPull = x;
+    return r;
+  }
+  up(x, y, t) {
+    if (this.st !== 'inhale') return super.up(x, y, t);
+    if (this.lowRaw - y < GB.rise) this.xPull = x;
+    this.tr.push([t, x, y]); this.st = 'done';
+    const side = Math.abs(this.xPull - this.ax) > this.c.cancelFrac * this.W;
+    if (side || this.pMax < this.c.minP) return (this.out = { kind: 'cancel', p: this.pMax, side });
+    return (this.out = { kind: 'puff', p: this.pMax });
+  }
+}
+
+// ───────────── 문법 B '놓고 쓸기' (기본 · 측정 tools/sweepgb.mjs, 원자료 tools/coresweep/data/gb/, 2026-10-16) ─────────────
+// 🧭 가설(측정으로 대체로 확인됨, 손 게이트 미검증): B 의 실력은 '휙' 하는 때다 — 꼭대기는 더미 위 절반이 들썩인 직후(화면 0.3~0.35 s).
+//   '위 절반 10° → 들리면 휙!' 단서 + 사람 반응(벽시계 0.2~0.44 s)이 격자 꼭대기의 94~98%(학습·보류 시드 같음).
+// 문법: 당겼다 놓으면 '퍼—'가 저절로 D(q) 화면 초 나간다(입 바닥 α 0, 봉투 rel = 0.26 s 오름 → 평평 → 0.04 s 끊김 — plan 모드와 같은 봉투).
+//   그동안 놓은 뒤 새로 누른 손가락이 위로 휙(최근 300 ms 안 최저점보다 12 px 위, 어느 속도든) → 고개가 목 축(poseAt 'c')을 따라 80°/s 로 24°까지
+//   (손가락 궤적은 안 따라감 = 방아쇠). 두 번째 휙부터 무시. 떼기 전 같은 획의 위로 휙은 방아쇠가 아니다(놓자마자 휙 = 0.0~0.4장, sweepgb ⑤ 가설 수정).
+//   숨 끝은 늘 저절로(두 번째 탭으로 일찍 끊기 없음 — D 0.6~1.0 에서 꼭대기가 평평해 이득 없음). 퍽 없음(30·40장 0장).
+export const GB = {
+  w: 80, A: 24,                // 쓸기 w 80 °/s(화면) · A 24° (sweepgb CHOSEN.sw[0] 'w80·A24': q 0.7~1.0 모든 칸에서 꼭대기가 최고값의 95~100%)
+  dMin: 0.6, dMax: 1.0, qLo: 0.7, // D(q) = clamp(0.6 + (q − 0.7)·4/3, 0.6, 1.0) 화면 초 (q 0.7/0.85/1.0 → 0.6/0.8/1.0, sweepgb CHOSEN.dq)
+  rise: 12, winMs: 300,        // 휙: 최근 300 ms 안의 가장 낮은 점(화면 y 최대)보다 12 px 위(문법 A '푸' 열림 문턱과 같은 크기 · 40 px/s 바닥). 평활 없음(때가 실력 → 지연을 안 더함)
+  cueTT: 10,                   // 단서: 위 절반 평균 기울기 ≥ 10°(옆모습 창 값) → '들리면 휙!' (화면 0.16~0.19 s, 판 간 ±0.01 s)
+};
+// 숨 길이(화면 초, 소수 4자리 — 측정 DQ 0.6/0.8/1.0 과 비트로 같게)
+export const gbD = (q) => +Math.min(GB.dMax, Math.max(GB.dMin, GB.dMin + ((q - GB.qLo) * 4) / 3)).toFixed(4);
+// 원인 칩(sweepgb CHIP 과 같은 규칙): 휙 없음 안 쓸었어요 · 뒤집힘 ≥ 0.85 × 기준 꼭대기(30장 20 · 40장 25, 측정 격자 꼭대기 19.3~20.8 · 24.0~26.2) 좋아요 ·
+//   그 밖 휙 순간 위 절반 기울기 ttF < 23° 이름 · ≥ 85° 또는 휙 때 남은 숨(D − ts) < 0.12 s 또는 숨 안에 꼭대기 못 넘음 늦음 · 그 밖 좋아요
+// 🧭 가설 수정(검토 2026-10-16, 측정 원자료로 확인됨): 기울기 문턱만(20°/85°)이면 거의 최고 결과에도 이름·늦음이 붙었다(놓고 450 ms 휙 19~23장 = 꼭대기 88% → 이름,
+//   1100 ms 휙 25~26장 = 꼭대기 → 늦음; 학습 시드 늦음 칩의 31% 가 꼭대기 85% 이상). 결과 우선 + 이름 문턱 23° → 이름 평균 19~20%·늦음 58~59%·좋아요 94~95%,
+//   이름·늦음 칩인데 꼭대기 85% 이상 = 0~1% (sweepgb report ⑩)
+export const GB_CHIP = { early: 23, late: 85, rem: 0.12, good: 0.85, peak: { 30: 20, 40: 25 } };
+export const gbPeakRef = (n) => GB_CHIP.peak[n] ?? 0.62 * n;
+export function gbChip({ ts, ttF, D, tTop, flip, n }) {
+  if (ts == null) return 'none';
+  if (flip >= GB_CHIP.good * gbPeakRef(n)) return 'good';
+  if (ttF < GB_CHIP.early) return 'early';
+  if (ttF >= GB_CHIP.late || D - ts < GB_CHIP.rem || !(tTop >= 0)) return 'late';
+  return 'good';
+}
+// 휙 인식(벽시계 ms · CSS px): 놓은 뒤 새로 누른 손가락 하나. 창 시작 직전 점 하나는 남긴다(그때 손가락이 거기 있었다 = ZOH)
+export class Flick {
+  constructor(cfg = {}) { this.c = { rise: GB.rise, winMs: GB.winMs, ...cfg }; this.tr = null; this.fired = false; }
+  down(x, y, t) { this.tr = [[t, y]]; this.fired = false; return false; }
+  move(x, y, t) {
+    if (!this.tr || this.fired) return false;
+    const tr = this.tr;
+    tr.push([t, y]);
+    while (tr.length > 2 && tr[1][0] <= t - this.c.winMs) tr.shift();
+    let yLow = -Infinity;
+    for (const p of tr) if (p[1] > yLow) yLow = p[1];
+    if (yLow - y >= this.c.rise) { this.fired = true; return true; }
+    return false;
+  }
+  up(x, y, t) { const f = this.move(x, y, t); this.tr = null; return f; }
+}
+
 // ───────────── 한 숨의 고개 조종 (스펙 §3 SweepCtl) ─────────────
 // '푸' 시작 순간 만든다. table.blowProg({ prog: ctl.prog, power: q, dur: ctl.durCap }) → ctl.attach(그 숨).
 // prog(t) 는 sim.js applyWind 가 물리 스텝마다 정확히 1번 부른다. 렌더는 prog 를 부르지 않고 ctl.state 를 읽는다.
 //  mode 'plan'  = 주입 훅·측정 일정: α = alphaOf({A, w, t0})(t), env = breathOf('rel', D, 0.04).env(t), 처음부터 dur = D + 0.04 (= makeProg('c', rel))
-//  mode 'thumb' = 엄지: α* = hInv(0.5 + u/150), α ← α + clamp(α* − α, ±1°) (≤ 24°). 떼기 요청 + t ≥ 0.131 이면 D = t 로 잠금(dur = D + 0.04),
+//  mode 'thumb' = 문법 A 엄지: α* = hInv(0.5 + u/150), α ← α + clamp(α* − α, ±1°) (≤ 24°). 떼기 요청 + t ≥ 0.131 이면 D = t 로 잠금(dur = D + 0.04),
 //                 떼지 않고 t ≥ 1.0 이면 D = 1.0(저절로 떼기). env = rel 봉투(D 잠기기 전엔 오름 0.26 s 뒤 1). 뗀 뒤 α 는 그 자리
 //  mode 'puck'  = 쓸기 문법의 퍽: 같은 바닥 입, α 0, breathOf('puff')(0.131 s) (= 측정 kind 'puff' · kin 'c' · sweep {})
+//  mode 'flick' = 문법 B: 처음부터 D = gbD(q) · dur = D + 0.04 · env = rel 봉투. flick(at) 요청 → 다음 prog(t) 에서 t0 잠금
+//                 (at 없음 = 그 스텝 t, at = 화면 초면 t ≥ at 인 첫 스텝에서 t0 = at — 주입·Node 일정). 잠근 뒤 α = alphaOf({A 24, w 80, t0})(t).
+//                 → plan {A 24, w 80, t0, D} 와 비트 동일(휙 없음 = plan {A 0}), sweepgame ctl 이 대조
 export class SweepCtl {
-  constructor(table, { mode = 'thumb', plan = null, onEvent = null } = {}) {
+  constructor(table, { mode = 'thumb', plan = null, q = null, onEvent = null } = {}) {
     const c = table.pileCenter();
     this.c = c;
     this.zf = c.z + 1;
@@ -223,10 +300,20 @@ export class SweepCtl {
       this.br = breathOf('puff');
       this.D = this.br.dur;
       this.durCap = this.br.dur;
+    } else if (mode === 'flick') {
+      if (!(q >= 0)) throw new Error("SweepCtl 'flick': q 필요");
+      this.tb = table; // 휙 순간 기울기를 읽기만(halves) — 힘에는 안 쓴다
+      this.q = q;
+      this.D = gbD(q);
+      this.br = breathOf('rel', this.D, SWEEP.off);
+      this.durCap = this.br.dur;
+      this.t0 = null; // 휙이 잠긴 숨 시각(화면 초) — 없으면 안 휙
+      this.flickReq = null; // 'now' | 화면 초
+      this.al = null;
     } else this.durCap = SWEEP.capD + SWEEP.off;
     this.state = { t: 0, alpha: 0, env: 0, o: { ...this.M0 }, yHit: GEO.ym, D: this.D, steps: 0, done: false };
-    // 기록(카드·원인·진동)
-    this.rec = { tTop: -1, ttAtTop: -1, maxTT: 0, maxTB: 0, endTB: 0, tb90: -1, series: [], tt: [] };
+    // 기록(카드·원인·진동). ttF·cueT 는 문법 B 만(휙 순간 위 절반 기울기 · 위 절반이 처음 10° 를 넘은 스텝 끝 시각)
+    this.rec = { tTop: -1, ttAtTop: -1, maxTT: 0, maxTB: 0, endTB: 0, tb90: -1, series: [], tt: [], ttF: -1, cueT: -1 };
     this.below = false;
     this.k = 0; // after() 호출 수(물리 스텝 수)
     this.calls = 0; this.seen = 0; // prog 호출 수(숨이 있던 스텝 수) · after 가 본 수
@@ -234,11 +321,28 @@ export class SweepCtl {
   }
   attach(P) { this.P = P; return this; }
   release(u) { if (u != null) this.u = u; this.relReq = true; }
+  // 문법 B 휙 요청(첫 번째만). at = 화면 초(주입·Node 일정) · 없으면 다음 물리 스텝. 숨이 끝났으면 false
+  flick(at = null) {
+    if (this.mode !== 'flick' || this.flickReq != null || this.state.done) return false;
+    this.flickReq = at == null ? 'now' : at;
+    return true;
+  }
   _prog(t) {
     this.calls++;
     let aRad, env;
     if (this.mode === 'plan') { aRad = this.al(t); env = this.br.env(t); }
     else if (this.mode === 'puck') { aRad = 0; env = this.br.env(t); }
+    else if (this.mode === 'flick') {
+      if (this.t0 == null && this.flickReq != null && (this.flickReq === 'now' || t >= this.flickReq)) {
+        this.t0 = this.flickReq === 'now' ? t : this.flickReq;
+        this.al = alphaOf({ A: GB.A, w: GB.w, t0: this.t0 });
+        // 손 휙: 휙 순간(= 지난 스텝 끝, 시각 t0) 위 절반 기울기. 일정 휙(숫자)은 after() 가 측정 규칙(스텝 끝 시각 ≥ ts 인 첫 스텝)으로
+        if (this.flickReq === 'now') this.rec.ttF = +halves(this.tb)[1].toFixed(1);
+        this.onEvent?.('flick');
+      }
+      aRad = this.al ? this.al(t) : 0;
+      env = this.br.env(t);
+    }
     else {
       // 떼기 잠금(물리 초): 요청 뒤 첫 스텝(최소 0.131), 아니면 상한 1.0
       if (this.D == null && ((this.relReq && t >= SWEEP.minD) || t >= SWEEP.capD)) {
@@ -270,6 +374,15 @@ export class SweepCtl {
       if (R.tTop < 0) { if (S.yHit <= this.top0) this.below = true; else if (this.below) crossed = true; }
       if (crossed) { R.tTop = +(S.t + table.T.dt).toFixed(4); this.onEvent?.('top'); }
       if (R.series.length < 200) R.series.push([+S.t.toFixed(4), +(S.alpha / D2R).toFixed(2), +S.env.toFixed(3), +S.yHit.toFixed(3)]);
+      // 문법 B(읽기만): 일정 휙의 ttF = 스텝 끝 시각 (k+1)·dt ≥ ts 인 첫 스텝 뒤 위 절반 기울기(sweepgb gbShot 과 같은 규칙 → 원인 칩 문턱이 측정과 같은 뜻)
+      //   · cueT = 숨 동안 위 절반이 처음 10° 를 넘은 스텝 끝 시각(코치 '들리면 휙!', sweepgb cue.tt10 과 같은 값)
+      const fq = this.mode === 'flick' ? this.flickReq : null;
+      const needF = typeof fq === 'number' && R.ttF < 0 && (k + 1) * table.T.dt >= fq;
+      if (this.mode === 'flick' && (needF || R.cueT < 0)) {
+        const tt = halves(table)[1];
+        if (needF) R.ttF = +tt.toFixed(1);
+        if (R.cueT < 0 && tt >= GB.cueTT) { R.cueT = +((k + 1) * table.T.dt).toFixed(4); this.onEvent?.('cue'); }
+      }
     }
     S.done = !table.puff;
     if (crossed || k % 3 === 0) {
@@ -288,6 +401,7 @@ export class SweepCtl {
     R.endTB = halves(table)[0];
     const r = { n: table.liveDiscs().length, flip: flips, out: outs, tTop: R.tTop, ttAtTop: R.ttAtTop, maxTT: +R.maxTT.toFixed(1), maxTB: +R.maxTB.toFixed(1), endTB: +R.endTB.toFixed(1) };
     r.cause = causeOf(r);
+    if (this.mode === 'flick') { Object.assign(r, { ts: this.t0, ttF: R.ttF, D: this.D, cueT: R.cueT }); r.chip = gbChip(r); }
     return r;
   }
 }
@@ -344,4 +458,23 @@ export function planShot(Table, { N, seed, plan, q, cards }) {
   do { t.step(); ctl.after(t); steps++; } while (!t.stepJudge(j));
   const R = t.judgeResult();
   return { table: t, ctl, plan: pl, D: ctl.D, steps, flips: R.flipped.length, outs: R.outs.length, hash: poseHash(t), tTop: ctl.rec.tTop, top };
+}
+
+// Node·게임 공용: 문법 B 한 샷 — 놓기(q) → ts(화면 초)에 휙(null = 안 휙) → 판정. 게임 주입 훅({ kind: 'gb', q, ts })과 같은 호출 순서
+//   flickNow = 스텝 번호(사람 손처럼 '그 스텝 전에 휙 요청 → 그 스텝 t 로 잠금'을 Node 에서 재현할 때, ts 대신)
+export function flickShot(Table, { N, seed, q, ts = null, flickNow = null, cards }) {
+  const t = new Table(practiceTableSeed(N, seed), { lift: 519.59 });
+  t.addPile(cards || Array.from({ length: N }, (_, i) => i));
+  t.settle(600);
+  const top = t.columnTop();
+  const ctl = new SweepCtl(t, { mode: 'flick', q });
+  if (ts != null) ctl.flick(ts);
+  ctl.attach(t.blowProg({ prog: ctl.prog, power: q, dur: ctl.durCap }));
+  const j = { n: 0, quiet: 0 };
+  let steps = 0;
+  do { if (flickNow != null && steps === flickNow) ctl.flick(); t.step(); ctl.after(t); steps++; } while (!t.stepJudge(j));
+  const R = t.judgeResult();
+  const flips = R.flipped.length, outs = R.outs.length;
+  const sum = ctl.summary(t, flips, outs);
+  return { table: t, ctl, D: ctl.D, t0: ctl.t0, steps, flips, outs, hash: poseHash(t), tTop: ctl.rec.tTop, ttF: ctl.rec.ttF, cueT: ctl.rec.cueT, chip: sum.chip, top };
 }

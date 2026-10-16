@@ -69,9 +69,10 @@ profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.c
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
 // jetLag·airFx·hsCut·airLog = 실험 '바람 도달 시간'(아래 '실험' 절). 슬라이더가 아니라 ⚙ 맨 위 실험 칸의 스위치로 바꾼다(EXP_KEYS). 초기화하면 끔
 // core = 조작 깃발 '쓸어 올리기(푸어억)'(0 고전 | 1 쓸기, 기본 0) — 켜도 바뀌는 것은 홈의 '쓸기 연습' 단추뿐(솔로 연습판 전용, 아래 '고개 쓸기 연습판' 절)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0 };
+// swg = 쓸기 연습판 문법(0 = B '놓고 쓸기' 기본 | 1 = A '누른 채 쓸기(옛)', 비교용 — 2026-10-16 재윤님 실기기 기록으로 B 를 기본으로)
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0, swg: 0 };
 const EXP_KEYS = new Set(['jetLag', 'airFx', 'hsCut', 'airLog']);
-const SWITCH_KEYS = new Set([...EXP_KEYS, 'core']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
+const SWITCH_KEYS = new Set([...EXP_KEYS, 'core', 'swg']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
 const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
 // 9차: 콩닥 숨 1(차분)을 기본으로(재윤님 '1 차분이 지금보다 괜찮다') — 저장된 튜닝값도 한 번 옮긴다
 if ((profile.settings.feelV || 0) < 9) { profile.settings.feel = { ...(profile.settings.feel || {}), beat: 1 }; profile.settings.feelV = 9; Store.save(profile); }
@@ -95,6 +96,7 @@ function expSanitize() { // 저장값·주소·옛 빌드 값이 무엇이든 �
   feel.jetLag = +feel.jetLag === JET_LAG_TEST ? JET_LAG_TEST : 0;
   for (const k of ['airFx', 'hsCut', 'airLog']) feel[k] = expBit(feel[k]);
   feel.core = expBit(feel.core); // 조작 깃발도 0/1 만
+  feel.swg = expBit(feel.swg); // 쓸기 문법도 0(B)/1(A) 만
 }
 {
   const jl = param('jetlag');
@@ -103,6 +105,9 @@ function expSanitize() { // 저장값·주소·옛 빌드 값이 무엇이든 �
   // 조작 깃발: ?core=sweep|classic · #core=sweep (이번 실행에만, ⚙ 완료를 누르면 저장 — jetLag 와 같은 규칙)
   const cr = param('core');
   if (cr === 'sweep') feel.core = 1; else if (cr === 'classic') feel.core = 0; else if (cr != null) console.warn('[쓸기] core 값 무시(sweep · classic 만 받음):', cr);
+  // 쓸기 문법: ?swg=b(놓고 쓸기, 기본) | a(누른 채 쓸기, 옛) — 이번 실행에만(⚙ 완료를 누르면 저장)
+  const sg = param('swg');
+  if (sg === 'b') feel.swg = 0; else if (sg === 'a') feel.swg = 1; else if (sg != null) console.warn('[쓸기] swg 값 무시(a · b 만 받음):', sg);
   expSanitize();
 }
 // 9차 물안경(재윤님: '초록 가이드는 아이템을 쓰면 보이게'): 이번 숨에 초록 구간이 보이는 아이템. 평생 첫 3숨은 무료(튜토리얼)
@@ -1558,6 +1563,7 @@ function refreshTexts() {
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
   $('#langBtn').textContent = t('lang');
   $('#sweepBtn').hidden = !(feel.core >= 0.5); // 조작 깃발 '쓸어 올리기'를 켜면 홈에 '쓸기 연습'
+  $('#swGNote').textContent = t(sweepGB() ? 'swGbNote' : 'swPuckNote'); // 연습 시트: 지금 문법의 한 줄
   $('#micBtn').textContent = micEnabled ? t('micOn') : t('micOff');
   $('#invCount').textContent = Store.total(profile);
   $('#albumProg').textContent = `${Store.ownedKinds(profile)}/${CARDS.length}`;
@@ -2409,7 +2415,7 @@ function expReadout() {
 window.__puffExp = () => {
   const A = airShot, el = $('#expLog');
   return {
-    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
+    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core, swg: feel.swg }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
     breathAir: !!breath.air, rings: ringLive,
     sweep: { core: feel.core, on: sweepOn(), clock: sweep.clock, input: !!sweep.input, shot: !!sweep.shot, shots: window.__puffSweep.shots, ribbon: !!sweep.ribbon?.visible }, // 쓸기 흔적(대결 중엔 모두 꺼져 있어야 — pvp-check)
     last: A && { seq: A.seq, who: A.who, lag: A.lag, air: A.air, cut: !!A.cut, hs: A.hs, hsImpact: A.hsImpact ?? null, arrPhys: A.arrPhys ?? null, hitPhys: A.hitPhys ?? null, movePhys: A.movePhys ?? null, moveWall: A.moveWall ?? null,
@@ -4177,11 +4183,19 @@ async function netApplyResult(M, g, ti, seat, P, o) {
 // 🧭 가설 수정(검토 2026-10-16, 확인됨: 헤드리스 터치 실측): 물리는 맞지만 화면·글이 핵심 박자('툭 열고 → 더미가 기울 때까지 기다렸다 → 쭉')를 안 가르쳤다.
 //   힌트대로 한 번에 쓸면 0~1장(🐇), 시범의 '살짝'(48 px/s)을 조금 느리게 따라 하면 '푸'가 늦게 열려 박자가 사라졌다 → 힌트·시범(빠른 툭)·첫 3숨 코치·'푸—' 열림 신호·
 //   안 열림 넛지·옆모습 창(기울기 호)·입을 따라 오르는 시점으로 고친다(물리는 그대로).
-// 문법(§4): 화면 아래 2/3 아무 데나 꾹 → 아래로 당기기 = 들이쉼(가장 깊이 당긴 곳 = 세기, 되물림 없음) →
+// 🧭 가설 수정(2026-10-16, 재윤님 실기기 기록·화면 녹화, 확인됨): 문법 A 는 자연스러운 한 획(당김 → 빠른 휙 → 떼기)과 부딪힌다 — 40장 4숨 모두
+//   푸 시작→떼기 4~108 ms · 고개 잠김 0.133 s · 0장(🐇). 힌트를 봐도 손은 한 획으로 간다. → 기본 = 문법 B '놓고 쓸기'(sweep.js GB 절, 측정 tools/sweepgb.mjs).
+//   A 는 ⚙ '누른 채 쓸기(옛)'(feel.swg 1 · ?swg=a)로 남겨 비교한다. 판가름 = 재윤님 손 게이트(BLOCKERS G13): 40장 같은 더미에서 B 첫 숨들이 0장이 아니고,
+//   코치 '들리면 휙!'을 따라 하면 안 휙(긴 퍼)보다 뚜렷이 많은가.
+// 문법 B(기본): 화면 아래 2/3 아무 데나 꾹 → 아래로 당기기 = 들이쉼(세기 q) → 놓으면 '퍼—'가 저절로 D(q) = 0.6~1.0 화면 초(벽시계 1.2~2.0 s) →
+//   그동안 다시 눌러 위로 휙(어디든, 어느 속도든 12 px) = 고개가 바닥에서 꼭대기 위로(80°/s, 24°). 휙은 한 번만 · 떼기 전 같은 획의 휙은 안 셈 · 숨은 늘 저절로 끝
+//   취소: 당기며 옆으로 30% 빼서 떼기(Sweep.GestureB — 같은 획 휙 동안 옆 흐름은 안 셈, 취소면 토스트) · 덜 당김(< 0.06) · 콜록. 느린 밀기 취소·퍽은 없다
+//   같은 획의 휙은 '한 획 휙'(I.strokeFlick)으로만 기록 → 숨 동안 '그 휙은 안 세요' · 카드 🔁. 숨 끝 0.5 s 뒤부터 판정까지의 누름은 '잠깐…'(늦은 휙 아님)
+// 문법 A(옛, §4): 화면 아래 2/3 아무 데나 꾹 → 아래로 당기기 = 들이쉼(가장 깊이 당긴 곳 = 세기, 되물림 없음) →
 //   (a) 밀지 않고 떼기 = 퍽(바닥 입·고개 0·0.131 s)  (b) 위로 툭 밀면 '푸' 시작 → 엄지 높이 = 고개(바람 자국 높이), 떼기 = 숨 끝(0.04 s 에 끊김)
 //   취소(숨·차례 안 씀): 옆으로 30% 빼서 떼기 · 덜 당김(< 0.06) · 콜록 · 느린 밀기('푸' 없이 40 px 위에서 떼기 → '툭 밀어 올려요' 시범)
 // 세기 q = 당김 ÷ 꽉(꽉 = 1.0) → 물리 세기 그대로. 돌풍 규칙·초록 띠·조준 흔들림·physSweetFor 를 거치지 않는다(측정 숫자가 그 조건) — 원 밖은 밀기 ∝ q^2.93 로 물리가 정한다
-// 시간: 숨 동안 0.5배 고정(히트스톱·슬로모 없음 · 60 Hz 면 프레임당 1스텝). 숨 길이 최소 0.131 · 상한 1.0 화면 초(SweepCtl, 물리 초로 강제)
+// 시간: 숨 동안 0.5배 고정(히트스톱·슬로모 없음 · 60 Hz 면 프레임당 1스텝). A 숨 길이 최소 0.131 · 상한 1.0 화면 초 · B 는 D(q)(SweepCtl, 물리 초로 강제)
 // 판정: sim.js stepJudge(스텝 기준) — 프레임 기준 watchSim 판정 대신. 그래서 같은 주입 일정이면 Node(tools/sweepgame.mjs ref)와 같은 스텝·같은 해시
 // 보상 없음: 별·진행·도감·딱지·튜토리얼 수·공략 단서 수·콜록 수 모두 그대로(프로필을 안 건드린다). 레벨·일일·AI 대전·PvP·봇·마이크는 늘 고전
 // 실험 '바람 도달 시간'(jetLag·airFx·hsCut) 저장값은 이 판에서 무시(expLag 0, blowProg 는 jetLag 를 받지 않는다)
@@ -4197,6 +4211,8 @@ const sweep = {
   lastTrail: null, // 지난 숨의 엄지 궤적(화면 CSS px) — 회색 점선 1숨만
   frameMs: [], lastFrameT: 0, dispA: 0, lastQ: 0,
   card: null, ribbon: null,
+  flickAt: 0, coachAgain: false, coachKey: null, lastFlTrail: null, // B: 휙 시각(화면 '휙!') · 안 쓸었으면 다음 숨도 코치 · 지금 그린 코치 말(시험용) · 지난 휙 궤적
+  breathEndAt: 0, pop: null, // B: 숨이 끝난 벽시계 시각(늦은 휙 창) · 짧은 글 신호 { key, at }('위로 휙!' · '잠깐…')
 };
 window.__puffSweep = { log: [], last: null, shots: 0 };
 // 자동 시험용(tools/sweepplay.mjs): 지금 연습판 상태
@@ -4205,17 +4221,28 @@ window.__puffSweep.state = () => ({
   clock: sweep.clock, shot: !!sweep.shot, card: !$('#sweepCard').hidden, total: sweep.total, guide: performance.now() < sweep.guideUntil, slowCancels: sweep.slowCancels,
   air: !!table?.air, lag: expLag(), timeScale, state,
   nudge: sweep.nudge, coach: sweepCoachOn(), coachShot: sweep.coachShot, side: !$('#swSide').hidden, mark: !!sweep.mark?.visible,
+  grammar: sweepGB() ? 'B' : 'A', mode: sweep.ctl?.mode ?? null, t0: sweep.ctl?.t0 ?? null, flickReq: sweep.ctl?.flickReq ?? null, cueT: sweep.ctl?.rec?.cueT ?? null, coachKey: sweep.coachKey,
+  listening: !!sweep.input?.listening, stroke: !!sweep.input?.strokeFlick, touches: sweep.input?.fls?.size ?? 0,
+  pop: sweep.pop && performance.now() - sweep.pop.at < SW_POP_MS ? sweep.pop.key : null,
   reticle: reticle ? { op: reticle.material.opacity, vis: reticle.visible } : null, // 고전 조준 고리(연습판이 건드리면 안 됨)
 });
-window.__sweepPlan = null; // 개발 주입 훅: { q, A, w, t0, D } (A·D 에 'top' 가능) 또는 { kind: 'puck', q }. __sweepFire() 가 다음 쓸기 샷 하나를 이 일정으로
+window.__sweepPlan = null; // 개발 주입 훅: { q, A, w, t0, D } (A·D 에 'top' 가능) · { kind: 'puck', q } · 문법 B { kind: 'gb', q, ts }(ts 화면 초, null = 안 휙). __sweepFire() 가 다음 쓸기 샷 하나를 이 일정으로
 window.__sweepFire = () => { const I = sweep.input; return !!(I && I.firePlan && !I.g && !I.ctl && I.firePlan(window.__sweepPlan)); };
 function sweepOn() { return match?.sweep === true && !match?.net; } // 문지기: 쓸기 연습판(솔로)만. 대결·레벨·일일·자유 대전은 늘 false
+function sweepGB() { return !(feel.swg >= 0.5); } // 쓸기 문법 B '놓고 쓸기'(기본) — feel.swg 1 이면 A '누른 채 쓸기(옛)'
 function sweepClockOn() { return sweep.clock && sweepOn(); }
 function sweepAlphaDeg() { return sweep.dispA; }
 function sweepVib(ms) { navigator.vibrate?.(ms); }
 const SW_OPEN_VIB = 35; // '푸 시작' 톡 = 강(> 32 ms → iOS tapHeavy). 예전 15(가장 약한 tapLight)는 열림을 손이 몰랐다(검토 3)
 function sweepFlipVib(now) { if (now - sweep.lastFlipVib < 80) return; sweep.lastFlipVib = now; navigator.vibrate?.(12); } // 뒤집힘 12 는 80 ms 에 하나
-function sweepEvent(name) { if (name === 'top') sweepVib(25); else if (name === 'tb90') sweepVib(47); } // 바람 축이 꼭대기를 넘음 · 아래 절반 평균 90°(물리 사건, 정답 신호 아님)
+// 바람 축이 꼭대기를 넘음 · 아래 절반 평균 90°(물리 사건, 정답 신호 아님). B(놓고 쓸기)는 'top' 진동을 안 낸다 — 휙 받음 20 바로 뒤
+//   (벽시계 약 0.15~0.18 s) 같은 세기(tapMedium)로 와서 휙을 두 번 받은 것처럼 느껴졌다(검토 2026-10-16). B 의 휙은 방아쇠라 '넘음' 정보가 겹친다
+function sweepEvent(name, mode) { if (name === 'top') { if (mode !== 'flick') sweepVib(25); } else if (name === 'tb90') sweepVib(47); }
+const SW_FLICK_VIB = 20; // B 휙 받음 = 중(16~32 ms → iOS tapMedium). 놓기 '퍼' 35(강)와 손으로 구별
+const SW_LATE_MS = 500; // B: 숨이 끝난 뒤 이 안의 휙만 '늦은 휙'(칩 늦었어요). 그 뒤(판정 기다림, 카드까지 약 2 s)의 누름은 '잠깐…'만 — 다음 숨 한 획이 늦은 휙으로 삼켜지지 않게
+const SW_STROKE_PXS = 500; // B: 놓기 전 같은 획에서 휙(12 px/300 ms) + 위로 밀기 ≥ 500 px/s = '한 획 휙'(쓸기로 안 셈) → 숨 동안 '그 휙은 안 세요' · 카드 칩
+const SW_POP_MS = 650;
+function swPopSet(key, now = performance.now()) { sweep.pop = { key, at: now }; }
 
 async function startPractice(N = 40, seedIdx = 0) {
   N = N === 30 ? 30 : 40;
@@ -4279,22 +4306,30 @@ function buildPracticePile(N, seed) {
   puffer.mode = 'idle'; puffer.p = 0; puffer.who = 'me';
 }
 
-// 엄지 입력 한 번 → { kind: 'pueok'|'puck'|'plan', q, ctl, input } (취소는 안에서 처리하고 다시 기다림) · 홈으로 나가면 null
-// 'pueok' 는 '푸'가 열리는 순간 돌려준다(그때부터 물리 시작). 떼기를 받을 때까지 move·up 리스너는 남는다
+// 엄지 입력 한 번 → { kind: 'pueok'|'puck'|'plan'|'gb', q, ctl, input } (취소는 안에서 처리하고 다시 기다림) · 홈으로 나가면 null
+// A 'pueok' 는 '푸'가 열리는 순간 돌려준다(그때부터 물리 시작). 떼기를 받을 때까지 move·up 리스너는 남는다
+// B 'gb' 는 놓는 순간 돌려준다(그때부터 퍼—, 숨 길이는 저절로). 휙(놓은 뒤 다시 눌러 위로)·늦은 휙을 받으려고 리스너는 판정까지 남는다(I.stop)
 function playerSweepShot() {
   if (!sweepOn()) throw new Error('playerSweepShot: 쓸기 연습판 밖 — 레벨·대결은 고전 조작(playerShot)');
   return new Promise((resolve) => {
     const el = renderer.domElement;
     const F = Rules.POUCH_FULL;
+    const gb = sweepGB(); // 이 숨의 문법(숨 도중 ⚙ 를 바꿔도 이 숨은 그대로)
     camAimGoal = 1; camStrafeGoal = 0;
     myTurn.on = true; myTurn.t0 = performance.now(); myTurn.pressed = false;
     puffer.mode = 'idle'; puffer.p = 0; puffer.who = 'me'; puffer.strain = 0; puffer.full = false;
-    $('#hint').hidden = false; $('#hint').className = 'hint'; $('#hintText').textContent = t('swHint');
+    $('#hint').hidden = false; $('#hint').className = 'hint sw'; $('#hintText').textContent = t(gb ? 'swHintB' : 'swHint'); // sw = 바탕 띠(칠판 글과 겹쳐 안 읽혔다, 검토)
     let settled = false;
-    const I = { g: null, inh: null, strain: 0, full: false, lastT: 0, leakAt: 0, ctl: null, trail: [], opens: 0, blowAt: null, relAt: null, released: false, pointerId: null };
+    const I = {
+      gb, g: null, inh: null, strain: 0, full: false, lastT: 0, leakAt: 0, ctl: null, trail: [], opens: 0, blowAt: null, relAt: null, released: false, pointerId: null,
+      // B: 숨 동안 누른 손가락마다 휙 인식기 { f: Sweep.Flick, tr: 궤적 }(pointerId → — 머무는 손가락이 있어도 다른 손가락 휙을 받는다) · 휙 받은 누름의 궤적 ·
+      //    휙 받은 시각 · 숨 끝 뒤 휙 · 휙 수 · 당김 획 안의 휙 인식기(pf, 쓸기로 안 셈) · 한 획 휙(당김 획 안 휙 + 빠른 밀기)
+      fls: new Map(), flTr: null, flickAt: null, lateAt: null, flicks: 0, listening: false, pf: null, pfFired: false, strokeFlick: false,
+    };
     sweep.input = I;
     const vis = () => { if (document.hidden) lose(); };
     const listen = (on) => {
+      I.listening = on;
       const f = on ? 'addEventListener' : 'removeEventListener';
       el[f]('pointerdown', down);
       window[f]('pointermove', move);
@@ -4306,14 +4341,15 @@ function playerSweepShot() {
     };
     const inhStop = () => { I.inh?.stop(); I.inh = null; };
     const resetPouch = () => { I.strain = 0; I.full = false; puffer.strain = 0; puffer.full = false; };
-    const end = () => { listen(false); inhStop(); sweep.nudge = false; if (sweep.input === I) sweep.input = null; $('#hint').hidden = true; };
+    const end = () => { listen(false); inhStop(); I.fls.clear(); sweep.nudge = false; if (sweep.input === I) sweep.input = null; $('#hint').hidden = true; };
+    I.stop = end; // B: 판정 뒤(sweepResult) 리스너 정리
     const settle = (v) => {
       if (settled) return;
       settled = true;
       cancelInput = null;
       myTurn.on = false; myTurn.pressed = false;
       myTurn.until = v ? performance.now() + 650 : 0;
-      if (v) { sweep.lastTrail = I.trail.slice(); sweep.lastQ = v.q; v.input = I; }
+      if (v) { sweep.lastTrail = I.trail.slice(); sweep.lastFlTrail = null; sweep.lastQ = v.q; v.input = I; }
       resolve(v);
     };
     I.kill = () => { end(); settle(null); };
@@ -4327,10 +4363,10 @@ function playerSweepShot() {
       puffer.full = I.full; puffer.p = p; puffer.mode = 'charge';
       I.inh?.set(p / F);
     };
-    // 취소: 숨·차례를 쓰지 않는다. 느린 밀기면 '툭 밀어 올려요' + 손가락 시범
+    // 취소: 숨·차례를 쓰지 않는다. 느린 밀기면(A 만) '툭 밀어 올려요' + 손가락 시범
     const cancelBreath = (why) => {
       inhStop(); resetPouch();
-      I.g = null; I.trail = [];
+      I.g = null; I.trail = []; I.pf = null; I.pfFired = false;
       puffer.p = 0;
       if (why === 'cough') {
         sfx.cough(); navigator.vibrate?.([40, 60, 40]);
@@ -4339,20 +4375,21 @@ function playerSweepShot() {
       } else puffer.mode = 'idle';
       sweep.nudge = false; I.riseAt = null;
       if (why === 'slow') { sweep.slowCancels++; sweep.guideUntil = performance.now() + 6500; toast(t('swSlowTip')); }
+      if (why === 'side') toast(t('swSideCancel')); // B: 당기며 옆으로 30% 뺐다 — 조용히 취소하지 않고 이유를 말한다(검토)
       myTurn.pressed = false; myTurn.t0 = performance.now();
       $('#hint').hidden = false;
     };
     const startCtl = (mode, extra) => {
-      const ctl = new Sweep.SweepCtl(table, { mode, onEvent: sweepEvent, ...extra });
+      const ctl = new Sweep.SweepCtl(table, { mode, onEvent: (n) => sweepEvent(n, mode), ...extra });
       I.ctl = ctl;
       return ctl;
     };
-    // 엄지 사건(gesture.move·tick 의 반환) — '푸' 시작이면 그 순간 물리(blowSweep)
+    // 엄지 사건(gesture.move·tick 의 반환) — A '푸' 시작이면 그 순간 물리(blowSweep). B 인식기는 '푸'를 열지 않는다(upStart ∞)
     I.onEv = (e, now) => {
       if (!e || !I.g) return;
       if (e.ev === 'inhale') pouch();
       else if (e.ev === 'blowStart') {
-        if (I.ctl) return;
+        if (I.ctl || I.gb) return;
         I.opens++;
         I.blowAt = now;
         sweep.nudge = false;
@@ -4362,13 +4399,15 @@ function playerSweepShot() {
         settle({ kind: 'pueok', q, ctl: I.ctl });
       } else if (e.ev === 'sweep') { if (I.ctl) I.ctl.u = e.u; }
     };
-    // 프레임마다(sweepTick, 물리 스텝 전): 버팀·새는 김·콜록
+    // 프레임마다(sweepTick, 물리 스텝 전): 버팀·새는 김·콜록 (+ A 안 열림 넛지)
     I.frame = (now) => {
       if (!I.g || I.g.st !== 'inhale') { I.lastT = 0; return; }
-      // 안 열림 넛지: 엄지가 가장 낮은 점보다 8 px 이상 올라 0.3 s 가 지나도 '푸'가 안 열렸다(작은·느린 툭) → '아직 안 열렸어요 — 툭!'(sweepCoachDraw)
-      const rise = I.g.lowRaw - I.g.tr[I.g.tr.length - 1][2];
-      if (rise >= 8) { if (I.riseAt == null) I.riseAt = now; } else I.riseAt = null;
-      sweep.nudge = I.riseAt != null && now - I.riseAt > 300;
+      // A 안 열림 넛지: 엄지가 가장 낮은 점보다 8 px 이상 올라 0.3 s 가 지나도 '푸'가 안 열렸다(작은·느린 툭) → '아직 안 열렸어요 — 툭!'(sweepCoachDraw)
+      if (!I.gb) {
+        const rise = I.g.lowRaw - I.g.tr[I.g.tr.length - 1][2];
+        if (rise >= 8) { if (I.riseAt == null) I.riseAt = now; } else I.riseAt = null;
+        sweep.nudge = I.riseAt != null && now - I.riseAt > 300;
+      }
       const dt = I.lastT ? Math.min(50, now - I.lastT) : 0;
       I.lastT = now;
       I.strain = Rules.strainStep(I.strain || 0, I.g.pMax, dt, I.full, feel.strainMs);
@@ -4376,10 +4415,19 @@ function playerSweepShot() {
       if (I.strain >= Rules.LEAK_AT && now >= I.leakAt) { sfx.leak(); I.leakAt = now + lerp(260, 140, (I.strain - Rules.LEAK_AT) / (1 - Rules.LEAK_AT)); }
       if (I.strain >= 1) cancelBreath('cough');
     };
-    // 주입 훅(window.__sweepFire): 엄지 대신 측정 일정으로 한 숨
+    // 주입 훅(window.__sweepFire): 엄지 대신 측정 일정으로 한 숨. B { kind: 'gb', q, ts } = 놓기 → ts(화면 초)에 휙(sweep.js flickShot 과 같은 순서)
     I.firePlan = (plan) => {
       if (!plan || I.g || I.ctl || settled) return false;
       const q = clamp(+plan.q || 0, 0, 1.25);
+      if (plan.kind === 'gb') {
+        const ts = plan.ts == null ? null : +plan.ts;
+        startCtl('flick', { q });
+        if (ts != null) I.ctl.flick(ts);
+        I.released = true;
+        end();
+        settle({ kind: 'gb', q, ctl: I.ctl, plan: { kind: 'gb', q, ts }, inject: true });
+        return true;
+      }
       const pl = plan.kind === 'puck' ? null : Sweep.resolvePlan({ A: plan.A, w: plan.w, t0: plan.t0, D: plan.D }, table.columnTop());
       if (pl) startCtl('plan', { plan: pl }); else startCtl('puck');
       I.released = true;
@@ -4387,19 +4435,67 @@ function playerSweepShot() {
       settle({ kind: pl ? 'plan' : 'puck', q, ctl: I.ctl, plan: pl });
       return true;
     };
+    // A: 떼기 = 숨 끝
     const release = (u, now) => {
       if (!I.ctl || I.released) return;
       I.released = true; I.relAt = now;
       I.ctl.release(u);
       end();
     };
+    // B: 놓기 = 퍼— 시작(숨 길이 D(q) 는 저절로). 같은 획에서 놓기 전 위로 휙은 세지 않는다(sweepgb ⑤: 놓자마자 휙 = 0.0~0.4장)
+    const releaseB = (out, now) => {
+      I.relAt = now;
+      const q = clamp(out.p / F, 0, 1);
+      inhStop(); resetPouch();
+      startCtl('flick', { q });
+      I.released = true; I.g = null;
+      $('#hint').hidden = true;
+      settle({ kind: 'gb', q, ctl: I.ctl });
+    };
+    // B 휙: 첫 번째만 물리로(두 번째부터 무시). 숨이 이미 끝났으면 끝난 뒤 SW_LATE_MS 안만 늦은 휙으로 기록(물리엔 안 감 → 칩 '늦었어요'),
+    //   그 뒤(판정 기다림)는 '잠깐…' 신호만
+    const fire = (now, e) => {
+      I.flicks++;
+      if (I.flickAt != null || I.lateAt != null) return;
+      if (sweep.clock && I.ctl === sweep.ctl && I.ctl.flick()) {
+        I.flickAt = now; sweep.flickAt = now; I.flTr = e.tr;
+        sweepVib(SW_FLICK_VIB);
+        return;
+      }
+      if (I.ctl?.t0 == null && sweep.breathEndAt && now - sweep.breathEndAt <= SW_LATE_MS) I.lateAt = now;
+      else swPopSet('swJudgeWait', now);
+    };
+    const flDown = (ev) => {
+      const now = performance.now();
+      if (!sweep.clock && !(sweep.breathEndAt && now - sweep.breathEndAt <= SW_LATE_MS)) { swPopSet('swJudgeWait', now); return; } // 판정 기다림
+      if (I.fls.size >= 5) return;
+      const e = { f: new Sweep.Flick(), tr: [[ev.clientX, ev.clientY, now]] };
+      e.f.down(ev.clientX, ev.clientY, now);
+      I.fls.set(ev.pointerId ?? -1, e);
+      try { el.setPointerCapture?.(ev.pointerId); } catch (err) { /* 합성 포인터 */ }
+    };
+    const flMove = (ev, isUp) => {
+      const id = ev?.pointerId ?? -1, e = I.fls.get(id);
+      if (!e) return;
+      const now = performance.now();
+      if (e.tr.length < 300) e.tr.push([ev.clientX, ev.clientY, now]);
+      const hit = isUp ? e.f.up(ev.clientX, ev.clientY, now) : e.f.move(ev.clientX, ev.clientY, now);
+      if (hit) fire(now, e);
+      if (!isUp) return;
+      I.fls.delete(id);
+      if (I.flTr === e.tr) sweep.lastFlTrail = e.tr; // 지난 숨 궤적 = 휙 받은 누름만
+      else if (!e.f.fired && sweep.clock && I.flickAt == null) swPopSet('swUpFlick', now); // 눌렀다 뗐는데 휙이 아님(탭·작은 밀기) → '위로 휙!'
+    };
     const down = (ev) => {
-      if (state !== 'match' || !sweepOn() || I.g || I.ctl || settled) return;
+      if (state !== 'match' || !sweepOn()) return;
+      if (I.gb && I.ctl) { if (I.ctl.mode === 'flick') flDown(ev); return; } // B 숨 동안: 어디든 다시 눌러 휙(손가락마다)
+      if (I.g || I.ctl || settled) return;
       if (ev.clientY < window.innerHeight / 3) return; // 화면 아래 2/3 아무 데나(조준 없음)
       sfx.unlock();
       const now = performance.now();
-      I.g = new Sweep.Gesture(window.innerWidth, window.innerHeight, { ...Sweep.GAME_GCFG, pull: feel.pull });
+      I.g = I.gb ? new Sweep.GestureB(window.innerWidth, window.innerHeight, { pull: feel.pull }) : new Sweep.Gesture(window.innerWidth, window.innerHeight, { ...Sweep.GAME_GCFG, pull: feel.pull });
       I.g.down(ev.clientX, ev.clientY, now);
+      if (I.gb) { I.pf = new Sweep.Flick(); I.pf.down(ev.clientX, ev.clientY, now); I.pfFired = false; I.strokeFlick = false; }
       I.trail = [[ev.clientX, ev.clientY, now]];
       I.pointerId = ev.pointerId;
       try { el.setPointerCapture?.(ev.pointerId); } catch (e) { /* 합성 포인터 */ }
@@ -4410,18 +4506,28 @@ function playerSweepShot() {
       I.inh = sfx.inhale();
     };
     const move = (ev) => {
+      if (I.gb && I.ctl) { flMove(ev, false); return; }
       if (!I.g || (I.pointerId != null && ev.pointerId != null && ev.pointerId !== I.pointerId)) return;
       const now = performance.now();
       if (!I.released) { I.trail.push([ev.clientX, ev.clientY, now]); if (I.trail.length > 900) I.trail.shift(); }
       I.onEv(I.g.move(ev.clientX, ev.clientY, now), now);
+      if (I.pf?.move(ev.clientX, ev.clientY, now)) I.pfFired = true; // B: 놓기 전 같은 획 안의 휙(쓸기로 안 셈 — 숨 동안 '그 휙은 안 세요')
     };
     const up = (ev) => {
+      if (I.gb && I.ctl) { flMove(ev, true); return; }
       if (!I.g || (I.pointerId != null && ev?.pointerId != null && ev.pointerId !== I.pointerId)) return;
       const now = performance.now();
       if (I.g.st === 'inhale') {
         const out = I.g.up(ev.clientX, ev.clientY, now);
-        if (out.kind === 'cancel') { cancelBreath(out.slow ? 'slow' : 'cancel'); return; }
-        // 퍽: '푸'가 안 열린 채 떼기 = 바닥 입·고개 0·0.131 s (측정 kind 'puff' · kin 'c')
+        if (out.kind === 'cancel') { cancelBreath(out.slow ? 'slow' : out.side && I.gb ? 'side' : 'cancel'); return; }
+        if (I.gb) {
+          I.trail.push([ev.clientX, ev.clientY, now]);
+          if (I.pf?.up(ev.clientX, ev.clientY, now)) I.pfFired = true;
+          I.strokeFlick = I.pfFired && upSpeed(I.trail) >= SW_STROKE_PXS;
+          releaseB(out, now);
+          return;
+        }
+        // A 퍽: '푸'가 안 열린 채 떼기 = 바닥 입·고개 0·0.131 s (측정 kind 'puff' · kin 'c')
         I.relAt = now;
         const q = clamp(out.p / F, 0, 1);
         startCtl('puck');
@@ -4434,13 +4540,17 @@ function playerSweepShot() {
       if (!I.released) I.trail.push([ev.clientX, ev.clientY, now]);
       release(out?.u, now);
     };
-    // 포인터 취소·창 흐림·숨김·페이지 떠남: 숨이 이미 나갔으면 떼기(취소 없음), 아니면 취소
+    // 포인터 취소·창 흐림·숨김·페이지 떠남: A 는 숨이 이미 나갔으면 떼기(취소 없음), 아니면 취소. B 는 숨이 저절로라 휙 누름만 버림
     const lose = () => {
+      if (I.gb && I.ctl) { I.fls.clear(); return; }
       if (I.ctl) { release(null, performance.now()); return; }
       if (I.g) cancelBreath('cancel');
     };
     // pointercancel 은 이 숨의 손가락일 때만(다른 손가락·다른 포인터의 취소가 '푸'를 끝내지 않게 — 검토 1). 창 흐림·숨김·떠남은 위 lose 그대로
-    const cancelEv = (ev) => { if (I.pointerId == null || ev?.pointerId == null || ev.pointerId === I.pointerId) lose(); };
+    const cancelEv = (ev) => {
+      if (I.gb && I.ctl) { if (ev?.pointerId == null) I.fls.clear(); else I.fls.delete(ev.pointerId); return; }
+      if (I.pointerId == null || ev?.pointerId == null || ev.pointerId === I.pointerId) lose();
+    };
     listen(true);
   });
 }
@@ -4464,8 +4574,10 @@ function blowSweep(raw) {
   if (raw.kind === 'puck') sfx.puff(raw.q, 1);
   else { sfx.puff(0.6 * raw.q, 1); sweep.snd = sfx.blow(); }
   sweepVib(SW_OPEN_VIB);
-  sweep.openAt = performance.now(); // 화면 열림 신호(자국·리본 번쩍 · 입술 위 '푸—')
+  sweep.openAt = performance.now(); // 화면 열림 신호(자국·리본 번쩍 · 입술 위 '푸—'/'퍼—')
+  sweep.flickAt = 0; sweep.coachKey = null; sweep.breathEndAt = 0; sweep.pop = null;
   sweep.coachShot = sweepCoachOn(); // 이 숨이 코치 숨인가(아래 total++ 전에 — 셋째 숨 도중 코치가 꺼지지 않게)
+  sweep.coachAgain = false;
   ctl.attach(table.blowProg({ prog: ctl.prog, power: raw.q, dur: ctl.durCap })); // 실험 jetLag 없음(blowProg 는 받지 않음) → table.air = null
   resetSimWatch('me');
   puffer.mode = 'blow'; puffer.p = raw.q; puffer.fill = clamp(raw.q, 0, 1); puffer.ratio = 1; puffer.strain = 0; puffer.full = false;
@@ -4478,7 +4590,7 @@ function blowSweep(raw) {
 }
 function sweepClockEnd() {
   if (!sweep.clock) return;
-  sweep.clock = false; sweep.clockEnded = true;
+  sweep.clock = false; sweep.clockEnded = true; sweep.breathEndAt = performance.now();
   sweep.snd?.stop(); sweep.snd = null;
   camAimGoal = 0; // 숨이 끝나면 위에서 내려다보는 시점으로(뒤집힌 그림이 보이게)
   setTimeout(() => { if (puffer.mode === 'blow' && !sweep.clock) pufferIdle(); }, 250);
@@ -4506,20 +4618,30 @@ async function sweepResult(raw, res, seed, my) {
   const S = sweep.shot;
   sweep.shot = null;
   const ctl = raw.ctl, I = raw.input;
+  I?.stop?.(); // B: 휙·늦은 휙 리스너는 판정까지 — 여기서 정리
   for (const d of res.outList) { if (d.off) continue; const p = d.body.translation(); fx.text(new THREE.Vector3(p.x, p.y + 0.5, p.z), 'OUT', 'out'); }
   if (res.outs) chalkPulse();
   const sum = ctl.summary(table, res.flips, res.outs);
   const st = sweepStats(I);
   const fr = S?.fr || [];
   const al = ctl.rec.series.map((r) => r[1]);
+  const gbShot = ctl.mode === 'flick';
   const last = {
-    kind: raw.kind, q: +raw.q.toFixed(4), plan: raw.plan || null, D: ctl.D, tTop: ctl.rec.tTop, flips: res.flips, outs: res.outs, steps: res.steps, hash: res.hash,
+    g: gbShot ? 'B' : 'A', kind: raw.kind, q: +raw.q.toFixed(4), qRaw: raw.q, plan: raw.plan || null, inject: !!raw.inject, D: ctl.D, tTop: ctl.rec.tTop, flips: res.flips, outs: res.outs, steps: res.steps, hash: res.hash,
     n: sum.n, seed, cause: sum.cause, opens: I?.opens || 0, alphaMax: al.length ? Math.max(...al) : 0, alphaMono: al.every((a, i) => !i || a >= al[i - 1] - 1e-9),
     endT: ctl.state.t, dur: ctl.P?.dur ?? null, fr, stats: st, frame: sweepFrameStats(), coach: !!sweep.coachShot,
+    // B: 휙이 잠긴 숨 시각 t0(화면 초) · 휙 순간 위 절반 기울기 · 위 절반 10° 시각(화면 초) · 측정 규칙 칩(sweep.js gbChip) · 휙 수 · 늦은 휙
+    //    · 한 획 휙(놓기 전 같은 획의 휙 — 쓸기로 안 셈). 늦은 휙 = 숨 끝 뒤 창 안 휙 또는 숨 마지막 스텝에 와서 잠기지 못한 휙
+    t0: gbShot ? ctl.t0 : null, ttF: gbShot ? ctl.rec.ttF : null, cueT: gbShot ? ctl.rec.cueT : null, gbChip: gbShot ? sum.chip : null, flicks: I?.flicks || 0,
+    late: I?.lateAt != null || (gbShot && I?.flickAt != null && ctl.t0 == null), stroke: !!I?.strokeFlick,
   };
   last.chip = sweepChip(raw, last, sum);
+  last.chip2 = sweepChip2(raw, last, sum);
   window.__puffSweep.last = last;
-  const entry = { q: last.q, kind: raw.kind, openLatMs: st.openLatMs, maxPxS: st.maxPxS, blowMs: st.blowMs, slowCancels: sweep.slowCancels, tTop: last.tTop, D: last.D, flips: res.flips, outs: res.outs, cause: sum.cause, chip: last.chip, coach: last.coach, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 };
+  const entry = gbShot
+    ? { g: 'B', q: last.q, kind: raw.kind, D: last.D, ts: last.t0 == null ? null : +last.t0.toFixed(4), flickMs: st.flickMs, lateMs: st.lateMs, flicks: last.flicks, stroke: last.stroke, ttF: last.ttF, cueMs: st.cueMs, pullUpPxS: st.maxPxS, flickPxS: st.flickPxS, tTop: last.tTop, flips: res.flips, outs: res.outs, cause: sum.cause, chip: last.chip, chip2: last.chip2, coach: last.coach, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
+    : { g: 'A', q: last.q, kind: raw.kind, openLatMs: st.openLatMs, maxPxS: st.maxPxS, blowMs: st.blowMs, slowCancels: sweep.slowCancels, tTop: last.tTop, D: last.D, flips: res.flips, outs: res.outs, cause: sum.cause, chip: last.chip, coach: last.coach, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 };
+  if (gbShot && ['none', 'stroke', 'early'].includes(last.chip)) sweep.coachAgain = true; // 안 쓸었거나(한 획 휙 포함) 일렀으면 다음 숨에 코치 다시(그 뒤엔 사라짐)
   window.__puffSweep.log.unshift(entry);
   if (window.__puffSweep.log.length > 20) window.__puffSweep.log.length = 20;
   sweep.slowCancels = 0;
@@ -4534,8 +4656,31 @@ async function sweepResult(raw, res, seed, my) {
   return showSweepCard(raw, last, sum);
 }
 // 손 기록(§8 숫자·'기록 복사'): 푸 열림 지연 = 밀기 시작(최저점에서 2 px 위) → '푸' 시작 · 최고 밀기 속도(30 ms 이상 간격) · 푸 시작 → 떼기
+//   B: 최고 밀기 = 놓기 전 같은 획의 위로 밀기(쓸기로 안 셈) · 휙 속도(놓은 뒤 누름) · 놓기 → 휙(벽시계 ms) · 놓기 → 늦은 휙 · 놓기 → 위 절반 10°(벽시계 = 화면 × 2)
+function upSpeed(tr) {
+  let iLow = 0;
+  for (let i = 1; i < tr.length; i++) if (tr[i][1] >= tr[iLow][1]) iLow = i;
+  let vmax = 0;
+  for (let i = iLow + 1; i < tr.length; i++) {
+    let j = i - 1;
+    while (j > iLow && tr[i][2] - tr[j][2] < 30) j--;
+    const dt = tr[i][2] - tr[j][2];
+    if (dt >= 16) vmax = Math.max(vmax, ((tr[j][1] - tr[i][1]) / dt) * 1000);
+  }
+  return Math.round(vmax);
+}
 function sweepStats(I) {
   const tr = I?.trail || [];
+  if (I?.ctl?.mode === 'flick') { // 갈래 = 이 숨의 조종 모드(주입 훅 { kind: 'gb' } 은 문법 A 에서도 B 기록, A 주입은 B 에서도 A 기록)
+    const fl = I.flTr || [];
+    const cue = I.ctl?.rec?.cueT;
+    return {
+      openLatMs: null, blowMs: null, maxPxS: tr.length > 1 ? upSpeed(tr) : null, flickPxS: fl.length > 1 ? upSpeed(fl) : null,
+      flickMs: I.flickAt != null && I.relAt != null ? Math.round(I.flickAt - I.relAt) : null,
+      lateMs: I.lateAt != null && I.relAt != null ? Math.round(I.lateAt - I.relAt) : null,
+      cueMs: cue != null && cue >= 0 ? Math.round(2000 * cue) : null,
+    };
+  }
   if (tr.length < 2) return { openLatMs: null, maxPxS: null, blowMs: null };
   let iLow = 0;
   for (let i = 1; i < tr.length; i++) if (tr[i][1] >= tr[iLow][1]) iLow = i;
@@ -4559,31 +4704,49 @@ function sweepStats(I) {
 // 카드 원인 칩(시험 — cuecheck 식 검증 전, 스펙 §5.4·§9 5번): sweep.js causeOf 그대로, 글만 고친다(검토 2·3).
 //   퍽이면 원인 대신 '퍽은 작은 더미용'(퍽에 '섞임'은 정보가 없다). 💨 는 세기가 정말 셀 때(q ≥ 0.95)만 '셌어요' —
 //   재윤님 (a) '세서 원 밖'과 겹쳐 덜 당기라는 잘못된 처방이 되지 않게. 숨이 길었으면(D > 0.5 화면 초 = 벽시계 1초) '길었어요', 그 밖은 '원 밖 많음'
-const SW_CAUSE = { early: '🐇', sank: '🐢', weak: '🪶', strong: '💨', out: '💨', long: '⏳', good: '👍', mixed: '🔀', puck: '👆' };
+//   B(놓고 쓸기): 측정 규칙(sweep.js gbChip — 결과 먼저, 그다음 휙 순간 위 절반 기울기) 그대로 이름 🐇 · 좋아요 👍 · 늦음 🐢 · 안 쓸었어요 ⬆️.
+//   숨이 끝난 뒤(창 안) 휙했으면 '늦었어요'. 휙 없이 놓기 전 같은 획에서만 휙했으면 🔁 '그 휙은 안 세요 — 놓고 다시 눌러 휙!'(재윤님 버릇 = 한 획, 검토 blocker).
+//   덧칩 💨 셌어요 = 세게(q ≥ 0.95) 불고 원 밖 ≥ 25% · 뒤집힘 < 절반(측정: q1 안 휙은 원 밖 17~19장) — 주 칩이 이름·늦음·🔁 이면 안 붙인다(덜 당기라는 잘못된 처방)
+const SW_CAUSE = { early: '🐇', sank: '🐢', weak: '🪶', strong: '💨', out: '💨', long: '⏳', good: '👍', mixed: '🔀', puck: '👆', late: '🐢', none: '⬆️', stroke: '🔁' };
 function sweepChip(raw, last, sum) {
+  if (raw.ctl?.mode === 'flick') return sum.chip !== 'none' ? sum.chip : last.late ? 'late' : last.stroke ? 'stroke' : 'none';
   if (raw.kind === 'puck') return 'puck';
   if (sum.cause !== 'strong') return sum.cause;
   if (raw.q >= 0.95) return 'strong';
   return last.D != null && last.D > 0.5 ? 'long' : 'out';
 }
+function sweepChip2(raw, last, sum) {
+  if (raw.ctl?.mode !== 'flick' || ['early', 'late', 'stroke'].includes(last.chip)) return null; // 한 획 휙(🔁)은 '다시 눌러 휙'만 — 💨 는 배울 것을 흐린다
+  return raw.q >= 0.95 && last.outs >= 0.25 * sum.n && last.flips < 0.5 * sum.n ? 'strong' : null;
+}
 // 타임라인 범례(색 견본 + 이름) — 캔버스 위 글자 대신 카드 HTML 한 줄(검토 3: 어느 선이 무엇인지 읽히게)
 const SW_LEGEND = [['#ff8a1f', 'swTlHit'], ['dash', 'swTlTop'], ['#e0457b', 'swTlTilt'], ['rgba(80,170,255,0.6)', 'swTlEnv'], ['dot:#ffd23f', 'swTlCross'], ['dot:#3a8fe0', 'swTlRel']];
+const SW_LEGEND_B = [['#ff8a1f', 'swTlHit'], ['dash', 'swTlTop'], ['#e0457b', 'swTlTilt'], ['rgba(80,170,255,0.6)', 'swTlEnv'], ['dot:#ffd23f', 'swTlCross'], ['dot:#3a8fe0', 'swTlFlick']];
 // '방금 숨' 카드: 첫 화면 = 원인 칩 · 뒤집힘/원 밖 · 단추. 타임라인·범례·숫자는 '자세히'(작은 폰은 처음에 접힘 → 결과 더미가 보이게).
 // 측정 정답 박자(예전 swRef 줄)는 보이지 않는다 — 스펙 §5 '정답 띠는 미리 보여 주지 않는다', 손 게이트가 지시 따르기를 재지 않게(검토 1·3)
 function showSweepCard(raw, last, sum) {
   const box = $('#sweepCard');
-  const kindTxt = raw.kind === 'puck' ? t('swKindPuck') : raw.kind === 'plan' ? t('swKindPlan') : t('swKindPueok');
-  const ck = last.chip;
+  const gbShot = raw.ctl?.mode === 'flick';
+  const kindTxt = raw.inject || raw.kind === 'plan' ? t('swKindPlan') : raw.kind === 'puck' ? t('swKindPuck') : gbShot ? t('swKindGb') : t('swKindPueok');
+  const ck = last.chip, ck2 = last.chip2;
   $('#swNum').textContent = `${t('rcpTitle')} · ${kindTxt}`;
-  $('#swCause').innerHTML = `<span class="sw-chip c-${ck}">${SW_CAUSE[ck] || ''} ${t('swCause_' + ck)} <i>${t('swTest')}</i></span>`;
+  const chip = (k, test) => `<span class="sw-chip c-${k}">${SW_CAUSE[k] || ''} ${t('swCause_' + k)}${test ? ` <i>${t('swTest')}</i>` : ''}</span>`;
+  $('#swCause').innerHTML = chip(ck, true) + (ck2 ? ' ' + chip(ck2, false) : '');
   $('#swMain').innerHTML = `<b>${last.flips}</b><small>/${sum.n}</small> ${t('swNumFlip')} · ${t('swNumOut')} <b>${last.outs}</b>`;
   const ms = (v) => (v == null ? '–' : `${v} ms`);
   const st = last.stats;
-  $('#swNums').innerHTML = [
-    `${t('swNumPow')} <b>${Math.round(last.q * 100)}%</b>`, `${t('swNumBlow')} <b>${ms(st.blowMs)}</b>`, `${t('swNumOpen')} <b>${ms(st.openLatMs)}</b>`,
-    `${t('swNumSpeed')} <b>${st.maxPxS == null ? '–' : st.maxPxS + ' px/s'}</b>`, `${t('swFrame')} <b>${last.frame.avg} ms (p95 ${last.frame.p95})</b>`,
-  ].map((x) => `<span>${x}</span>`).join('');
-  $('#swLeg').innerHTML = SW_LEGEND.map(([c, key]) => `<span><i${c.startsWith('dot:') ? ` class="dot" style="background:${c.slice(4)}"` : c === 'dash' ? ' class="dash"' : ` style="background:${c}"`}></i>${t(key)}</span>`).join('');
+  $('#swNums').innerHTML = (gbShot
+    ? [
+      `${t('swNumPow')} <b>${Math.round(last.q * 100)}%</b>`, `${t('swNumBreath')} <b>${(2 * last.D).toFixed(1)} s</b>`,
+      `${t('swNumFlick')} <b>${st.flickMs != null ? ms(st.flickMs) : st.lateMs != null ? `${t('swNumLate')} ${ms(st.lateMs)}` : '–'}</b>`,
+      `${t('swNumTiltF')} <b>${last.ttF != null && last.ttF >= 0 ? Math.round(last.ttF) + '°' : '–'}</b>`, `${t('swNumCue')} <b>${ms(st.cueMs)}</b>`,
+      `${t('swNumFlickSpd')} <b>${st.flickPxS == null ? '–' : st.flickPxS + ' px/s'}</b>`, `${t('swFrame')} <b>${last.frame.avg} ms (p95 ${last.frame.p95})</b>`,
+    ]
+    : [
+      `${t('swNumPow')} <b>${Math.round(last.q * 100)}%</b>`, `${t('swNumBlow')} <b>${ms(st.blowMs)}</b>`, `${t('swNumOpen')} <b>${ms(st.openLatMs)}</b>`,
+      `${t('swNumSpeed')} <b>${st.maxPxS == null ? '–' : st.maxPxS + ' px/s'}</b>`, `${t('swFrame')} <b>${last.frame.avg} ms (p95 ${last.frame.p95})</b>`,
+    ]).map((x) => `<span>${x}</span>`).join('');
+  $('#swLeg').innerHTML = (gbShot ? SW_LEGEND_B : SW_LEGEND).map(([c, key]) => `<span><i${c.startsWith('dot:') ? ` class="dot" style="background:${c.slice(4)}"` : c === 'dash' ? ' class="dash"' : ` style="background:${c}"`}></i>${t(key)}</span>`).join('');
   const more = $('#swMore');
   more.open = sweep.moreOpen ?? window.innerHeight >= 760; // 펼치거나 접으면 이번 실행 동안 기억
   more.ontoggle = () => { sweep.moreOpen = more.open; if (more.open) drawSweepTimeline($('#swTl'), raw.ctl, last); };
@@ -4602,7 +4765,7 @@ function showSweepCard(raw, last, sum) {
   });
 }
 // 타임라인(가로 = 손 시간 = 벽시계 초: 숨 동안 0.5배라 물리 초 × 2, 숨이 끝난 뒤 × 1 · 물리 0~1.2 s — 카드 숫자(벽시계 ms)와 같은 단위):
-//   위 띠 = 높이(바람 자국 주황 · 더미 꼭대기 점선 · 꼭대기 넘음 노란 점 · 떼기 파란 점), 가운데 띠 = 위 절반 기울기(0~90°, 분홍), 아래 띠 = 숨 봉투(파랑).
+//   위 띠 = 높이(바람 자국 주황 · 더미 꼭대기 점선 · 꼭대기 넘음 노란 점 · 떼기(A)/휙(B) 파란 점), 가운데 띠 = 위 절반 기울기(0~90°, 분홍), 아래 띠 = 숨 봉투(파랑).
 //   정답 곡선·예상 장수는 그리지 않는다(§5.4)
 function drawSweepTimeline(cv, ctl, last) {
   if (!cv || !cv.clientWidth) return; // 접힌 '자세히' 안이면 펼칠 때 그린다
@@ -4643,7 +4806,8 @@ function drawSweepTimeline(cv, ctl, last) {
   c.stroke();
   const dot = (tt, h, col) => { c.fillStyle = col; c.strokeStyle = '#2a1a12'; c.lineWidth = 1.5; c.beginPath(); c.arc(x(tt), y(h), 5, 0, Math.PI * 2); c.fill(); c.stroke(); };
   if (last.tTop >= 0) dot(last.tTop, top0, '#ffd23f');
-  if (last.D != null && ser.length) { const r = ser.reduce((a, b) => (Math.abs(b[0] - last.D) < Math.abs(a[0] - last.D) ? b : a)); dot(r[0], r[3], '#3a8fe0'); }
+  const tBlue = ctl.mode === 'flick' ? last.t0 : last.D; // A = 떼기(D) · B = 휙(t0, 없으면 점 없음)
+  if (tBlue != null && ser.length) { const r = ser.reduce((a, b) => (Math.abs(b[0] - tBlue) < Math.abs(a[0] - tBlue) ? b : a)); dot(r[0], r[3], '#3a8fe0'); }
   c.fillStyle = 'rgba(42,26,18,0.75)'; c.font = '600 10px sans-serif';
   c.fillText('0', 2, hBot - 2);
   const lab = `${WT.toFixed(1)} s · ${t('swTlAxis')}`;
@@ -4683,7 +4847,10 @@ const SW_COACH = 3; // 이번 실행 첫 3숨(+ 느린 밀기 취소 뒤 6.5초)
 // '지금 쭉!' = 위 절반 평균 기울기 15°. 고정 숨(툭 18 px 버티기) 실측: 30장 q0.7 시드 601~606·40장 q0.85 시드 401~406 모두 15° = 화면 약 0.21 s,
 //   사람 반응 약 0.1 s(화면, 벽시계 0.2 s)를 더하면 쓸기 시작 ≈ 0.31 s — 정답 시작 0.25~0.35 s 안(사람 반응은 미검증)
 const SW_COACH_TT = 15;
-function sweepCoachOn(now = performance.now()) { return sweep.total < SW_COACH || now < sweep.guideUntil; }
+// B '들리면 휙!' = 위 절반 10°(sweep.js GB.cueTT, 측정 tools/sweepgb.mjs ⑤: 화면 0.16~0.19 s, 반응 벽시계 0.2~0.44 s 를 더하면 꼭대기의 94~98% — 15° 보다 느린 반응·40장 q0.7 에서 조금 낫다)
+function swCoachTT() { return sweepGB() ? Sweep.GB.cueTT : SW_COACH_TT; }
+// 코치: 첫 3숨 · A 느린 밀기 취소 뒤 6.5초 · B 지난 숨이 '안 쓸었어요'·'일렀어요'면 다음 한 숨(그 뒤엔 사라짐)
+function sweepCoachOn(now = performance.now()) { return sweep.total < SW_COACH || now < sweep.guideUntil || sweep.coachAgain; }
 // 지금 위 절반 평균 기울기(°) — 물리 상태 그대로(정답 신호 아님). 프레임마다 한 번(40장 = 회전 40번)
 function sweepTiltNow() { return table ? Sweep.halves(table)[1] : 0; }
 
@@ -4700,14 +4867,14 @@ function sweepDraw(now) {
   const blowing = sweep.clock && ctl;
   sweep.dispA += ((blowing ? ctl.state.alpha / D2R : 0) - sweep.dispA) * (blowing ? 1 : 0.15);
   const aiming = !!(sweep.input && myTurn.on);
-  const guide = aiming && !myTurn.pressed && sweepCoachOn(now) && now - myTurn.t0 > 500 ? sweepGuidePose(now) : null;
+  const guide = aiming && !myTurn.pressed && sweepCoachOn(now) && now - myTurn.t0 > 500 ? (sweepGB() ? sweepGuidePoseB(now) : sweepGuidePose(now)) : null;
   // 바람 자국: 숨 동안 = 지금 자세, 당기는 동안 = 고개 0 자리(흐리게), 시범 동안 = 시범 손가락 높이(유령 자국, '엄지 높이 = 자국 높이')
   let S = null, top0 = 0, zf = 0, cx = 0, q = sweep.lastQ, ghost = false;
   const pc = table.pileCenter();
   if (blowing) { S = ctl.state; top0 = ctl.top0; zf = ctl.zf; cx = ctl.c.x; q = sweep.shot?.q ?? q; }
   else if ((aiming && sweep.input.g) || guide) {
     cx = pc.x; zf = pc.z + 1; top0 = table.columnTop();
-    const yHit = guide ? Sweep.hitC(Sweep.alphaForU(guide.u)) : Sweep.GEO.ym;
+    const yHit = guide ? Sweep.hitC(guide.aDeg ?? Sweep.alphaForU(guide.u)) : Sweep.GEO.ym;
     S = { o: { x: pc.x, y: Sweep.GEO.ym, z: zf + Sweep.GEO.L }, alpha: 0, env: 0.25, yHit };
     q = guide ? 0.6 : clamp((sweep.input.g.pMax || 0) / Rules.POUCH_FULL, 0, 1);
     ghost = !!guide;
@@ -4766,7 +4933,12 @@ function sweepDraw(now) {
   // 지난 숨 엄지 궤적(회색 점선) — 조준 동안
   if (aiming && sweep.lastTrail && sweep.lastTrail.length > 1) {
     c2.save(); c2.scale(dpr, dpr); c2.strokeStyle = 'rgba(90,90,90,0.55)'; c2.lineWidth = 3; c2.setLineDash([6, 6]);
-    c2.beginPath(); sweep.lastTrail.forEach((p, i) => (i ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]))); c2.stroke(); c2.restore();
+    c2.beginPath(); sweep.lastTrail.forEach((p, i) => (i ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]))); c2.stroke();
+    if (sweep.lastFlTrail && sweep.lastFlTrail.length > 1) { // B: 놓은 뒤 휙 누름(따로 — 놓은 자리와 잇지 않는다)
+      c2.strokeStyle = 'rgba(200,150,0,0.55)';
+      c2.beginPath(); sweep.lastFlTrail.forEach((p, i) => (i ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]))); c2.stroke();
+    }
+    c2.restore();
   }
   if (guide) drawSweepGuide(guide, c2, dpr);
   sweepCoachDraw(c2, dpr, now);
@@ -4792,17 +4964,47 @@ function sweepGuidePose(now) {
   else { y = y0; press = 0; key = null; }
   return { x, y, y0, yL, FL, uTop, key, press, u: press > 0 && cyc >= 0.36 ? Math.max(0, yL - y) : 0 };
 }
+// B 손가락 시범 한 주기(4.0 s 벽시계): 꾹 → 당기고 → 놓으면 퍼—(손가락 뗌) → 들리면…(손가락 떠 있음) → 다시 눌러 휙!(70 px 를 약 0.16 s)
+//   → 쉼. 놓기(cyc 0.28) → 휙 시작(0.43) = 0.6 s 벽시계 = 측정 꼭대기(화면 0.3 s, 검토: 예전 박자 0.75~1.0 s 는 30장에서 '늦었어요'가 났다).
+//   유령 자국은 휙부터 0.6 s 동안 바닥에서 24° 까지(B 고개 = 80°/s 화면 = 40°/s 벽시계)
+const SW_DEMO_B_MS = 4000;
+function sweepGuidePoseB(now) {
+  const W = window.innerWidth, H = window.innerHeight, minDim = Math.min(W, H);
+  const x = W / 2, y0 = H * 0.6, pull = minDim * 0.42 * 0.75, FLK = 70;
+  const cyc = ((now - myTurn.t0) % SW_DEMO_B_MS) / SW_DEMO_B_MS;
+  const sm = (k) => k * k * (3 - 2 * k);
+  const yL = y0 + pull;
+  let y = y0, key = 'swG1', press = 1, aDeg = 0;
+  if (cyc < 0.06) press = cyc / 0.06;
+  else if (cyc < 0.26) { y = y0 + sm((cyc - 0.06) / 0.2) * pull; key = 'swG2'; }
+  else if (cyc < 0.3) { y = yL - 14 * sm((cyc - 0.26) / 0.04); key = 'swGB3'; press = 1 - 0.7 * sm((cyc - 0.26) / 0.04); }
+  else if (cyc < 0.4) { y = yL - 14; key = cyc < 0.34 ? 'swGB3' : 'swGB4'; press = 0.3; }
+  else if (cyc < 0.43) { y = yL - 14 + 4 * sm((cyc - 0.4) / 0.03); key = 'swGB4'; press = 0.3 + 0.7 * sm((cyc - 0.4) / 0.03); }
+  else if (cyc < 0.47) { y = yL - 10 - FLK * sm((cyc - 0.43) / 0.04); key = 'swGB5'; }
+  else if (cyc < 0.62) { y = yL - 10 - FLK; key = 'swGB5'; press = 1 - (cyc - 0.47) / 0.15; }
+  else { y = y0; press = 0; key = null; }
+  if (cyc >= 0.43 && cyc < 0.75) aDeg = Sweep.GB.A * Math.min(1, (cyc - 0.43) / 0.15);
+  return { b: true, x, y, y0, yL, FLK, key, press, aDeg, u: 0 };
+}
 function drawSweepGuide(g, ctx, dpr) {
   const W = window.innerWidth;
   const { x, y, y0, yL, FL, uTop } = g;
   ctx.save(); ctx.scale(dpr, dpr);
-  // 길: 내려가는 길(왼쪽, ↓)과 올라가는 길(오른쪽, ↑)을 띄워 그린다 · '툭' 높이에 눈금
   const arrow = (ax, ay, dir) => { ctx.beginPath(); ctx.moveTo(ax - 7, ay - 9 * dir); ctx.lineTo(ax, ay); ctx.lineTo(ax + 7, ay - 9 * dir); ctx.stroke(); };
   ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 3; ctx.setLineDash([7, 6]);
   ctx.beginPath(); ctx.moveTo(x + 30, y0); ctx.lineTo(x + 30, yL); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(x + 46, yL); ctx.lineTo(x + 46, yL - uTop); ctx.stroke(); ctx.setLineDash([]);
-  arrow(x + 30, yL, 1); arrow(x + 46, yL - uTop, -1);
-  ctx.beginPath(); ctx.moveTo(x + 40, yL - FL); ctx.lineTo(x + 52, yL - FL); ctx.stroke();
+  if (g.b) {
+    // B: 내려가는 길(↓, 점선) · 놓기 표시(작은 동그라미) · 따로 그린 짧은 휙 화살(↑, 노랑 실선 = 새로 누른 손가락)
+    ctx.setLineDash([]); arrow(x + 30, yL, 1);
+    ctx.beginPath(); ctx.arc(x + 30, yL + 12, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,210,63,0.95)'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(x + 50, yL - 10); ctx.lineTo(x + 50, yL - 10 - g.FLK); ctx.stroke(); arrow(x + 50, yL - 10 - g.FLK, -1);
+  } else {
+    // A: 길: 내려가는 길(왼쪽, ↓)과 올라가는 길(오른쪽, ↑)을 띄워 그린다 · '툭' 높이에 눈금
+    ctx.beginPath(); ctx.moveTo(x + 46, yL); ctx.lineTo(x + 46, yL - uTop); ctx.stroke(); ctx.setLineDash([]);
+    arrow(x + 30, yL, 1); arrow(x + 46, yL - uTop, -1);
+    ctx.beginPath(); ctx.moveTo(x + 40, yL - FL); ctx.lineTo(x + 52, yL - FL); ctx.stroke();
+  }
   if (g.press > 0) {
     ctx.globalAlpha = 0.4 + 0.6 * g.press;
     ctx.translate(x, y);
@@ -4814,7 +5016,7 @@ function drawSweepGuide(g, ctx, dpr) {
       const txt = t(g.key);
       ctx.font = '700 15px "Jua", sans-serif';
       const tw = ctx.measureText(txt).width + 18, bx = clamp(-tw - 22, 8 - x, W - x - tw - 8);
-      ctx.fillStyle = g.key === 'swG3' ? '#ffd23f' : 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
+      ctx.fillStyle = g.key === 'swG3' || g.key === 'swGB5' ? '#ffd23f' : 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, -34, tw, 28, 10) : ctx.rect(bx, -34, tw, 28); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#2a1a12'; ctx.textBaseline = 'middle'; ctx.fillText(txt, bx + 9, -20);
     }
@@ -4838,32 +5040,48 @@ function swBubble(ctx, x, y, txt, tone, fillK) {
   }
   ctx.fillStyle = '#2a1a12'; ctx.textBaseline = 'middle'; ctx.fillText(txt, bx + 11 + ring, y + 1);
 }
+// B(놓고 쓸기): 당기는 동안 '놓으면 퍼—' → 숨 동안 '퍼— 들리면 휙!'(채워지는 고리 = 위 절반 기울기 / 10°) → 위 절반이 10° 를 넘은 스텝(ctl.rec.cueT,
+//   물리 값)부터 '들렸다 — 지금 휙!' → 휙 받으면 사라짐. 입술 위 '퍼—'(놓기) · '휙!'(휙 받음)
+function swPop(ctx, txt, since, W, H, col, yFrac = 0.84) {
+  const k = since < 120 ? since / 120 : 1 - (since - 120) / 530;
+  ctx.globalAlpha = clamp(k, 0, 1);
+  ctx.font = `700 ${Math.round(34 + 10 * (1 - k))}px "Jua", sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = '#2a1a12'; ctx.fillStyle = col;
+  const ty = H * yFrac - 30 * (since / 650);
+  ctx.strokeText(txt, W / 2, ty); ctx.fillText(txt, W / 2, ty);
+  ctx.globalAlpha = 1; ctx.textAlign = 'start';
+}
 function sweepCoachDraw(ctx, dpr, now) {
   const W = window.innerWidth, H = window.innerHeight;
   const I = sweep.input;
   const side = $('#swSide');
   const yC = side && !side.hidden ? side.getBoundingClientRect().bottom + 30 : H * 0.3;
+  let key = null;
   ctx.save(); ctx.scale(dpr, dpr);
   if (I && I.g && I.g.st === 'inhale' && myTurn.pressed) {
-    if (sweep.nudge) swBubble(ctx, W / 2, yC, t('swNudge'), 'y');
-    else if (sweepCoachOn(now)) swBubble(ctx, W / 2, yC, t('swCoachFlick'), 'w');
+    if (sweep.nudge) { key = 'swNudge'; swBubble(ctx, W / 2, yC, t(key), 'y'); }
+    else if (sweepCoachOn(now)) { key = I.gb ? 'swCoachRel' : 'swCoachFlick'; swBubble(ctx, W / 2, yC, t(key), 'w'); }
   } else if (sweep.clock && sweep.ctl) {
-    if (sweep.coachShot && I && !I.released) {
+    const ctl = sweep.ctl;
+    if (ctl.mode === 'flick') {
+      // 한 획 휙(놓기 전 같은 획에서 휙)이었으면 코치 숨이 아니어도 말한다: 단서 전 '그 휙은 안 세요 — 기다려…' → 단서 뒤 '들렸다 — 다시 눌러 휙!'
+      //   단서 전 말에는 '휙'을 넣지 않는다(검토: 첫 말 '퍼— 들리면 휙!'을 보자마자 휙 → 이름 3~7장)
+      const again = !!(I && I.strokeFlick);
+      if ((sweep.coachShot || again) && ctl.flickReq == null) {
+        if (ctl.rec.cueT >= 0) { key = 'swCoachGoB'; swBubble(ctx, W / 2, yC, t(key), 'y'); }
+        else { key = again ? 'swCoachStrokeB' : 'swCoachWaitB'; swBubble(ctx, W / 2, yC, t(key), 'w', sweepTiltNow() / Sweep.GB.cueTT); }
+      }
+    } else if (sweep.coachShot && I && !I.released) {
       const tt = sweepTiltNow();
-      if (tt >= SW_COACH_TT) swBubble(ctx, W / 2, yC, t('swCoachGo'), 'y');
-      else swBubble(ctx, W / 2, yC, t('swCoachWait'), 'w', tt / SW_COACH_TT);
+      if (tt >= SW_COACH_TT) { key = 'swCoachGo'; swBubble(ctx, W / 2, yC, t(key), 'y'); }
+      else { key = 'swCoachWait'; swBubble(ctx, W / 2, yC, t(key), 'w', tt / SW_COACH_TT); }
     }
     const since = now - sweep.openAt;
-    if (since < 650) { // 입술 위 '푸—'
-      const k = since < 120 ? since / 120 : 1 - (since - 120) / 530;
-      ctx.globalAlpha = clamp(k, 0, 1);
-      ctx.font = `700 ${Math.round(34 + 10 * (1 - k))}px "Jua", sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = '#2a1a12'; ctx.fillStyle = '#e2f6ff';
-      const ty = H * 0.84 - 30 * (since / 650);
-      ctx.strokeText(t('swPuu'), W / 2, ty); ctx.fillText(t('swPuu'), W / 2, ty);
-      ctx.globalAlpha = 1; ctx.textAlign = 'start';
-    }
+    if (since < 650) swPop(ctx, t(ctl.mode === 'flick' ? 'swPeo' : 'swPuu'), since, W, H, '#e2f6ff'); // 입술 위 '푸—'(A) · '퍼—'(B)
   }
+  if (sweep.flickAt && now - sweep.flickAt < 650) swPop(ctx, t('swWhik'), now - sweep.flickAt, W, H, '#ffd23f'); // B 휙 받음
+  else if (sweep.pop && now - sweep.pop.at < SW_POP_MS) swPop(ctx, t(sweep.pop.key), now - sweep.pop.at, W, H, '#ffffff', 0.7); // B '위로 휙!'(탭·작은 밀기) · '잠깐…'(판정 중)
+  sweep.coachKey = key;
   ctx.restore();
 }
 
@@ -4927,12 +5145,12 @@ function drawSweepSide(on) {
   const ey = rotH(1.65, 0.15);
   c.fillStyle = '#2a1a12'; c.beginPath(); c.arc(X(ey.z), Y(ey.y), 2.2, 0, Math.PI * 2); c.fill();
   c.fillStyle = '#d4566a'; c.beginPath(); c.ellipse(X(o.z), Y(o.y), 4.5, 3, -aRad, 0, Math.PI * 2); c.fill(); c.stroke();
-  // 기울기 호(왼쪽 위): 위 절반 평균 기울기 0~90°(물리 값). 코치 숨이면 15° 눈금('쭉')
+  // 기울기 호(왼쪽 위): 위 절반 평균 기울기 0~90°(물리 값). 코치 숨이면 눈금(A 15° '쭉' · B 10° '휙')
   const tt = sweepTiltNow(), gx = 10, gy = 46, gr = 28;
   c.lineWidth = 7; c.strokeStyle = 'rgba(42,26,18,0.15)'; c.beginPath(); c.arc(gx, gy, gr, -Math.PI / 2, 0); c.stroke();
   c.strokeStyle = '#e0457b'; c.beginPath(); c.arc(gx, gy, gr, -clamp(tt, 0, 90) * D2R, 0); c.stroke();
   const coach = ctl ? sweep.coachShot : sweepCoachOn();
-  if (coach) { const k = SW_COACH_TT * D2R; c.strokeStyle = '#2a1a12'; c.lineWidth = 2; c.beginPath(); c.moveTo(gx + (gr - 6) * Math.cos(k), gy - (gr - 6) * Math.sin(k)); c.lineTo(gx + (gr + 6) * Math.cos(k), gy - (gr + 6) * Math.sin(k)); c.stroke(); }
+  if (coach) { const k = swCoachTT() * D2R; c.strokeStyle = '#2a1a12'; c.lineWidth = 2; c.beginPath(); c.moveTo(gx + (gr - 6) * Math.cos(k), gy - (gr - 6) * Math.sin(k)); c.lineTo(gx + (gr + 6) * Math.cos(k), gy - (gr + 6) * Math.sin(k)); c.stroke(); }
   c.fillStyle = '#2a1a12'; c.font = '700 11px sans-serif'; c.textBaseline = 'alphabetic';
   c.fillText(`${t('swTilt')} ${tt > 90 ? '90°+' : Math.round(tt) + '°'}`, gx + 4, 12); // 뒤집히면 90° 를 넘는다(평균 acos, 엎어짐 180°)
 }
@@ -4949,7 +5167,7 @@ function sweepStop() {
   sweep.snd?.stop(); sweep.snd = null;
   sweep.clock = false; sweep.clockEnded = false;
   if (sweep.shot && !sweep.shot.judged) sweep.shot.resolve?.(null);
-  sweep.shot = null; sweep.ctl = null; sweep.dispA = 0; sweep.nudge = false; sweep.openAt = 0;
+  sweep.shot = null; sweep.ctl = null; sweep.dispA = 0; sweep.nudge = false; sweep.openAt = 0; sweep.flickAt = 0; sweep.coachKey = null;
   sweep.card?.resolve?.(null);
   if (sweep.ribbon) sweep.ribbon.visible = false;
   if (sweep.mark) sweep.mark.visible = false;
@@ -4961,12 +5179,16 @@ function coreSection() {
   const wrap = document.createElement('div');
   wrap.className = 'exp core';
   const render = () => {
-    const on = feel.core >= 0.5;
+    const on = feel.core >= 0.5, gbOn = sweepGB();
     wrap.innerHTML = `<h3>${t('coreTitle')}</h3>`
       + `<div class="exp-btns"><button type="button" class="exp-sw${on ? ' on' : ''}" id="core-sw" aria-pressed="${on}">${t('coreSw')} <b>${on ? t('expOn') : t('expOff')}</b></button>`
       + `<button type="button" class="exp-sw" id="core-p40"${on ? '' : ' disabled'}>${t('coreP40')}</button><button type="button" class="exp-sw" id="core-p30"${on ? '' : ' disabled'}>${t('coreP30')}</button></div>`
-      + `<p class="exp-how">${t('coreNote')}</p>`;
+      // 쓸기 문법(연습판): B '놓고 쓸기'(기본) · A '누른 채 쓸기(옛)' — 비교용
+      + `<div class="exp-btns"><button type="button" class="exp-sw${gbOn ? ' on' : ''}" id="core-gb" aria-pressed="${gbOn}"${on ? '' : ' disabled'}>${t('coreGB')}</button>`
+      + `<button type="button" class="exp-sw${gbOn ? '' : ' on'}" id="core-ga" aria-pressed="${!gbOn}"${on ? '' : ' disabled'}>${t('coreGA')}</button></div>`
+      + `<p class="exp-how">${t('coreNote')} ${t('coreGNote')}</p>`;
     wrap.querySelector('#core-sw').addEventListener('click', () => { sfx.pop(); feel.core = feel.core >= 0.5 ? 0 : 1; $('#sweepBtn').hidden = feel.core < 0.5; render(); });
+    for (const [id, v] of [['core-gb', 0], ['core-ga', 1]]) wrap.querySelector('#' + id).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.swg = v; render(); });
     for (const n of [40, 30]) wrap.querySelector('#core-p' + n).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); closeTune(false); goHome(); startPractice(n, 0); });
   };
   render();

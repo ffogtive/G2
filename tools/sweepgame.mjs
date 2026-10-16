@@ -14,9 +14,15 @@
 //                                      tools/coresweep/data/vf/chk601.jsonl.gz 와 (장수, 키, 시드)로 맞춰 줄마다 비트 대조(sweepcheck same 과 같은 판정). SEEDS=601-624 NS=20,30,45 = 전부(약 20분)
 //   node tools/sweepgame.mjs ctl      엄지 px ↔ 고개 α 표(±1 px) · 따라가기(스텝당 |Δα| ≤ 1°, ≤ 24°) · 떼기 잠금(D = 떼기 뒤 첫 스텝·최소 0.131·상한 1.0, dur = D + 0.04)
 //                                      · plan 모드 prog ≡ makeProg('c', rel 0.04) 비트 · gesture.js ≡ gesture.mjs(gestnoise 손 잡음 궤적에서 모든 반환값·시각 같음)
-//                                      · 채택 설정(+ slowCancel 40) '푸' 열림 지연 중앙값 233/617/267 ms · 쓸기 놓침 0%. 약 20초
+//                                      · 채택 설정(+ slowCancel 40) '푸' 열림 지연 중앙값 233/617/267 ms · 쓸기 놓침 0%
+//                                      · 문법 B '놓고 쓸기'(2026-10-16 기본): GB 값 ≡ sweepgb 측정(CHOSEN w80·A24 · D(q) · CHIP 규칙) · 휙 인식기 표(탭·느린 끌기·떨림 = 안 휙,
+//                                        12 px/100 ms·빠른 휙·뗄 때 휙 = 휙, 한 번만) · 당김 인식기 GestureB 는 '푸'를 안 열고 한 획 휙·느린 밀기도 놓기(취소 아님),
+//                                        한 획 휙 동안 옆 ±125 px 흐름도 놓기 · 당기며 옆 빼기·덜 당김 = 취소(side 표시)
+//                                        · flick ≡ plan {A 24, w 80, t0, D(q)} prog 비트 · 손 휙(그 스텝 t 로 잠금)·일정 휙·안 휙·숨 끝 뒤 휙 = planShot 해시
+//                                        · 두 번째 휙 무시 · flickShot = 측정 원자료(tools/coresweep/data/gb grid·held) 줄의 해시·뒤집힘·원 밖·스텝·ttF·단서 시각·칩
+//                                        · 칩 함수 gbChip ≡ sweepgb chipOf(고른 쓸기·D(q) 원자료 줄 전부). 약 40초
 //   node tools/sweepgame.mjs ref [--json]   주입 훅(window.__sweepPlan) 칸들의 Node 기준: #p30 시드 601 t0 .05/.25/.45 · #p40 시드 401 t0 .10/.35 → 뒤집힘·원 밖·D·스텝·정지 해시
-//                                      (tools/sweepplay.mjs 가 게임과 비교). 약 5초
+//                                      + 문법 B 주입({ kind: 'gb', q, ts }) 칸: #p40 401 q0.85 ts 0.3·안 휙 · #p30 601 q0.7 ts 0.3 (tools/sweepplay.mjs 가 게임과 비교). 약 8초
 //   node tools/sweepgame.mjs base     게임 문법의 고정 숨 기준선(검토 2): '툭 연 높이(엄지 18 px → α ≈ 0.9°)에서 버티다 떼기' D 0.375·0.45·0.525·0.6 대
 //                                      쓸기(꼭대기 떼기) t0 0.25·0.35 — 30장 q0.7 시드 601~606 · 40장 q0.85 시드 401~406. 장수별 평균 · 시드마다 (최고 쓸기 − 최고 고정) 짝 차.
 //                                      문서·카드의 이득 주장은 이 기준으로 말한다(측정 표의 α = 0 고정보다 게임 버티기가 세다). 판정 없음(보고만). 약 30초
@@ -44,6 +50,12 @@ export const REF_CELLS = [
   { N: 40, seed: 401, q: 0.85, plan: { A: 'top', w: 120, t0: 0.1, D: 'top' } },
   { N: 40, seed: 401, q: 0.85, plan: { A: 'top', w: 120, t0: 0.35, D: 'top' } },
 ];
+// 문법 B 주입 칸(sweepplay (1) 이 같은 판에서 게임과 비교). ts = 화면 초, null = 안 휙
+export const REF_GB_CELLS = [
+  { N: 40, seed: 401, q: 0.85, ts: 0.3 },
+  { N: 40, seed: 401, q: 0.85, ts: null },
+  { N: 30, seed: 601, q: 0.7, ts: 0.3 },
+];
 const PARITY_CELLS = [
   { name: '퍽 0.131', q: 0.85, plan: { kind: 'puck' } },
   { name: 'rel q0.7 w40 t.05 꼭대기', q: 0.7, plan: { A: 'top', w: 40, t0: 0.05, D: 'top' } },
@@ -60,6 +72,13 @@ export async function refRows() {
   return REF_CELLS.map((c) => {
     const r = G.planShot(V1.Table, { N: c.N, seed: c.seed, plan: c.plan, q: c.q });
     return { N: c.N, seed: c.seed, q: c.q, plan: r.plan, D: r.D, steps: r.steps, flips: r.flips, outs: r.outs, hash: r.hash, tTop: r.tTop };
+  });
+}
+export async function refRowsGB() {
+  await V1.initPhysics();
+  return REF_GB_CELLS.map((c) => {
+    const r = G.flickShot(V1.Table, c);
+    return { N: c.N, seed: c.seed, q: c.q, ts: c.ts, D: r.D, t0: r.t0, steps: r.steps, flips: r.flips, outs: r.outs, hash: r.hash, tTop: r.tTop, ttF: r.ttF, cueT: r.cueT, chip: r.chip };
   });
 }
 
@@ -388,6 +407,101 @@ async function ctl() {
   }
   ok('gesture.js ≡ gesture.mjs (slowCancel 40): 같은 사건에 모든 반환값·결정·시각 같음', cnt.bad === 0 && JSON.stringify(G.GCFG) === JSON.stringify(GM.GCFG) && G.pouchPower(0.9) === GM.pouchPower(0.9), `${cnt.n - cnt.bad}/${cnt.n} 호출`);
   ok("채택 설정 '푸' 열림 지연 중앙값 233/617/267 ms (보통·느린 손·아이) · 쓸기 놓침 0%", lat.join('/') === '233/617/267' && miss.every((m) => m === 0), `${lat.join('/')} ms · 놓침 ${miss.join('/')}`);
+  await ctlGB(mk);
+}
+
+// ───────────────────────── ctl: 문법 B '놓고 쓸기' ─────────────────────────
+async function ctlGB(mk) {
+  console.log("문법 B '놓고 쓸기' (sweep.js GB · Flick · SweepCtl 'flick' · flickShot)");
+  const GB = await import('./sweepgb.mjs');
+  // (1) 값 = 측정이 고른 값
+  const dqOk = Object.entries(GB.CHOSEN.dq).every(([q, D]) => G.gbD(+q) === D);
+  let mono = true, prev = -1;
+  for (let q = 0; q <= 1.25 + 1e-9; q += 0.005) { const d = G.gbD(q); if (d < prev || d < 0.6 || d > 1) mono = false; prev = d; }
+  const chipSame = ['early', 'late', 'rem', 'good'].every((k) => G.GB_CHIP[k] === GB.CHIP[k]) && JSON.stringify(G.GB_CHIP.peak) === JSON.stringify(GB.CHIP.peak);
+  ok("GB = 측정 고른 값: 쓸기 'w80·A24' · D(q) 0.7/0.85/1 → 0.6/0.8/1.0(비트) · 0.6~1.0 단조 · 칩 규칙(꼭대기 0.85 × 20/25장 · 23°/85°/0.12 s) = sweepgb CHIP",
+    GB.CHOSEN.sw[0] === `w${G.GB.w}·A${G.GB.A}` && dqOk && mono && chipSame,
+    `sw ${GB.CHOSEN.sw[0]} · D(q) ${Object.keys(GB.CHOSEN.dq).map((q) => G.gbD(+q)).join('/')} · 단조 ${mono}`);
+  // (2) 휙 인식기 표 (벽시계 ms · px, 16 ms 간격)
+  const drive = (pts, upAt) => { const f = new G.Flick(); let at = null; f.down(0, pts[0][1], pts[0][0]); for (let i = 1; i < pts.length; i++) if (f.move(0, pts[i][1], pts[i][0]) && at == null) at = pts[i][0]; if (upAt && f.up(0, upAt[1], upAt[0]) && at == null) at = upAt[0]; return at; };
+  const lin = (t0, y0, t1, y1) => { const a = []; for (let t = t0; t <= t1 + 1e-9; t += 16) a.push([t, y0 + ((y1 - y0) * (t - t0)) / Math.max(1, t1 - t0)]); return a; };
+  const R = mulberry(16);
+  const cases = [
+    ['탭(움직임 없음)', drive([[0, 500], [80, 500]], [96, 500]), false],
+    ['느린 끌기 12 px / 400 ms', drive(lin(0, 500, 400, 488), [416, 488]), false],
+    ['아주 느린 끌기 60 px / 3 s', drive(lin(0, 500, 3000, 440), [3016, 440]), false],
+    ['떨림 ±4 px 2 s', drive(Array.from({ length: 125 }, (_, i) => [i * 16, 500 + (R() * 8 - 4)]), [2016, 500]), false],
+    ['12 px / 100 ms', drive([[0, 500], ...lin(16, 500, 112, 488)], [128, 488]) != null, true],
+    ['빠른 휙 40 px / 48 ms', drive([[0, 500], ...lin(16, 500, 64, 460)], [80, 460]) != null, true],
+    ['뗄 때만 휙(움직임 사건 없이 30 ms 뒤 30 px 위에서 뗌)', drive([[0, 500]], [30, 470]) != null, true],
+    ['누른 채 1 s 머문 뒤 12 px / 64 ms', drive([[0, 500], [1000, 500], ...lin(1016, 500, 1080, 488)], [1096, 488]) != null, true],
+    ['20 px 내렸다 12 px 올림(최저점 기준)', drive([[0, 500], ...lin(16, 500, 96, 520), ...lin(112, 520, 160, 508)], [176, 508]) != null, true],
+  ];
+  const cOk = cases.every(([, got, want]) => !!got === want);
+  const f1 = new G.Flick(); f1.down(0, 500, 0); const a1 = f1.move(0, 470, 16), a2 = f1.move(0, 400, 32), a3 = f1.up(0, 380, 48);
+  ok('휙 인식기: 탭·느린 끌기·떨림 = 안 휙 · 12 px/100 ms·빠른 휙·뗄 때 휙·머문 뒤 휙·내렸다 올림 = 휙 · 한 누름에 한 번', cOk && a1 && !a2 && !a3, cases.map(([n, got, want]) => `${n} ${!!got === want ? '○' : '×'}`).join(' · '));
+  // (3) 당김 인식기(GestureB = GB_GCFG + 옆 빼기는 당기는 동안의 x): '푸'를 안 열고(blowStart 없음) 떼면 'puff'(= 놓기) — 한 획 휙·느린 밀기도 취소 아님.
+  //     옆 빼기(당기는 동안 30%)·덜 당김은 취소. 같은 획의 위로 휙에서 옆으로 흐른 것(엄지 호, 검토: 휙 220 px 위 + 옆 ±120 px)은 취소 아님
+  const pullRun = (fn) => { const g = new G.GestureB(W0, H0); const ev = []; const call = (m, ...a) => { const r = g[m](...a); if (r?.ev === 'blowStart') ev.push(r); return r; }; const out = fn(call); return { out, opened: ev.length }; };
+  const oneStroke = pullRun((c) => { let t = 0; c('down', 195, 500, t); for (let i = 1; i <= 19; i++) c('move', 195, 500 + (156 * i) / 19, (t += 16)); for (let i = 1; i <= 4; i++) c('move', 195, 656 - 20 * i, (t += 16)); return c('up', 195, 576, t + 8); });
+  const slowPush = pullRun((c) => { let t = 0; c('down', 195, 500, t); for (let i = 1; i <= 19; i++) c('move', 195, 500 + (160 * i) / 19, (t += 16)); t += 200; for (let i = 1; i <= 188; i++) { t += 16; c('move', 195, 660 - (60 * i) / 188, t); c('tick', t); } return c('up', 195, 600, t + 8); });
+  const side = pullRun((c) => { c('down', 195, 500, 0); c('move', 195, 600, 100); c('move', 350, 600, 200); return c('up', 350, 600, 216); });
+  const tiny = pullRun((c) => { c('down', 195, 500, 0); c('move', 195, 505, 100); return c('up', 195, 505, 116); });
+  const drift = (dx) => pullRun((c) => { let t = 0; c('down', 195, 500, t); for (let i = 1; i <= 19; i++) c('move', 195, 500 + (156 * i) / 19, (t += 16)); for (let i = 1; i <= 8; i++) c('move', 195 + (dx * i) / 8, 656 - (220 * i) / 8, (t += 16)); return c('up', 195 + dx, 436, t + 8); });
+  const dL = drift(-125), dR = drift(125);
+  const sideRel = pullRun((c) => { let t = 0; c('down', 195, 500, t); for (let i = 1; i <= 19; i++) c('move', 195 + (130 * i) / 19, 500 + (156 * i) / 19, (t += 16)); return c('up', 325, 656, t + 8); });
+  ok("당김 인식기 GestureB: 한 획(당김 156 px → 80 px 휙 → 뗌) = 놓기 'puff'·세기 = 가장 깊이 · '푸' 안 열림 · 느린 밀기도 놓기 · 한 획 휙 + 옆 ±125 px = 놓기 · 옆 빼기(당기며 130 px·당긴 뒤 옆)·덜 당김 = 취소",
+    oneStroke.out.kind === 'puff' && oneStroke.opened === 0 && Math.abs(oneStroke.out.p - G.pouchPower(156 / (390 * 0.42))) < 1e-12 && slowPush.out.kind === 'puff' && slowPush.opened === 0
+      && dL.out.kind === 'puff' && dR.out.kind === 'puff' && side.out.kind === 'cancel' && side.out.side === true && sideRel.out.kind === 'cancel' && sideRel.out.side === true && tiny.out.kind === 'cancel' && tiny.out.side === false,
+    `한 획 ${oneStroke.out.kind} p ${oneStroke.out.p.toFixed(3)} 열림 ${oneStroke.opened} · 느린 밀기 ${slowPush.out.kind} · 휙+옆 ${dL.out.kind}/${dR.out.kind} · 옆 ${side.out.kind}/${sideRel.out.kind} · 덜 당김 ${tiny.out.kind}`);
+  // (4) flick ≡ plan: prog 출력 비트(일정 휙 t0 3개 · 안 휙) · durCap
+  let bad = 0, tot = 0;
+  for (const n of [30, 40]) for (const q of [0.7, 0.85, 1.0]) for (const ts of [0.1, 0.3, 0.55, null]) {
+    const t = mk(n, 401), D = G.gbD(q);
+    const c = new G.SweepCtl(t, { mode: 'flick', q });
+    if (ts != null) c.flick(ts);
+    const ref = new G.SweepCtl(t, { mode: 'plan', plan: { A: ts == null ? 0 : 24, w: 80, t0: ts ?? 0, D } });
+    for (let i = 0; i <= 125; i++) { const tt = i / 120, x = c.prog(tt), y = ref.prog(tt); for (const k of ['phi', 'env', 'ux', 'uz']) { tot++; if (!Object.is(x[k], y[k])) bad++; } for (const k of ['x', 'y', 'z']) { tot++; if (!Object.is(x.o[k], y.o[k])) bad++; } }
+    tot += 2; if (c.durCap !== ref.durCap) bad++; if (c.D !== D) bad++;
+  }
+  ok("flick ≡ plan {A 24, w 80, t0, D(q)} (안 휙 = A 0): prog 출력 비트 · durCap = D + 0.04", bad === 0, `${tot - bad}/${tot}`);
+  // (5) 손 휙(그 스텝 전에 요청 → 그 스텝 t 로 잠금) · 숨 끝 뒤 휙 · 두 번째 휙 = planShot 해시
+  const rows = [];
+  let sOk = 0, sTot = 0;
+  for (const [N, seed, q] of [[40, 401, 0.85], [30, 601, 0.7]]) for (const k of [0, 30, 42, 66, 200]) {
+    const s = G.flickShot(V1.Table, { N, seed, q, flickNow: k });
+    const p = G.planShot(V1.Table, { N, seed, q, plan: s.t0 == null ? { A: 0, w: 80, t0: 0, D: G.gbD(q) } : { A: 24, w: 80, t0: s.t0, D: G.gbD(q) } });
+    const late = k * (1 / 120) > G.gbD(q) + 0.04;
+    const good = s.hash === p.hash && s.flips === p.flips && s.outs === p.outs && s.steps === p.steps && (late ? s.t0 == null && s.chip === 'none' : s.t0 != null);
+    sTot++; if (good) sOk++;
+    rows.push(`${N}장 ${seed} q${q} 스텝 ${k} → t0 ${s.t0 == null ? '없음' : s.t0.toFixed(4)} ${s.flips}장 ${s.chip}${good ? '' : ' ×'}`);
+  }
+  { // 두 번째 휙은 무시
+    const t = mk(40, 401), c = new G.SweepCtl(t, { mode: 'flick', q: 0.85 });
+    c.attach(t.blowProg({ prog: c.prog, power: 0.85, dur: c.durCap }));
+    const f1 = c.flick(); for (let i = 0; i < 10; i++) { t.step(); c.after(t); }
+    const t0a = c.t0, f2 = c.flick(); for (let i = 0; i < 10; i++) { t.step(); c.after(t); }
+    sTot++; if (f1 && !f2 && c.t0 === t0a && t0a === 0) sOk++; else rows.push(`두 번째 휙 × (${f1}/${f2} t0 ${t0a}/${c.t0})`);
+  }
+  ok("손 휙(스텝 0·30·42·66 → 그 스텝 t 로 잠금)·숨 끝 뒤 휙(스텝 200 = 안 휙)·두 번째 휙 무시 = planShot 해시·뒤집힘·원 밖·스텝", sOk === sTot, `${sOk}/${sTot} · ${rows.join(' · ')}`);
+  // (6) flickShot(일정 휙) = 측정 원자료 줄 비트(학습 시드 grid · 보류 시드 held, 고른 쓸기·D(q)·안 휙)
+  const raw = GB.readRows(new URL('./coresweep/data/gb/grid.jsonl.gz', import.meta.url).pathname + ',' + new URL('./coresweep/data/gb/held.jsonl.gz', import.meta.url).pathname)
+    .filter((r) => (r.kind === 'gb' && r.sw === GB.CHOSEN.sw[0] && GB.CHOSEN.dq[r.q] === r.D) || (r.kind === 'never' && GB.CHOSEN.dq[r.q] === r.D));
+  const stride = Math.max(1, Math.floor(raw.length / 14));
+  let mOk = 0, mTot = 0;
+  const chipOf = GB.chipOf; // sweepgb report ⑩ 식 그대로
+  const bads = [];
+  for (let i = 0; i < raw.length && mTot < 14; i += stride) {
+    const r = raw[i];
+    const s = G.flickShot(V1.Table, { N: r.N, seed: r.seed, q: r.q, ts: r.kind === 'gb' ? r.ts : null });
+    const good = s.hash === r.hash && s.flips === r.flip && s.outs === r.out && s.steps === r.steps && s.tTop === r.tTop && s.ttF === r.ttF && s.cueT === (r.cue.tt10 ?? -1) && s.chip === chipOf(r);
+    mTot++; if (good) mOk++; else bads.push(`${r.N}|${r.seed}|${r.key}`);
+  }
+  ok('flickShot(일정 휙·안 휙) = 측정 원자료 줄(grid·held): 해시·뒤집힘·원 밖·스텝·꼭대기 넘음·ttF·단서 시각·칩', mOk === mTot && mTot >= 12, `${mOk}/${mTot}${bads.length ? ' 다름 ' + bads.join(', ') : ''}`);
+  // (7) 칩 함수 전체 대조: 게임 gbChip(요약 입력) ≡ sweepgb chipOf — 고른 쓸기·D(q) 의 모든 원자료 줄
+  let cBad = 0;
+  for (const r of raw) if (G.gbChip({ ts: r.kind === 'gb' ? r.ts : null, ttF: r.ttF, D: r.Deff, tTop: r.tTop, flip: r.flip, n: r.N }) !== chipOf(r)) cBad++;
+  ok('칩 함수 gbChip ≡ sweepgb chipOf (고른 쓸기·D(q) 원자료 줄 전부)', cBad === 0 && raw.length > 1000, `${raw.length - cBad}/${raw.length}`);
 }
 
 // ───────────────────────── 진입 ─────────────────────────
@@ -404,9 +518,12 @@ if (!isMainThread && workerData?.sweepgameWorker) {
   else if (cmd === 'ctl') await ctl();
   else if (cmd === 'base') await base();
   else if (cmd === 'ref') {
-    const rows = await refRows();
-    if (a.includes('--json')) console.log(JSON.stringify(rows));
-    else for (const r of rows) console.log(`${r.N}장 시드 ${r.seed} q${r.q} A ${r.plan.A}° w ${r.plan.w} t0 ${r.plan.t0} D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 원 밖 ${r.outs} · 꼭대기 넘음 ${r.tTop} · 해시 ${r.hash}`);
+    const rows = await refRows(), gb = await refRowsGB();
+    if (a.includes('--json')) console.log(JSON.stringify({ plan: rows, gb }));
+    else {
+      for (const r of rows) console.log(`${r.N}장 시드 ${r.seed} q${r.q} A ${r.plan.A}° w ${r.plan.w} t0 ${r.plan.t0} D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 원 밖 ${r.outs} · 꼭대기 넘음 ${r.tTop} · 해시 ${r.hash}`);
+      for (const r of gb) console.log(`B ${r.N}장 시드 ${r.seed} q${r.q} ts ${r.ts ?? '안 휙'} D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 원 밖 ${r.outs} · 꼭대기 넘음 ${r.tTop} · ttF ${r.ttF} · 단서 ${r.cueT} · 칩 ${r.chip} · 해시 ${r.hash}`);
+    }
   } else { console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n')); process.exit(0); }
   if (cmd !== 'ref' || !a.includes('--json')) console.log(`\nsweepgame ${cmd}: ${FAIL ? `틀림 ${FAIL}` : '맞음'} (${((Date.now() - t0) / 1000).toFixed(1)}초)`);
   if (FAIL) process.exitCode = 1;

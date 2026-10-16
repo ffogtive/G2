@@ -130,6 +130,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .hint .hand::after { content: ""; position: absolute; left: 50%; top: 100%; width: 4px; height: 40px; background: linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0)); transform: translateX(-50%); }
 @keyframes pull { 0%, 15% { transform: translateY(-40px) scale(1); } 20% { transform: translateY(-40px) scale(0.85); } 75% { transform: translateY(40px) scale(0.85); } 85%, 100% { transform: translateY(40px) scale(1.15); opacity: 0; } }
 .hint .hand { display: none; } /* 6차: 더미 위 손가락 시범(drawTapGuide)이 대신 */
+.hint.sw { background: rgba(42,26,18,0.55); border-radius: 16px; padding: 6px 14px; font-size: 1.15rem; } /* 쓸기 연습판: 칠판 글('오늘의 당번')과 겹쳐 안 읽혔다 → 바탕 띠(검토) */
 #puffWrap.fpvhide { opacity: 0; visibility: hidden; transition: none; } /* 6차: 내 차례엔 1인칭(볼·입술)이 대신 */
 
 /* 배너 & 큰 글자 */
@@ -494,7 +495,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <p class="note" data-t="swPick">How many discs?</p>
     <div class="row"><button id="swP40" class="btn xl gold" type="button" data-t="swN40">40</button><button id="swP30" class="btn xl" type="button" data-t="swN30">30</button></div>
     <p class="note" data-t="swPickNote"></p>
-    <p class="note" data-t="swPuckNote"></p>
+    <p class="note" id="swGNote"></p>
     <p class="note" data-t="swBadge">Practice · no rewards</p>
     <div class="row"><button id="swClose" class="btn blue" type="button" data-t="back">BACK</button></div>
   </div></div>
