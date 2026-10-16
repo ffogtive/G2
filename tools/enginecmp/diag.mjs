@@ -9,6 +9,7 @@ const cfgs = {
   'J-b0.4-4x-v20': { engine: 'jolt', substeps: 4, joltPreset: 'fair', jolt: { baumgarte: 0.4, velocitySteps: 20, positionSteps: 4 } },
   'J-b0.4-4x': { engine: 'jolt', substeps: 4, joltPreset: 'fair', jolt: { baumgarte: 0.4, velocitySteps: 10, positionSteps: 4 } },
   'R-e0.8-2x': { engine: 'rapier', erp: 0.8, substeps: 2 },
+  'R21-2x-f480-i8': { engine: 'rapier', substeps: 2, iterations: 8, rapier: { naturalFrequency: 480 } },
 };
 const w = await createWorld(cfgs[name]);
 const t = new GameTable(w, { n, seed, h });

@@ -8,7 +8,8 @@
 //   node compare.mjs speed <cfgs> [--n 45] [--reps 3]           45장 ms/스텝 (가라앉힘 360 + 샷 360)
 //   node compare.mjs report <tag> [kind]                        data/cmp-<tag>.json.gz → 표
 //
-// cfgs: 이름 목록(아래 CONFIGS) 또는 JSON 파일. Jolt 빌드는 JOLT_FLAVOUR(기본 cpd = 웹↔앱 PvP 에 쓸 빌드).
+// cfgs: 이름 목록(아래 CONFIGS) 또는 JSON 파일(cfgs/*.json — Rapier JS 0.21 훑기·허용치 훑기·속도). Jolt 빌드는 JOLT_FLAVOUR(기본 cpd = 웹↔앱 PvP 에 쓸 빌드).
+// Rapier 판: 기본 = 게임과 같은 @dimforge/rapier3d-compat 0.12.0. RAPIER_PATH=<…/rapier3d-compat@0.21.0/dist/rapier.mjs> 면 최신 판(R21-* 설정, cfgs/r21*.json).
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { gzipSync, gunzipSync } from 'node:zlib';
 import { cpus, loadavg } from 'node:os';
@@ -58,12 +59,14 @@ export const CONFIGS = {
   'J-b0.4-8x': J(0.4, 8),
   'J-b0.4-2x-p8': J(0.4, 2, 10, 8),
   'J-b0.4-1x-v20p8': J(0.4, 1, 20, 8),
-  // 잠 문턱 변형 (B 용)
+  // 잠 문턱 변형: Rapier 0.12 기본(0.4 u/s · 게임 시간 2 s)에 맞춤. time 은 게임 시간 — 어댑터가 Jolt 에 time/하위 스텝을 넣는다(index.mjs '잠')
   'J-b0.4-4x-rsleep': J(0.4, 4, 10, 4, { sleep: { pointVelocity: 0.4, time: 2.0 } }),
   'J-b0.4-2x-rsleep': J(0.4, 2, 10, 4, { sleep: { pointVelocity: 0.4, time: 2.0 } }),
   // A 1등(v20) 변형: 볼록 반경(테두리 둥글림) h/2·0.1 — 쏜 뒤 기울어 기댄 딱지가 둥근 테두리 위에서 흔들의자처럼 구르는 것(진단 diag.mjs) 줄이기
   'J-b0.4-4x-v20-cr0.1': J(0.4, 4, 20, 4, { jolt: { convexRadiusFrac: 0.1 } }),
   'J-b0.4-4x-v20-rsleep': J(0.4, 4, 20, 4, { sleep: { pointVelocity: 0.4, time: 2.0 } }),
+  // 옛(잘못 옮긴) 잠: 2026-10-16 첫 A 의 '-rsleep' 줄 = Jolt 에 2.0 이 그대로 들어가 실제 8 s 였던 것. 원자료 재현용으로만 남김
+  'J-b0.4-4x-v20-rsleep8s': J(0.4, 4, 20, 4, { sleep: { pointVelocity: 0.4, time: 8.0 } }),
   'J-b0.4-4x-v20-cr0.1-rsleep': J(0.4, 4, 20, 4, { jolt: { convexRadiusFrac: 0.1 }, sleep: { pointVelocity: 0.4, time: 2.0 } }),
   'J-b0.4-4x-cr0.1': J(0.4, 4, 10, 4, { jolt: { convexRadiusFrac: 0.1 } }),
   // 두께 0.11 쏜 뒤 기어감 탐색

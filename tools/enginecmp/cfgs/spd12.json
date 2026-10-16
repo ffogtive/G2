@@ -1,0 +1,1 @@
+[{"name": "R-e0.8-2x(0.12)", "cfg": {"engine": "rapier", "erp": 0.8, "substeps": 2, "iterations": 8}}]

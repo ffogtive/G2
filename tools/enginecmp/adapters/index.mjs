@@ -36,7 +36,12 @@ import { loadJolt, JoltWorld } from './jolt.mjs';
 //   감쇠: Rapier v·1/(1+c·dt) ↔ Jolt v·(1−c·dt) (dt 1/120, c 0.35 에서 차 1e-5 → 같은 값 넣음)
 //   반발: Rapier = '새 접촉 첫 스텝'에만 ↔ Jolt = 다가오는 속도 > mMinVelocityForRestitution(기본 1 m/s → 0.5 u/s: 한 스텝 중력 속도 0.32 u/s 위)
 //   결합: Rapier 평균 ↔ Jolt √(f1f2)·max(r1,r2) → combine 'average' 가 평균을 맞춘다(jolt.mjs _resolveCombine)
-//   잠: Rapier 0.12 JS 는 문턱을 못 바꿈(|v|<0.4·|ω|<0.5 가 2 s) ↔ Jolt mPointVelocitySleepThreshold·mTimeBeforeSleep (기본 0.03·0.5 s 유지)
+//   잠: Rapier 0.12 JS 는 문턱을 못 바꿈(|v|<0.4·|ω|<0.5 가 2 s) ↔ Jolt mPointVelocitySleepThreshold·mTimeBeforeSleep
+//     주의(감사에서 찾음, 실측): Jolt 5.6 은 잠 타이머를 '마지막 하위 스텝'에서 한 번만, mStepDeltaTime(= dt/하위 스텝)만큼 올린다
+//     (PhysicsSystem.cpp CheckSleepAndUpdateBounds). 그래서 mTimeBeforeSleep 0.5 를 하위 스텝 4 로 돌리면 실제로는 2 s 뒤에 잔다.
+//     → 이 어댑터의 sleep.time 은 '게임 시간(초)'이고, Jolt 에는 time / 하위 스텝 수(sleep.joltTime)를 넣는다(audit/sleepchk.mjs 로 확인).
+//     sleep.time 을 안 주면 Jolt 기본 mTimeBeforeSleep 0.5 를 그대로 넣는다 = 실제 0.5 s × 하위 스텝 수(jolt-fair 는 2 s, Rapier 와 같은 길이).
+//     2026-10-16 저녁 이전 원자료의 '-rsleep' 줄은 time 2.0 이 그대로 들어가 실제 8 s 였다(cmp-A 에서 '-rsleep8s' 로 이름을 바꿈).
 //   각속도 상한: Rapier 없음 ↔ Jolt mMaxAngularVelocity 기본 47 rad/s → 1000 (돌며 날아가는 딱지가 잘리지 않게)
 
 // 게임 단위로 줄인 길이 허용치(처음 '공정' 후보. stage1~2 의 'scaled'). 나머지 값의 바탕
@@ -85,7 +90,7 @@ export const PRESETS = Object.freeze({
   'rapier-thin': { engine: 'rapier', erp: 0.8, substeps: 2 },          // core-sweep §7 얇은 안(1/240): 서지만 쏜 뒤 안 멈춤
   'jolt-fair': { engine: 'jolt', substeps: 4, joltPreset: 'fair' },     // 훑어서 고른 Jolt (1/480 하위 스텝)
   'jolt-1x': { engine: 'jolt', substeps: 1, joltPreset: 'fair' },       // 같은 값, 하위 스텝 없이(1/120) — 더미 못 세움(비교용)
-  // 잠 문턱을 Rapier 0.12 기본(|v|<0.4·|ω|<0.5 를 2 s)에 맞춘 것. Jolt 는 '상자 꼭짓점 속도' 기준이라 0.4 u/s·2 s 가 가장 가까운 짝(약간 엄격)
+  // 잠 문턱을 Rapier 0.12 기본(|v|<0.4·|ω|<0.5 를 2 s)에 맞춘 것. Jolt 는 '상자 꼭짓점 속도' 기준이라 0.4 u/s·2 s(게임 시간)가 가장 가까운 짝(약간 엄격)
   'jolt-fair-rsleep': { engine: 'jolt', substeps: 4, joltPreset: 'fair', sleep: { pointVelocity: 0.4, time: 2.0 } },
 });
 
@@ -97,6 +102,7 @@ export function normalizeParams(input = {}) {
   const params = { ...base, ...input, jolt: { ...(base.jolt ?? {}), ...(input.jolt ?? {}) }, sleep: { ...(base.sleep ?? {}), ...(input.sleep ?? {}) } };
   const engine = params.engine ?? 'rapier';
   const sleepIn = params.sleep;
+  const substeps = params.substeps ?? 1;
   const jp = JOLT_PRESETS[params.joltPreset ?? 'fair'];
   if (!jp) throw new Error(`알 수 없는 joltPreset: ${params.joltPreset}`);
   return {
@@ -107,13 +113,15 @@ export function normalizeParams(input = {}) {
     iterations: params.iterations ?? GAME.iterations,
     frictionIterations: params.frictionIterations ?? GAME.frictionIterations,
     erp: params.erp ?? GAME.erp,
-    substeps: params.substeps ?? 1, // 한 step() = dt 를 substeps 개 하위 스텝으로 (Rapier: ip.dt = dt/k 를 k 번, Jolt: Step(dt, k))
+    substeps, // 한 step() = dt 를 substeps 개 하위 스텝으로 (Rapier: ip.dt = dt/k 를 k 번, Jolt: Step(dt, k))
     ccd: params.ccd ?? GAME.ccd,
     combine: params.combine ?? 'average', // 'average'(게임 의미, Jolt 는 자동: 재질 맞춤 또는 콜백) | 'listener'(Jolt 강제 콜백) | 'native'(각 엔진 기본)
     sleep: {
       enabled: sleepIn.enabled ?? true, // Rapier 게임 기본 = 잠 켜짐(setCanSleep 안 부름)
       pointVelocity: sleepIn.pointVelocity ?? 0.03, // Jolt 전용
-      time: sleepIn.time ?? 0.5, // Jolt 전용
+      // Jolt 전용. time = 게임 시간(초). joltTime = Jolt mTimeBeforeSleep 에 실제로 넣는 값(= time / 하위 스텝, 위 '잠' 주석)
+      time: sleepIn.time ?? 0.5 * substeps,
+      joltTime: sleepIn.time != null ? sleepIn.time / substeps : 0.5,
     },
     rapier: { ...(params.rapier ?? {}) },
     jolt: { ...jp, ...params.jolt },

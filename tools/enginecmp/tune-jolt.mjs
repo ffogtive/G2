@@ -32,7 +32,7 @@ const CANDIDATES = {
   'J s4 v10p2 scaled b0.2': { engine: 'jolt', substeps: 4, jolt: { velocitySteps: 10, positionSteps: 2, baumgarte: 0.2 } },
   'J s4 v6p2 scaled b0.4': { engine: 'jolt', substeps: 4, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
   'J s2 v10p4 default b0.4': { engine: 'jolt', substeps: 2, joltPreset: 'default', jolt: { velocitySteps: 10, positionSteps: 4, baumgarte: 0.4 } },
-  'J s4 v6p2 scaled b0.4 sleep0.1': { engine: 'jolt', substeps: 4, sleep: { pointVelocity: 0.1, time: 0.5 }, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
+  'J s4 v6p2 scaled b0.4 sleep0.1': { engine: 'jolt', substeps: 4, sleep: { pointVelocity: 0.1, time: 2.0 }, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
 };
 
 // stage3: stage2 1등(s4 v6p2 default b0.4) 주변. 'mid' = 허용 겹침만 줄이고(0.005) 미리 접촉·한 번 보정 최대는 기본(0.02·0.2)
@@ -41,10 +41,10 @@ const STAGE3 = {
   'J s4 v6p2 default b0.4': CANDIDATES['J s4 v6p2 default b0.4'],
   'J s4 v6p2 mid b0.4': { engine: 'jolt', substeps: 4, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4, ...MID } },
   'J s4 v10p4 default b0.4': { engine: 'jolt', substeps: 4, joltPreset: 'default', jolt: { velocitySteps: 10, positionSteps: 4, baumgarte: 0.4 } },
-  'J s4 v6p2 default b0.4 sleep0.1': { engine: 'jolt', substeps: 4, joltPreset: 'default', sleep: { pointVelocity: 0.1, time: 0.5 }, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
+  'J s4 v6p2 default b0.4 sleep0.1': { engine: 'jolt', substeps: 4, joltPreset: 'default', sleep: { pointVelocity: 0.1, time: 2.0 }, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
   'J s3 v6p2 default b0.4': { engine: 'jolt', substeps: 3, joltPreset: 'default', jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
   'J s6 v6p2 default b0.4': { engine: 'jolt', substeps: 6, joltPreset: 'default', jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4 } },
-  'J s4 v6p2 mid b0.4 sleep0.1': { engine: 'jolt', substeps: 4, sleep: { pointVelocity: 0.1, time: 0.5 }, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4, ...MID } },
+  'J s4 v6p2 mid b0.4 sleep0.1': { engine: 'jolt', substeps: 4, sleep: { pointVelocity: 0.1, time: 2.0 }, jolt: { velocitySteps: 6, positionSteps: 2, baumgarte: 0.4, ...MID } },
 };
 
 function row(name, r) {

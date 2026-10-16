@@ -1,0 +1,24 @@
+[package]
+name = "puff_sim"
+version = "0.1.0"
+edition = "2021"
+description = "enginecmp 실험판: native/puff_sim(Rapier 0.36 + 게임 바람) 복사본, 두께만 실행 때 바꿈 + B(쏜 뒤) 실행기"
+publish = false
+license = "UNLICENSED"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+rapier3d = { version = "=0.36.0", features = ["enhanced-determinism"] }
+libm = "0.2.16"
+
+[[bin]]
+name = "bthin"
+path = "src/bin/bthin.rs"
+
+[profile.release]
+opt-level = 3
+codegen-units = 16
+lto = false
+debug = false

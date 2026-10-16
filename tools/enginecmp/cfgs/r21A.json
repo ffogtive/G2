@@ -1,0 +1,159 @@
+[
+{
+"name": "R21-1x-f30-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 1,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 30
+}
+}
+},
+{
+"name": "R21-1x-f120-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 1,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 120
+}
+}
+},
+{
+"name": "R21-1x-f480-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 1,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 480
+}
+}
+},
+{
+"name": "R21-2x-f30-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 30
+}
+}
+},
+{
+"name": "R21-2x-f120-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 120
+}
+}
+},
+{
+"name": "R21-2x-f480-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 480
+}
+}
+},
+{
+"name": "R21-2x-f1500-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 1500
+}
+}
+},
+{
+"name": "R21-2x-f480-i4",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 4,
+"rapier": {
+"naturalFrequency": 480
+}
+}
+},
+{
+"name": "R21-4x-f30-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 4,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 30
+}
+}
+},
+{
+"name": "R21-4x-f120-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 4,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 120
+}
+}
+},
+{
+"name": "R21-4x-f480-i8",
+"cfg": {
+"engine": "rapier",
+"substeps": 4,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 480
+}
+}
+},
+{
+"name": "R21-2x-f120-i8-lu0.2",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 120,
+"lengthUnit": 0.2
+}
+}
+},
+{
+"name": "R21-2x-f480-i8-lu0.2",
+"cfg": {
+"engine": "rapier",
+"substeps": 2,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 480,
+"lengthUnit": 0.2
+}
+}
+},
+{
+"name": "R21-4x-f120-i8-lu0.2",
+"cfg": {
+"engine": "rapier",
+"substeps": 4,
+"iterations": 8,
+"rapier": {
+"naturalFrequency": 120,
+"lengthUnit": 0.2
+}
+}
+}
+]

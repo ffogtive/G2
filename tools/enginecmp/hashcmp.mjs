@@ -6,6 +6,8 @@
 //   bin 앞에 'qemu-aarch64-static:' 를 붙이면 그 에뮬레이터로 돈다.
 // 출력: 줄마다 { who, final, msPerStep, firstDiff(기준 = 같은 엔진 무리의 첫 줄) }
 import { writeFileSync, mkdirSync } from 'node:fs';
+// Jolt 빌드 기본 = cpd(웹↔앱 PvP 에 쓸 빌드, 네이티브 CPD 와 비교하는 뜻). npm 배포본(CPD 꺼짐)과 비교하려면 JOLT_FLAVOUR=wasm-compat 를 직접 준다
+process.env.JOLT_FLAVOUR ??= 'cpd';
 import { execFileSync } from 'node:child_process';
 import { createWorld, addPileTo, normalizeParams } from './adapters/index.mjs';
 import { makePile, pileToText, defaultShot, applyShotStep, handleOffDesk } from './adapters/common.mjs';
@@ -53,7 +55,7 @@ const nargs = {
   slop: J.penetrationSlop, spec: J.speculativeContactDistance, maxpen: J.maxPenetrationDistance, lct: J.linearCastThreshold,
   lcmp: J.linearCastMaxPenetration, mtol: J.manifoldTolerance, minrest: J.minVelocityForRestitution, cachepos: J.bodyPairCacheMaxDeltaPosition,
   preserve: J.contactPointPreserveLambdaMaxDist, crfrac: J.convexRadiusFrac, crmax: J.convexRadiusMax, split: J.useLargeIslandSplitter ? 1 : 0,
-  sleep: P.sleep.enabled ? 1 : 0, sleepvel: P.sleep.pointVelocity, sleeptime: P.sleep.time, maxang: J.maxAngularVelocity, maxlin: J.maxLinearVelocity,
+  sleep: P.sleep.enabled ? 1 : 0, sleepvel: P.sleep.pointVelocity, sleeptime: P.sleep.joltTime, maxang: J.maxAngularVelocity, maxlin: J.maxLinearVelocity,
   ccd: P.ccd ? 1 : 0, combine: rows[0]?.combine === 'listener' ? 'average' : (P.combine === 'native' ? 'native' : 'material'),
   steps, hashEvery: every, shotStart: shot.start, shotSteps: shot.steps, lo: shot.lo, hi: shot.hi, lift: shot.lift, push: shot.push,
   mx: shot.mouth[0], my: shot.mouth[1], mz: shot.mouth[2], shield: shot.shield,

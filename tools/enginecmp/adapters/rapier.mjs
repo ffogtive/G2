@@ -30,9 +30,18 @@ export class RapierWorld {
     const ip = this.world.integrationParameters;
     ip.dt = params.dt / params.substeps;
     ip.numSolverIterations = params.iterations;
-    ip.numAdditionalFrictionIterations = params.frictionIterations;
-    ip.erp = params.erp;
     const rp = params.rapier;
+    this.newApi = !('erp' in ip) && ('contact_erp' in ip || 'lengthUnit' in ip);
+    if (this.newApi) {
+      // Rapier JS >= 0.13: erp 대신 contact_natural_frequency (Hz). frictionIterations 없음
+      if (rp.naturalFrequency != null) ip.contact_natural_frequency = rp.naturalFrequency;
+      if (rp.lengthUnit != null) ip.lengthUnit = rp.lengthUnit;
+      if (rp.nAllowedLinearError != null) ip.normalizedAllowedLinearError = rp.nAllowedLinearError;
+      if (rp.nPredictionDistance != null) ip.normalizedPredictionDistance = rp.nPredictionDistance;
+    } else {
+      ip.numAdditionalFrictionIterations = params.frictionIterations;
+      ip.erp = params.erp;
+    }
     if (rp.allowedLinearError != null) ip.allowedLinearError = rp.allowedLinearError;
     if (rp.predictionDistance != null) ip.predictionDistance = rp.predictionDistance;
     if (rp.numInternalPgsIterations != null) ip.numInternalPgsIterations = rp.numInternalPgsIterations;
@@ -62,7 +71,7 @@ export class RapierWorld {
       .setCanSleep(!!this.P.sleep.enabled);
     const body = this.world.createRigidBody(desc);
     const col = this.world.createCollider(
-      R.ColliderDesc.cylinder(halfHeight, radius).setDensity(p.density).setFriction(p.friction).setRestitution(p.restitution),
+      (() => { const cd = R.ColliderDesc.cylinder(halfHeight, radius).setDensity(p.density).setFriction(p.friction).setRestitution(p.restitution); if (this.P.rapier.skin != null) cd.setContactSkin(this.P.rapier.skin); return cd; })(),
       body,
     );
     this.bodies.push(body);
@@ -107,7 +116,7 @@ export class RapierWorld {
       opts.discsOnly ? this._isDisc : undefined);
     if (!hit) return null;
     const i = this.colIndex.get(hit.collider.handle) ?? -1;
-    return { i, toi: hit.toi };
+    return { i, toi: hit.toi ?? hit.timeOfImpact };
   }
 
   isSleeping(i) { return this.bodies[i].isSleeping(); }
@@ -129,6 +138,7 @@ export class RapierWorld {
 
   info() {
     const ip = this.world.integrationParameters;
+    if (this.newApi) return { engine: 'rapier', version: R.version(), dt: ip.dt * this.P.substeps, substeps: this.P.substeps, iterations: ip.numSolverIterations, contact_erp: ip.contact_erp, lengthUnit: ip.lengthUnit, nale: ip.normalizedAllowedLinearError, npd: ip.normalizedPredictionDistance, pgs: ip.numInternalPgsIterations };
     return {
       engine: 'rapier', version: R.version(), build: '@dimforge/rapier3d-compat 0.12.0 WASM (enhanced-determinism 기능 없는 배포본 — 같은 wasm 끼리는 같음, 네이티브 0.36 과는 버전이 다름)',
       dt: ip.dt * this.P.substeps, substeps: this.P.substeps, iterations: ip.numSolverIterations, frictionIterations: ip.numAdditionalFrictionIterations,

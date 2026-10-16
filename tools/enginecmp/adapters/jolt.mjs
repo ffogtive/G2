@@ -16,6 +16,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 //   'cpd'               = 같은 JoltPhysics.js 1.1.0 을 CROSS_PLATFORM_DETERMINISTIC=ON 으로 다시 빌드한 것(vendor/, native/build-jolt-cpd-wasm.sh)
 //                         → 네이티브 x86_64·aarch64 CPD 빌드와 비트 동일(실측, hashcmp.mjs)
 //   그 밖 = jolt-physics/<flavour> 하위 경로. JOLT_PATH 를 주면 그 파일을 그대로 씀
+// npm 배포본은 저장소 package.json 에 넣지 않는다. 스크래치에 깔고 JOLT_NPM 으로 가리킨다(README '설치'):
+//   npm install --prefix /tmp/jolt-npm --no-save jolt-physics@1.1.0
+//   JOLT_NPM=/tmp/jolt-npm/node_modules/jolt-physics JOLT_FLAVOUR=wasm-compat node smoke.mjs
+//   (JOLT_NPM 이 없으면 'jolt-physics' 를 보통 방식으로 찾는다 — tools/enginecmp/node_modules 를 스크래치로 심볼릭 링크해도 됨)
 const VENDOR = fileURLToPath(new URL('../vendor/', import.meta.url));
 function cpdPath() {
   const js = VENDOR + 'jolt-physics-1.1.0-cpd.wasm-compat.js';
@@ -33,7 +37,9 @@ export async function loadJolt(flavour = process.env.JOLT_FLAVOUR || 'wasm-compa
   }
   const spec = process.env.JOLT_PATH
     ? (process.env.JOLT_PATH.startsWith('/') ? pathToFileURL(process.env.JOLT_PATH).href : process.env.JOLT_PATH)
-    : flavour === 'wasm-compat' ? 'jolt-physics' : flavour === 'cpd' ? cpdPath() : `jolt-physics/${flavour}`;
+    : flavour === 'cpd' ? cpdPath()
+    : process.env.JOLT_NPM ? pathToFileURL(`${process.env.JOLT_NPM}/dist/jolt-physics.${flavour === 'wasm-compat' ? 'wasm-compat' : flavour}.js`).href
+    : flavour === 'wasm-compat' ? 'jolt-physics' : `jolt-physics/${flavour}`;
   const init = (await import(spec)).default;
   J = await init();
   JOLT_META = { flavour: process.env.JOLT_PATH ? 'path' : flavour, spec };
@@ -83,7 +89,7 @@ export class JoltWorld {
     s.mBodyPairCacheMaxDeltaPositionSq = jp.bodyPairCacheMaxDeltaPosition ** 2;
     s.mContactPointPreserveLambdaMaxDistSq = jp.contactPointPreserveLambdaMaxDist ** 2;
     s.mAllowSleeping = !!params.sleep.enabled;
-    s.mTimeBeforeSleep = params.sleep.time;
+    s.mTimeBeforeSleep = params.sleep.joltTime; // = time / 하위 스텝 (Jolt 5.6 은 타이머를 바깥 스텝마다 dt/하위 스텝만 올림, index.mjs '잠')
     s.mPointVelocitySleepThreshold = params.sleep.pointVelocity;
     s.mDeterministicSimulation = true;
     s.mUseLargeIslandSplitter = jp.useLargeIslandSplitter;
@@ -300,7 +306,7 @@ export class JoltWorld {
       penetrationSlop: s.mPenetrationSlop, speculativeContactDistance: s.mSpeculativeContactDistance,
       maxPenetrationDistance: s.mMaxPenetrationDistance, linearCastThreshold: s.mLinearCastThreshold,
       manifoldTolerance: s.mManifoldTolerance, minVelocityForRestitution: s.mMinVelocityForRestitution,
-      sleep: s.mAllowSleeping ? `point ${s.mPointVelocitySleepThreshold} u/s · ${s.mTimeBeforeSleep} s` : '끔',
+      sleep: s.mAllowSleeping ? `point ${s.mPointVelocitySleepThreshold} u/s · 게임 시간 ${this.P.sleep.time} s (mTimeBeforeSleep ${s.mTimeBeforeSleep} × 하위 스텝 ${this.P.substeps})` : '끔',
       convexRadius: cr, combine: this.combineMode, combineFloor: this.combineFloor ?? null,
       maxAngularVelocity: this.P.jolt.maxAngularVelocity,
     };
