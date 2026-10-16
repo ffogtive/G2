@@ -6,6 +6,11 @@
 //   iOS 27 에서 폐기됐다(Apple 개발자 문서 deprecatedAt iOS 27.0, 2026-10-14 확인). 기기에서 그 길이 조용히 무시되는지는 미검증
 //   → 네이티브 길을 먼저 쓰고, 채널이 없거나 실패하면 엔진 길로.
 // 안드로이드: 엔진 HapticFeedback 그대로.
+//
+// 🧭 가설 수정(BLOCKERS G4, 미검증): 게임 진동은 Swift 까지 가고 응답도 돌아온다(확인됨). 사라지는 곳은 '재생' — 1순위 = UIKit 생성기 길이 기기에서
+//   조용히 무시됨, 2순위 = 같은 틱 소리·연속 요청에 눌림. 그래서 iOS 게임 진동('g:auto')의 기본 길을 다른 OS 길인 Core Haptics('play' 신호
+//   tapLight·tapMedium·tapHeavy·cough)로 먼저 보내고, false·예외면 생성기(impact, view) → 그것도 안 되면 엔진. 실패를 영구 기억하지 않는다
+//   (엔진이 인터럽트로 멈춰도 Swift 가 다음 호출에서 다시 만든다). 'g:view' = 옛 생성기 길(⚙ '게임 진동 길' 스위치). 'w:' = 예열(warm).
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -23,6 +28,14 @@ HapticKind parseHaptic(String msg) {
   return HapticKind.heavy;
 }
 
+/// 게임 진동의 Core Haptics 신호(Swift PuffRichHaptics.events): 세기 3단 톡 + 콜록 패턴
+String coreCue(HapticKind k) => switch (k) {
+      HapticKind.light => 'tapLight',
+      HapticKind.medium => 'tapMedium',
+      HapticKind.pattern => 'cough',
+      _ => 'tapHeavy',
+    };
+
 HapticKind _kindOf(String name) => switch (name) {
       'light' => HapticKind.light,
       'medium' => HapticKind.medium,
@@ -35,7 +48,9 @@ HapticKind _kindOf(String name) => switch (name) {
 const MethodChannel kHapticChannel = MethodChannel('puff/haptics');
 
 /// 'PuffHaptic' 메시지 → 햅틱 + 응답(ACK).
-///  `25` · `p:40,60,40`        게임 진동(navigator.vibrate)
+///  `g:auto:g7:49` · `g:view:g8:p:40,60,40`  게임 진동(다리 navigator.vibrate). route auto = iOS Core Haptics 먼저, view = 옛 생성기 길. id 를 그대로 돌려준다
+///  `w:w3`                      예열(Core Haptics 엔진 미리 켜기) → 응답 path 'warm'
+///  `25` · `p:40,60,40`        옛 평문 게임 진동(route auto 로 받음)
 ///  `d:길:세기또는신호:id`        진단: 길 = game(게임과 같은 길) · engine(Flutter HapticFeedback) · native(Swift 생성기) · core(Core Haptics 신호)
 ///  `i:id`                      진단 정보(앱 소리 세션·햅틱 하드웨어·저전력·iOS 판)
 class HapticBridge {
@@ -55,12 +70,22 @@ class HapticBridge {
         ack['id'] = msg.substring(2);
         ack['path'] = 'info';
         ack['info'] = await info();
+      } else if (msg.startsWith('g:')) {
+        // 'g:<route>:<id>:<payload>' — payload 에 ':' 가 있으므로(p:40,60,40) 앞 세 칸만 자르고 나머지를 이어 붙인다
+        final p = msg.split(':');
+        ack['id'] = p.length > 2 ? p[2] : null;
+        ack['path'] = await game(p.length > 1 ? p[1] : 'auto', parseHaptic(p.length > 3 ? p.sublist(3).join(':') : ''));
+      } else if (msg.startsWith('w:')) {
+        ack['id'] = msg.substring(2);
+        ack['path'] = 'warm';
+        ack['ok'] = await warm();
+        return ack;
       } else if (msg.startsWith('d:')) {
         final p = msg.split(':');
         ack['id'] = p.length > 3 ? p[3] : null;
         ack['path'] = await diag(p.length > 1 ? p[1] : 'game', p.length > 2 ? p[2] : 'heavy');
       } else {
-        ack['path'] = await play(parseHaptic(msg));
+        ack['path'] = await game('auto', parseHaptic(msg)); // 옛 평문('25' · 'p:…')
       }
       ack['ok'] = ack['path'] != 'fail';
     } catch (e) {
@@ -70,7 +95,40 @@ class HapticBridge {
     return ack;
   }
 
-  /// 게임 진동. 반환 = 실제로 울린 길('view' 뷰에 붙인 생성기 · 'plain' 뷰 없는 생성기 · 'engine' Flutter · 'none')
+  /// 게임 진동 길. 반환 = 실제로 울린 길('core' Core Haptics · 'view'·'plain' 생성기 · 'engine' Flutter · 'none')
+  ///  iOS auto: Core Haptics 신호(play) → false·예외면 생성기(impact) → 엔진. iOS view: 생성기 → 엔진(옛 길). 안드로이드: 늘 엔진
+  Future<String> game(String route, HapticKind k) async {
+    if (k == HapticKind.none) return 'none';
+    if (!_ios) {
+      await engine(k);
+      return 'engine';
+    }
+    if (route != 'view') {
+      try {
+        final ok = await _ch.invokeMethod<bool>('play', coreCue(k)) ?? false;
+        if (ok) return 'core';
+      } on MissingPluginException {
+        // 채널 없음 → 생성기 → 엔진
+      } on PlatformException {
+        // Core Haptics 실패 → 생성기 → 엔진
+      }
+    }
+    return play(k);
+  }
+
+  /// 예열: Core Haptics 엔진을 미리 켠다(자동 꺼짐 뒤 첫 진동이 늦지 않게). 채널이 없거나 실패면 false
+  Future<bool> warm() async {
+    if (!_ios) return false;
+    try {
+      return await _ch.invokeMethod<bool>('warm') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  /// 생성기 길(옛 게임 진동). 반환 = 실제로 울린 길('view' 뷰에 붙인 생성기 · 'plain' 뷰 없는 생성기 · 'engine' Flutter · 'none')
   Future<String> play(HapticKind k) async {
     switch (k) {
       case HapticKind.none:

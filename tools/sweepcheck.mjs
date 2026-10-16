@@ -24,7 +24,8 @@
 //   B→A: 거꾸로. 합: A→B 의 B 시드 짝(오름차순) 뒤에 B→A 의 A 시드 짝(오름차순)을 이어 pairedRatio 한 번(같은 부트스트랩 2,000회·같은 난수 씨).
 //   후보는 같은 시드 비와 같다: v|relfix|* (+ 게이트 파일을 주면 g|fix|* = pueok 고정·퍽). ③' 줄은 최고 시작 시각도 같은 반에서 고른다.
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
-import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, realpathSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import * as SW from './coresweep/simsweep.js';
 import { shot, poseAt, regCell, GEO, index, pairOf, pairedRatio, bestKey, line } from './sweepmap.mjs';
@@ -63,7 +64,7 @@ const A_STAR = Math.atan((hitC(8) - GEO.ym) / GEO.L) / D2R;
 
 function pileTop(n, seed) { SW.setDiscH(0.11); const t = new SW.Table(seed * 7907 + n); t.addPile(Array.from({ length: n }, (_, i) => i)); t.settle(600); return t.columnTop(); }
 
-function makeJobs() {
+export function makeJobs() {
   const [a, b] = (process.env.SEEDS || '601-624').split('-').map(Number);
   const NS = process.env.NS ? process.env.NS.split(',').map(Number) : [20, 30, 45];
   const J = [];
@@ -191,11 +192,13 @@ function report(files) {
   }
 }
 
+// 다른 스크립트가 import 해도(tools/sweepgame.mjs chk 가 makeJobs 를 씀) CLI 가 돌지 않게: 직접 실행했을 때만 CLI (sweepmap.mjs 와 같은 가드)
+const IS_CLI = isMainThread && !!process.argv[1] && (() => { try { return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href; } catch { return false; } })();
 if (!isMainThread && workerData?.sweepcheckWorker) {
   await SW.initPhysics();
   parentPort.on('message', (job) => { if (job === null) process.exit(0); parentPort.postMessage({ ...shot(job), key: job.key, meta: job.meta }); });
   parentPort.postMessage({ ready: true });
-} else if (isMainThread) {
+} else if (IS_CLI) {
   const [cmd, ...a] = process.argv.slice(2);
   if (cmd === 'run') { await run(a[0] || 'out_check.jsonl', +(a[1] || 2)); report(a[0] || 'out_check.jsonl'); }
   else if (cmd === 'report') report(a[0]);

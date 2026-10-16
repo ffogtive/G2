@@ -445,6 +445,28 @@ export class Table {
     return { M: o, phi, tilt, up, down };
   }
 
+  // ── 고개 쓸기(푸어억) 숨: 시간에 따라 입 위치·제트 기울기가 바뀐다. 힘 식은 9차 입술 경로(blowLip) 그대로 (docs/design/core-sweep.md §2) ──
+  // tools/coresweep/simsweep.js 의 blowProg·jetPose 를 글자 그대로 옮김(trace 인자만 뺌, 렌더러용 this.air 는 비움). node tools/sweepgame.mjs parity 로 비트 대조.
+  // prog(t) → { o: 입 위치, phi: 제트 위 기울기(rad, + = 위), ux, uz: 수평 방향, env: 숨 봉투 0..1 }. applyWind 가 물리 스텝마다 정확히 한 번 부른다.
+  // dur = 숨 길이(화면 초). 숨 도중 P.dur 를 줄여도 된다(엄지 떼기 = 숨 끝, mockup/src/sweep.js SweepCtl).
+  // 실험 jetLag 는 받지 않는다(armJetLag 가 P.prog 를 거부). 솔로 '쓸기 연습판' 전용 — PvP ShotRun 은 단언으로 막는다(turn.js)
+  blowProg({ prog, power, dur }) {
+    this.air = null;
+    this.puff = { o: { x: 0, y: 0, z: 0 }, d: { x: 0, y: 0, z: -1 }, power, t: 0, jit: new Map(), blast: 0, up: 0, down: 0, spreadK: 1, discOnly: true, lip: true, splitU: 1, splitD: 1, prog, dur };
+    for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
+    return this.puff;
+  }
+  jetPose(P, g) {
+    const T = this.T;
+    const c = Math.cos(g.phi), s = Math.sin(g.phi);
+    P.o = g.o; P.d = { x: g.ux * c, y: s, z: g.uz * c };
+    const tilt = g.phi + T.pitch0;
+    P.up = Math.max(0, Math.sin(tilt)); P.down = Math.max(0, -Math.sin(tilt));
+    P.spreadK = 1 - T.tiltSpread * (1 - Math.cos(tilt));
+    const s0 = -Math.sin(T.pitch0);
+    P.splitU = (1 + s) / (1 + s0); P.splitD = (1 - s) / (1 - s0);
+  }
+
   // from → to 사이(끝에서 stop 만큼 덜)에 다른 딱지가 있나 (책상·자기 자신 제외)
   discBlocks(from, to, stop, d, b) {
     const vx = to.x - from.x, vy = to.y - from.y, vz = to.z - from.z;
@@ -459,7 +481,8 @@ export class Table {
     const P = this.puff;
     if (!P) return null;
     const T = this.T;
-    let env = Math.sin(Math.min(1, P.t / T.puffDuration) * Math.PI); // 0→1→0
+    let env; // 쓸기 숨(blowProg)이면 이 스텝의 자세·봉투를 prog 에서, 아니면 v1 봉투 0→1→0 (식 그대로)
+    if (P.prog) { const g = P.prog(P.t); this.jetPose(P, g); env = g.env; } else env = Math.sin(Math.min(1, P.t / T.puffDuration) * Math.PI);
     // 실험 jetLag(위 armJetLag): 숨 하나짜리 P.lag. 없거나 0 이면 아래 분기를 전부 건너뜀(비트 동일). simsweep.js 상수 자세 경로와 같은 식·같은 순서
     const lag = P.lag > 0 ? P.lag : 0;
     const o0 = lag ? { ...P.o } : null, d0 = lag ? { ...P.d } : null;
@@ -617,7 +640,8 @@ export class Table {
       hits.push({ id: d.id, s, gap, liftF, e, dir: { x: fx, y: P.d.y, z: fz } });
     }
     P.t += T.dt;
-    if (P.t >= (lag ? T.puffDuration + lag * 12 : T.puffDuration)) this.puff = null; // 지연이면 마지막 공기(축 거리 12 u)까지 기다림
+    // 지연이면 마지막 공기(축 거리 12 u)까지 기다림. 쓸기 숨은 P.dur(고전 경로엔 P.dur 가 없어 같은 값과 비교 → 비트 동일). prog + lag 는 armJetLag 가 막음
+    if (P.t >= (lag ? T.puffDuration + lag * 12 : (P.dur ?? T.puffDuration))) this.puff = null;
     return hits;
   }
 

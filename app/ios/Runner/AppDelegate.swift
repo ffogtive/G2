@@ -20,7 +20,8 @@ import UIKit
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     // 'puff/haptics' 채널(lib/haptics.dart · lib/native/rich_haptics.dart). 없거나 실패하면 Dart 쪽이 Flutter HapticFeedback 로 대신한다
-    //  play   Core Haptics 패턴(신호 이름)          → Bool
+    //  play   Core Haptics 패턴(신호 이름)          → Bool   (게임 진동 기본 길: tapLight·tapMedium·tapHeavy·cough — lib/haptics.dart game())
+    //  warm   Core Haptics 엔진 미리 켜기(예열)       → Bool
     //  impact 생성기 톡 {style, intensity}           → "view"(뷰에 붙인 생성기) | "plain"(뷰 없는 생성기)
     //  diag   앱 소리 세션·햅틱 하드웨어·저전력·iOS 판 → [String: Any] (⚙ 소리·진동 시험)
     let channel = FlutterMethodChannel(name: "puff/haptics", binaryMessenger: engineBridge.applicationRegistrar.messenger())
@@ -29,6 +30,7 @@ import UIKit
     channel.setMethodCallHandler { call, result in
       switch call.method {
       case "impact": result(impact.play(call.arguments))
+      case "warm": result(haptics.warm())
       case "diag": result(PuffDiag.info())
       default: haptics.handle(call, result: result)
       }
@@ -147,6 +149,18 @@ final class PuffRichHaptics {
     }
   }
 
+  /// 예열: 엔진을 만들어 켜 둔다(자동 꺼짐 뒤 첫 진동 지연 방지). 하드웨어가 없거나 실패면 false — 다음 호출에서 다시 만든다
+  func warm() -> Bool {
+    guard supported else { return false }
+    do {
+      _ = try ensureEngine()
+      return true
+    } catch {
+      engine = nil
+      return false
+    }
+  }
+
   private func ensureEngine() throws -> CHHapticEngine {
     if let engine = engine { return engine }
     let engine = try CHHapticEngine()
@@ -190,6 +204,10 @@ final class PuffRichHaptics {
     case "fire": return [tap(0, 0.85, 0.6), hum(0.01, 0.22, 0.5, 0.1)]
     case "fireStrong": return [tap(0, 1.0, 0.8), hum(0.01, 0.32, 0.8, 0.2), tap(0.2, 0.5, 0.3)]
     case "land": return [tap(0, 0.35, 0.6), tap(0.07, 0.25, 0.6)]
+    // 게임 진동 기본 길(navigator.vibrate ms → 다리 'g:auto' → Dart game()): 약 ≤15 ms · 중 ≤32 ms · 강. UIKit 생성기 길이 기기에서 무시되는지 가르는 ④-d 도 이 신호
+    case "tapLight": return [tap(0, 0.6, 0.5)]
+    case "tapMedium": return [tap(0, 0.85, 0.6)]
+    case "tapHeavy": return [tap(0, 1.0, 0.75), hum(0.005, 0.05, 0.6, 0.3)]
     default: return [tap(0, 0.5, 0.5)]
     }
   }

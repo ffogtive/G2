@@ -250,12 +250,30 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
   background: rgba(20,12,8,0.72); color: #fff; border-radius: 10px; padding: 4px 9px; font-size: 0.74rem; line-height: 1.3; text-align: center; font-variant-numeric: tabular-nums; }
 .exp-log b { display: block; font-size: 0.95rem; color: #ffd23f; word-break: keep-all; }
 .exp-log span { display: block; opacity: 0.9; word-break: keep-all; overflow-wrap: break-word; }
+/* 고개 쓸기 연습판(조작 깃발 core) — docs/design/core-sweep.md §9 4번 줄 */
+.exp.core { border-color: #2f7fd0; background: rgba(140,200,255,0.22); }
+.exp-sw:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+.sw-badge { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 58px); left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none; font-family: var(--display); font-size: 0.95rem; color: #fff; -webkit-text-stroke: 1.2px var(--ink); paint-order: stroke fill; background: rgba(47,127,208,0.85); border: 2px solid var(--ink); border-radius: 10px; padding: 1px 10px; white-space: nowrap; }
+.sweep-card { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20; width: min(94vw, 560px); box-sizing: border-box; background: rgba(255,248,232,0.97); border: 3px solid var(--ink); border-radius: 16px; padding: 8px 10px 6px; box-shadow: 0 5px 0 var(--ink); text-align: left; }
+.sweep-card .row { margin-top: 4px; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.sweep-card .btn { font-size: 0.95rem; padding: 6px 12px; }
+.sw-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: var(--display); }
+.sw-chip { display: inline-block; font-family: var(--body); font-weight: 700; font-size: 0.92rem; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 1px 8px; }
+.sw-chip i { font-style: normal; font-size: 0.68rem; font-weight: 600; background: var(--ink); color: #fff; border-radius: 6px; padding: 0 4px; margin-left: 4px; vertical-align: 1px; }
+.sw-tl { display: block; width: 100%; height: 110px; border: 2px solid rgba(42,26,18,0.25); border-radius: 8px; margin: 6px 0 4px; }
+.sw-nums { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 0.82rem; }
+.sw-nums b { font-variant-numeric: tabular-nums; }
+.sw-ref { font-size: 0.72rem; opacity: 0.7; margin: 3px 0 0; }
 .diag-how { font-size: 0.82rem; text-align: left; margin: 2px 0 8px; opacity: 0.85; line-height: 1.35; white-space: pre-line; }
 .diag-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 6px 0; }
 .diag-btns button { font-family: var(--body); font-size: 0.9rem; color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; box-shadow: 0 2px 0 var(--ink); cursor: pointer; }
 .diag-btns button:active { transform: translateY(2px); box-shadow: none; }
 .diag-btns button:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: 0 2px 0 var(--ink); }
 .diag-step { font-family: var(--display); min-height: 1.3em; margin: 4px 0; }
+.diag-big { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 60; font-family: var(--display); font-size: 3rem; color: #fff; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); pointer-events: none; white-space: nowrap; }
+.diag-ox { display: flex; gap: 6px; margin-top: 3px; }
+.diag-ox button { font-family: var(--body); font-size: 0.85rem; background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 2px 10px; cursor: pointer; }
+.diag-ox button.on { background: #ffd23f; }
 .diag-tab { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
 .diag-tab td { padding: 3px 4px; border-bottom: 1px solid rgba(0,0,0,0.1); vertical-align: top; overflow-wrap: anywhere; }
 .diag-tab td:first-child { width: 38%; font-weight: bold; }
@@ -357,6 +375,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
         <button id="albumBtn" class="btn blue" type="button"><span data-t="collection">ALBUM</span> <small id="albumProg">0/24</small></button>
         <button id="micBtn" class="btn ghost" type="button">Mic: OFF</button>
         <button id="pvpBtn" class="btn gold" type="button" data-t="pvpBtn" hidden>PvP (2 TABS)</button>
+        <button id="sweepBtn" class="btn gold" type="button" data-t="swBtn" hidden>SWEEP PRACTICE</button>
       </div>
     </div>
   </section>
@@ -370,6 +389,15 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <div id="puffWrap"><canvas id="puffCanvas" width="340" height="340"></canvas></div>
     <div id="breathFb" class="breath-fb" hidden></div>
     <div id="expLog" class="exp-log" hidden></div>
+    <div id="swBadge" class="sw-badge" data-t="swBadge" hidden>Practice · no rewards</div>
+    <!-- 쓸기 연습판 '방금 숨' 카드(docs/design/core-sweep.md §5·§8): 타임라인 한 줄 · 원인 칩(시험) · 숫자 · 단추 -->
+    <div id="sweepCard" class="sweep-card" hidden>
+      <div class="sw-head"><b id="swNum"></b><span id="swCause"></span></div>
+      <canvas id="swTl" class="sw-tl" aria-hidden="true"></canvas>
+      <div id="swNums" class="sw-nums"></div>
+      <p id="swRef" class="sw-ref"></p>
+      <div class="row"><button id="swSame" class="btn" type="button" data-t="swSame">SAME PILE</button><button id="swNew" class="btn gold" type="button" data-t="swNew">NEW PILE</button><button id="swHome" class="btn blue" type="button" data-t="home">HOME</button><button id="swCopy" class="btn ghost" type="button" data-t="swCopy">COPY LOG</button></div>
+    </div>
     <div id="hint" class="hint" hidden><div class="hand"></div><span id="hintText"></span></div>
     <div id="banner" class="banner" hidden></div>
     <div id="big" class="big" hidden></div>
@@ -444,6 +472,14 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
       <button id="freeGo" class="btn xl" type="button" data-t="play">PLAY</button>
     </div>
     <div class="row"><button id="freeClose" class="btn blue" type="button" data-t="back">BACK</button></div>
+  </div></div>
+  <!-- 쓸기 연습 시트: 30·40장(조작 깃발 켬일 때 홈 '쓸기 연습') -->
+  <div id="sweepSheet" class="modal" hidden><div class="panel pvp-panel">
+    <h2 class="disp" data-t="swBtn">SWEEP PRACTICE</h2>
+    <p class="note" data-t="swPick">How many discs?</p>
+    <div class="row"><button id="swP30" class="btn xl" type="button" data-t="coreP30">30</button><button id="swP40" class="btn xl gold" type="button" data-t="coreP40">40</button></div>
+    <p class="note" data-t="swBadge">Practice · no rewards</p>
+    <div class="row"><button id="swClose" class="btn blue" type="button" data-t="back">BACK</button></div>
   </div></div>
   <div id="micOffer" class="modal" hidden><div class="panel"><p class="ask" data-t="micAsk"></p><div class="row"><button id="micYes" class="btn gold" type="button" data-t="micYes">YES</button><button id="micNo" class="btn blue" type="button" data-t="micNo">Later</button></div></div></div>
   <div id="pvpLobby" class="modal" hidden><div class="panel pvp-panel">

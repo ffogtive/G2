@@ -92,7 +92,17 @@ export class Sfx {
     this.noApi = false; // Web Audio 자체가 없음(잠금 모드) — ⚙ 표가 '아직 안 만듦'과 가른다
     this.ref = null; // 'running' 시계 기준점 {ctx, ct, at}(멈춤 판정)
     this.stalled = false; // 마지막 판정이 '멈춤'이었나(같은 톡의 다음 사건도 깨우기만)
+    this.recent = []; // 최근 실제로 낸 소리 16개 {at: performance.now(), name} — ⚙ '게임 진동 기록'의 '±60 ms 소리' 판정(진동이 소리에 눌리나)
     AppAudio.sfx = this;
+  }
+
+  // 소리를 실제로 낼 때(음소거·컨텍스트 없음이면 안 부름) 이름을 남긴다. 다른 소리 안에서 부른 tone(같은 순간 2 ms 안)은 겹쳐 적지 않는다
+  mark(name) {
+    const at = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const l = this.recent[this.recent.length - 1];
+    if (name === 'tone' && l && at - l.at < 2) return;
+    this.recent.push({ at, name });
+    if (this.recent.length > 16) this.recent.shift();
   }
 
   // 시도 기록: 'new@5.2s(click)→running@5.2s 14ms' · 'resume@6.1s(touchend)…'(대기 중) · 'resume@6.1s(touchend)✗NotAllowedError' · 'recreate@9.0s(click) suspended'
@@ -335,6 +345,7 @@ export class Sfx {
 
   tone(freq, dur, type = 'sine', vol = 0.3, when = 0, glideTo) {
     if (!this.ok) return;
+    this.mark('tone');
     const t0 = this.ctx.currentTime + when;
     const o = this.ctx.createOscillator();
     o.type = type;
@@ -350,6 +361,7 @@ export class Sfx {
   // 들숨(차징) — 파워에 따라 음높이 상승. 반환된 핸들로 갱신/정지
   inhale() {
     if (!this.ok) return null;
+    this.mark('inhale');
     const t0 = this.ctx.currentTime;
     const src = this.noise(8);
     const bp = this.ctx.createBiquadFilter();
@@ -384,6 +396,7 @@ export class Sfx {
   // 숨 주머니 꽉 — 둔탁한 '읍' (성공음이 아니라 막힘)
   cork() {
     if (!this.ok) return;
+    this.mark('cork');
     this.tone(260, 0.07, 'sine', 0.22, 0, 140);
     const t0 = this.ctx.currentTime;
     const src = this.noise(0.03);
@@ -409,6 +422,7 @@ export class Sfx {
   // 콜록 — 너무 오래 참음 (로우패스 노이즈 두 번)
   cough() {
     if (!this.ok) return;
+    this.mark('cough');
     for (const w of [0, 0.18]) {
       const t0 = this.ctx.currentTime + w;
       const src = this.noise(0.14 + w); // noise() 는 지금 시작 → 두 번째 기침은 게인 엔벨로프로 늦춤
@@ -429,6 +443,7 @@ export class Sfx {
   // 일레븐랩스 등 실제 녹음 샘플이 빌드에 들어 있으면(window.__PUFF_SFX__.puh) 그걸 먼저 쓴다.
   puff(power = 1, ratio = 1) {
     if (!this.ok) return;
+    this.mark('puff');
     if (this.playSample('puh', 0.85 + 0.25 * Math.min(1.2, power), 0.55 + 0.45 * Math.min(1, power), ratio)) return;
     renderPuh(this.ctx, this.master, this.ctx.currentTime, power, ratio, this.noiseBuf);
   }
@@ -437,6 +452,7 @@ export class Sfx {
   playSample(name, rate = 1, vol = 1, ratio = 1) {
     const list = this.samples?.[name];
     if (!list || !list.length) return false;
+    this.mark('sample:' + name);
     const { buf, off } = list[Math.floor(Math.random() * list.length)];
     const src = this.ctx.createBufferSource();
     src.buffer = buf;
@@ -464,6 +480,7 @@ export class Sfx {
   // 입의 '푸'(숨 시작)와 다른 자리·다른 때(물리 도달 스텝) — 짧은 저역 숨 덩어리(높은 '탁' 성분 없음, 재윤님 6차 '탁이 아니라')
   airHit(power = 1) {
     if (!this.ok) return;
+    this.mark('airHit');
     const t0 = this.ctx.currentTime;
     const src = this.noise(0.12);
     const lp = this.ctx.createBiquadFilter();
@@ -478,6 +495,7 @@ export class Sfx {
   // 딱지가 책상에 '탁' 떨어지는 소리
   clack(intensity = 1) {
     if (!this.ok) return;
+    this.mark('clack');
     const t0 = this.ctx.currentTime;
     const src = this.noise(0.08);
     const hp = this.ctx.createBiquadFilter();
@@ -491,6 +509,7 @@ export class Sfx {
 
   // n번째 뒤집힘 — 음이 한 칸씩 올라감 (펜타토닉)
   flip(n) {
+    if (this.ok) this.mark('flip');
     const scale = [0, 2, 4, 7, 9];
     const step = scale[n % 5] + 12 * Math.floor(n / 5);
     const f = 523.25 * Math.pow(2, step / 12);
@@ -499,17 +518,20 @@ export class Sfx {
   }
 
   coin(i = 0) {
+    if (this.ok) this.mark('coin');
     const f = 880 * Math.pow(2, Math.min(i, 14) / 24);
     this.tone(f, 0.08, 'square', 0.06);
     this.tone(f * 1.5, 0.12, 'sine', 0.1, 0.05);
   }
 
   pop() {
+    if (this.ok) this.mark('pop');
     this.tone(660, 0.07, 'sine', 0.15, 0, 990);
   }
 
   whoosh() {
     if (!this.ok) return;
+    this.mark('whoosh');
     const t0 = this.ctx.currentTime;
     const src = this.noise(0.4);
     const bp = this.ctx.createBiquadFilter();
@@ -522,12 +544,45 @@ export class Sfx {
   }
 
   fanfare(win = true) {
+    if (this.ok) this.mark('fanfare');
     const notes = win ? [523, 659, 784, 1047, 1319] : [523, 466, 415, 349];
     notes.forEach((f, i) => this.tone(f, win ? 0.28 : 0.35, 'triangle', 0.22, i * (win ? 0.11 : 0.16)));
     if (win) this.tone(1047, 0.6, 'sine', 0.12, 0.55);
   }
 
+  // 고개 쓸기 숨(솔로 연습판, mockup/src/sweep.js): 이어지는 바람 소리 손잡이. 노이즈 → 대역 통과.
+  //   중심 주파수 = 500 + 900·clamp(바람 자국 높이 / 더미 꼭대기, 0, 1.4)(자국이 오르면 소리도 오름), 음량 ∝ 세기 q × 숨 봉투 env.
+  //   frame 마다 set(env, hRel, q), 숨이 끝나면 stop(). 음소거·컨텍스트 없음이면 null
+  blow() {
+    if (!this.ok) return null;
+    this.mark('blow');
+    const ctx = this.ctx;
+    const src = this.noise(4);
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 500; bp.Q.value = 1.4;
+    const g = ctx.createGain();
+    g.gain.value = 0.0001;
+    src.connect(bp).connect(g).connect(this.master);
+    const safe = (f) => { try { f(); } catch (e) { /* 닫힌 컨텍스트 */ } };
+    let done = false;
+    return {
+      set: (env, hRel, q = 1) => {
+        if (done) return;
+        safe(() => {
+          bp.frequency.setTargetAtTime(500 + 900 * Math.max(0, Math.min(1.4, hRel)), ctx.currentTime, 0.03);
+          g.gain.setTargetAtTime(Math.max(0.0001, 0.22 * Math.max(0, Math.min(1.2, q)) * Math.max(0, Math.min(1, env))), ctx.currentTime, 0.02);
+        });
+      },
+      stop: () => {
+        if (done) return;
+        done = true;
+        safe(() => { g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.025); src.stop(ctx.currentTime + 0.2); });
+      },
+    };
+  }
+
   big() {
+    if (this.ok) this.mark('big');
     // 대박 연출: 드럼롤 비슷한 노이즈 + 상승 화음
     [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.5, 'triangle', 0.16, i * 0.06));
   }

@@ -25,6 +25,8 @@ import { turnSeeds, hash32 } from './sim.js';
 import { ShotRun, TrackPlayer, TrackChunker, BeatClock, encodeState, toB64, fromB64, hashBytes, shotSimV, puppetTable, posePuppet, setPose as setDiscPose, traceToB64, traceFromB64 } from './turn.js';
 import { resolveNet, param, makeCode } from './net.js';
 import * as Pvp from './pvp.js';
+// 고개 쓸기(푸어억) — 솔로 '쓸기 연습판'만 쓴다(docs/design/core-sweep.md §9 4번 줄, 깃발 feel.core). PvP·레벨·일일·AI 대전·봇은 고전 그대로
+import * as Sweep from './sweep.js';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -66,8 +68,10 @@ profile.cue = Object.assign({ breath: 0, bBig: 0, height: 0, side: 0, star: 0, p
 profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.cue.relapse || {});
 // 손맛 튜닝 값 (홈 ⚙ 패널에서 조절 → 재윤님 피드백 루프용)
 // jetLag·airFx·hsCut·airLog = 실험 '바람 도달 시간'(아래 '실험' 절). 슬라이더가 아니라 ⚙ 맨 위 실험 칸의 스위치로 바꾼다(EXP_KEYS). 초기화하면 끔
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0 };
+// core = 조작 깃발 '쓸어 올리기(푸어억)'(0 고전 | 1 쓸기, 기본 0) — 켜도 바뀌는 것은 홈의 '쓸기 연습' 단추뿐(솔로 연습판 전용, 아래 '고개 쓸기 연습판' 절)
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0 };
 const EXP_KEYS = new Set(['jetLag', 'airFx', 'hsCut', 'airLog']);
+const SWITCH_KEYS = new Set([...EXP_KEYS, 'core']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
 const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
 // 9차: 콩닥 숨 1(차분)을 기본으로(재윤님 '1 차분이 지금보다 괜찮다') — 저장된 튜닝값도 한 번 옮긴다
 if ((profile.settings.feelV || 0) < 9) { profile.settings.feel = { ...(profile.settings.feel || {}), beat: 1 }; profile.settings.feelV = 9; Store.save(profile); }
@@ -90,11 +94,15 @@ const expBit = (v) => (+v >= 0.5 ? 1 : 0);
 function expSanitize() { // 저장값·주소·옛 빌드 값이 무엇이든 숨을 막지 않게: jetLag ∈ {0, 0.02}, 스위치 ∈ {0, 1}
   feel.jetLag = +feel.jetLag === JET_LAG_TEST ? JET_LAG_TEST : 0;
   for (const k of ['airFx', 'hsCut', 'airLog']) feel[k] = expBit(feel[k]);
+  feel.core = expBit(feel.core); // 조작 깃발도 0/1 만
 }
 {
   const jl = param('jetlag');
   if (jl != null) { if (jl === '' || +jl === JET_LAG_TEST) feel.jetLag = JET_LAG_TEST; else if (+jl === 0) feel.jetLag = 0; else console.warn('[실험] jetlag 값 무시(0 · 0.02 만 받음):', jl); }
   for (const [q, k] of [['airfx', 'airFx'], ['hscut', 'hsCut'], ['airlog', 'airLog']]) { const v = param(q); if (v != null) feel[k] = v === '' ? 1 : expBit(v); }
+  // 조작 깃발: ?core=sweep|classic · #core=sweep (이번 실행에만, ⚙ 완료를 누르면 저장 — jetLag 와 같은 규칙)
+  const cr = param('core');
+  if (cr === 'sweep') feel.core = 1; else if (cr === 'classic') feel.core = 0; else if (cr != null) console.warn('[쓸기] core 값 무시(sweep · classic 만 받음):', cr);
   expSanitize();
 }
 // 9차 물안경(재윤님: '초록 가이드는 아이템을 쓰면 보이게'): 이번 숨에 초록 구간이 보이는 아이템. 평생 첫 3숨은 무료(튜토리얼)
@@ -335,6 +343,8 @@ function classroomBackdrop() {
 function buildScene() {
   const canvas = $('#c');
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  // 자동 시험(tools/sweepplay.mjs): ?norender = 3D 그리기만 끔(장면·카메라 행렬은 갱신 → 화면 좌표·투영 계산은 그대로). 헤드리스 소프트웨어 렌더는 프레임당 약 1초라 가짜 시계 시험이 안 끝난다
+  if (param('norender') != null) renderer.render = (s, c) => { s.updateMatrixWorld(); c.updateMatrixWorld(); };
   // 품질 프리셋: 터치(폰) 기기는 픽셀 배율·그림자 해상도를 낮춰 발열/프레임 저하를 줄인다
   const mobile = window.matchMedia?.('(pointer: coarse)').matches;
   renderer.setPixelRatio(Math.min(mobile ? 1.75 : 2, window.devicePixelRatio || 1));
@@ -799,14 +809,17 @@ function drawFPV(now) {
   const mode = puffer.mode;
   const tm = Math.max(0, (performance.now() - (puffer._t0 || performance.now())) / 1000); // drawPuffer 와 같은 시계(rAF 시각은 느린 기기에서 뒤처짐)
   let fill = mode === 'charge' ? clamp(puffer.p / F, 0, 1.12) : 0;
-  if (mode === 'blow') fill = (puffer.fill || 0) * Math.max(0, 1 - tm / 0.22); // 불면 볼이 푹 꺼짐
+  const swS = sweep.clock && sweep.ctl ? sweep.ctl.state : null; // 쓸기 숨: 볼은 숨이 나가는 동안 천천히 꺼지고(그대로 숨 주머니), 입 틈 바람은 숨 내내
+  if (mode === 'blow') fill = swS ? (puffer.fill || 0) * (0.35 + 0.65 * (1 - clamp(swS.t / Sweep.SWEEP.capD, 0, 1))) : (puffer.fill || 0) * Math.max(0, 1 - tm / 0.22); // 불면 볼이 푹 꺼짐
   if (mode === 'cough') fill = 0.3 * Math.max(0, 1 - tm / 0.3);
   const strain = mode === 'charge' ? puffer.strain || 0 : 0;
   const full = mode === 'charge' && puffer.full;
   const v = 0.18 + 0.82 * Math.min(1, fill); // 볼이 시야에 들어온 정도 (기다릴 때도 살짝 보여 '내 얼굴' 기준을 만든다)
   const shake = (full ? 1.5 : 0) + strain * 4 + (mode === 'cough' ? 9 * Math.max(0, 1 - tm / 0.5) : 0);
   const sx = Math.sin(now * 0.07) * shake, sy = Math.cos(now * 0.09) * shake * 0.6;
-  ctx.save(); ctx.scale(dpr, dpr); ctx.translate(sx, sy);
+  // 쓸기 연습판: 고개를 젖힐수록 입술·볼이 화면 아래로 빠진다(α 10° = 화면 높이의 12%)
+  const swDy = sweepOn() && !reducedMotion ? H * 0.012 * clamp(sweepAlphaDeg(), 0, Sweep.SWEEP.maxDeg) : 0;
+  ctx.save(); ctx.scale(dpr, dpr); ctx.translate(sx, sy + swDy);
   // 아래 그늘 (얼굴 아래쪽이 시야를 가리는 느낌)
   const vy0 = H * (0.78 - 0.08 * v);
   const vg = ctx.createLinearGradient(0, vy0, 0, H);
@@ -836,7 +849,7 @@ function drawFPV(now) {
     }
   }
   // 윗입술: 1인칭으로 내려다본 내 입술 — 화면 아래 가운데에 반쯤 걸친 넓적한 큐피드 활 모양. 오므릴수록 좁아지며 앞(위)으로 쭉
-  const open = mode === 'blow' ? Math.min(1, tm / 0.05) * Math.max(0, 1 - tm / 0.5) : 0;
+  const open = mode === 'blow' ? Math.min(1, tm / 0.05) * (swS ? swS.env : Math.max(0, 1 - tm / 0.5)) : 0;
   const pk = Math.min(1, fill);
   const lw = W * (0.2 - 0.07 * pk + 0.03 * open), lh = H * (0.03 + 0.018 * pk);
   const lx = W / 2, ly = H + 2 - lh * (0.9 + 0.5 * pk); // 윗입술 꼭대기선 높이
@@ -894,14 +907,14 @@ function setPose(p, quiet) {
 function updateRail() {
   const rail = $('#lipRail'), gg = $('#goggles');
   const mine = state === 'match' && myTurn.on && puffer.who === 'me';
-  const showRail = mine && !myTurn.pressed && fpvOn() && poseUnlocked();
+  const showRail = mine && !myTurn.pressed && fpvOn() && poseUnlocked() && !sweepOn(); // 쓸기 연습판엔 입술 높이 레일 없음(입은 바닥)
   if (rail.hidden === showRail) rail.hidden = !showRail;
   const small = liveCount() < Rules.LOW_POSE_MIN_N;
   if (pose === 'low' && small && mine) setPose('eye', true); // 작은 더미: 보이게 눈높이로 되돌림
   rail.classList.toggle('low', pose === 'low');
   rail.classList.toggle('off', small);
   const free = goggleTrial() || feel.guide >= 0.5;
-  const showG = mine && !myTurn.pressed && !free && !match?.net; // 누르기 전에만 (기획서 1.7). PvP 는 아이템 없음
+  const showG = mine && !myTurn.pressed && !free && !match?.net && !sweepOn(); // 누르기 전에만 (기획서 1.7). PvP 는 아이템 없음. 쓸기 연습판도 없음(초록 띠가 없다)
   if (gg.hidden === showG) gg.hidden = !showG;
   if (showG) {
     gg.classList.toggle('on', gogglesOn);
@@ -931,6 +944,7 @@ function drawLipLine() {
 }
 const TAP_GUIDE_PUFFS = 3;
 function drawTapGuide(now) {
+  if (sweepOn()) return; // 쓸기 연습판은 자기 시범(sweepDraw)
   if (!myTurn.on || myTurn.pressed || !table || state !== 'match' || cue.receipt) return; // 카드가 떠 있으면 카드 먼저
   // 손가락 시범은 맨 처음 튜토리얼(평생 첫 3숨)에만 (재윤님 7차). 그 뒤 '어디'는 금 띠·영수증이 맡는다
   if ((profile.tutorialPuffs || 0) >= TAP_GUIDE_PUFFS) return;
@@ -1368,12 +1382,15 @@ function frame(now) {
   requestAnimationFrame(frame);
   let dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
-  if (now < hitStopUntil) dt = 0;
+  sweepTick(now); // 쓸기 연습판: 엄지 인식(gesture.tick)을 물리 스텝 전에 — 사건이 없어도 판정(연습판 밖이면 아무것도 안 함)
+  const swClock = sweepClockOn(); // 쓸기 숨(푸 시작 ~ 숨 끝): 0.5배 고정 · 히트스톱·슬로모 무시(솔로 연습판만, 대결이면 늘 false)
+  if (now < hitStopUntil && !swClock) dt = 0;
   expSlowKick(now); // 실험 공기 앞머리 연출: 충돌 멈칫이 끝난 첫 프레임에 슬로모(끄면 아무것도 안 함)
   // 슬로모
   const targetScale = now < slowUntil ? feel.slow : 1;
   timeScale = lerp(timeScale, targetScale, targetScale < timeScale ? 0.5 : 0.08);
-  $('#vignette').style.opacity = String(clamp((1 - timeScale) * 1.3, 0, 0.85));
+  if (swClock) timeScale = 0.5; else if (sweep.clockEnded) { sweep.clockEnded = false; timeScale = 1; } // 쓸기 숨이 끝나면 바로 1배(lerp 없음)
+  $('#vignette').style.opacity = String(swClock ? 0.3 : clamp((1 - timeScale) * 1.3, 0, 0.85));
 
   if (simOn && table && dt > 0) {
     acc += dt * timeScale;
@@ -1389,7 +1406,9 @@ function frame(now) {
         expStep(A, now);
         if (A.lag && A.arrPhys == null && table.air?.arrivedT != null && expArrive(A)) break;
       }
+      if (sweep.shot && sweepAfterStep()) break; // 쓸기 연습판: 숨 기록 + 스텝 판정(판정 스텝에서 멈춤 = Node 측정과 같은 스텝 수)
     }
+    if (sweep.shot) sweepFrameSteps(n, swClock);
     syncMeshes();
     // 가장자리 밑으로 파고든 공기 → 위로 들어 올리는 입자 (왜 넘어가는지 보이게)
     if (table.lastHits) {
@@ -1422,7 +1441,11 @@ function frame(now) {
   let aimPos = camAimPos;
   if (camAim > 0.001 && table) {
     const top = table.columnTop();
-    if (fpvOn()) {
+    if (sweepOn()) { // 쓸기 연습판: 낮은 앞-옆 시점 + 고개 따라 피치(sweepView)
+      const v = sweepView(top);
+      aimPos = v.pos;
+      target.lerp(v.target, camAim);
+    } else if (fpvOn()) {
       // 1인칭(6차): 입 높이에서 더미를 바라본다 — 10장 옆면 121px·폭 87% (three.js 투영 계산), 더미는 아래 입술·볼 위에
       const portrait = window.innerWidth / window.innerHeight < 0.85;
       // 9차 책상 자세: 고개를 책상까지 숙임 — 더미 앞 가운데가 화면 같은 높이(±4px)에 오게 시선을 맞춤(설계 패널)
@@ -1452,6 +1475,7 @@ function frame(now) {
     if (breath.press && breath.who === 'me' && !fpvOn()) drawThumbTick(bctx, bdpr);
     drawSlideArrow(bctx, bdpr);
   }
+  sweepDraw(now); // 쓸기 연습판: 바람 자국·리본·바닥 입·엄지 궤적·손가락 시범·숨 소리(연습판 밖이면 숨김만)
   drawTapGuide(now);
   drawLipLine();
   // 물안경 렌즈 테(파란 선)는 그리지 않는다 — 재윤님 10차 '이상하다'. 효과는 숨 물결(초록 띠)과 칩 불빛으로만 (설계서 v2 §8.2)
@@ -1505,8 +1529,8 @@ function watchSim() {
       fx.text(new THREE.Vector3(p.x, p.y + 0.6, p.z), '+1', 'plus');
       ownerGlow(d, simWatch.shooter === 'ai' ? 0xff4d5e : 0x3a8fe0);
       if (c.rarity !== 'common') fx.text(new THREE.Vector3(p.x, p.y + 1.1, p.z), RARITY[c.rarity].label, 'rar r-' + c.rarity);
-      if (simWatch.count >= 4) { slowUntil = Math.max(slowUntil, now + 450); camZoom = Math.min(0.28, camZoom + 0.04); }
-      navigator.vibrate?.(12);
+      if (simWatch.count >= 4 && !sweepOn()) { slowUntil = Math.max(slowUntil, now + 450); camZoom = Math.min(0.28, camZoom + 0.04); } // 쓸기 샷은 '4장 이상 슬로모 연장' 없음(숨 단계 0.5배로 바꿈)
+      if (sweepOn()) sweepFlipVib(now); else navigator.vibrate?.(12);
     } else if (up < 0.2 && simWatch.revealed.has(d.id)) {
       simWatch.revealed.delete(d.id); // 다시 엎어짐
       simWatch.count = Math.max(0, simWatch.count - 1);
@@ -1531,6 +1555,7 @@ function show(id) {
 function refreshTexts() {
   document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
   $('#langBtn').textContent = t('lang');
+  $('#sweepBtn').hidden = !(feel.core >= 0.5); // 조작 깃발 '쓸어 올리기'를 켜면 홈에 '쓸기 연습'
   $('#micBtn').textContent = micEnabled ? t('micOn') : t('micOff');
   $('#invCount').textContent = Store.total(profile);
   $('#albumProg').textContent = `${Store.ownedKinds(profile)}/${CARDS.length}`;
@@ -1614,6 +1639,7 @@ function backImage() {
 function goHome() {
   runId++;
   netStop(); // PvP 정리(방 나가기·구독 끊기·월드 반납). 솔로면 아무것도 안 함
+  sweepStop(); // 쓸기 연습판 정리(입력·숨·시계·소리·카드). 연습판이 아니면 표시만 숨김
   $('#dailyCard').hidden = true;
   $('#lvResult').hidden = true;
   $('#lvIntro').hidden = true;
@@ -2199,7 +2225,7 @@ const EXP_MOVE_PX = 3; // 보이는 첫 움직임: 기준 자리(아래 expStep)
 const EXP_MOVE_D = 0.03; // 물리 첫 움직임(u, 3D) = react3 첫 움직임 FM 과 같은 크기 — 수치 둘째 줄(물리 ms)
 function expMicOn() { return micEnabled && mic.ready; }
 // 이 숨에 실제로 쓸 지연: 대결(PvP)·마이크 모드면 언제나 0(turn.js 도 단언). 값은 0.02 하나(expSanitize)
-function expLag() { return match?.net || expMicOn() ? 0 : feel.jetLag === JET_LAG_TEST ? JET_LAG_TEST : 0; }
+function expLag() { return match?.net || expMicOn() || sweepOn() ? 0 : feel.jetLag === JET_LAG_TEST ? JET_LAG_TEST : 0; } // 쓸기 연습판도 0(이 판은 실험 지연 무시)
 function expAirOn() { return expLag() > 0 && feel.airFx >= 0.5; }
 // 이 숨의 물리 시각(화면 초): 숨 시작(table.blow) 전 0 · 다음 숨이 시작되거나 버리면 Infinity(옛 연출 끝). 스텝 사이는 acc 로 보간
 function airClock(A) {
@@ -2337,6 +2363,12 @@ function expFrame() {
 function expReadout() {
   const el = (expReadout.el ||= $('#expLog')); // 매 프레임 부름 → 한 번만 찾음
   if (!el) return;
+  if (sweepOn() && state === 'match') { // 쓸기 연습판: 늘 한 줄(세기·실험 꺼짐·프레임 ms)
+    if (el.hidden) el.hidden = false;
+    const txt = `<span>${sweepReadout()}</span>`;
+    if (el._txt !== txt) { el._txt = txt; el.innerHTML = txt; }
+    return;
+  }
   const solo = state === 'match' && !match?.net;
   const active = solo && (feel.jetLag > 0 || feel.airFx >= 0.5 || feel.hsCut >= 0.5); // 실험이 켜진 채 저장돼 있으면 판 화면에 늘 표시(잊고 손맛을 보지 않게)
   const show = solo && (feel.airLog >= 0.5 || active);
@@ -2368,8 +2400,9 @@ function expReadout() {
 window.__puffExp = () => {
   const A = airShot, el = $('#expLog');
   return {
-    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
+    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
     breathAir: !!breath.air, rings: ringLive,
+    sweep: { core: feel.core, on: sweepOn(), clock: sweep.clock, input: !!sweep.input, shot: !!sweep.shot, shots: window.__puffSweep.shots, ribbon: !!sweep.ribbon?.visible }, // 쓸기 흔적(대결 중엔 모두 꺼져 있어야 — pvp-check)
     last: A && { seq: A.seq, who: A.who, lag: A.lag, air: A.air, cut: !!A.cut, hs: A.hs, hsImpact: A.hsImpact ?? null, arrPhys: A.arrPhys ?? null, hitPhys: A.hitPhys ?? null, movePhys: A.movePhys ?? null, moveWall: A.moveWall ?? null,
       arrWall: A.arrAt != null ? A.arrAt - A.relT : null, faceDone: !!A.faceDone, ring: !!A.ring, logged: !!A.logged, slowLeft: Math.max(0, slowUntil - performance.now()) },
   };
@@ -2477,6 +2510,19 @@ async function blow(rawShot, who) {
     }
   }
   if (A.lag && !table.air) A.lag = 0; // 지연 숨이 v1 로 떨어졌으면(expBlowTable) 측정·표시도 v1 로
+  resetSimWatch(who);
+  // 날아오르는 순간만 짧게 슬로모(대박 조짐이면 watchSim 에서 연장). 공기 앞머리 연출이면 공기가 가는 동안 1배, 충돌 멈칫이 끝나면(expSlowKick)
+  slowUntil = A.air ? 0 : performance.now() + 120 + 380;
+  acc = 0;
+  simOn = true;
+  A.started = true;
+  // 부는 얼굴: 지금은 450 ms 뒤 쉼. 공기 앞머리 연출이면 도달 + 숨 끝(물리)까지 유지(expFrame), 최소 450 ms
+  if (A.air) A.faceMin = performance.now() + 450;
+  else setTimeout(pufferIdle, 450);
+}
+
+// 숨 시작 때 판 지켜보기(뒤집힘 연출·멈춤 판정) 상태를 비운다 — 고전 blow 와 쓸기 blowSweep 이 같이 쓴다
+function resetSimWatch(who) {
   simWatch.revealed = new Set(table.liveDiscs().filter((d) => table.faceUp(d) > 0.5).map((d) => d.id));
   simWatch.count = 0;
   simWatch.glowed = new Set();
@@ -2486,14 +2532,6 @@ async function blow(rawShot, who) {
   simWatch.simTime = 0;
   simWatch.quiet = 0;
   simWatch.vy.clear();
-  // 날아오르는 순간만 짧게 슬로모(대박 조짐이면 watchSim 에서 연장). 공기 앞머리 연출이면 공기가 가는 동안 1배, 충돌 멈칫이 끝나면(expSlowKick)
-  slowUntil = A.air ? 0 : performance.now() + 120 + 380;
-  acc = 0;
-  simOn = true;
-  A.started = true;
-  // 부는 얼굴: 지금은 450 ms 뒤 쉼. 공기 앞머리 연출이면 도달 + 숨 끝(물리)까지 유지(expFrame), 최소 450 ms
-  if (A.air) A.faceMin = performance.now() + 450;
-  else setTimeout(pufferIdle, 450);
 }
 
 function simulate() {
@@ -2869,7 +2907,7 @@ function openLevelIntro(n) {
 }
 
 function updateLevelHud() {
-  if (!match || !match.solo) return;
+  if (!match || !match.solo || !match.level) return; // 쓸기 연습판(solo·레벨 없음)은 목표 상자가 없다
   const sp = match.level;
   $('#potLbl').textContent = t('goal');
   $('#potN').textContent = sp.type === 'flip' ? `${match.flipped}/${sp.target}` : match.goldenTaken ? '✓' : '★';
@@ -3013,9 +3051,10 @@ function openTune() {
   sfx.unlock(); sfx.pop();
   const box = $('#tuneRows');
   box.innerHTML = '';
-  box.appendChild(expSection()); // 맨 위: 실험 '바람 도달 시간'(스위치) — 아래 슬라이더 목록에선 뺀다
+  box.appendChild(coreSection()); // 맨 위: 조작 깃발 '쓸어 올리기(푸어억)' + 쓸기 연습판(스위치) — 아래 슬라이더 목록에선 뺀다
+  box.appendChild(expSection()); // 그다음: 실험 '바람 도달 시간'(스위치)
   for (const k of Object.keys(TUNE_DEFAULTS)) {
-    if (EXP_KEYS.has(k)) continue;
+    if (SWITCH_KEYS.has(k)) continue;
     const [mn, mx, st] = TUNE_RANGE[k];
     const row = document.createElement('label');
     row.className = 'trow';
@@ -3062,6 +3101,7 @@ function expSection() {
 function closeTune(reset) {
   if (reset) Object.assign(feel, TUNE_DEFAULTS);
   expSanitize();
+  $('#sweepBtn').hidden = !(feel.core >= 0.5);
   profile.settings.feel = { ...feel };
   Store.save(profile);
   if (reset) openTune(); else $('#tune').hidden = true;
@@ -4118,6 +4158,592 @@ async function netApplyResult(M, g, ti, seat, P, o) {
   await collect(flipped, who);
 }
 
+// ── 고개 쓸기 연습판 (docs/design/core-sweep.md §2·§4·§5·§8 · §9 4번 줄 '깃발 뒤 새 문법' — feel.core, 솔로 연습판 전용) ──────────
+// 🧭 가설(미검증): 재윤님이 기대한 '아래에서 위로 올리는 물리 컨트롤'에 필요한 식은 측정 도구에 이미 있고(mockup/src/sweep.js 로 옮김), 게임에 없던 것은 이식뿐이다.
+//   → 판가름 = 주입 훅(window.__sweepPlan) 샷이 Node 측정과 비트까지 같고(tools/sweepplay.mjs ↔ tools/sweepgame.mjs ref), 재윤님 손으로 30장 3번 중 1번 이상 부채꼴(손 게이트, BLOCKERS G13).
+// 문법(§4): 화면 아래 2/3 아무 데나 꾹 → 아래로 당기기 = 들이쉼(가장 깊이 당긴 곳 = 세기, 되물림 없음) →
+//   (a) 밀지 않고 떼기 = 퍽(바닥 입·고개 0·0.131 s)  (b) 위로 툭 밀면 '푸' 시작 → 엄지 높이 = 고개(바람 자국 높이), 떼기 = 숨 끝(0.04 s 에 끊김)
+//   취소(숨·차례 안 씀): 옆으로 30% 빼서 떼기 · 덜 당김(< 0.06) · 콜록 · 느린 밀기('푸' 없이 40 px 위에서 떼기 → '툭 밀어 올려요' 시범)
+// 세기 q = 당김 ÷ 꽉(꽉 = 1.0) → 물리 세기 그대로. 돌풍 규칙·초록 띠·조준 흔들림·physSweetFor 를 거치지 않는다(측정 숫자가 그 조건) — 원 밖은 밀기 ∝ q^2.93 로 물리가 정한다
+// 시간: 숨 동안 0.5배 고정(히트스톱·슬로모 없음 · 60 Hz 면 프레임당 1스텝). 숨 길이 최소 0.131 · 상한 1.0 화면 초(SweepCtl, 물리 초로 강제)
+// 판정: sim.js stepJudge(스텝 기준) — 프레임 기준 watchSim 판정 대신. 그래서 같은 주입 일정이면 Node(tools/sweepgame.mjs ref)와 같은 스텝·같은 해시
+// 보상 없음: 별·진행·도감·딱지·튜토리얼 수·공략 단서 수·콜록 수 모두 그대로(프로필을 안 건드린다). 레벨·일일·AI 대전·PvP·봇·마이크는 늘 고전
+// 실험 '바람 도달 시간'(jetLag·airFx·hsCut) 저장값은 이 판에서 무시(expLag 0, blowProg 는 jetLag 를 받지 않는다)
+const D2R = Math.PI / 180;
+const sweep = {
+  N: 30, idx: 0, total: 0, // 연습판 장수·시드 번호 · 이번 실행에서 분 숨 수(첫 3숨 손가락 시범 — 프로필에 안 적는다)
+  input: null, // 진행 중 엄지 입력(playerSweepShot)
+  ctl: null, // 지금(마지막) 숨의 SweepCtl — 화면은 ctl.state 만 읽는다(prog 는 물리만 부름)
+  shot: null, // 진행 중 샷 { kind, q, ctl, j, steps, fr, resolve, ... }
+  clock: false, clockEnded: false, // 쓸기 숨 동안 0.5배 고정 · 끝난 첫 프레임에 바로 1배
+  snd: null, lastFlipVib: 0, guideUntil: 0, slowCancels: 0,
+  lastTrail: null, // 지난 숨의 엄지 궤적(화면 CSS px) — 회색 점선 1숨만
+  frameMs: [], lastFrameT: 0, dispA: 0, lastQ: 0,
+  card: null, ribbon: null,
+};
+window.__puffSweep = { log: [], last: null, shots: 0 };
+// 자동 시험용(tools/sweepplay.mjs): 지금 연습판 상태
+window.__puffSweep.state = () => ({
+  on: sweepOn(), N: sweep.N, seed: match?.seed ?? null, waiting: !!(sweep.input && !sweep.input.g && !sweep.input.ctl), input: !!sweep.input, pressed: !!sweep.input?.g,
+  clock: sweep.clock, shot: !!sweep.shot, card: !$('#sweepCard').hidden, total: sweep.total, guide: performance.now() < sweep.guideUntil, slowCancels: sweep.slowCancels,
+  air: !!table?.air, lag: expLag(), timeScale, state,
+});
+window.__sweepPlan = null; // 개발 주입 훅: { q, A, w, t0, D } (A·D 에 'top' 가능) 또는 { kind: 'puck', q }. __sweepFire() 가 다음 쓸기 샷 하나를 이 일정으로
+window.__sweepFire = () => { const I = sweep.input; return !!(I && I.firePlan && !I.g && !I.ctl && I.firePlan(window.__sweepPlan)); };
+function sweepOn() { return match?.sweep === true && !match?.net; } // 문지기: 쓸기 연습판(솔로)만. 대결·레벨·일일·자유 대전은 늘 false
+function sweepClockOn() { return sweep.clock && sweepOn(); }
+function sweepAlphaDeg() { return sweep.dispA; }
+function sweepVib(ms) { navigator.vibrate?.(ms); }
+function sweepFlipVib(now) { if (now - sweep.lastFlipVib < 80) return; sweep.lastFlipVib = now; navigator.vibrate?.(12); } // 뒤집힘 12 는 80 ms 에 하나
+function sweepEvent(name) { if (name === 'top') sweepVib(25); else if (name === 'tb90') sweepVib(47); } // 바람 축이 꼭대기를 넘음 · 아래 절반 평균 90°(물리 사건, 정답 신호 아님)
+
+async function startPractice(N = 30, seedIdx = 0) {
+  N = N === 40 ? 40 : 30;
+  sfx.unlock();
+  const my = ++runId;
+  for (const m of homeMeshes) scene.remove(m);
+  homeMeshes = [];
+  ringStop(airShot); airShot = null; // 지난 고전 숨의 실험 상태를 끌고 오지 않는다
+  lastBreath.aim = null; micOfferArmed = false; cue.receipt = null;
+  $('#dailyCard').hidden = true; $('#lvResult').hidden = true; $('#lvIntro').hidden = true; $('#sweepSheet').hidden = true;
+  sweep.N = N; sweep.idx = seedIdx; sweep.lastTrail = null; sweep.slowCancels = 0;
+  if (micEnabled && mic.ready) setTimeout(() => toast(t('swMicNote')), 600); // 마이크 켬이어도 이 판은 터치만 받는다
+  let first = true;
+  for (;;) {
+    const seed = Sweep.practiceSeed(N, sweep.idx);
+    buildPracticePile(N, seed);
+    if (first) {
+      show('#hud');
+      await introDrop();
+      if (my !== runId) return;
+      await banner(`${t('swBoard')} · ${N}`, 'b-me');
+      if (my !== runId) return;
+      first = false;
+    } else { sfx.whoosh(); await wait(250); if (my !== runId) return; }
+    const raw = await playerSweepShot();
+    if (my !== runId || !raw) return;
+    const res = await blowSweep(raw);
+    if (my !== runId || !res) return;
+    const choice = await sweepResult(raw, res, seed);
+    if (my !== runId) return;
+    if (choice === 'home' || !choice) { goHome(); return; }
+    if (choice === 'new') sweep.idx++;
+  }
+}
+
+// 매 숨 더미를 새로 만든다(같은 시드 = 같은 더미 → 시도끼리 비교). 측정과 같은 물리: Table(seed·7907 + N, lift 519.59) — feel.wind 무시
+function buildPracticePile(N, seed) {
+  const rng = mulberry32(seed);
+  const ids = Array.from({ length: N }, () => rollCard(rng, null));
+  match = { seed, rng, myStake: [], aiStake: [], pot: ids.map((id) => ({ id, from: 'practice' })), rivalName: '', rivalCard: CARDS[0], mode: 'fun', practice: true, sweep: true, solo: true, n: N, turn: 'me', turnNo: 0, best: 0, flipsMe: 0, level: null };
+  table = new Table(Sweep.practiceTableSeed(N, seed), { lift: 519.59 });
+  table.addPile(ids);
+  table.settle(600);
+  clearMatchMeshes();
+  for (const d of table.discs) { const m = makeDiscMesh(d.cardId); meshes.set(d.id, m); scene.add(m); }
+  syncMeshes();
+  state = 'match'; pose = 'eye'; gogglesOn = false;
+  camZoom = 0; simOn = false; sweep.dispA = 0;
+  snapCam();
+  $('#rivalName').textContent = t('swBoard');
+  $('#rivalAva').src = backImage();
+  $('#meScore').textContent = '0';
+  $('#aiScore').textContent = `#${seed}`;
+  $('#potLbl').textContent = t('swPile');
+  $('#potN').textContent = String(N);
+  $('#hud').classList.remove('no-pot');
+  $('#swBadge').hidden = false;
+  $('#sweepCard').hidden = true;
+  puffer.mode = 'idle'; puffer.p = 0; puffer.who = 'me';
+}
+
+// 엄지 입력 한 번 → { kind: 'pueok'|'puck'|'plan', q, ctl, input } (취소는 안에서 처리하고 다시 기다림) · 홈으로 나가면 null
+// 'pueok' 는 '푸'가 열리는 순간 돌려준다(그때부터 물리 시작). 떼기를 받을 때까지 move·up 리스너는 남는다
+function playerSweepShot() {
+  if (!sweepOn()) throw new Error('playerSweepShot: 쓸기 연습판 밖 — 레벨·대결은 고전 조작(playerShot)');
+  return new Promise((resolve) => {
+    const el = renderer.domElement;
+    const F = Rules.POUCH_FULL;
+    camAimGoal = 1; camStrafeGoal = 0;
+    myTurn.on = true; myTurn.t0 = performance.now(); myTurn.pressed = false;
+    puffer.mode = 'idle'; puffer.p = 0; puffer.who = 'me'; puffer.strain = 0; puffer.full = false;
+    $('#hint').hidden = false; $('#hint').className = 'hint'; $('#hintText').textContent = t('swHint');
+    let settled = false;
+    const I = { g: null, inh: null, strain: 0, full: false, lastT: 0, leakAt: 0, ctl: null, trail: [], opens: 0, blowAt: null, relAt: null, released: false, pointerId: null };
+    sweep.input = I;
+    const vis = () => { if (document.hidden) lose(); };
+    const listen = (on) => {
+      const f = on ? 'addEventListener' : 'removeEventListener';
+      el[f]('pointerdown', down);
+      window[f]('pointermove', move);
+      window[f]('pointerup', up);
+      window[f]('pointercancel', lose);
+      window[f]('blur', lose);
+      window[f]('pagehide', lose);
+      document[f]('visibilitychange', vis);
+    };
+    const inhStop = () => { I.inh?.stop(); I.inh = null; };
+    const resetPouch = () => { I.strain = 0; I.full = false; puffer.strain = 0; puffer.full = false; };
+    const end = () => { listen(false); inhStop(); if (sweep.input === I) sweep.input = null; $('#hint').hidden = true; };
+    const settle = (v) => {
+      if (settled) return;
+      settled = true;
+      cancelInput = null;
+      myTurn.on = false; myTurn.pressed = false;
+      myTurn.until = v ? performance.now() + 650 : 0;
+      if (v) { sweep.lastTrail = I.trail.slice(); sweep.lastQ = v.q; v.input = I; }
+      resolve(v);
+    };
+    I.kill = () => { end(); settle(null); };
+    cancelInput = I.kill;
+    // 세기·꽉 래치(Rules 그대로): 당김 최대(되물림 없음)가 꽉에 닿으면 '읍' + 손끝 톡 + 들숨 소리 멈춤
+    const pouch = () => {
+      const p = I.g.pMax, was = I.full;
+      I.full = Rules.fullLatch(p, was);
+      if (I.full && !was) { sfx.cork(); navigator.vibrate?.(25); I.inh?.hold(); }
+      if (!I.full && was) I.inh?.resume();
+      puffer.full = I.full; puffer.p = p; puffer.mode = 'charge';
+      I.inh?.set(p / F);
+    };
+    // 취소: 숨·차례를 쓰지 않는다. 느린 밀기면 '툭 밀어 올려요' + 손가락 시범
+    const cancelBreath = (why) => {
+      inhStop(); resetPouch();
+      I.g = null; I.trail = [];
+      puffer.p = 0;
+      if (why === 'cough') {
+        sfx.cough(); navigator.vibrate?.([40, 60, 40]);
+        puffer.mode = 'cough';
+        setTimeout(() => { if (puffer.mode === 'cough') puffer.mode = 'idle'; }, 700);
+      } else puffer.mode = 'idle';
+      if (why === 'slow') { sweep.slowCancels++; sweep.guideUntil = performance.now() + 6500; toast(t('swSlowTip')); }
+      myTurn.pressed = false; myTurn.t0 = performance.now();
+      $('#hint').hidden = false;
+    };
+    const startCtl = (mode, extra) => {
+      const ctl = new Sweep.SweepCtl(table, { mode, onEvent: sweepEvent, ...extra });
+      I.ctl = ctl;
+      return ctl;
+    };
+    // 엄지 사건(gesture.move·tick 의 반환) — '푸' 시작이면 그 순간 물리(blowSweep)
+    I.onEv = (e, now) => {
+      if (!e || !I.g) return;
+      if (e.ev === 'inhale') pouch();
+      else if (e.ev === 'blowStart') {
+        if (I.ctl) return;
+        I.opens++;
+        I.blowAt = now;
+        const q = clamp(I.g.pMax / F, 0, 1);
+        inhStop(); resetPouch();
+        startCtl('thumb');
+        settle({ kind: 'pueok', q, ctl: I.ctl });
+      } else if (e.ev === 'sweep') { if (I.ctl) I.ctl.u = e.u; }
+    };
+    // 프레임마다(sweepTick, 물리 스텝 전): 버팀·새는 김·콜록
+    I.frame = (now) => {
+      if (!I.g || I.g.st !== 'inhale') { I.lastT = 0; return; }
+      const dt = I.lastT ? Math.min(50, now - I.lastT) : 0;
+      I.lastT = now;
+      I.strain = Rules.strainStep(I.strain || 0, I.g.pMax, dt, I.full, feel.strainMs);
+      puffer.strain = I.strain;
+      if (I.strain >= Rules.LEAK_AT && now >= I.leakAt) { sfx.leak(); I.leakAt = now + lerp(260, 140, (I.strain - Rules.LEAK_AT) / (1 - Rules.LEAK_AT)); }
+      if (I.strain >= 1) cancelBreath('cough');
+    };
+    // 주입 훅(window.__sweepFire): 엄지 대신 측정 일정으로 한 숨
+    I.firePlan = (plan) => {
+      if (!plan || I.g || I.ctl || settled) return false;
+      const q = clamp(+plan.q || 0, 0, 1.25);
+      const pl = plan.kind === 'puck' ? null : Sweep.resolvePlan({ A: plan.A, w: plan.w, t0: plan.t0, D: plan.D }, table.columnTop());
+      if (pl) startCtl('plan', { plan: pl }); else startCtl('puck');
+      I.released = true;
+      end();
+      settle({ kind: pl ? 'plan' : 'puck', q, ctl: I.ctl, plan: pl });
+      return true;
+    };
+    const release = (u, now) => {
+      if (!I.ctl || I.released) return;
+      I.released = true; I.relAt = now;
+      I.ctl.release(u);
+      end();
+    };
+    const down = (ev) => {
+      if (state !== 'match' || !sweepOn() || I.g || I.ctl || settled) return;
+      if (ev.clientY < window.innerHeight / 3) return; // 화면 아래 2/3 아무 데나(조준 없음)
+      sfx.unlock();
+      const now = performance.now();
+      I.g = new Sweep.Gesture(window.innerWidth, window.innerHeight, { ...Sweep.GAME_GCFG, pull: feel.pull });
+      I.g.down(ev.clientX, ev.clientY, now);
+      I.trail = [[ev.clientX, ev.clientY, now]];
+      I.pointerId = ev.pointerId;
+      try { el.setPointerCapture?.(ev.pointerId); } catch (e) { /* 합성 포인터 */ }
+      myTurn.pressed = true;
+      puffer.mode = 'charge'; puffer.p = 0;
+      resetPouch();
+      $('#hint').hidden = true;
+      I.inh = sfx.inhale();
+    };
+    const move = (ev) => {
+      if (!I.g || (I.pointerId != null && ev.pointerId != null && ev.pointerId !== I.pointerId)) return;
+      const now = performance.now();
+      if (!I.released) { I.trail.push([ev.clientX, ev.clientY, now]); if (I.trail.length > 900) I.trail.shift(); }
+      I.onEv(I.g.move(ev.clientX, ev.clientY, now), now);
+    };
+    const up = (ev) => {
+      if (!I.g || (I.pointerId != null && ev?.pointerId != null && ev.pointerId !== I.pointerId)) return;
+      const now = performance.now();
+      if (I.g.st === 'inhale') {
+        const out = I.g.up(ev.clientX, ev.clientY, now);
+        if (out.kind === 'cancel') { cancelBreath(out.slow ? 'slow' : 'cancel'); return; }
+        // 퍽: '푸'가 안 열린 채 떼기 = 바닥 입·고개 0·0.131 s (측정 kind 'puff' · kin 'c')
+        I.relAt = now;
+        const q = clamp(out.p / F, 0, 1);
+        startCtl('puck');
+        I.released = true;
+        end();
+        settle({ kind: 'puck', q, ctl: I.ctl });
+        return;
+      }
+      const out = I.g.up(ev.clientX, ev.clientY, now);
+      if (!I.released) I.trail.push([ev.clientX, ev.clientY, now]);
+      release(out?.u, now);
+    };
+    // 포인터 취소·창 흐림·숨김·페이지 떠남: 숨이 이미 나갔으면 떼기(취소 없음), 아니면 취소
+    const lose = () => {
+      if (I.ctl) { release(null, performance.now()); return; }
+      if (I.g) cancelBreath('cancel');
+    };
+    listen(true);
+  });
+}
+
+// 프레임마다(물리 스텝 전): 엄지 인식기 판정(사건이 없어도) + 버팀
+function sweepTick(now) {
+  const I = sweep.input;
+  if (!I) return;
+  if (!sweepOn()) { I.kill?.(); sweep.input = null; return; }
+  if (I.g && (I.g.st === 'inhale' || I.g.st === 'blow')) I.onEv(I.g.tick(now), now);
+  I.frame?.(now);
+}
+
+// 쓸기 숨: blow() 를 고치지 않는 새 함수. 히트스톱 없음 — 손잡이 소리 → '푸 시작' 톡 → 물리(blowProg)
+function blowSweep(raw) {
+  if (match?.net || !match?.practice || !sweepOn()) throw new Error('blowSweep: 솔로 쓸기 연습판 전용(대결·레벨 금지)');
+  const ctl = raw.ctl;
+  sweep.ctl = ctl;
+  sweep.snd?.stop();
+  sweep.snd = sfx.blow();
+  sweepVib(15);
+  ctl.attach(table.blowProg({ prog: ctl.prog, power: raw.q, dur: ctl.durCap })); // 실험 jetLag 없음(blowProg 는 받지 않음) → table.air = null
+  resetSimWatch('me');
+  puffer.mode = 'blow'; puffer.p = raw.q; puffer.fill = clamp(raw.q, 0, 1); puffer.ratio = 1; puffer.strain = 0; puffer.full = false;
+  hitStopUntil = 0; slowUntil = 0; acc = 0;
+  simOn = true;
+  sweep.clock = true; sweep.clockEnded = false;
+  sweep.total++;
+  window.__puffSweep.shots++;
+  return new Promise((resolve) => { sweep.shot = { kind: raw.kind, q: raw.q, ctl, j: { n: 0, quiet: 0 }, steps: 0, fr: [], resolve, judged: false }; });
+}
+function sweepClockEnd() {
+  if (!sweep.clock) return;
+  sweep.clock = false; sweep.clockEnded = true;
+  sweep.snd?.stop(); sweep.snd = null;
+  camAimGoal = 0; // 숨이 끝나면 위에서 내려다보는 시점으로(뒤집힌 그림이 보이게)
+  setTimeout(() => { if (puffer.mode === 'blow' && !sweep.clock) pufferIdle(); }, 250);
+}
+// frame 루프의 매 table.step() 직후: 기록(SweepCtl.after) → 숨 끝이면 시계 끝 → 스텝 판정(sim.js stepJudge). 판정 스텝이면 true(그 프레임 스텝 멈춤)
+function sweepAfterStep() {
+  const S = sweep.shot;
+  if (!S || S.judged) return false;
+  S.ctl.after(table);
+  S.steps++;
+  if (sweep.clock && !table.puff) sweepClockEnd();
+  if (!table.stepJudge(S.j)) return false;
+  S.judged = true;
+  simOn = false;
+  sweepClockEnd();
+  const R = table.judgeResult();
+  S.res = { flips: R.flipped.length, outs: R.outs.length, flipped: R.flipped, outList: R.outs, hash: Sweep.poseHash(table), steps: S.steps };
+  S.resolve(S.res);
+  return true;
+}
+function sweepFrameSteps(n, clk) { const S = sweep.shot; if (S && !S.judged && S.fr.length < 3000) S.fr.push([n, clk ? 1 : 0]); }
+
+// 판정 뒤: OUT 글자·장수 → 기록 → '방금 숨' 카드 → 단추(같은 더미 다시 · 새 더미 · 홈)
+async function sweepResult(raw, res, seed) {
+  const S = sweep.shot;
+  sweep.shot = null;
+  const ctl = raw.ctl, I = raw.input;
+  for (const d of res.outList) { if (d.off) continue; const p = d.body.translation(); fx.text(new THREE.Vector3(p.x, p.y + 0.5, p.z), 'OUT', 'out'); }
+  if (res.outs) chalkPulse();
+  const sum = ctl.summary(table, res.flips, res.outs);
+  const st = sweepStats(I);
+  const fr = S?.fr || [];
+  const al = ctl.rec.series.map((r) => r[1]);
+  const last = {
+    kind: raw.kind, q: +raw.q.toFixed(4), plan: raw.plan || null, D: ctl.D, tTop: ctl.rec.tTop, flips: res.flips, outs: res.outs, steps: res.steps, hash: res.hash,
+    n: sum.n, seed, cause: sum.cause, opens: I?.opens || 0, alphaMax: al.length ? Math.max(...al) : 0, alphaMono: al.every((a, i) => !i || a >= al[i - 1] - 1e-9),
+    endT: ctl.state.t, dur: ctl.P?.dur ?? null, fr, stats: st,
+  };
+  window.__puffSweep.last = last;
+  const entry = { q: last.q, kind: raw.kind, openLatMs: st.openLatMs, maxPxS: st.maxPxS, blowMs: st.blowMs, slowCancels: sweep.slowCancels, tTop: last.tTop, D: last.D, flips: res.flips, outs: res.outs, cause: sum.cause, n: sum.n, seed };
+  window.__puffSweep.log.unshift(entry);
+  if (window.__puffSweep.log.length > 20) window.__puffSweep.log.length = 20;
+  sweep.slowCancels = 0;
+  $('#meScore').textContent = String(res.flips);
+  const el = $('#big');
+  el.innerHTML = res.flips > 0 ? `${res.flips} <small>${t('flipped')}</small>` : t('miss');
+  el.className = 'big ' + (res.flips >= 0.5 * sum.n ? 'r2' : res.flips > 0 ? 'r1' : 'r0');
+  el.hidden = false; void el.offsetWidth; el.classList.add('go');
+  await wait(700);
+  el.hidden = true;
+  return showSweepCard(raw, last, sum);
+}
+// 손 기록(§8 숫자·'기록 복사'): 푸 열림 지연 = 밀기 시작(최저점에서 2 px 위) → '푸' 시작 · 최고 밀기 속도(30 ms 이상 간격) · 푸 시작 → 떼기
+function sweepStats(I) {
+  const tr = I?.trail || [];
+  if (tr.length < 2) return { openLatMs: null, maxPxS: null, blowMs: null };
+  let iLow = 0;
+  for (let i = 1; i < tr.length; i++) if (tr[i][1] >= tr[iLow][1]) iLow = i;
+  const yLow = tr[iLow][1];
+  let pushT = null;
+  for (let i = iLow + 1; i < tr.length; i++) if (yLow - tr[i][1] >= 2) { pushT = tr[i][2]; break; }
+  let vmax = 0;
+  for (let i = iLow + 1; i < tr.length; i++) {
+    let j = i - 1;
+    while (j > iLow && tr[i][2] - tr[j][2] < 30) j--;
+    const dt = tr[i][2] - tr[j][2];
+    if (dt >= 16) vmax = Math.max(vmax, ((tr[j][1] - tr[i][1]) / dt) * 1000);
+  }
+  return {
+    openLatMs: I.blowAt != null && pushT != null ? Math.round(I.blowAt - pushT) : null,
+    maxPxS: Math.round(vmax),
+    blowMs: I.blowAt != null && I.relAt != null ? Math.round(I.relAt - I.blowAt) : null,
+  };
+}
+
+const SW_CAUSE = { early: '🐇', sank: '🐢', weak: '🪶', strong: '💨', good: '👍', mixed: '🔀' };
+function showSweepCard(raw, last, sum) {
+  const box = $('#sweepCard');
+  const kindTxt = raw.kind === 'puck' ? t('swKindPuck') : raw.kind === 'plan' ? t('swKindPlan') : t('swKindPueok');
+  $('#swNum').textContent = `${kindTxt} · ${t('rcpTitle')}`;
+  $('#swCause').innerHTML = `<span class="sw-chip c-${sum.cause}">${SW_CAUSE[sum.cause] || ''} ${t('swCause_' + sum.cause)} <i>${t('swTest')}</i></span>`;
+  const ms = (v) => (v == null ? '–' : `${v} ms`);
+  const st = last.stats;
+  $('#swNums').innerHTML = [
+    `${t('swNumFlip')} <b>${last.flips}/${sum.n}</b>`, `${t('swNumOut')} <b>${last.outs}</b>`, `q <b>${last.q.toFixed(2)}</b>`,
+    `${t('swNumBlow')} <b>${ms(st.blowMs)}</b>`, `${t('swNumOpen')} <b>${ms(st.openLatMs)}</b>`, `${t('swNumSpeed')} <b>${st.maxPxS == null ? '–' : st.maxPxS + ' px/s'}</b>`,
+  ].map((x) => `<span>${x}</span>`).join('');
+  $('#swRef').textContent = t('swRef');
+  drawSweepTimeline($('#swTl'), raw.ctl, last);
+  box.hidden = false;
+  return new Promise((resolve) => {
+    const done = (v) => { box.hidden = true; sweep.card = null; resolve(v); };
+    sweep.card = { resolve: done };
+    $('#swSame').onclick = () => { sfx.pop(); done('same'); };
+    $('#swNew').onclick = () => { sfx.pop(); done('new'); };
+    $('#swHome').onclick = () => { sfx.pop(); done('home'); };
+    $('#swCopy').onclick = async () => {
+      const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, log: window.__puffSweep.log });
+      try { await navigator.clipboard.writeText(txt); toast(t('swCopied')); } catch (e) { console.log('[쓸기 기록]', txt); toast(t('copyManual')); }
+    };
+  });
+}
+// 타임라인 한 줄(물리 0~1.2 s): 숨 봉투(아래 띠) · 바람 자국 높이 · 더미 꼭대기(점선) · 위 절반 기울기 · '꼭대기 넘음' 점 · 떼기 점. 정답 곡선·예상 장수는 그리지 않는다
+function drawSweepTimeline(cv, ctl, last) {
+  if (!cv) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const Wc = cv.clientWidth || 320, Hc = cv.clientHeight || 110;
+  cv.width = Math.round(Wc * dpr); cv.height = Math.round(Hc * dpr);
+  const c = cv.getContext('2d');
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, Wc, Hc);
+  const T = 1.2, pad = 4, x = (tt) => pad + (Math.min(T, tt) / T) * (Wc - 2 * pad);
+  const ser = ctl.rec.series, top0 = ctl.top0;
+  const hMax = Math.max(top0 * 1.25, ...ser.map((r) => r[3]), 1);
+  const y = (h) => Hc - 6 - (h / hMax) * (Hc - 16);
+  c.fillStyle = 'rgba(255,255,255,0.9)'; c.fillRect(0, 0, Wc, Hc);
+  // 숨 봉투(아래 띠)
+  c.fillStyle = 'rgba(80,170,255,0.35)';
+  c.beginPath(); c.moveTo(x(0), Hc - 2);
+  for (const r of ser) c.lineTo(x(r[0]), Hc - 2 - r[2] * 22);
+  if (ser.length) c.lineTo(x(ser[ser.length - 1][0]), Hc - 2);
+  c.closePath(); c.fill();
+  // 더미 꼭대기
+  c.strokeStyle = 'rgba(42,26,18,0.7)'; c.setLineDash([5, 4]); c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(x(0), y(top0)); c.lineTo(x(T), y(top0)); c.stroke(); c.setLineDash([]);
+  // 위 절반 기울기(0~90° → 0~꼭대기 높이 1.25배 눈금 위로, 분홍)
+  c.strokeStyle = '#e0457b'; c.lineWidth = 2;
+  c.beginPath();
+  ctl.rec.tt.forEach((r, i) => { const yy = Hc - 6 - (Math.min(90, r[2]) / 90) * (Hc - 16); if (i) c.lineTo(x(r[0]), yy); else c.moveTo(x(r[0]), yy); });
+  c.stroke();
+  // 바람 자국 높이(주황)
+  c.strokeStyle = '#ff8a1f'; c.lineWidth = 3;
+  c.beginPath();
+  ser.forEach((r, i) => { if (i) c.lineTo(x(r[0]), y(r[3])); else c.moveTo(x(r[0]), y(r[3])); });
+  c.stroke();
+  const dot = (tt, h, col) => { c.fillStyle = col; c.strokeStyle = '#2a1a12'; c.lineWidth = 1.5; c.beginPath(); c.arc(x(tt), y(h), 5, 0, Math.PI * 2); c.fill(); c.stroke(); };
+  if (last.tTop >= 0) dot(last.tTop, top0, '#ffd23f');
+  if (last.D != null && ser.length) { const r = ser.reduce((a, b) => (Math.abs(b[0] - last.D) < Math.abs(a[0] - last.D) ? b : a)); dot(r[0], r[3], '#3a8fe0'); }
+  c.fillStyle = '#2a1a12'; c.font = '600 10px sans-serif';
+  c.fillText(`${t('swTlHit')} · ${t('swTlTop')} · ${t('swTlTilt')} · ${t('swTlEnv')} · ● ${t('swTlCross')} · ● ${t('swTlRel')}`, 6, 11);
+  c.fillText('0', 2, Hc - 1); c.fillText('1.2 s', Wc - 26, Hc - 1);
+}
+
+// 시점: 낮은 앞-옆(1인칭 책상 자세 근처 + 옆 0.6 u). 피치 = 10°·tanh(α/10°) — 6° 까지 거의 1:1, 그 위는 부드러운 상한 10°(어지럼 방지). 줄인 움직임이면 0
+function sweepView(top) {
+  const portrait = window.innerWidth / window.innerHeight < 0.85;
+  const pos = new THREE.Vector3(0.6, 0.36, portrait ? 4.9 : 4.4);
+  const d = new THREE.Vector3(0, 0.12 + 0.5 * top, 0).sub(pos);
+  const h = Math.hypot(d.x, d.z) || 1, L = d.length();
+  const pitch = reducedMotion ? 0 : 10 * Math.tanh(sweep.dispA / 10) * D2R;
+  const e = Math.atan2(d.y, h) + pitch;
+  return { pos, target: pos.clone().add(new THREE.Vector3((d.x / h) * Math.cos(e) * L, Math.sin(e) * L, (d.z / h) * Math.cos(e) * L)) };
+}
+
+// 그리기(frame, sweepOn 일 때): 바람 자국(조준 고리 메시 재사용) · 바람 리본(원뿔) · 숨 소리 · 엄지 궤적 · 손가락 시범 · 1인칭 끔이면 바닥 입
+function sweepDraw(now) {
+  const on = sweepOn() && state === 'match' && !!table;
+  if (sweep.ribbon) sweep.ribbon.visible = false;
+  if (!on) { sweep.dispA = 0; return; }
+  if (sweep.lastFrameT) { sweep.frameMs.push(now - sweep.lastFrameT); if (sweep.frameMs.length > 180) sweep.frameMs.shift(); }
+  sweep.lastFrameT = now;
+  const ctl = sweep.ctl;
+  const blowing = sweep.clock && ctl;
+  sweep.dispA += ((blowing ? ctl.state.alpha / D2R : 0) - sweep.dispA) * (blowing ? 1 : 0.15);
+  const aiming = !!(sweep.input && myTurn.on);
+  // 바람 자국: 숨 동안 = 지금 자세, 조준 동안 = 고개 0 자리(흐리게)
+  let S = null, top0 = 0, zf = 0, cx = 0, q = sweep.lastQ;
+  if (blowing) { S = ctl.state; top0 = ctl.top0; zf = ctl.zf; cx = ctl.c.x; q = sweep.shot?.q ?? q; }
+  else if (aiming && sweep.input.g) {
+    const c = table.pileCenter();
+    cx = c.x; zf = c.z + 1; top0 = table.columnTop();
+    S = { o: { x: c.x, y: Sweep.GEO.ym, z: zf + Sweep.GEO.L }, alpha: 0, env: 0.25, yHit: Sweep.GEO.ym };
+    q = clamp((sweep.input.g.pMax || 0) / Rules.POUCH_FULL, 0, 1);
+  }
+  if (S) {
+    const a = (S.o.z - zf) / Math.max(0.2, Math.cos(S.alpha)); // 입 → 앞면 축 거리
+    const rj = table.T.jetR0 + a * table.T.jetSpread;
+    const over = S.yHit > top0;
+    reticle.visible = true; layerRing.visible = false; aimLine.visible = false;
+    reticle.position.set(cx, S.yHit, zf + 0.03);
+    reticle.lookAt(cx, S.yHit, zf + 2);
+    reticle.scale.set(rj / 0.26, rj / 1.6 / 0.26, 1); // 원뿔 세기 식(lat = hypot(lx, 1.6·ly, lz))과 같은 납작한 타원
+    reticle.material.color.setHex(0xffffff);
+    reticle.material.opacity = (0.25 + 0.7 * clamp(q * S.env, 0, 1)) * (over ? 0.4 : 1);
+    if (blowing) {
+      // 바람 리본: 입 → 자국 원뿔(프레임마다)
+      if (!sweep.ribbon) {
+        const g = new THREE.CylinderGeometry(1, 0.25, 1, 20, 1, true);
+        g.translate(0, 0.5, 0);
+        sweep.ribbon = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xe2f6ff, transparent: true, opacity: 0.2, depthWrite: false, side: THREE.DoubleSide }));
+        sweep.ribbon.renderOrder = 8;
+        scene.add(sweep.ribbon);
+      }
+      const from = new THREE.Vector3(S.o.x, S.o.y, S.o.z), to = new THREE.Vector3(cx, S.yHit, zf);
+      const dir = to.clone().sub(from), L = dir.length();
+      sweep.ribbon.position.copy(from);
+      sweep.ribbon.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+      sweep.ribbon.scale.set(rj, L, rj);
+      sweep.ribbon.material.opacity = 0.05 + 0.25 * clamp(q * S.env, 0, 1);
+      sweep.ribbon.visible = true;
+      sweep.snd?.set(S.env, top0 > 0 ? S.yHit / top0 : 0, q);
+    }
+    // 헛바람(자국이 꼭대기 위): 위로 흐르는 줄(2D)
+    if (over && blowing) {
+      const cv = $('#breath'), c2 = cv.getContext('2d'), dpr = cv._dpr || 1;
+      const p = new THREE.Vector3(cx, S.yHit, zf).project(camera);
+      const px = (p.x * 0.5 + 0.5) * window.innerWidth, py = (-p.y * 0.5 + 0.5) * window.innerHeight;
+      c2.save(); c2.scale(dpr, dpr); c2.strokeStyle = 'rgba(255,255,255,0.55)'; c2.lineWidth = 2;
+      for (let i = 0; i < 5; i++) { const k = ((now * 0.002) + i / 5) % 1, xx = px + (i - 2) * 9; c2.beginPath(); c2.moveTo(xx, py - 30 * k); c2.lineTo(xx, py - 30 * k - 14); c2.stroke(); }
+      c2.restore();
+    }
+  } else if (!blowing && reticle.visible && !myTurn.on) reticle.visible = false;
+  const cv = $('#breath'), c2 = cv.getContext('2d'), dpr = cv._dpr || 1;
+  // 1인칭을 끈 경우: 바닥 입을 투영한 자리에 입술(입이 오르는 것이 보이게)
+  if (!fpvOn() && S) {
+    const p = new THREE.Vector3(S.o.x, S.o.y, S.o.z).project(camera);
+    if (p.z < 1) {
+      const px = (p.x * 0.5 + 0.5) * window.innerWidth, py = (-p.y * 0.5 + 0.5) * window.innerHeight;
+      c2.save(); c2.scale(dpr, dpr); c2.fillStyle = '#d4566a'; c2.strokeStyle = '#2a1a12'; c2.lineWidth = 2;
+      c2.beginPath(); c2.ellipse(px, py, 16, 7, 0, 0, Math.PI * 2); c2.fill(); c2.stroke(); c2.restore();
+    }
+  }
+  // 지난 숨 엄지 궤적(회색 점선) — 조준 동안
+  if (aiming && sweep.lastTrail && sweep.lastTrail.length > 1) {
+    c2.save(); c2.scale(dpr, dpr); c2.strokeStyle = 'rgba(90,90,90,0.55)'; c2.lineWidth = 3; c2.setLineDash([6, 6]);
+    c2.beginPath(); sweep.lastTrail.forEach((p, i) => (i ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]))); c2.stroke(); c2.restore();
+  }
+  if (aiming && !myTurn.pressed && (sweep.total < 3 || now < sweep.guideUntil) && now - myTurn.t0 > 500) drawSweepGuide(now, c2, dpr);
+}
+
+// 손가락 시범: 꾹·당기고 → 살짝 올려 푸 → 하나 → 쭉 올리며 떼기 (첫 3숨 · 느린 밀기 취소 뒤)
+function drawSweepGuide(now, ctx, dpr) {
+  const W = window.innerWidth, H = window.innerHeight, minDim = Math.min(W, H);
+  const x = W / 2, y0 = H * 0.6, pull = minDim * 0.42 * 0.6;
+  const cyc = ((now - myTurn.t0) % 4200) / 4200;
+  const sm = (k) => k * k * (3 - 2 * k);
+  let y = y0, key = 'swG1', press = 1;
+  if (cyc < 0.12) { press = cyc / 0.12; key = 'swG1'; }
+  else if (cyc < 0.4) { y = y0 + sm((cyc - 0.12) / 0.28) * pull; key = 'swG2'; }
+  else if (cyc < 0.5) { y = y0 + pull - sm((cyc - 0.4) / 0.1) * 20; key = 'swG3'; }
+  else if (cyc < 0.66) { y = y0 + pull - 20; key = 'swG4'; }
+  else if (cyc < 0.88) { y = y0 + pull - 20 - sm((cyc - 0.66) / 0.22) * pull * 1.3; key = 'swG5'; }
+  else { y = y0 + pull - 20 - pull * 1.3; key = 'swG5'; press = 1 - (cyc - 0.88) / 0.12; }
+  ctx.save(); ctx.scale(dpr, dpr);
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3; ctx.setLineDash([7, 6]);
+  ctx.beginPath(); ctx.moveTo(x + 34, y0); ctx.lineTo(x + 34, y0 + pull); ctx.lineTo(x + 34, y0 + pull - 20 - pull * 1.3); ctx.stroke(); ctx.setLineDash([]);
+  ctx.globalAlpha = 0.4 + 0.6 * press;
+  ctx.translate(x, y);
+  ctx.fillStyle = '#ffe1c4'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-11, 0, 22, 62, 11) : ctx.rect(-11, 0, 22, 62); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#ffc6cf'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-6, 4, 12, 10, 5) : ctx.rect(-6, 4, 12, 10); ctx.fill(); ctx.stroke();
+  ctx.globalAlpha = 1;
+  const txt = t(key);
+  ctx.font = '700 15px "Jua", sans-serif';
+  const tw = ctx.measureText(txt).width + 18, bx = clamp(40, 8 - x, W - x - tw - 8);
+  ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, -34, tw, 28, 10) : ctx.rect(bx, -34, tw, 28); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#2a1a12'; ctx.textBaseline = 'middle'; ctx.fillText(txt, bx + 9, -20);
+  ctx.restore();
+}
+
+// 판 화면 한 줄(#expLog): '쓸기 연습 · q 0.00 · 실험 지연 꺼짐(이 판) · 프레임 ms'(앱 웹뷰 40장 프레임 비용은 실기기에서 안 쟀다)
+function sweepReadout() {
+  const g = sweep.input?.g;
+  const q = g && g.st === 'inhale' ? clamp(g.pMax / Rules.POUCH_FULL, 0, 1) : sweep.lastQ || 0;
+  const f = sweep.frameMs.slice().sort((a, b) => a - b);
+  const avg = f.length ? f.reduce((a, b) => a + b, 0) / f.length : 0, p95 = f.length ? f[Math.floor(f.length * 0.95)] : 0;
+  return `${t('swLine')} · q ${q.toFixed(2)} · ${t('swLagOff')} · ${t('swFrame')} ${avg.toFixed(1)} ms (p95 ${p95.toFixed(1)})`;
+}
+
+// 홈으로 나감·판 바꿈: 입력·숨·시계·소리·카드·표시 정리
+function sweepStop() {
+  sweep.input?.kill?.(); sweep.input = null;
+  sweep.snd?.stop(); sweep.snd = null;
+  sweep.clock = false; sweep.clockEnded = false;
+  if (sweep.shot && !sweep.shot.judged) sweep.shot.resolve?.(null);
+  sweep.shot = null; sweep.ctl = null; sweep.dispA = 0;
+  sweep.card?.resolve?.(null);
+  if (sweep.ribbon) sweep.ribbon.visible = false;
+  $('#sweepCard').hidden = true; $('#swBadge').hidden = true; $('#sweepSheet').hidden = true;
+}
+
+// ⚙ 맨 위 칸: 조작 깃발 + 쓸기 연습판(스위치를 켰을 때만). 완료를 눌러야 저장(다른 손맛 값과 같음) — 연습판 단추는 저장하고 바로 시작
+function coreSection() {
+  const wrap = document.createElement('div');
+  wrap.className = 'exp core';
+  const render = () => {
+    const on = feel.core >= 0.5;
+    wrap.innerHTML = `<h3>${t('coreTitle')}</h3>`
+      + `<div class="exp-btns"><button type="button" class="exp-sw${on ? ' on' : ''}" id="core-sw" aria-pressed="${on}">${t('coreSw')} <b>${on ? t('expOn') : t('expOff')}</b></button>`
+      + `<button type="button" class="exp-sw" id="core-p30"${on ? '' : ' disabled'}>${t('coreP30')}</button><button type="button" class="exp-sw" id="core-p40"${on ? '' : ' disabled'}>${t('coreP40')}</button></div>`
+      + `<p class="exp-how">${t('coreNote')}</p>`;
+    wrap.querySelector('#core-sw').addEventListener('click', () => { sfx.pop(); feel.core = feel.core >= 0.5 ? 0 : 1; $('#sweepBtn').hidden = feel.core < 0.5; render(); });
+    for (const n of [30, 40]) wrap.querySelector('#core-p' + n).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); closeTune(false); goHome(); startPractice(n, 0); });
+  };
+  render();
+  return wrap;
+}
+
 // ── 부트 ───────────────────────────────────────────────
 function wireUI() {
   $('#playBtn').addEventListener('click', () => { sfx.unlock(); openMap(); });
@@ -4137,6 +4763,11 @@ function wireUI() {
   $('#sheetBtn').addEventListener('click', openSheet);
   $('#tuneBtn').addEventListener('click', openTune);
   $('#dailyBtn').addEventListener('click', startDaily);
+  // 쓸기 연습(조작 깃발 켬일 때만 보임): 30/40장 고르는 작은 시트(자유 대전 시트 본보기)
+  $('#sweepBtn').addEventListener('click', () => { sfx.unlock(); sfx.pop(); refreshTexts(); $('#sweepSheet').hidden = false; });
+  $('#swP30').addEventListener('click', () => { sfx.pop(); $('#sweepSheet').hidden = true; startPractice(30, 0); });
+  $('#swP40').addEventListener('click', () => { sfx.pop(); $('#sweepSheet').hidden = true; startPractice(40, 0); });
+  $('#swClose').addEventListener('click', () => { sfx.pop(); $('#sweepSheet').hidden = true; });
   $('#dailyAgain').addEventListener('click', () => { $('#dailyCard').hidden = true; clearMatchMeshes(); startDaily(); });
   $('#dailyHome').addEventListener('click', () => { $('#dailyCard').hidden = true; goHome(); });
   $('#dailyCopy').addEventListener('click', async () => {
@@ -4253,6 +4884,9 @@ async function bootInner() {
   netReady.then((n) => { if (!n) return; NET = n; window.__pvpNet = n.kind; netBoot(); }); // PvP 버튼 + 진행 중이던 대결로 돌아가기(새로고침·재접속). null 이면 아무것도 안 함
   const lvHash = /#lv(\d+)/.exec(location.hash || '');
   if (lvHash) setTimeout(() => openLevelIntro(Math.max(1, +lvHash[1])), 400); // 테스트용: 주소 끝 #lv18
+  // 쓸기 연습판 바로가기: #p30 · #p40 (· #p30s3 = 그 장수의 넷째 시드). 주소로 들어오면 조작 깃발 저장값과 상관없이 그 판은 쓸기
+  const pHash = /#p(30|40)(?:s(\d+))?(?![\d])/.exec(location.hash || '');
+  if (pHash) setTimeout(() => startPractice(+pHash[1], pHash[2] ? +pHash[2] : 0), 400);
   requestAnimationFrame((t0) => { lastT = t0; frame(t0); });
   // 자동 테스트용 훅: 더미의 화면 좌표(꼭대기·바닥)와 상태
   window.__puff = () => {
@@ -4284,7 +4918,7 @@ window.__puffLifecycle = {
 
 // 앱 '뒤로' 다리(안드로이드 뒤로 버튼): 맨 위에 열린 창의 닫기·돌아가기 버튼을 누른 것처럼 한다.
 // 처리했으면 true. 홈 화면에서만 false → 앱이 닫힌다(판 도중에 눌러 앱이 꺼지는 사고 방지)
-const BACK_ORDER = [['#tune', '#tuneClose'], ['#micOffer', '#micNo'], ['#freeSheet', '#freeClose'], ['#pvpLobby', '#pvpClose'], ['#dailyCard', '#dailyHome'],
+const BACK_ORDER = [['#tune', '#tuneClose'], ['#micOffer', '#micNo'], ['#freeSheet', '#freeClose'], ['#sweepSheet', '#swClose'], ['#sweepCard', '#swHome'], ['#pvpLobby', '#pvpClose'], ['#dailyCard', '#dailyHome'],
   ['#lvIntro', '#liClose'], ['#lvResult', '#lrMap'], ['#album', '#albumBack'], ['#map', '#mapBack'], ['#result', '#homeBtn'], ['#hud', '#quitBtn']];
 window.__puffBack = () => {
   for (const [box, btn] of BACK_ORDER) {

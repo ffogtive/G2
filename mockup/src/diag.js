@@ -6,6 +6,12 @@
 //   원인 A(무음 모드) 확정 + 고침 확인. 마이크를 켜면 WebKit 이 PlayAndRecord(무음 무시)라 이 비교가 안 된다 → 마이크 켬 동안 그 단추는 잠근다.
 //   마이크 켬에서 삑이 작으면 VideoChat 재생 레벨 / 삑은 들리는데 푸만 안 들리면 노이즈 길 / 진동이 마이크 켬에서만 안 오면 녹음 중 햅틱 억제
 // 앱 쪽 줄(세션·출력·음량·다른 소리)은 Flutter 프로세스 세션 값이다(웹뷰 소리는 WebKit 프로세스 세션) → 참고로만
+//
+// 🧭 가설 수정(BLOCKERS G4, 미검증): 게임 진동은 운반이 아니라 '재생'에서 사라진다. 1순위 = UIKit 생성기 길(③-1 과 옛 게임 진동)이 기기에서 조용히 무시됨,
+//   2순위 = 같은 틱 소리·연속 요청에 눌림. → (1) '게임 진동 기록' 줄(판 안 진동마다 경로·응답 ms·±60 ms 안 소리) (2) ④ 게임처럼(단계마다 O/X)
+//   (3) iOS 게임 진동 기본 길 = Core Haptics(다리 'g:auto', 실패하면 생성기 → 엔진) + '게임 진동 길' 단추(Core / 생성기 / 끔).
+//   ④ 읽는 법: ④-c X · ④-d O → UIKit 길 무시(1순위 확정, Core 기본 길로 고쳐짐) · ④-a O · ④-b X → 소리와 겹칠 때 억제 ·
+//   ④-a O · ④-c 일부만 → 연속 요청 버려짐 · 넷 다 X → 시스템 수준 억제(녹화·손쉬운 사용 진동 끔) → 재윤님께 물을 것(G4)
 import { AppAudio } from './audio.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -23,8 +29,8 @@ export function mountSoundTest(box, deps) {
   wrap.className = 'diag';
   wrap.innerHTML = `<div class="trow"><span>${esc(t('diagTitle'))}</span><button class="btn blue" type="button" id="diagGo">${esc(t('diagGo'))}</button></div>`
     + `<p class="diag-how">${esc(t(app ? 'diagHow' : 'diagHowWeb'))}</p>`
-    + `<div class="diag-btns"><button type="button" id="diagMic"></button>${silentBtn ? '<button type="button" id="diagSilent"></button>' : ''}</div>`
-    + '<div class="diag-step" id="diagStep"></div><div id="diagOut"></div>';
+    + `<div class="diag-btns"><button type="button" id="diagMic"></button>${silentBtn ? '<button type="button" id="diagSilent"></button>' : ''}${app ? '<button type="button" id="diagRoute"></button><button type="button" id="diag4Go"></button>' : ''}</div>`
+    + '<div class="diag-step" id="diagStep"></div><div id="diag4Big" class="diag-big" hidden></div><div id="diag4"></div><div id="diagOut"></div>';
   box.appendChild(wrap);
   const $ = (s) => wrap.querySelector(s);
   let res = null, busy = false;
@@ -43,6 +49,14 @@ export function mountSoundTest(box, deps) {
     return `${dct >= dw * 0.5 ? t('diagFlow') : t('diagStall')} +${dct.toFixed(2)}s/${dw.toFixed(2)}s`;
   };
   let prevSnap = null, clock = '';
+  const routeName = (r) => t(r === 'view' ? 'diagRouteView' : r === 'off' ? 'diagRouteOff' : 'diagRouteCore');
+  // 이 진동 앞뒤 ±60 ms 안에 시작한 게임 소리(audio.js recent) — 가장 가까운 것
+  const soundNear = (at) => {
+    let best = null;
+    for (const s of sfx.recent || []) { const d = s.at - at; if (Math.abs(d) <= 60 && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, name: s.name }; }
+    return best ? `${t('diagSoundAt')} ${best.name} ${best.d >= 0 ? '+' : ''}${Math.round(best.d)}ms` : t('diagNoSound');
+  };
+  const gameLine = (g) => `${((g.at - performance.now()) / 1000).toFixed(1)}${t('diagSec')} · ${g.payload} · ${g.path ?? (g.ms == null ? t('diagNoAck') : '?')}${g.ms != null ? ` · ${g.ms}ms` : ''}${g.ok === false ? ` · ${t('diagFail')}` : ''} · ${soundNear(g.at)}`;
   function rows() {
     const ctx = sfx.ctx;
     const r = [];
@@ -82,6 +96,13 @@ export function mountSoundTest(box, deps) {
     } else if (res) {
       r.push([t('diagVib'), res.webVib == null ? t('diagNoVib') : `navigator.vibrate → ${res.webVib}`]);
     }
+    // 게임 진동 기록(앱 전용): 판 안 진동마다 '−3.2초 · 49 · core · 21ms · 소리 puff +3ms'(앞뒤 ±60 ms 안에 시작한 소리가 없으면 '소리 없음')
+    if (app) {
+      r.push([t('diagGameRoute'), routeName(app.route ? app.route() : 'core')]);
+      const gl = (app.games || []).slice().reverse();
+      if (!gl.length) r.push([t('diagGameLog'), t('diagGameNone')]);
+      gl.forEach((g, i) => r.push([i ? '' : t('diagGameLog'), gameLine(g)]));
+    } else r.push([t('diagGameLog'), t('diagAppOnly')]);
     if (res?.err) r.push(['error', res.err]);
     if (res) r.push([t('diagAt'), res.at]);
     return r;
@@ -93,12 +114,18 @@ export function mountSoundTest(box, deps) {
       b.disabled = micOn(); // 마이크 켬 = 늘 'auto'(PlayAndRecord) → 이 단추는 아무것도 안 바꾼다
       b.textContent = `${t('diagSilent')}: ${AppAudio.silentPlay ? t('diagOn') : t('diagOff')}${b.disabled ? ` (${t('diagMicLock')})` : ''}`;
     }
+    if (app) {
+      $('#diagRoute').textContent = `${t('diagGameRoute')}: ${routeName(app.route ? app.route() : 'core')}`;
+      $('#diag4Go').textContent = t('diag4Go');
+      $('#diag4Go').disabled = busy;
+      render4();
+    }
     const s = sfx.snap();
     if (s && prevSnap && s.ctx === prevSnap.ctx && (s.at - prevSnap.at) >= 400) { clock = flow(prevSnap, s); prevSnap = s; }
     else if (!s || !prevSnap || s.ctx !== prevSnap.ctx) { clock = ''; prevSnap = s; }
     const r = rows();
     $('#diagOut').innerHTML = `<table class="diag-tab"><tbody>${r.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table>`;
-    window.__puffDiagLast = { rows: r, res, done: !!res && !busy };
+    window.__puffDiagLast = { rows: r, res, done: !!res && !busy, four: four && four.map((x) => ({ k: x.k, path: x.path, ans: x.ans || null })), fourDone: !!four && !busy4 };
   }
   // ⚙ 를 연 그 순간에 굳은 표가 아니라 지금 상태를 보이게: 창이 열려 있는 동안 0.5초마다 다시 그린다(닫히면 건너뜀, 떼어지면 멈춤)
   const timer = setInterval(() => {
@@ -152,6 +179,55 @@ export function mountSoundTest(box, deps) {
     }
   }
 
+  // ④ 게임처럼: 단계마다 큰 글씨 '④-a 지금!' → 1.5초 쉼. 줄마다 [O 느낌] [X 없음] — 캡처 한 장으로 판가름. 응답은 id 로 짝지어 길·ms
+  let four = null, busy4 = false;
+  const loud = (f) => { const m = sfx.muted; sfx.muted = false; try { f(); } catch (e) { /* 소리 없음 */ } finally { sfx.muted = m; } };
+  const fireD = (spec, row) => { const t0 = performance.now(); const p = app.request('d:' + spec, 1500).then((a) => { row.acks.push(a ? `${a.path || '?'} ${Math.round(performance.now() - t0)}ms` : t('diagNoAck')); }); row.sent.push(spec); return p; };
+  function render4() {
+    const box = $('#diag4');
+    if (!four) { if (box.innerHTML) box.innerHTML = ''; return; }
+    const html = `<table class="diag-tab"><tbody>${four.map((x, i) => `<tr><td>${esc(t('diag4_' + x.k))}</td><td>${esc(x.sent.length ? `${x.route} → ${x.acks.join(' · ') || '…'}` : '…')}`
+      + `<div class="diag-ox"><button type="button" data-i="${i}" data-a="O" class="${x.ans === 'O' ? 'on' : ''}">${esc(t('diagO'))}</button><button type="button" data-i="${i}" data-a="X" class="${x.ans === 'X' ? 'on' : ''}">${esc(t('diagX'))}</button></div></td></tr>`).join('')}</tbody></table>`;
+    if (box._html === html) return;
+    box._html = html;
+    box.innerHTML = html;
+    box.querySelectorAll('button[data-i]').forEach((b) => b.addEventListener('click', () => { const x = four[+b.dataset.i]; if (x) { x.ans = b.dataset.a; render(); } }));
+  }
+  async function run4() {
+    if (busy || busy4 || !app) return;
+    busy4 = true;
+    four = ['a', 'b', 'c', 'd'].map((k) => ({ k, route: k === 'd' ? 'core' : 'native', sent: [], acks: [], ans: null }));
+    render();
+    const big = $('#diag4Big');
+    const now = async (x) => { big.textContent = `${t('diag4_' + x.k).split(' ')[0]} ${t('diag4Now')}`; big.hidden = false; await wait(350); };
+    try {
+      const [a, b, c, d] = four;
+      await now(a); fireD('native:heavy', a); await wait(900); big.hidden = true; await wait(1500);
+      await now(b); loud(() => sfx.puff(0.9, 0.9)); fireD('native:heavy', b); await wait(900); big.hidden = true; await wait(1500);
+      // ④-c 게임 순서 그대로(생성기 길): 꽉 '읍' + 중간 → 600 ms → '푸' + 강 → 150 ms → [뒤집힘 + 약] × 3, 120 ms 간격
+      const seqRun = async (x, cue) => {
+        await now(x);
+        loud(() => sfx.cork()); fireD(cue.medium, x); await wait(600);
+        loud(() => sfx.puff(0.9, 0.9)); fireD(cue.heavy, x); await wait(150);
+        for (let i = 0; i < 3; i++) { loud(() => sfx.flip(i)); fireD(cue.light, x); await wait(120); }
+        await wait(700); big.hidden = true;
+      };
+      await seqRun(c, { medium: 'native:medium', heavy: 'native:heavy', light: 'native:light' });
+      await wait(1500);
+      await seqRun(d, { medium: 'core:tapMedium', heavy: 'core:tapHeavy', light: 'core:tapLight' }); // ④-d 같은 소리·시각, Core Haptics 로
+      await wait(800);
+    } catch (e) {
+      if (res) res.err = String((e && e.message) || e);
+    } finally {
+      busy4 = false; big.hidden = true;
+      step(t('diag4Done'));
+      render();
+    }
+  }
+  if (app) {
+    $('#diagRoute').addEventListener('click', () => { const r = app.route ? app.route() : 'core'; app.setRoute?.(r === 'core' ? 'view' : r === 'view' ? 'off' : 'core'); render(); });
+    $('#diag4Go').addEventListener('click', run4);
+  }
   $('#diagGo').addEventListener('click', run);
   $('#diagMic').addEventListener('click', async () => {
     if (busy) return;

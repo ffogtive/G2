@@ -309,6 +309,8 @@ export class ShotRun {
     // 실험 jetLag(바람 도달 시간, 06 §8.10 · BLOCKERS G12)는 솔로 시험 토글 전용. shotSimV 는 전역 TUNE 만 해시하고 여기는 tune 을 안 넘기므로
     // 한쪽만 켜면 버전은 같은데 해시가 갈라진다(E10 뒤 검증이 조용히 실패) → PvP 에 넣으려면 방 문서·두 쪽 tune·shotSimV·pvp-check 를 먼저 바꿀 것
     if (tune && tune.jetLag != null) throw new Error('ShotRun: jetLag 는 솔로 시험 전용 — PvP 금지');
+    // 고개 쓸기(푸어억, sim.js blowProg)는 솔로 '쓸기 연습판' 전용(docs/design/core-sweep.md §9). PvP 는 고전 조작·고전 물리만 — 들어오면 해시가 갈라지기 전에 막는다
+    if (tune && tune.prog != null) throw new Error('ShotRun: 쓸기(prog)는 솔로 연습판 전용 — PvP 금지');
     const t = (this.table = Table.fromTurnState([...ids].sort((a, b) => a - b), seeds.stack, { cardOf, heavy, tune }));
     this.ids = t.discs.map(pidOf);
     this.seeds = { ...seeds };
@@ -324,6 +326,7 @@ export class ShotRun {
   fire(input) {
     if (this.fired) throw new Error('ShotRun.fire: 이미 쐈다');
     if (input && input.jetLag != null) throw new Error('ShotRun.fire: jetLag 는 솔로 시험 전용 — PvP 금지');
+    if (input && ((input.kind && input.kind !== 'classic') || input.prog != null)) throw new Error('ShotRun.fire: 쓸기(kind·prog)는 솔로 연습판 전용 — PvP 금지');
     this.fired = true;
     const t = this.table;
     this.input = { ...input };
