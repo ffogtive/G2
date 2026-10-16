@@ -326,6 +326,16 @@ async function self() {
   const dOnly = dropRun({ v: 'x', c: 'flat', seed: 801 }, { tune: { restitution: 0.3 }, tableE: null });
   const dBoth = dropRun({ v: 'x', c: 'flat', seed: 801 }, VARIANTS.e3);
   ok('결합 규칙 평균: 딱지만 e 0.3 의 책상 튀는 비 ≈ 딱지+책상 e 0.3 의 절반(0.35~0.65배), 둘 다 e 0 이면 ≈ 0', dOnly.ratio > 0.35 * dBoth.ratio && dOnly.ratio < 0.65 * dBoth.ratio && dropRun({ v: 'v1', c: 'flat', seed: 801 }).ratio < 0.02, `딱지만 ${dOnly.ratio} · 둘 다 ${dBoth.ratio}`);
+  // (7) 원자료 재현: 커밋된 줄 몇 개를 다시 돌려 바이트 비교(변형마다 고전 1줄 · 쓸기판 1줄 · 쌓기 1줄 · 낙하 1줄 — 없으면 건너뜀)
+  { let k = 0, tot = 0; const bad = [];
+    const pick = (rows, pred) => VIDS.map((v) => rows.find((r) => r.v === v && pred(r))).filter(Boolean);
+    const strip = (r) => { const { _t, ...x } = r; return JSON.stringify(x); };
+    const chk = (row, fn) => { tot++; const again = fn(row); if (strip(again) === JSON.stringify(row)) k++; else bad.push(`${row.part}|${row.v}|${row.n ?? row.N ?? row.c}|${row.seed}`); };
+    for (const r of pick(readPart('game'), (r) => r.n <= 6 && r.seed === 803)) chk(r, (x) => gameShot({ ...x, ratio: x.ratio === 0.89 ? undefined : x.ratio }));
+    for (const r of pick(readPart('sweep'), (r) => r.N === 30 && r.seed === 802 && r.plan === 'flick')) chk(r, (x) => sweepShot(x));
+    for (const r of pick(readPart('pile'), (r) => r.n === 8 && r.seed === 804)) chk(r, (x) => pileRun(x));
+    for (const r of pick(readPart('drop'), (r) => r.c === 'tilt20')) chk(r, (x) => dropRun(x));
+    ok('원자료 재현: 저장된 줄(고전·쓸기판·쌓기·낙하, 변형마다) = 다시 돌린 줄 바이트 동일', tot === 0 || k === tot, tot ? `${k}/${tot}${bad.length ? ' 다름 ' + bad.join(', ') : ''}` : '원자료 없음(건너뜀)'); }
   // (6) 게임 기본값 무변경: TUNE 에 이 도구가 쓰는 키의 v1 값
   ok('sim.js TUNE 기본값 그대로(restitution 0 · density 1 · linDamp 0.35 · angDamp 1)', T0.restitution === 0 && T0.density === 1 && T0.linDamp === 0.35 && T0.angDamp === 1);
   console.log(FAIL ? `틀림 ${FAIL}` : '모두 맞음');
@@ -441,6 +451,9 @@ function report() {
       if (sweep.some((r) => r.v === v)) {
         const s = (N, plan) => (r) => r.N === N && r.plan === plan;
         parts.push(`쓸기 40 휙 ${ci(pairedCI(sweep, v, s(40, 'flick'), (r) => r.flip))} · 버티기 ${ci(pairedCI(sweep, v, s(40, 'hold'), (r) => r.flip))} · 30 휙 ${ci(pairedCI(sweep, v, s(30, 'flick'), (r) => r.flip))} · 원 밖(전체) ${ci(pairedCI(sweep, v, () => true, (r) => r.out))}장`);
+        // 휙 ÷ 버티기(같은 판, 평균의 비): 쓸기가 버티기보다 얼마나 나은가 — 코어 손잡이(core-sweep §9 0번)와 같은 방향의 참고값(판정 아님)
+        const fh = (vv, N) => mean(sweep.filter((r) => r.v === vv && s(N, 'flick')(r)).map((r) => r.flip)) / mean(sweep.filter((r) => r.v === vv && s(N, 'hold')(r)).map((r) => r.flip));
+        parts.push(`휙÷버티기 40장 ${f(fh(v, 40))}(v1 ${f(fh('v1', 40))}) · 30장 ${f(fh(v, 30))}(v1 ${f(fh('v1', 30))})`);
       }
       const d = drop.find((r) => r.v === v && r.c === 'flat');
       if (d) parts.push(`낙하 튀는 비 ${f(d.ratio)}`);
