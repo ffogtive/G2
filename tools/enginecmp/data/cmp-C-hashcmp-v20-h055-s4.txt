@@ -1,0 +1,5 @@
+{"who":"jolt-wasm(js)","final":"162874e8","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.626,"sleeping":22,"off":5}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"162874e8","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2945,"sleeping":22,"off":5}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"162874e8","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":7.1489,"sleeping":22,"off":5}
+{"who":"build/rapier-x86/rapier_bench","arch":"x86_64","final":"7cfb2213","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.717,"sleeping":4,"off":2}
+{"who":"qemu-aarch64-static:build/rapier-arm64/rapier_bench","arch":"aarch64","final":"7cfb2213","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":31.5595,"sleeping":4,"off":2}
