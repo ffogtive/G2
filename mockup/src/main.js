@@ -1434,6 +1434,7 @@ function frame(now) {
   updateCues(now);
   drawReceipt(now);
   $('#puffWrap').classList.toggle('fpvhide', fpvOn() && puffer.who === 'me'); // 1인칭 모드: 내 정면 얼굴은 안 보임(상대 차례엔 상대 얼굴)
+  expVisFrame(now); // 실험 수치: 보이는 첫 움직임(그려질 딱지·카메라로, 수치 끔이면 아무것도 안 함)
   frame._last = now;
   renderer.render(scene, camera);
 }
@@ -2184,7 +2185,7 @@ let shotSeq = 0;
 let airShot = null; // 지금(마지막) 솔로 숨: { seq, who, lag, air, cut, relT, hs, started, arrPhys, arrAt, hsImpact, hitPhys, movePhys, moveWall, ring, meas, ... }
 let expMine = null; // 수치 표시는 '내' 마지막 숨(상대 차례에도 그대로 보임)
 const expHist = []; // 최근 '내' 숨의 '놓기 → 보이는 첫 움직임' 벽시계 ms (없음 = null). 상대(AI) 숨은 안 넣는다(기준이 '놓기'가 아니라 조준 연출 뒤)
-const EXP_MOVE_PX = 3; // 보이는 첫 움직임: 기준 자리(아래 expStep) 테두리 점이 지금 카메라로 화면에서 3 CSS px 움직인 첫 스텝(슬로모 중에도 같은 눈금)
+const EXP_MOVE_PX = 3; // 보이는 첫 움직임: 기준 자리(아래 expVisFrame) 화면에 그려진 딱지의 테두리 점이 그 프레임 카메라로 3 CSS px 움직인 첫 프레임(슬로모 중에도 같은 눈금)
 const EXP_MOVE_D = 0.03; // 물리 첫 움직임(u, 3D) = react3 첫 움직임 FM 과 같은 크기 — 수치 둘째 줄(물리 ms)
 function expMicOn() { return micEnabled && mic.ready; }
 // 이 숨에 실제로 쓸 지연: 대결(PvP)·마이크 모드면 언제나 0(turn.js 도 단언). 값은 0.02 하나(expSanitize)
@@ -2206,33 +2207,43 @@ const EXP_RIM = Array.from({ length: 16 }, (_, j) => new THREE.Vector3(Math.cos(
 const expQ = new THREE.Quaternion(), expV = new THREE.Vector3(), expP = new THREE.Vector3();
 function expRim(d) { const p = d.body.translation(), q = d.body.rotation(); expQ.set(q.x, q.y, q.z, q.w); return EXP_RIM.map((v) => v.clone().applyQuaternion(expQ).add(expV.set(p.x, p.y, p.z))); }
 function expPx(v) { expP.copy(v).project(camera); return [(expP.x * 0.5 + 0.5) * window.innerWidth, (-expP.y * 0.5 + 0.5) * window.innerHeight]; }
+// 화면에 그려진 딱지(종이 배치 뒤 메시)의 테두리 점. 물리 몸 테두리가 아니다: 종이 배치(받침에 닿게 내림·작은 기울기 눕힘·높이 따라가기, paper.js)가
+//   보이는 움직임을 물리보다 늦출 수 있어(06 §8.11), 화면 수치는 그려진 것으로 잰다(feelclock 계측과 같은 정의)
+function expRimV(m) { return EXP_RIM.map((v) => v.clone().applyQuaternion(m.quaternion).add(m.position)); }
+function expVisRims(ids) { const out = new Map(); for (const d of table.liveDiscs()) { const m = meshes.get(d.id); if (!d.off && m && ids.has(d.id)) out.set(d.id, expRimV(m)); } return out; }
+// 물리 스텝마다: 바람 닿음·물리 첫 움직임(3D 0.03 u, react3 처럼 늘 숨 시작 자리 기준) · 지연 숨의 화면 기준 자리 정하기
 function expStep(A, now) {
   if (A.hitPhys == null && table.lastHits?.some((h) => h.s > 0)) A.hitPhys = simWatch.simTime; // 바람(세기 > 0)이 처음 닿은 스텝 끝(react3 'arr' 와 같은 뜻)
   const M = A.meas;
   if (!M) return;
-  // 화면 기준 자리: 지연 숨이면 '공기가 처음 닿은 스텝의 시작' 자리(그 전 83 ms 동안 정지 더미가 약 1.5 px 기어가는 것을 공기 탓으로 세지 않게).
-  //   지연 없음이면 숨 시작 자리(바람이 첫 스텝부터 닿으니 같은 뜻). 물리 ms(3D 0.03 u)는 react3 처럼 늘 숨 시작 자리 기준
-  const wait = A.lag > 0 && !A.measPx;
-  if (wait && table.air?.arrivedT != null) A.measPx = A.pre || M; // 이 스텝이 도달 스텝
-  if (A.moveWall != null && A.movePhys != null) return;
-  const PX = A.lag > 0 ? A.measPx : M;
-  const pre = A.lag > 0 && !A.measPx ? new Map() : null;
+  // 화면 기준 자리: 지연 숨이면 공기가 처음 닿은 스텝 직전에 화면에 보인 자리(그 전 83 ms 동안 정지 더미가 약 1.5 px 기어가는 것을 공기 탓으로 세지 않게).
+  //   지연 없음이면 숨 시작 자리(바람이 첫 스텝부터 닿으니 같은 뜻)
+  if (A.lag > 0 && !A.measPxV && table.air?.arrivedT != null) A.measPxV = A.preV || A.measV; // 이 스텝이 도달 스텝
+  if (A.movePhys != null) return;
   for (const d of table.liveDiscs()) {
     const ref = M.get(d.id);
     if (!ref || d.off) continue;
     const cur = expRim(d);
-    if (pre) pre.set(d.id, cur);
-    const refPx = PX?.get(d.id);
-    for (let j = 0; j < cur.length; j++) {
-      if (A.movePhys == null && cur[j].distanceTo(ref[j]) >= EXP_MOVE_D) A.movePhys = simWatch.simTime;
-      if (A.moveWall == null && refPx) { // 같은 (지금) 카메라로 기준·지금 자리를 투영 → 카메라가 움직여도 딱지 움직임만 잰다
-        const p0 = expPx(refPx[j]), p1 = expPx(cur[j]);
-        if (Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) >= EXP_MOVE_PX) A.moveWall = now - A.relT;
-      }
+    for (let j = 0; j < cur.length; j++) if (cur[j].distanceTo(ref[j]) >= EXP_MOVE_D) { A.movePhys = simWatch.simTime; return; }
+  }
+}
+// 프레임마다 그리기 직전(종이 배치·카메라가 이번 프레임으로 정해진 뒤): 보이는 첫 움직임 = 그려진 딱지 테두리 점이 같은 (지금) 카메라로
+//   기준 자리에서 3 CSS px 움직인 첫 프레임(카메라가 움직여도 딱지 움직임만 잰다). 판정까지 안 움직이면(약한 숨) 없음으로 기록
+function expVisFrame(now) {
+  const A = airShot;
+  if (!A || !A.started || !A.measV || A.logged || match?.net || !table) return;
+  camera.updateMatrixWorld(); // 이번 프레임 카메라 자리(그리기와 같은 행렬)
+  const cur = expVisRims(A.measV);
+  if (A.lag > 0 && !A.measPxV) A.preV = cur; // 공기 도달 전: 다음 프레임 스텝에서 도달하면 이 자리가 기준(expStep)
+  else {
+    const ref = A.lag > 0 ? A.measPxV : A.measV;
+    find: for (const [id, c] of cur) {
+      const b = ref.get(id);
+      if (!b) continue;
+      for (let j = 0; j < c.length; j++) { const p0 = expPx(b[j]), p1 = expPx(c[j]); if (Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) >= EXP_MOVE_PX) { A.moveWall = now - A.relT; break find; } }
     }
   }
-  if (pre) A.pre = pre;
-  if (A.moveWall != null) expRecord(A);
+  if (A.moveWall != null || !simOn) expRecord(A);
 }
 function expRecord(A) {
   if (A.logged) return;
@@ -2303,7 +2314,7 @@ function expSlowKick(now) {
     if (A.camHold) { A.camHold = false; camAimGoal = 0; camStrafeGoal = 0; }
   }
 }
-// 프레임마다: 고리·부는 얼굴 유지·측정 마무리·수치 표시
+// 프레임마다: 고리·부는 얼굴 유지·수치 표시(보이는 첫 움직임 측정은 그리기 직전 expVisFrame)
 function expFrame() {
   const A = airShot;
   if (A && (state !== 'match' || match?.net || !table)) { // 판을 떠남·대결 → 버림(얼굴은 화면 전환이 맡음)
@@ -2319,7 +2330,6 @@ function expFrame() {
       const w = performance.now(), end = A.arrPhys != null ? A.arrPhys + table.T.puffDuration : Infinity;
       if ((w >= A.faceMin && airClock(A) >= end) || w - A.relT > 3000) { A.faceDone = true; pufferIdle(); }
     }
-    if (A.meas && !A.logged && !simOn) expRecord(A); // 판정까지 안 움직임(약한 숨)
   }
   expReadout();
 }
@@ -2385,7 +2395,10 @@ async function blow(rawShot, who) {
   ringStop(airShot); // 지난 숨 고리가 남았으면(정상이면 이미 없음)
   const A = (airShot = { seq: ++shotSeq, who, lag, air: airOn, cut: airOn && feel.hsCut >= 0.5, relT: performance.now(), started: false, camHold: airOn && who === 'me' });
   if (who === 'me') expMine = A;
-  if (feel.airLog >= 0.5 && !match?.net) A.meas = new Map(table.liveDiscs().filter((d) => !d.off).map((d) => [d.id, expRim(d)])); // 숨 전(정지) 자리
+  if (feel.airLog >= 0.5 && !match?.net) { // 숨 전(정지) 자리: 물리 몸(물리 첫 움직임) · 그려진 딱지(보이는 첫 움직임)
+    A.meas = new Map(table.liveDiscs().filter((d) => !d.off).map((d) => [d.id, expRim(d)]));
+    A.measV = expVisRims(A.meas);
+  }
   const shot = resolveShot(rawShot, match.rng);
   const g = shotGeometry(shot);
   if (who === 'me') takeCueSnap(rawShot, shot, g);
@@ -5727,11 +5740,16 @@ function drawSweepZero(now) {
     c.strokeStyle = 'rgba(224,69,69,0.55)'; c.lineWidth = 7; c.beginPath(); c.moveTo(X(zf), hS(Sweep.GC.red)); c.lineTo(X(zf), hS(1)); c.stroke();
   }
   c.lineCap = 'butt';
-  // 바닥 글: 바닥선 아래, 앞면 오른쪽(기둥 아래 끝·s 0.4 점과 겹치지 않게 — 검토). 자리가 모자라면 두 줄
+  // 바닥 글: 바닥선 아래, 앞면 오른쪽(기둥 아래 끝·s 0.4 점과 겹치지 않게 — 검토). 줄마다 폭을 재는 줄 바꿈, 두 줄까지.
+  //   오른쪽이 두 줄에도 모자라면(종이 배치로 배율이 커진 30장 · 영어 글 — 검토: 둘째 줄이 창 끝에 잘림) 앞면 왼쪽 바닥선 아래에 오른쪽 맞춤
   c.fillStyle = 'rgba(90,90,90,0.95)'; c.font = '600 10px sans-serif'; c.textBaseline = 'top'; c.textAlign = 'left';
-  { const fx = X(zf) + 14, room = w - 6 - fx, txt = t('swFloorNo'), ws = txt.split(' ');
-    if (c.measureText(txt).width <= room || ws.length < 2) c.fillText(txt, fx, Y(0) + 6);
-    else { let i = ws.length - 1; while (i > 1 && c.measureText(ws.slice(0, i).join(' ')).width > room) i--; c.fillText(ws.slice(0, i).join(' '), fx, Y(0) + 5); c.fillText(ws.slice(i).join(' '), fx, Y(0) + 18); } }
+  { const txt = t('swFloorNo');
+    const wrap = (room) => { const L = []; let cur = ''; for (const wd of txt.split(' ')) { const nx = cur ? cur + ' ' + wd : wd; if (cur && c.measureText(nx).width > room) { L.push(cur); cur = wd; } else cur = nx; } if (cur) L.push(cur); return L; };
+    const fits = (L, room) => L.length <= 2 && L.every((s) => c.measureText(s).width <= room);
+    let fx = X(zf) + 14, L = wrap(w - 6 - fx);
+    if (!fits(L, w - 6 - fx)) { fx = X(zf) - 14; c.textAlign = 'right'; L = wrap(fx - 6); }
+    L.slice(0, 2).forEach((s, i) => c.fillText(s, fx, Y(0) + (L.length > 1 ? 5 : 6) + 13 * i));
+    c.textAlign = 'left'; }
   // 제트: 입(창 밖) → 영점 원뿔(그 s 의 α0)
   const a0 = Sweep.a0Of(s, top), M0 = { x: pc.x, y: Sweep.GEO.ym, z: zf + Sweep.GEO.L };
   const p = Sweep.poseAt(a0 * D2R, 'c', Sweep.GEO, M0), yHit = V(p.o.y + Math.tan(p.phi) * (p.o.z - zf)); // 앞면 닿는 높이 → 보이는 딱지 높이(= 영점 점)

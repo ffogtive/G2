@@ -258,8 +258,10 @@ export function report(all, log = console.log) {
   }
   const nErr = errs.reduce((s, r) => s + r.errs.length, 0);
   const phOk = rows.filter((r) => r.phReal === r.ph && r.f1 === (r.ph ? 16 - r.ph : 16)).length;
-  const scr = rows.filter((r) => r.px3 === r.moveWallGame).length;
-  log(`콘솔 오류 ${nErr} · 놓기 위상 맞음 ${phOk}/${rows.length} · 계측 '보이는 첫 움직임' = 게임 화면 수치 ${scr}/${rows.length}`);
+  // 게임 화면 수치(main.js expVisFrame)는 그려진 딱지로 재고, 지연 숨이면 기준 자리가 '도달 직전에 보인 자리'다 → 같은 기준의 계측값은 px3A.
+  //   표는 놓기 자리 기준(px3) — 둘 다 찍는다(도달 전 더미가 조금 움직이면 한 프레임 갈릴 수 있음)
+  const scr = rows.filter((r) => r.px3 === r.moveWallGame).length, scrA = rows.filter((r) => r.px3A === r.moveWallGame).length;
+  log(`콘솔 오류 ${nErr} · 놓기 위상 맞음 ${phOk}/${rows.length} · 계측 '보이는 첫 움직임' = 게임 화면 수치 ${scr}/${rows.length} (같은 기준 — 지연 숨은 도달 직전 자리 — 으로 ${scrA}/${rows.length})`);
   const pair = (R, base) => R.map((r) => { const b = base.find((q) => q.lv === r.lv && q.pose === r.pose && q.pull === r.pull && q.ph === r.ph); return b && r.px3 != null && b.px3 != null ? r.px3 - b.px3 : null; });
   // main: §8.11 표
   const M = rows.filter((r) => r.set === 'main');

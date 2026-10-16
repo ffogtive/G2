@@ -1,19 +1,19 @@
 ## preset jolt-fair-rsleep · n 30 · h 0.055 · seed 11 · 976스텝 · JOLT_FLAVOUR 기본(cpd)
 {"who":"jolt-wasm(js)","final":"007a29f2","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.653,"sleeping":30,"off":5}
-{"who":"/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/jolt-gcc-avx2/joltbench","cpd":true,"final":"007a29f2","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2349,"sleeping":30,"off":5}
-{"who":"qemu-aarch64-static:/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/jolt-zig-arm64/joltbench","cpd":true,"final":"007a29f2","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":5.1816,"sleeping":30,"off":5}
-{"who":"/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/rapier-x86/rapier_bench","arch":"x86_64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.5544,"sleeping":5,"off":5}
-{"who":"qemu-aarch64-static:/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/rapier-arm64/rapier_bench","arch":"aarch64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":28.7996,"sleeping":5,"off":5}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"007a29f2","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2349,"sleeping":30,"off":5}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"007a29f2","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":5.1816,"sleeping":30,"off":5}
+{"who":"build/rapier-x86/rapier_bench","arch":"x86_64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.5544,"sleeping":5,"off":5}
+{"who":"qemu-aarch64-static:build/rapier-arm64/rapier_bench","arch":"aarch64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":28.7996,"sleeping":5,"off":5}
 
 real	0m34.959s
 user	0m34.502s
 sys	0m0.072s
 ## preset jolt-fair · n 30 · h 0.055 · seed 11 · 976스텝 · JOLT_FLAVOUR 기본(cpd)
 {"who":"jolt-wasm(js)","final":"ed3959cb","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.593,"sleeping":30,"off":5}
-{"who":"/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/jolt-gcc-avx2/joltbench","cpd":true,"final":"ed3959cb","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2138,"sleeping":30,"off":5}
-{"who":"qemu-aarch64-static:/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/jolt-zig-arm64/joltbench","cpd":true,"final":"ed3959cb","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":5.3026,"sleeping":30,"off":5}
-{"who":"/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/rapier-x86/rapier_bench","arch":"x86_64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.5797,"sleeping":5,"off":5}
-{"who":"qemu-aarch64-static:/tmp/claude-0/-home-user/c9455a4b-4493-5b56-9f3c-9ad220383293/scratchpad/engine-cmp/build/rapier-arm64/rapier_bench","arch":"aarch64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":29.1607,"sleeping":5,"off":5}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"ed3959cb","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2138,"sleeping":30,"off":5}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"ed3959cb","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":5.3026,"sleeping":30,"off":5}
+{"who":"build/rapier-x86/rapier_bench","arch":"x86_64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.5797,"sleeping":5,"off":5}
+{"who":"qemu-aarch64-static:build/rapier-arm64/rapier_bench","arch":"aarch64","final":"e09c47bd","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":29.1607,"sleeping":5,"off":5}
 
 real	0m35.288s
 user	0m34.865s

@@ -55,7 +55,9 @@ export function mountSoundTest(box, deps) {
   const soundNear = (at) => {
     let best = null;
     for (const s of sfx.recent || []) { const d = s.at - at; if (Math.abs(d) <= 60 && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, name: s.name }; }
-    return best ? `${t('diagSoundAt')} ${best.name} ${best.d >= 0 ? '+' : ''}${Math.round(best.d)}ms` : t('diagNoSound');
+    if (!best) return t('diagNoSound');
+    const ms = Math.round(best.d) || 0; // 반올림 먼저, 부호는 그 뒤(−0.5 ≤ d < 0 이 부호 없는 '0ms' 로 찍히지 않게 → '+0ms')
+    return `${t('diagSoundAt')} ${best.name} ${ms >= 0 ? '+' : ''}${ms}ms`;
   };
   const gameLine = (g) => `${((g.at - performance.now()) / 1000).toFixed(1)}${t('diagSec')} · ${g.payload} · ${g.path ?? (g.ms == null ? t('diagNoAck') : '?')}${g.ms != null ? ` · ${g.ms}ms` : ''}${g.ok === false ? ` · ${t('diagFail')}` : ''} · ${soundNear(g.at)}`;
   function rows() {
