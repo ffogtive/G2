@@ -1,0 +1,7 @@
+[
+ {"name":"R-e0.8-2x-ale0.005-pd0.01","cfg":{"engine":"rapier","erp":0.8,"substeps":2,"iterations":8,"rapier":{"allowedLinearError":0.005,"predictionDistance":0.01}}},
+ {"name":"R-e0.8-2x-ale0.01-pd0.02","cfg":{"engine":"rapier","erp":0.8,"substeps":2,"iterations":8,"rapier":{"allowedLinearError":0.01,"predictionDistance":0.02}}},
+ {"name":"R-e0.8-2x-ale0.02-pd0.02","cfg":{"engine":"rapier","erp":0.8,"substeps":2,"iterations":8,"rapier":{"allowedLinearError":0.02,"predictionDistance":0.02}}},
+ {"name":"R-e0.8-1x-ale0.01-pd0.02","cfg":{"engine":"rapier","erp":0.8,"substeps":1,"iterations":8,"rapier":{"allowedLinearError":0.01,"predictionDistance":0.02}}},
+ {"name":"R-e0.4-2x-ale0.01-pd0.02","cfg":{"engine":"rapier","erp":0.4,"substeps":2,"iterations":8,"rapier":{"allowedLinearError":0.01,"predictionDistance":0.02}}}
+]

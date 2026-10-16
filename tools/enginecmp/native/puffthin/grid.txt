@@ -1,0 +1,48 @@
+# 이름;프리셋;TUNE 덮어쓰기;bthin 추가 인자;두께   (run-grid.sh 가 읽음. 프리셋 v1 = puff_sim 기본(게임 v1 짝), web = sim.js 값 그대로(마찰 0.75·책상 0.9))
+R36-v1;v1;;;0.11
+R36-v1;v1;;;0.055
+R36w-hz30-z1;web;contactHz=30,contactZeta=1;;0.055
+R36w-hz30-z5;web;contactHz=30,contactZeta=5;;0.055
+R36w-hz30-z20;web;contactHz=30,contactZeta=20;;0.055
+R36w-hz60-z5;web;contactHz=60,contactZeta=5;;0.055
+R36w-hz60-z20;web;contactHz=60,contactZeta=20;;0.055
+R36w-hz120-z1;web;contactHz=120,contactZeta=1;;0.055
+R36w-hz120-z5;web;contactHz=120,contactZeta=5;;0.055
+R36w-hz120-z20;web;contactHz=120,contactZeta=20;;0.055
+R36w-hz120-z50;web;contactHz=120,contactZeta=50;;0.055
+R36w-hz240-z20;web;contactHz=240,contactZeta=20;;0.055
+R36w-hz240-z50;web;contactHz=240,contactZeta=50;;0.055
+R36w-hz480-z1;web;contactHz=480,contactZeta=1;;0.055
+R36w-hz480-z5;web;contactHz=480,contactZeta=5;;0.055
+R36w-hz480-z20;web;contactHz=480,contactZeta=20;;0.055
+R36w-hz1500-z1;web;contactHz=1500,contactZeta=1;;0.055
+R36w-hz1500-z5;web;contactHz=1500,contactZeta=5;;0.055
+R36w-hz1500-z20;web;contactHz=1500,contactZeta=20;;0.055
+R36w-hz120-z20-stab4;web;contactHz=120,contactZeta=20,stabIters=4;;0.055
+R36w-hz120-z20-stab0;web;contactHz=120,contactZeta=20,stabIters=0;;0.055
+R36w-hz120-z20-warm0;web;contactHz=120,contactZeta=20,warmstart=0;;0.055
+R36w-hz120-z20-warm0.5;web;contactHz=120,contactZeta=20,warmstart=0.5;;0.055
+R36w-hz120-z20-it16;web;contactHz=120,contactZeta=20,substeps=16;;0.055
+R36w-hz120-z20-it4;web;contactHz=120,contactZeta=20,substeps=4;;0.055
+R36w-hz120-z20-pgs2;web;contactHz=120,contactZeta=20,pgsIters=2;;0.055
+R36w-hz120-z20-sub2;web;contactHz=120,contactZeta=20;--sub 2;0.055
+R36w-hz120-z20-mc1;web;contactHz=120,contactZeta=20,maxCorrective=1;;0.055
+R36w-hz120-z20-mc5;web;contactHz=120,contactZeta=20,maxCorrective=5;;0.055
+R36w-hz120-z20-simpleF;web;contactHz=120,contactZeta=20,coulomb=0;;0.055
+R36w-hz120-z20-gyro;web;contactHz=120,contactZeta=20,gyro=1;;0.055
+R36w-hz120-z20-f042;web;contactHz=120,contactZeta=20,friction=0.42,groundFriction=0.47;;0.055
+R36w-hz120-z20-fbias0;web;contactHz=120,contactZeta=20,frictionBias=0;;0.055
+R36w-hz120-z20-err;web;contactHz=120,contactZeta=20,allowedErr=0.005,prediction=0.01;;0.055
+R36w-hz480-z20-warm0;web;contactHz=480,contactZeta=20,warmstart=0;;0.055
+R36w-hz1500-z20-warm0;web;contactHz=1500,contactZeta=20,warmstart=0;;0.055
+R36w-hz480-z20-warm0-stab4;web;contactHz=480,contactZeta=20,warmstart=0,stabIters=4;;0.055
+R36w-hz240-z20-warm0-sub2;web;contactHz=240,contactZeta=20,warmstart=0;--sub 2;0.055
+R36w-hz480-z20-warm0-sub2;web;contactHz=480,contactZeta=20,warmstart=0;--sub 2;0.055
+R36w-hz480-z20-warm0.5;web;contactHz=480,contactZeta=20,warmstart=0.5;;0.055
+R36w-hz120-z20-stab4-sub2;web;contactHz=120,contactZeta=20,stabIters=4;--sub 2;0.055
+R36w-hz240-z50-stab4-sub2;web;contactHz=240,contactZeta=50,stabIters=4;--sub 2;0.055
+R36w-hz240-z50-stab4-it16-err;web;contactHz=240,contactZeta=50,stabIters=4,substeps=16,allowedErr=0.005,prediction=0.01;;0.055
+R36w-hz120-z20-static0.16;web;contactHz=120,contactZeta=20,staticErp=0.16;;0.055
+R36w-hz120-z20-static0.8;web;contactHz=120,contactZeta=20,staticErp=0.8;;0.055
+R36w-hz240-z50-static0.16;web;contactHz=240,contactZeta=50,staticErp=0.16;;0.055
+R36w-hz480-z20-static0.16;web;contactHz=480,contactZeta=20,staticErp=0.16;;0.055

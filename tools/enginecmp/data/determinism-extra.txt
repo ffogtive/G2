@@ -1,0 +1,16 @@
+== --n 30 --h 0.11 --seed 1 cfg={"preset":"jolt-1x","joltPreset":"scaled"} (CPD WASM)
+{"who":"jolt-wasm(js)","final":"0949c6d3","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":1.725,"sleeping":1,"off":0}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"0949c6d3","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.4705,"sleeping":1,"off":0}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"0949c6d3","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":10.7449,"sleeping":1,"off":
+== --n 45 --h 0.055 --seed 2 cfg={"preset":"jolt-1x","joltPreset":"scaled"} (CPD WASM)
+{"who":"jolt-wasm(js)","final":"10e4d255","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":1.792,"sleeping":3,"off":0}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"10e4d255","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.3708,"sleeping":3,"off":0}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"10e4d255","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":10.0231,"sleeping":3,"off":
+== --n 30 --h 0.11 --seed 1 cfg={"substeps":4,"engine":"jolt","joltPreset":"default","jolt":{"velocitySteps":6,"positionSteps":2,"baumgarte":0.4}} (CPD WASM)
+{"who":"jolt-wasm(js)","final":"8598e725","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.493,"sleeping":30,"off":0}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"8598e725","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.234,"sleeping":30,"off":0}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"8598e725","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":3.7693,"sleeping":30,"off":
+== --n 45 --h 0.055 --seed 2 cfg={"substeps":4,"engine":"jolt","joltPreset":"default","jolt":{"velocitySteps":6,"positionSteps":2,"baumgarte":0.4}} (CPD WASM)
+{"who":"jolt-wasm(js)","final":"1d5cf4f8","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.791,"sleeping":36,"off":10}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"1d5cf4f8","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2649,"sleeping":36,"off":10}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"1d5cf4f8","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":6.7342,"sleeping":36,"off":

@@ -1,0 +1,18 @@
+== h=0.11 jolt-v20 (WASM CPD vs x86 native)
+{"who":"jolt-wasm(js)","final":"252e249a","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.815,"sleeping":45,"off":1}
+{"who":"jolt-gcc-avx2/joltbench","cpd":true,"final":"252e249a","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.3976,"sleeping":45,"off":1}
+== h=0.11 rapier v1 (JS 0.12 vs native 0.36 puff_sim v1 pair)
+{"who":"rapier-wasm(js)","final":"53af16f2","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":2.12,"sleeping":45,"off":0}
+{"who":"rapier-x86/rapier_bench","arch":"x86_64","final":"06d09c3d","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.4807,"sleeping":45,"off":0}
+== h=0.11 rapier thin (JS 0.12 erp0.8 1/240 vs native erp0.8 iters8 1/240)
+{"who":"rapier-wasm(js)","final":"bd29a126","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":1.884,"sleeping":1,"off":1}
+{"who":"rapier-x86/rapier_bench","arch":"x86_64","final":"13be4800","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.5045,"sleeping":1,"off":1}
+== h=0.055 jolt-v20 (WASM CPD vs x86 native)
+{"who":"jolt-wasm(js)","final":"453476e0","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.68,"sleeping":45,"off":15}
+{"who":"jolt-gcc-avx2/joltbench","cpd":true,"final":"453476e0","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.2936,"sleeping":45,"off":15}
+== h=0.055 rapier v1 (JS 0.12 vs native 0.36 puff_sim v1 pair)
+{"who":"rapier-wasm(js)","final":"9c8dfdee","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":2.119,"sleeping":40,"off":15}
+{"who":"rapier-x86/rapier_bench","arch":"x86_64","final":"dcad497c","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.5557,"sleeping":18,"off":0}
+== h=0.055 rapier thin (JS 0.12 erp0.8 1/240 vs native erp0.8 iters8 1/240)
+{"who":"rapier-wasm(js)","final":"0b858471","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":1.602,"sleeping":7,"off":18}
+{"who":"rapier-x86/rapier_bench","arch":"x86_64","final":"bb497779","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.4112,"sleeping":10,"off":19}
