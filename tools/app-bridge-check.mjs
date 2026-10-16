@@ -2,8 +2,9 @@
 // 흉내: navigator.vibrate 없음 · webkit.messageHandlers.PuffHaptic(+ window.PuffHaptic 래퍼) · Dart 응답(ACK = app/lib/haptics.dart 와 같은 모양)
 //       · navigator.audioSession(type 바뀐 기록) · 가짜 마이크(getUserMedia 부를 때의 type 기록)
 // 확인:
-//  [app]       부팅 오류 0 · ③-1 게임 길 = 'OK · core'(다리 'g:auto' → Dart 새 기본 길 Core Haptics 흉내) · ③-2 engine · ③-3 core · 보냄/응답 4/4(시험 전 게임 진동 없음)
-//              · ④ 게임처럼: 네 줄(native·native·native·core 길) 응답 + O/X 단추 · '게임 진동 길' 스위치 view → 다음 게임 메시지 'g:view' · off → 안 보냄·기록 'off'
+//  [app]       부팅 오류 0 · ③-1 생성기(옛 게임 길, 'd:native:heavy') = 'OK · view' · ③-2 engine · ③-3 core · ③-4 지금 게임 길 = 'OK · core'(다리 'g:auto' → Dart 기본 길 Core Haptics 흉내)
+//              · 보냄/응답 5/5(시험 전 게임 진동 없음) · ④ 게임처럼: 네 줄(native·native·native·core 길) 응답 + O/X 단추 · ④ 도는 동안 [시험] 잠김
+//              · '게임 진동 길' 스위치 view → 다음 게임 메시지 'g:view' · off → 안 보냄·기록 'off'·저장 안 함(이번 실행만) · ③-4 '보내지 않음(길 끔)'
 //              · 레벨 1 한 숨 뒤 '게임 진동 기록' ≥ 1줄(길·응답 ms·'소리 puff ±60 ms') · 터치 모드 type=playback · '지금 재생' 제목 PUFF! · ⚙ 소리·진동 시험 → 진동 3길 응답(view/engine/core)·앱 정보 표·예상 범주
 //              · 마이크 켬 → getUserMedia 때 type=auto(= 'playback' 이면 iOS 가 녹음을 안 함) · 소리 키움 · 무음 단추 잠김 · 끔 → playback
 //              · '무음 모드에서도 소리' 끔 → auto · 마이크 단추 두 번 연타 = 녹음 한 번 · 수명주기 pause/resume = 'playback' 안 거치고 auto
@@ -129,18 +130,23 @@ async function runDiag(page) {
   await page.waitForTimeout(1300);
   const live = await diagRows(page);
   ok("표가 계속 다시 그려짐(소리 시계 '흐름' · 지금 시각 바뀜)", /흐름 \+/.test(live['소리 시계'] || '') && live['소리 시계'] !== r['소리 시계'], `${r['소리 시계']} ⇒ ${live['소리 시계']}`);
-  ok('③-1 게임 길 응답 = Core Haptics(새 기본 길)', /^OK · core/.test(r['③-1 진동: 게임 길'] || ''), r['③-1 진동: 게임 길']);
+  ok('③-1 생성기(옛 게임 길) 응답 = view', /^OK · view/.test(r['③-1 진동: 생성기(옛 게임 길)'] || ''), r['③-1 진동: 생성기(옛 게임 길)']);
+  ok('③-4 지금 게임 길(Core Haptics 기본) 응답 = core', /^OK · core · \d+ms/.test(r['③-4 진동: 지금 게임 길(Core Haptics(기본))'] || ''), r['③-4 진동: 지금 게임 길(Core Haptics(기본))']);
   ok('③-2 엔진 길 응답', /^OK · engine/.test(r['③-2 진동: 엔진 길'] || ''), r['③-2 진동: 엔진 길']);
   ok('③-3 Core Haptics 응답', /^OK · core/.test(r['③-3 진동: Core Haptics'] || ''), r['③-3 진동: Core Haptics']);
   ok('앱 정보 줄(앱 쪽 세션·출력·녹음 중 햅틱·기기)', r['앱 쪽 세션(참고)'] === 'Playback / Default' && /Speaker/.test(r['앱 쪽 출력(참고)'] || '') && r['녹음 중 햅틱 허용(앱 쪽)'] === '예' && /iOS 27/.test(r['기기'] || ''), `${r['앱 쪽 세션(참고)']} | ${r['앱 쪽 출력(참고)']} | ${r['기기']}`);
   ok('예상 소리 범주 = 재생(무음 모드 무시)', r['예상 소리 범주'] === '재생(무음 모드 무시)', r['예상 소리 범주']);
-  ok('햅틱 채널·보냄/응답 수가 맞음', r['햅틱 채널'] === 'PuffHaptic · 보냄 / 응답 4 / 4', r['햅틱 채널']);
+  ok('햅틱 채널·보냄/응답 수가 맞음', r['햅틱 채널'] === 'PuffHaptic · 보냄 / 응답 5 / 5', r['햅틱 채널']);
   ok('audioSession 줄', /^예 · type=playback/.test(r.audioSession || ''), r.audioSession);
   ok("'게임 진동 길' 줄 = Core Haptics(기본) · 기록 줄 있음", r['게임 진동 길'] === 'Core Haptics(기본)' && r['게임 진동 기록'] != null, `${r['게임 진동 길']} | ${r['게임 진동 기록']}`);
   // ④ 게임처럼: 네 줄 · 길(native ×3 · core) · 응답 · O/X
   const m0 = await page.evaluate(() => window.__hapt.length);
   await page.click('#diag4Go');
+  await page.waitForTimeout(300);
+  const lock4 = await page.evaluate(() => document.querySelector('#diagGo').disabled);
   await page.waitForFunction(() => window.__puffDiagLast?.fourDone, null, { timeout: 40000 });
+  const unlock4 = await page.evaluate(() => document.querySelector('#diagGo').disabled);
+  ok('④ 도는 동안 [시험] 잠김 · 끝나면 풀림', lock4 === true && unlock4 === false, `${lock4} → ${unlock4}`);
   const four = await page.evaluate(() => window.__puffDiagLast.four);
   const msgs4 = await page.evaluate((k) => window.__hapt.slice(k), m0);
   const txt4 = await page.evaluate(() => [...document.querySelectorAll('#diag4 tr')].map((tr) => tr.textContent));
@@ -155,10 +161,18 @@ async function runDiag(page) {
   await page.click('#diagRoute');
   const rv = await page.evaluate(async () => { const n = window.__hapt.length; navigator.vibrate(25); await new Promise((r) => setTimeout(r, 120)); const g = window.__puffApp.games.at(-1); return { route: window.__puffApp.route(), msg: window.__hapt.slice(n).join(','), path: g.path, ms: g.ms }; });
   await page.click('#diagRoute');
-  const ro = await page.evaluate(async () => { const n = window.__hapt.length, s0 = window.__puffApp.sent; navigator.vibrate(25); await new Promise((r) => setTimeout(r, 120)); const g = window.__puffApp.games.at(-1); return { route: window.__puffApp.route(), msgs: window.__hapt.length - n, sent: window.__puffApp.sent - s0, path: g.path }; });
+  const ro = await page.evaluate(async () => { const n = window.__hapt.length, s0 = window.__puffApp.sent; navigator.vibrate(25); await new Promise((r) => setTimeout(r, 120)); const g = window.__puffApp.games.at(-1); return { route: window.__puffApp.route(), msgs: window.__hapt.length - n, sent: window.__puffApp.sent - s0, path: g.path, saved: localStorage.getItem('puff.hapRoute') }; });
+  // 길 끔에서 [시험] → ③-4 '보내지 않음(길 끔)'(운반 실패 '응답 없음'과 갈림)
+  await page.evaluate(() => { window.__prevRes = window.__puffDiagLast?.res; });
+  await page.click('#diagGo');
+  await page.waitForFunction(() => window.__puffDiagLast?.done && window.__puffDiagLast.res !== window.__prevRes, null, { timeout: 20000 });
+  const rOff = await diagRows(page);
+  ok("길 끔: ③-4 = '보내지 않음(길 끔)'", rOff['③-4 진동: 지금 게임 길(끔(이번 실행만))'] === '보내지 않음(길 끔)', JSON.stringify(Object.entries(rOff).filter(([k]) => /③-4/.test(k))));
   await page.click('#diagRoute');
   const rc = await page.evaluate(() => window.__puffApp.route());
-  ok("길 스위치: view → 'g:view:…' 응답 view · off → 보냄 0·기록 'off' · 다시 core", rv.route === 'view' && /^g:view:g\d+:25$/.test(rv.msg) && rv.path === 'view' && rv.ms != null && ro.route === 'off' && ro.msgs === 0 && ro.sent === 0 && ro.path === 'off' && rc === 'core', `${JSON.stringify(rv)} | ${JSON.stringify(ro)} | ${rc}`);
+  ok("길 스위치: view → 'g:view:…' 응답 view · off → 보냄 0·기록 'off'·저장 안 함(view 그대로) · 다시 core", rv.route === 'view' && /^g:view:g\d+:25$/.test(rv.msg) && rv.path === 'view' && rv.ms != null && ro.route === 'off' && ro.msgs === 0 && ro.sent === 0 && ro.path === 'off' && ro.saved === 'view' && rc === 'core', `${JSON.stringify(rv)} | ${JSON.stringify(ro)} | ${rc}`);
+  const oldOff = await page.evaluate(() => { localStorage.setItem('puff.hapRoute', 'off'); const r = window.__puffApp.route(); localStorage.setItem('puff.hapRoute', 'core'); return r; });
+  ok("옛 빌드가 저장한 'off' 는 core 로 읽음(조용히 진동 끔 방지)", oldOff === 'core', oldOff);
   // 마이크 켬/끔
   await page.click('#diagMic');
   await page.waitForFunction(() => (window.__puffDiagLast?.rows || []).some(([k, v]) => k === '마이크' && /켜짐/.test(v)), null, { timeout: 10000 }).catch(() => {});

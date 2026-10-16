@@ -9,8 +9,9 @@
 //
 // 🧭 가설 수정(BLOCKERS G4, 미검증): 게임 진동은 Swift 까지 가고 응답도 돌아온다(확인됨). 사라지는 곳은 '재생' — 1순위 = UIKit 생성기 길이 기기에서
 //   조용히 무시됨, 2순위 = 같은 틱 소리·연속 요청에 눌림. 그래서 iOS 게임 진동('g:auto')의 기본 길을 다른 OS 길인 Core Haptics('play' 신호
-//   tapLight·tapMedium·tapHeavy·cough)로 먼저 보내고, false·예외면 생성기(impact, view) → 그것도 안 되면 엔진. 실패를 영구 기억하지 않는다
-//   (엔진이 인터럽트로 멈춰도 Swift 가 다음 호출에서 다시 만든다). 'g:view' = 옛 생성기 길(⚙ '게임 진동 길' 스위치). 'w:' = 예열(warm).
+//   tapLight·tapMedium·tapHeavy·cough)로 먼저 보내고, false·예외면 생성기(impact, view) → 그것도 안 되면 엔진.
+//   Core·생성기 길 모두 한 번의 실패(false·PlatformException)는 기억하지 않고 다음 진동에서 다시 시도한다(엔진이 인터럽트로 멈춰도 Swift 가
+//   다음 호출에서 다시 켠다). 영구히 기억하는 것은 채널 자체가 없을 때(MissingPluginException)뿐. 'g:view' = 옛 생성기 길(⚙ '게임 진동 길' 스위치). 'w:' = 예열(warm).
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -58,7 +59,7 @@ class HapticBridge {
   final MethodChannel _ch;
   final Duration gap; // 패턴(콜록) 두 톡 사이
   int received = 0;
-  bool? _native; // iOS 네이티브 'impact' 길이 되는가(null = 아직 모름)
+  bool? _native; // iOS 네이티브 'impact' 채널이 있는가(false = 채널 없음, 이후 바로 엔진. 한 번의 실패는 false 로 두지 않는다)
 
   bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
@@ -151,11 +152,11 @@ class HapticBridge {
           _native = true;
           return r;
         }
-        _native = false;
+        // 응답이 비었다(이번만 실패) → 이번 진동은 엔진으로, 다음에 다시 시도
       } on MissingPluginException {
-        _native = false;
+        _native = false; // 채널 없음 → 이후 바로 엔진
       } on PlatformException {
-        _native = false;
+        // 이번만 실패 → 엔진으로, 다음에 다시 시도
       }
     }
     await engine(k);

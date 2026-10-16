@@ -17,6 +17,9 @@
 //                                      · 채택 설정(+ slowCancel 40) '푸' 열림 지연 중앙값 233/617/267 ms · 쓸기 놓침 0%. 약 20초
 //   node tools/sweepgame.mjs ref [--json]   주입 훅(window.__sweepPlan) 칸들의 Node 기준: #p30 시드 601 t0 .05/.25/.45 · #p40 시드 401 t0 .10/.35 → 뒤집힘·원 밖·D·스텝·정지 해시
 //                                      (tools/sweepplay.mjs 가 게임과 비교). 약 5초
+//   node tools/sweepgame.mjs base     게임 문법의 고정 숨 기준선(검토 2): '툭 연 높이(엄지 18 px → α ≈ 0.9°)에서 버티다 떼기' D 0.375·0.45·0.525·0.6 대
+//                                      쓸기(꼭대기 떼기) t0 0.25·0.35 — 30장 q0.7 시드 601~606 · 40장 q0.85 시드 401~406. 장수별 평균 · 시드마다 (최고 쓸기 − 최고 고정) 짝 차.
+//                                      문서·카드의 이득 주장은 이 기준으로 말한다(측정 표의 α = 0 고정보다 게임 버티기가 세다). 판정 없음(보고만). 약 30초
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { readFileSync, realpathSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
@@ -300,6 +303,26 @@ function runPair(kind, cfg, r, pl, cnt) {
   for (let k = 1; k <= 12; k++) call('tick', t + k * dt); // 뗀 뒤 tick(최소 숨·끝 사건)
   return { miss: out.kind !== 'pueok', lat };
 }
+// ───────────────────────── base (게임 고정 숨 기준선) ─────────────────────────
+async function base() {
+  await V1.initPhysics();
+  const A0 = +G.alphaForU(18).toFixed(3);
+  const fixD = [0.375, 0.45, 0.525, 0.6], swT0 = [0.25, 0.35];
+  for (const [N, q, w, seeds] of [[30, 0.7, 40, [601, 602, 603, 604, 605, 606]], [40, 0.85, 120, [401, 402, 403, 404, 405, 406]]]) {
+    const fx = fixD.map(() => []), sw = swT0.map(() => []), diff = [];
+    for (const seed of seeds) {
+      const f = fixD.map((D, i) => { const r = G.planShot(V1.Table, { N, seed, q, plan: { A: A0, w: 120, t0: 0, D } }); fx[i].push(r.flips); return r.flips; });
+      const sv = swT0.map((t0, i) => { const r = G.planShot(V1.Table, { N, seed, q, plan: { A: 'top', w, t0, D: 'top' } }); sw[i].push(r.flips); return r.flips; });
+      diff.push(Math.max(...sv) - Math.max(...f));
+    }
+    const m = (a) => (a.reduce((x, y) => x + y, 0) / a.length).toFixed(1);
+    const bestF = Math.max(...fx.map((a) => +m(a))), bestS = Math.max(...sw.map((a) => +m(a)));
+    console.log(`${N}장 q${q} 시드 ${seeds[0]}~${seeds.at(-1)} · 고정 = 툭 높이 α ${A0}° 버티기`);
+    console.log(`  고정 D ${fixD.join('/')}: ${fx.map(m).join(' / ')}장   쓸기 t0 ${swT0.join('/')}(w ${w}°/s, 꼭대기 떼기): ${sw.map(m).join(' / ')}장`);
+    console.log(`  최고 쓸기 / 최고 고정 = ${(bestS / bestF).toFixed(2)}배 · 시드마다 짝 차(최고 쓸기 − 최고 고정) ${diff.join(', ')} · 0 이상 ${diff.filter((d) => d >= 0).length}/${diff.length}`);
+  }
+}
+
 async function ctl() {
   await V1.initPhysics();
   console.log('엄지 px ↔ 고개 α (150 px/u, 목 축 c)');
@@ -379,6 +402,7 @@ if (!isMainThread && workerData?.sweepgameWorker) {
   if (cmd === 'parity') await parity();
   else if (cmd === 'chk') await chk(+(a[0] || 2));
   else if (cmd === 'ctl') await ctl();
+  else if (cmd === 'base') await base();
   else if (cmd === 'ref') {
     const rows = await refRows();
     if (a.includes('--json')) console.log(JSON.stringify(rows));

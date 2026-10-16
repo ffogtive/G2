@@ -8,6 +8,9 @@
 //  (3) 20 px/s 로 60 px 밀고 떼기 → 취소(숨 안 씀, 손가락 시범 뜸)  (4) 밀기 없이 떼기 → 퍽(α 0 · 숨 0.131 s)
 //  (5) 연습판 뒤 프로필(별·레벨·도감·튜토리얼 수·단서 수 …) 바이트 동일  (6) ?core=sweep 이어도 레벨 1·일일은 고전 경로(playerShot·blow)
 //  (7) 실험 jetLag·airFx·hsCut 켬 + 연습판 → table.air 없음 · 지연 0  (8) 콘솔 오류 0
+//  (9) 검토 고침(2026-10-16): 시트 40장이 먼저 · '푸 시작' 톡 35(iOS 강) · 다른 손가락 pointercancel 은 숨을 안 끝냄 · 고전 조준 고리 불투명도 그대로 0.95
+//      · 시범 그대로의 툭(28 px/105 ms)은 밀기 시작 200 ms 안에 열림 · 느린 툭(28 px/300 ms)도 쓸기 전에 열림 · 작은 툭(10 px)은 안 열림 넛지 → 떼면 퍽(칩 '퍽')
+//      · 옆모습 창: 연습판 동안 보이고 홈에서 숨김 · 코치(첫 3숨) 켜짐
 // 쓰기: npm run build && PW=$(npm root -g)/playwright node tools/sweepplay.mjs   (약 3~5분, 소프트웨어 렌더)
 import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
@@ -82,9 +85,11 @@ console.log('(2)~(5)·(7) 합성 엄지 · 느린 밀기 취소 · 퍽 · 보상
   const prof0 = await page.evaluate((k) => localStorage.getItem(k), PROFILE);
   await page.evaluate(() => { document.querySelector('#sweepBtn').click(); });
   await run(160);
-  const sheet = await page.evaluate(() => !document.querySelector('#sweepSheet').hidden && !document.querySelector('#sweepBtn').hidden);
+  const sheet = await page.evaluate(() => !document.querySelector('#sweepSheet').hidden && !document.querySelector('#sweepBtn').hidden && document.querySelector('#sweepSheet .row button')?.id === 'swP40');
   await page.evaluate(() => document.querySelector('#swP30').click());
-  ok("홈 '쓸기 연습' 단추 → 30/40 시트 → 30장 연습판", sheet && (await waitTurn(P)), JSON.stringify(await st(page)));
+  ok("홈 '쓸기 연습' 단추 → 시트(40장이 먼저) → 30장 연습판", sheet && (await waitTurn(P)), JSON.stringify(await st(page)));
+  const sv0 = await st(page);
+  ok('연습판: 옆모습 창 보임 · 코치 켜짐(첫 3숨) · 고전 조준 고리 0.95', sv0.side && sv0.coach && sv0.reticle?.op === 0.95, JSON.stringify({ side: sv0.side, coach: sv0.coach, reticle: sv0.reticle }));
   // (2) 합성 엄지
   const X = 195, Y = 520;
   const drag = async (pts, dtMs = 16) => { for (const [x, y] of pts) { await page.mouse.move(x, y); await run(dtMs); } };
@@ -92,7 +97,10 @@ console.log('(2)~(5)·(7) 합성 엄지 · 느린 밀기 취소 · 퍽 · 보상
   await drag(Array.from({ length: 19 }, (_, i) => [X, Y + (200 * (i + 1)) / 19])); // 당김 200 px / 300 ms
   await run(208); // 멈춤
   const yLow = Y + 200;
-  await drag(Array.from({ length: 31 }, (_, i) => [X, yLow - (150 * (i + 1)) / 31])); // 300 px/s 로 150 px (500 ms)
+  await drag(Array.from({ length: 15 }, (_, i) => [X, yLow - (72 * (i + 1)) / 31])); // 300 px/s 로 150 px (500 ms) — 앞 절반
+  // 다른 손가락(포인터 77)의 pointercancel 은 이 숨을 끝내지 않는다(검토 1: 예전엔 '푸'가 0.133 s 로 끝남)
+  const cancel77 = await page.evaluate(() => { window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 77, bubbles: true })); return window.__puffSweep.state(); });
+  await drag(Array.from({ length: 16 }, (_, i) => [X, yLow - 72 - (78 * (i + 1)) / 16])); // 뒤 절반
   await page.mouse.up();
   await waitCard(P);
   const L = await page.evaluate(() => window.__puffSweep.last);
@@ -105,7 +113,30 @@ console.log('(2)~(5)·(7) 합성 엄지 · 느린 밀기 취소 · 퍽 · 보상
   ok('D 잠금(떼기 뒤 첫 스텝, 0.131~1.0) · 숨 끝 = D + 0.04', L?.D >= 0.131 && L.D <= 1.0 && L.dur === L.D + 0.04 && L.endT < L.dur && L.endT >= L.dur - 1 / 120 - 1e-9, `D ${L?.D} · dur ${L?.dur} · 마지막 숨 스텝 t ${L?.endT}`);
   ok('쓸기 숨: 실험 지연 저장값(jetlag 0.02·airfx·hscut) 무시 → table.air 없음 · 지연 0', (await st(page)).air === false && (await st(page)).lag === 0 && (await page.evaluate(() => window.__puffExp().feel.jetLag)) === 0.02);
   const vib = await page.evaluate(() => window.__vib.map((v) => v.p));
-  ok("쓸기 진동: '푸 시작' 15 가 감", vib.includes(15), JSON.stringify(vib.slice(0, 12)));
+  ok("쓸기 진동: '푸 시작' 35(iOS 강 tapHeavy)가 감(예전 15 = 가장 약한 톡 아님)", vib.includes(35) && !vib.includes(15), JSON.stringify(vib.slice(0, 12)));
+  ok('다른 손가락 pointercancel → 숨 계속(떼기는 진짜 손가락 떼기에서: 푸 시작→떼기 > 300 ms)', cancel77.clock === true && L.stats.blowMs > 300, `cancel 뒤 clock ${cancel77.clock} · 푸 시작→떼기 ${L.stats.blowMs} ms`);
+  ok('연습판 뒤에도 고전 조준 고리 불투명도 0.95(연습판 자국은 자기 메시)', (await st(page)).reticle?.op === 0.95, JSON.stringify((await st(page)).reticle));
+  // 시범 그대로의 툭: 당김 → 28 px 를 105 ms(7프레임) → 열림이 밀기 시작 200 ms 안
+  const flickTest = async (px, ms) => {
+    await page.$eval('#swSame', (e) => e.click());
+    await waitTurn(P);
+    await page.mouse.move(X, Y); await page.mouse.down(); await run(16);
+    await drag(Array.from({ length: 30 }, (_, i) => [X, Y + (170 * (i + 1)) / 30])); // 당김 170 px / 480 ms (빠른 당김 바로 뒤 툭 — 검토 3 이 실패를 본 경우)
+    const n = Math.max(1, Math.round(ms / 16));
+    const t0 = await page.evaluate(() => performance.now());
+    let openAt = null;
+    for (let i = 1; i <= n; i++) { await page.mouse.move(X, Y + 170 - (px * i) / n); await run(16); if (openAt == null && (await st(page)).clock) openAt = (await page.evaluate(() => performance.now())) - t0; }
+    for (let k = 0; k < 40 && openAt == null; k++) { await run(16); if ((await st(page)).clock) openAt = (await page.evaluate(() => performance.now())) - t0; }
+    await run(500);
+    await drag(Array.from({ length: 12 }, (_, i) => [X, Y + 170 - px - (110 * (i + 1)) / 12]));
+    await page.mouse.up();
+    await waitCard(P);
+    return { openAt, last: await page.evaluate(() => window.__puffSweep.last) };
+  };
+  const fA = await flickTest(28, 105);
+  ok("시범 그대로의 툭(28 px/105 ms, 빠른 당김 직후) → '푸'가 밀기 시작 200 ms 안에 열림 · 푸어억", fA.openAt != null && fA.openAt <= 200 && fA.last.kind === 'pueok' && fA.last.opens === 1, `열림 ${fA.openAt == null ? '안 됨' : Math.round(fA.openAt) + ' ms'} · ${fA.last.kind}`);
+  const fB = await flickTest(28, 300);
+  ok("느린 툭(28 px/300 ms)도 쓸기 전에 열림(500 ms 안)", fB.openAt != null && fB.openAt <= 500 && fB.last.kind === 'pueok', `열림 ${fB.openAt == null ? '안 됨' : Math.round(fB.openAt) + ' ms'} · ${fB.last.kind}`);
   // (3) 느린 밀기 → 취소
   await page.$eval('#swSame', (e) => e.click());
   await waitTurn(P);
@@ -119,19 +150,25 @@ console.log('(2)~(5)·(7) 합성 엄지 · 느린 밀기 취소 · 퍽 · 보상
   const sc = await st(page);
   const shots1 = await page.evaluate(() => window.__puffSweep.shots);
   ok('느린 밀기(20 px/s · 60 px) → 취소: 숨 안 씀 · 다시 기다림 · 손가락 시범 뜸', shots1 === shots0 && sc.waiting && sc.guide && !sc.clock, `숨 ${shots0}→${shots1} · ${JSON.stringify(sc)}`);
-  // (4) 밀기 없이 떼기 → 퍽
+  // (4) 작은 툭(10 px, 안 열림) → 넛지 → 떼면 퍽(칩 '퍽')
   await page.mouse.move(X, Y); await page.mouse.down(); await run(16);
   await drag(Array.from({ length: 19 }, (_, i) => [X, Y + (150 * (i + 1)) / 19]));
   await run(208);
+  await drag(Array.from({ length: 5 }, (_, i) => [X, Y + 150 - (10 * (i + 1)) / 5]), 32);
+  await run(480);
+  const nd = await st(page);
   await page.mouse.up();
   await waitCard(P);
   const K = await page.evaluate(() => window.__puffSweep.last);
-  ok('밀기 없이 떼기 → 퍽: α 0 · 숨 0.131 s', K?.kind === 'puck' && K.alphaMax === 0 && K.dur === 0.131 && K.D === 0.131, `kind ${K?.kind} · α ${K?.alphaMax} · dur ${K?.dur}`);
+  ok("작은 툭(10 px) → '아직 안 열렸어요' 넛지(푸 안 열림)", nd.nudge === true && nd.clock === false, JSON.stringify({ nudge: nd.nudge, clock: nd.clock }));
+  ok("그대로 떼기 → 퍽: α 0 · 숨 0.131 s · 칩 '퍽'", K?.kind === 'puck' && K.alphaMax === 0 && K.dur === 0.131 && K.D === 0.131 && K.chip === 'puck', `kind ${K?.kind} · α ${K?.alphaMax} · dur ${K?.dur} · 칩 ${K?.chip}`);
   // (5) 보상 없음 — 홈으로 나간 뒤 프로필 문자열 그대로
   await page.$eval('#swHome', (e) => e.click());
   await run(320);
   const prof1 = await page.evaluate((k) => localStorage.getItem(k), PROFILE);
   ok('연습판 뒤 프로필(별·레벨·도감·튜토리얼·단서 수 …) 바이트 동일', prof0 === prof1 && (await page.evaluate(() => !document.querySelector('#home').hidden)), `${prof0?.length}B → ${prof1?.length}B`);
+  const sh = await st(page);
+  ok('홈: 옆모습 창·바람 자국 숨김 · 문지기 꺼짐', !sh.side && !sh.mark && !sh.on, JSON.stringify({ side: sh.side, mark: sh.mark, on: sh.on }));
   allErrs.push(...P.errs);
   await P.ctx.close();
 }

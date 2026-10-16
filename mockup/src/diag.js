@@ -1,6 +1,7 @@
 // diag.js — ⚙(손맛 튜닝) 안 '소리·진동 시험'. 실기기에서 '푸'·진동이 안 올 때 어느 길에서 끊기는지 화면 캡처 한 장으로 가른다.
 // 순서: ① 삑(1760Hz 짧은 고음, 오실레이터 길) → ② 푸(노이즈 소스 길) → ③ 진동
-//   앱: ③-1 게임 길(navigator.vibrate → 다리 → Dart → Swift 뷰에 붙인 생성기) · ③-2 Flutter 엔진 길(HapticFeedback) · ③-3 Core Haptics, 0.7초 간격
+//   앱: ③-1 생성기(옛 게임 길 = Swift 뷰에 붙인 UIImpactFeedbackGenerator, 옛 빌드 ③-1 과 같은 길 — 답을 옛 빌드와 비교할 수 있게 고정)
+//       · ③-2 Flutter 엔진 길(HapticFeedback) · ③-3 Core Haptics · ③-4 지금 게임 길(navigator.vibrate → 다리 → ⚙ '게임 진동 길' 그대로, 기본 Core), 0.7초 간격
 //   웹: navigator.vibrate 한 번(없으면 '이 기기 미지원')
 // 판가름(무음 모드를 켠 채로, 마이크는 반드시 끈 채로 먼저): '무음 모드에서도 소리' 끔(auto → Ambient)에서 삑이 안 들리고 켬(playback)에서 들리면
 //   원인 A(무음 모드) 확정 + 고침 확인. 마이크를 켜면 WebKit 이 PlayAndRecord(무음 무시)라 이 비교가 안 된다 → 마이크 켬 동안 그 단추는 잠근다.
@@ -36,7 +37,7 @@ export function mountSoundTest(box, deps) {
   let res = null, busy = false;
 
   const yes = () => t('diagYes'), no = () => t('diagNo');
-  const ackText = (a) => (a ? `${a.ok ? 'OK' : t('diagFail')} · ${a.path || '?'}${a.ms != null ? ` · ${a.ms}ms` : ''}${a.err ? ` · ${a.err}` : ''}` : t('diagNoAck'));
+  const ackText = (a) => (a ? (a.path === 'off' ? t('diagVibOff') : `${a.ok ? 'OK' : t('diagFail')} · ${a.path || '?'}${a.ms != null ? ` · ${a.ms}ms` : ''}${a.err ? ` · ${a.err}` : ''}`) : t('diagNoAck'));
   const s1 = (ms) => `${(ms / 1000).toFixed(1)}s`;
   // 컨텍스트 없음: Web Audio 자체가 없으면(잠금 모드) '없음', 아니면 아직 안 만듦(만들기 실패는 기록 줄에 new✗)
   const noCtx = () => t(sfx.noApi ? 'diagNoCtx' : 'diagNotYet');
@@ -83,6 +84,7 @@ export function mountSoundTest(box, deps) {
         r.push([t('diagVib1'), ackText(res.v1)]);
         r.push([t('diagVib2'), ackText(res.v2)]);
         r.push([t('diagVib3'), ackText(res.v3)]);
+        r.push([`${t('diagVib4')}(${routeName(res.v4route || 'core')})`, ackText(res.v4)]);
         const i = res.info;
         if (!i) r.push([t('diagAppSess'), t('diagNoAck')]);
         else if (i.category != null) {
@@ -134,11 +136,17 @@ export function mountSoundTest(box, deps) {
     render();
   }, 500);
   const step = (s) => { $('#diagStep').textContent = s; };
-  // 게임 길(navigator.vibrate)은 id 가 없다 → 응답 수가 늘 때까지 기다림
-  async function ackAfter(n0, ms) {
+  // 지금 게임 길(navigator.vibrate): 다리가 진동마다 붙인 id 기록(app.games)으로 짝지어 기다린다 — 판 화면 예열('w:') 응답과 섞이지 않게.
+  //   길 끔이면 보내지 않으므로 바로 { path: 'off' } (표에 '보내지 않음(길 끔)')
+  async function gameVib(ms) {
+    const g0 = app.games[app.games.length - 1];
+    navigator.vibrate(50);
+    const g = app.games[app.games.length - 1];
+    if (!g || g === g0) return null;
+    if (g.path === 'off') return { ok: true, path: 'off' };
     const t0 = performance.now();
     while (performance.now() - t0 < ms) {
-      if (app.acks > n0) return { ...app.last, ms: Math.round(performance.now() - t0) };
+      if (g.path != null) return { ok: g.ok, path: g.path, ms: g.ms, err: g.err };
       await wait(25);
     }
     return null;
@@ -150,7 +158,7 @@ export function mountSoundTest(box, deps) {
   }
 
   async function run() {
-    if (busy) return;
+    if (busy || busy4) return; // ④ 가 도는 중에 [시험]을 누르면 진동이 겹쳐 O/X 가 섞인다
     busy = true;
     $('#diagGo').disabled = true;
     res = { at: new Date().toLocaleTimeString(), s0: sfx.snap() }; // 시험 전(이 클릭에서 전역 kick 이 깨우기를 막 요청한 직후 — 결과는 비동기라 아직 반영 전)
@@ -160,9 +168,11 @@ export function mountSoundTest(box, deps) {
       step(t('diagBeep')); res.beep = sfx.testBeep(); await wait(650); res.s1 = sfx.snap();
       step(t('diagPuff')); res.puff = sfx.testPuff(); await wait(1000); res.s2 = sfx.snap();
       if (app) {
-        step(t('diagVib1')); const n0 = app.acks; navigator.vibrate(50); res.v1 = await ackAfter(n0, 1500); await wait(700);
+        step(t('diagVib1')); res.v1 = await timed(app.request('d:native:heavy')); await wait(700);
         step(t('diagVib2')); res.v2 = await timed(app.request('d:engine:heavy')); await wait(700);
-        step(t('diagVib3')); res.v3 = await timed(app.request('d:core:fireStrong'));
+        step(t('diagVib3')); res.v3 = await timed(app.request('d:core:fireStrong')); await wait(700);
+        res.v4route = app.route ? app.route() : 'core';
+        step(t('diagVib4')); res.v4 = await gameVib(1500);
         res.info = (await app.request('i', 2500))?.info || null;
       } else {
         step(t('diagVib'));
@@ -196,6 +206,7 @@ export function mountSoundTest(box, deps) {
   async function run4() {
     if (busy || busy4 || !app) return;
     busy4 = true;
+    $('#diagGo').disabled = true;
     four = ['a', 'b', 'c', 'd'].map((k) => ({ k, route: k === 'd' ? 'core' : 'native', sent: [], acks: [], ans: null }));
     render();
     const big = $('#diag4Big');
@@ -220,6 +231,7 @@ export function mountSoundTest(box, deps) {
       if (res) res.err = String((e && e.message) || e);
     } finally {
       busy4 = false; big.hidden = true;
+      $('#diagGo').disabled = busy;
       step(t('diag4Done'));
       render();
     }

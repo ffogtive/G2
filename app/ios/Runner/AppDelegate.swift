@@ -124,8 +124,12 @@ enum PuffDiag {
 
 /// 딱지 손끝 신호: 톡(transient)과 웅(continuous)을 시간차로 엮은 Core Haptics 패턴.
 /// UIImpactFeedbackGenerator(= Flutter HapticFeedback)는 세기 3단계 톡 한 번뿐이라 '꽉(코르크 읍)'·'콜록'·'퍽+바람 꼬리'를 못 낸다.
+/// 엔진 수명(게임 진동 기본 길이라 첫 톡이 늦지 않게): 한 번 만든 엔진은 버리지 않는다. 자동 꺼짐(idleTimeout)·인터럽트·앱 멈춤·서버 재시작(reset)
+/// 뒤에는 표시만 해 두고 다음 호출(진동 또는 판에서 누를 때의 예열 'w:')에서 start() 만 다시 한다. 엔진이 망가졌을 때(engineDestroyed·systemError)만 새로 만든다.
+/// stoppedHandler·resetHandler 는 엔진 내부 큐에서 불린다 → 상태 쓰기는 메인 큐로 넘긴다(채널 처리기 handle·warm 은 메인 스레드).
 final class PuffRichHaptics {
   private var engine: CHHapticEngine?
+  private var needsStart = false
   private let supported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -144,32 +148,52 @@ final class PuffRichHaptics {
       try player.start(atTime: CHHapticTimeImmediate)
       result(true)
     } catch {
-      self.engine = nil
+      needsStart = true  // 엔진은 두고 다음 호출에서 start() 다시(만들기부터 다시 하면 첫 톡이 늦다)
       result(false)
     }
   }
 
-  /// 예열: 엔진을 만들어 켜 둔다(자동 꺼짐 뒤 첫 진동 지연 방지). 하드웨어가 없거나 실패면 false — 다음 호출에서 다시 만든다
+  /// 예열: 엔진을 켜 둔다(자동 꺼짐 뒤 첫 진동 지연 방지). 이미 켜져 있으면 아무것도 안 한다. 하드웨어가 없거나 실패면 false — 다음 호출에서 다시
   func warm() -> Bool {
     guard supported else { return false }
     do {
       _ = try ensureEngine()
       return true
     } catch {
-      engine = nil
+      needsStart = true
       return false
     }
   }
 
   private func ensureEngine() throws -> CHHapticEngine {
-    if let engine = engine { return engine }
+    if let engine = engine {
+      if needsStart {
+        try engine.start()
+        needsStart = false
+      }
+      return engine
+    }
     let engine = try CHHapticEngine()
     engine.playsHapticsOnly = true
     engine.isAutoShutdownEnabled = true
-    engine.stoppedHandler = { [weak self] _ in self?.engine = nil }
-    engine.resetHandler = { [weak self] in self?.engine = nil }
+    engine.stoppedHandler = { [weak self] reason in
+      DispatchQueue.main.async {
+        guard let self = self else { return }
+        switch reason {
+        case .engineDestroyed, .systemError:
+          self.engine = nil  // 망가짐 → 다음 호출에서 새로 만든다
+          self.needsStart = false
+        default:
+          self.needsStart = true  // idleTimeout·audioSessionInterrupt·applicationSuspended 등: 같은 엔진을 다음 호출에서 start()
+        }
+      }
+    }
+    engine.resetHandler = { [weak self] in
+      DispatchQueue.main.async { self?.needsStart = true }  // 햅틱 서버가 다시 떴다 → 같은 엔진을 다시 start()
+    }
     try engine.start()
     self.engine = engine
+    needsStart = false
     return engine
   }
 

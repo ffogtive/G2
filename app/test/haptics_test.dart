@@ -74,6 +74,23 @@ void main() {
     expect(engine.single.arguments, 'HapticFeedbackType.lightImpact');
   });
 
+  test('생성기(impact)가 한 번 실패해도 영구히 엔진으로 가지 않음 — 다음 진동에서 다시 생성기', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    var fail = true;
+    mockNative((c) {
+      if (c.method == 'impact') {
+        if (fail) throw PlatformException(code: 'gen');
+        return 'view';
+      }
+      return null;
+    });
+    final b = HapticBridge(gap: Duration.zero);
+    expect((await b.handle('g:view:g1:49'))['path'], 'engine');
+    fail = false;
+    expect((await b.handle('g:view:g2:49'))['path'], 'view');
+    expect(native.where((c) => c.method == 'impact').length, 2);
+  });
+
   test("g:view 는 옛 생성기 길(impact) · 옛 평문 '25'·'p:…' 도 받음(auto)", () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     mockNative((c) => c.method == 'play' ? true : c.method == 'impact' ? 'view' : null);

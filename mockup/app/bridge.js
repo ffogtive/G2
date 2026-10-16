@@ -8,8 +8,9 @@
 //   → 게임 진동마다 id 를 붙여 기록(app.games, ⚙ '게임 진동 기록' 줄: 경로·응답 ms·±60 ms 안 소리)하고, iOS 기본 길을 Core Haptics 로(Dart 가 실패하면 생성기 → 엔진).
 // 게임 진동 메시지: 'g:<route>:<id>:<payload>'  route = auto(iOS Core Haptics 먼저) | view(옛 생성기 길), id = 'g' + 순번, payload = '49' 또는 'p:40,60,40'
 //   (payload 에 ':' 가 있으므로 Dart 는 앞 세 칸만 자르고 나머지를 이어 붙인다)
-// 진동 길 스위치: localStorage 'puff.hapRoute' = core(기본) | view | off(보내지 않고 기록만 'off') — ⚙ 소리·진동 시험의 '게임 진동 길' 단추
-// 예열 'w:<id>': 판 화면에서 누를 때 마지막 예열이 20초 이상 지났으면 한 번(CHHapticEngine 자동 꺼짐 뒤 첫 진동이 늦지 않게). 게임 기록에는 안 넣는다
+// 진동 길 스위치(⚙ 소리·진동 시험의 '게임 진동 길' 단추): core(기본) | view 는 localStorage 'puff.hapRoute' 에 저장,
+//   off(보내지 않고 기록만 'off')는 **이번 실행에만** — 저장하면 단추를 눌러 보다 끔에서 멈춘 채 '게임에서 진동이 안 와요'가 그대로 다시 생긴다
+// 예열 'w:<id>': 판 화면에서 누를 때 마지막 예열이 3초 이상 지났으면 한 번(CHHapticEngine 자동 꺼짐 뒤 첫 진동이 늦지 않게, Swift 는 켜져 있으면 아무것도 안 함). 게임 기록에는 안 넣는다
 (function () {
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
   const app = (window.__puffApp = { sent: 0, acks: 0, drops: 0, last: null, err: null, games: [] });
@@ -22,9 +23,19 @@
     if (!c) { app.drops++; return false; }
     try { c.postMessage(msg); app.sent++; return true; } catch (e) { app.drops++; app.err = String((e && e.message) || e); return false; }
   };
-  const ROUTES = ['core', 'view', 'off'];
-  app.route = () => { try { const v = localStorage.getItem('puff.hapRoute'); return ROUTES.indexOf(v) >= 0 ? v : 'core'; } catch (e) { return 'core'; } };
-  app.setRoute = (v) => { if (ROUTES.indexOf(v) < 0) v = 'core'; try { localStorage.setItem('puff.hapRoute', v); } catch (e) { /* 저장 안 됨 */ } return v; };
+  const SAVED = ['core', 'view']; // 저장하는 길. 'off' 는 저장하지 않는다(옛 빌드가 저장한 'off' 도 core 로 읽음)
+  let sessionOff = false;
+  app.route = () => {
+    if (sessionOff) return 'off';
+    try { const v = localStorage.getItem('puff.hapRoute'); return SAVED.indexOf(v) >= 0 ? v : 'core'; } catch (e) { return 'core'; }
+  };
+  app.setRoute = (v) => {
+    if (v === 'off') { sessionOff = true; return 'off'; }
+    sessionOff = false;
+    if (SAVED.indexOf(v) < 0) v = 'core';
+    try { localStorage.setItem('puff.hapRoute', v); } catch (e) { /* 저장 안 됨 */ }
+    return v;
+  };
   const waits = new Map();
   app.ack = (a) => {
     app.acks++;
@@ -61,7 +72,7 @@
     const hud = document.getElementById('hud');
     if (!hud || hud.hidden || app.route() === 'off') return;
     const t = now();
-    if (t - lastWarm < 20000) return;
+    if (t - lastWarm < 3000) return;
     lastWarm = t;
     app.send('w:w' + ++wseq);
   }, { capture: true, passive: true });
