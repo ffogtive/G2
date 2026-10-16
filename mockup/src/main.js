@@ -1391,8 +1391,8 @@ function frame(now) {
   let aimPos = camAimPos;
   if (camAim > 0.001 && table) {
     const top = table.columnTop();
-    if (sweepOn()) { // 쓸기 연습판: 낮은 앞-옆 시점 + 고개 따라 피치(sweepView)
-      const v = sweepView(top);
+    if (sweepOn()) { // 쓸기 연습판: 낮은 앞-옆 시점 + 고개 따라 피치(sweepView) · 보이는 기둥 높이로 맞춤(종이 대응)
+      const v = sweepView(swVisFn()(top));
       aimPos = v.pos;
       target.lerp(v.target, camAim);
     } else if (fpvOn()) {
@@ -4176,6 +4176,7 @@ const sweep = {
   breathEndAt: 0, pop: null, // B: 숨이 끝난 벽시계 시각(늦은 휙 창) · 짧은 글 신호 { key, at }('위로 휙!' · '잠깐…')
   // C(영점 조준): 다음 숨 다시 코치(영점 칩 → 띠 + 1단계 · 숨/각 칩 → 2단계) · 지난 영점(같은 더미면 끌기 시작점) · '쓱—!' 시각 · 영점 창 확대·축소
   gcAgain: { zero: false, aim: false }, gcPile: null, gcLastS: null, upAt: 0, zoom: null,
+  visFrz: null, // 종이 딱지 대응표(물리 높이 → 보이는 높이)를 숨 시작 때 얼린 것 — 숨 동안 그림·카드 미니 기둥(swVisFreeze)
 };
 window.__puffSweep = { log: [], last: null, shots: 0 };
 // 자동 시험용(tools/sweepplay.mjs): 지금 연습판 상태
@@ -4565,15 +4566,53 @@ function gcThLive(I, now) {
   if (I.meterName === 'th') return I.aimT0 == null ? 0 : Sweep.meterAt('th', now - I.aimT0, I.T);
   return Sweep.thOfRise(I.g.lowRaw - I.lastY, I.g.minDim);
 }
-// 큰 영점 창의 그림 비율(균등 배율 — 제트 각이 정직): 기둥 높이 = 창 높이 × 0.45, 바닥선 = 85%, 더미 뒤 가장자리 = 창 폭 8%
-function zeroMap(cv, top) {
-  const w = cv.offsetWidth || 358, h = cv.offsetHeight || 300, pc = table.pileCenter();
-  const k = (0.45 * h) / top, fy = 0.85 * h, x0 = 0.08 * w, zb = pc.z - DISC_R;
-  return { w, h, k, fy, pc, zf: pc.z + 1, top, X: (z) => x0 + (z - zb) * k, Y: (y) => fy - y * k };
+// ── 종이 딱지(paper.js) 대응: 연습판이 '물리 높이'에 그리는 것 → 보이는 딱지 높이 ──
+// 🧭 가설(확인됨, Node 연습판 시드 401(40장)·601(30장), paper.js 배치 40프레임): 보이는 더미는 물리보다 가운데 약 0.015 u · 꼭대기 0.14 u 낮고,
+//   물리상 책상에 묻힌 바닥 장이 위로 올라와 앞면 높이 0(아래 모서리 s 0.4)이 보이는 0.05 u 다 → 물리 높이로 그리면 영점 점·띠·화살표·바람 자국이
+//   보이는 딱지와 어긋난다(40장 꼭대기 약 0.14 u 위). 그래서 '그 높이의 물리 딱지가 그려진 자리'(paper.visY, 기둥 장 중심끼리 직선)로 옮겨 그린다.
+//   물리 입력(s · hOfS/sOfH · meterAt · zeroShot · 탭 값 · θ · q)은 그대로 물리 단위 — 바뀌는 것은 그림과 '창 안 누른 곳 → s'(physY, 고전 pointerAim 과 같은 규칙)뿐.
+//   꼭대기 위(쓸기 화살표 끝 · 헛바람 자국)는 공기라 눌리지 않는다 → 꼭대기 차이만큼 그대로 내림(기울기 1).
+//   숨 동안은 숨 시작 때 표를 얼린다(swVisFreeze): 쓸기 자국은 숨 시작 기둥(top0 · 영점) 기준 기하인데, 더미가 흩어지면 visY 표가 누운 기둥 장만으로 줄어
+//   그 위를 바깥 기울기(0.5)로 누른다. 2D 옆모습 창의 딱지 단면은 3D 메시(보이는 자리·자세) 그대로 그린다(drawSideBase)
+function swVisFreeze() {
+  const c = table.pileCenter(), top = table.columnTop(), n = 192, vs = new Float64Array(n + 1);
+  for (let i = 0; i <= n; i++) vs[i] = paper.visY((top * i) / n, c);
+  sweep.visFrz = { top, n, vs };
 }
-// 화면 y(CSS px, 창이 다 커졌을 때) ↔ 영점 s
-function zeroYOfS(s) { const cv = $('#swZero'), r = cv.getBoundingClientRect(), h = cv.offsetHeight; return r.top + 0.85 * h - (0.45 * h * (s - Sweep.GC.sBase)) / (1 - Sweep.GC.sBase); }
-function zeroSOfY(y) { const cv = $('#swZero'), r = cv.getBoundingClientRect(), h = cv.offsetHeight; return Sweep.GC.sBase + (1 - Sweep.GC.sBase) * clamp((r.top + 0.85 * h - y) / (0.45 * h), 0, 1); }
+function swVisFrozen(F, y) {
+  if (y >= F.top) return F.vs[F.n] + (y - F.top);
+  const u = (Math.max(0, y) / F.top) * F.n, i = Math.min(F.n - 1, Math.floor(u));
+  return F.vs[i] + (F.vs[i + 1] - F.vs[i]) * (u - i) + Math.min(0, y);
+}
+// 이번 프레임의 대응 함수(물리 y → 보이는 y): 숨 동안 = 얼린 표, 그 밖 = 지금 배치(paper.visY · 꼭대기 위는 기울기 1)
+function swVisFn() {
+  if (!table) return (y) => y;
+  const F = sweep.clock ? sweep.visFrz : null;
+  if (F && F.top > 0) return (y) => swVisFrozen(F, y);
+  const c = table.pileCenter(), top = table.columnTop(), vt = paper.visY(top, c);
+  return (y) => (y <= top ? paper.visY(y, c) : vt + (y - top));
+}
+// 거꾸로(보이는 y → 물리 y): 큰 영점 창에서 누른 곳 → 영점 s. 1단계(숨 전)만 쓰므로 지금 배치
+function swPhysY(v) {
+  const c = table.pileCenter(), top = table.columnTop(), vt = paper.visY(top, c);
+  return v <= vt ? paper.physY(v, c) : top + (v - vt);
+}
+window.__puffSweep.vis = (y) => swVisFn()(y); // 시험용: 지금 대응(물리 → 보이는 높이)
+// 큰 영점 창의 그림 비율(균등 배율 — 제트 각이 정직): 보이는 기둥 높이 = 창 높이 × 0.45, 바닥선 = 85%, 더미 뒤 가장자리 = 창 폭 8%
+function zeroMap(cv, vtop) {
+  const w = cv.offsetWidth || 358, h = cv.offsetHeight || 300, pc = table.pileCenter();
+  const k = (0.45 * h) / vtop, fy = 0.85 * h, x0 = 0.08 * w, zb = pc.z - DISC_R;
+  return { w, h, k, fy, pc, zf: pc.z + 1, vtop, X: (z) => x0 + (z - zb) * k, Y: (y) => fy - y * k };
+}
+// 화면 y(CSS px, 창이 다 커졌을 때) ↔ 영점 s — 점은 보이는 딱지 높이에 그린다(종이 대응): s → 물리 앞면 높이 hOfS → 보이는 높이 → 창 y, 거꾸로 physY → sOfH
+function zeroYOfS(s) {
+  const cv = $('#swZero'), r = cv.getBoundingClientRect(), h = cv.offsetHeight, top = table.columnTop(), V = swVisFn();
+  return r.top + 0.85 * h - (0.45 * h * V(Sweep.hOfS(s, top))) / V(top);
+}
+function zeroSOfY(y) {
+  const cv = $('#swZero'), r = cv.getBoundingClientRect(), h = cv.offsetHeight, top = table.columnTop(), vt = swVisFn()(top);
+  return Sweep.sOfH(swPhysY(((r.top + 0.85 * h - y) * vt) / (0.45 * h)), top);
+}
 window.__puffSweep.zeroY = (s) => zeroYOfS(s);
 window.__puffSweep.zeroX = () => { const r = $('#swZero').getBoundingClientRect(); return r.left + r.width / 2; };
 function sweepHint(key) { $('#hint').hidden = false; $('#hint').className = 'hint sw' + (key === 'swHintC1' || key === 'swHintC1d' ? ' swz' : ''); $('#hintText').textContent = t(key); }
@@ -4777,9 +4816,8 @@ function playerSweepShotC() {
       if (I.stage === 'zero') {
         const d = I.zeroDrag;
         if (!d || (d.id != null && ev.pointerId != null && ev.pointerId !== d.id)) return;
-        const h = $('#swZero').offsetHeight || 300;
         d.moved = Math.max(d.moved, Math.abs(ev.clientY - d.y));
-        I.s = clamp(d.s - ((ev.clientY - d.y) * (1 - Sweep.GC.sBase)) / (0.45 * h), Sweep.GC.sMin, Sweep.GC.sMax); // 손가락 1 px = 표시점 1 px
+        I.s = clamp(zeroSOfY(zeroYOfS(d.s) + (ev.clientY - d.y)), Sweep.GC.sMin, Sweep.GC.sMax); // 손가락 1 px = 표시점 1 px(점은 보이는 딱지 높이 — 종이 대응표를 거쳐 s)
         return;
       }
       if (!I.g || (I.pointerId != null && ev.pointerId != null && ev.pointerId !== I.pointerId)) return;
@@ -4873,6 +4911,7 @@ function blowSweep(raw) {
   const gk = ctl.mode === 'zero' ? 'C' : ctl.mode === 'flick' ? 'B' : 'A'; // 이 숨의 문법(주입 훅은 조종 모드로 — { kind: 'gc' } = C · 'gb' = B · 그 밖 A)
   sweep.coachShot = gk === 'C' ? sweep.totalBy.C < SW_COACH : sweepCoachOn(); // 이 숨이 코치 숨인가(아래 ++ 전에 — 셋째 숨 도중 코치가 꺼지지 않게). C 숨 동안 코치는 첫 3숨만
   sweep.coachAgain = false; sweep.gcAgain = { zero: false, aim: false }; sweep.upAt = 0;
+  swVisFreeze(); // 종이 대응표를 물리가 움직이기 전에 얼림(숨 동안 자국·리본·옆모습 창 · 카드 미니 기둥)
   ctl.attach(table.blowProg({ prog: ctl.prog, power: raw.q, dur: ctl.durCap })); // 실험 jetLag 없음(blowProg 는 받지 않음) → table.air = null
   resetSimWatch('me');
   puffer.mode = 'blow'; puffer.p = raw.q; puffer.fill = clamp(raw.q, 0, 1); puffer.ratio = 1; puffer.strain = 0; puffer.full = false;
@@ -5149,6 +5188,7 @@ function drawSweepTimeline(cv, ctl, last) {
 //   바닥 입이 화면 밖 왼쪽으로 나가던 것 고침). 바닥 입이 화면 아래 가운데(1인칭 입술 자리)에 오고, 고개를 들면 시점이 입과 함께 든다.
 //   피치는 스펙 §5.1(10°·tanh)의 0.35배만 — 1:1 이면 바람 자국이 화면에서 거의 안 올랐다(14 px). 이 시점이면 30장 꼭대기까지 자국이 약 77 px 오른다
 //   (three.js 투영, 390×844). 줄인 움직임이면 고개 0 시점 고정(입술·볼 내림은 남김, drawFPV)
+// top = 보이는 꼭대기(종이 대응 swVisFn — 얇게 그린 더미는 물리보다 낮다). 입·고개 자세(o)는 물리 그대로
 function sweepView(top) {
   const portrait = window.innerWidth / window.innerHeight < 0.85;
   const pc = table.pileCenter();
@@ -5231,11 +5271,12 @@ function sweepDraw(now) {
   if (S) {
     const a = (S.o.z - zf) / Math.max(0.2, Math.cos(S.alpha)); // 입 → 앞면 축 거리
     const rj = table.T.jetR0 + a * table.T.jetSpread;
-    const over = S.yHit > top0;
+    const over = S.yHit > top0; // 꼭대기 위(헛바람) 판단은 물리 높이로
+    const vy = swVisFn()(S.yHit); // 그리는 높이 = 그 물리 높이의 딱지가 보이는 자리(종이 대응) — 입(S.o)은 물리 그대로
     const m = sweepMarkMesh();
     m.visible = true;
-    m.position.set(cx, S.yHit, zf + 0.03);
-    m.lookAt(cx, S.yHit, zf + 2);
+    m.position.set(cx, vy, zf + 0.03);
+    m.lookAt(cx, vy, zf + 2);
     const k = 1 + 0.15 * flash;
     if (aimC && !blowing) m.scale.set(0.75, 0.75, 1); // C 2단계 영점 고리 = 작은 표지(반지름 약 0.2 u) — 제트 폭(약 1 u)으로 그리면 더미를 감싸는 큰 고리로 보였다
     else m.scale.set((k * rj) / 0.26, (k * rj) / 1.6 / 0.26, 1); // 원뿔 세기 식(lat = hypot(lx, 1.6·ly, lz))과 같은 납작한 타원
@@ -5250,7 +5291,7 @@ function sweepDraw(now) {
         sweep.ribbon.renderOrder = 8;
         scene.add(sweep.ribbon);
       }
-      const from = new THREE.Vector3(S.o.x, S.o.y, S.o.z), to = new THREE.Vector3(cx, S.yHit, zf);
+      const from = new THREE.Vector3(S.o.x, S.o.y, S.o.z), to = new THREE.Vector3(cx, vy, zf);
       const dir = to.clone().sub(from), L = dir.length();
       sweep.ribbon.position.copy(from);
       sweep.ribbon.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
@@ -5262,7 +5303,7 @@ function sweepDraw(now) {
     // 헛바람(자국이 꼭대기 위): 위로 흐르는 줄(2D)
     if (over && blowing) {
       const cv = $('#breath'), c2 = cv.getContext('2d'), dpr = cv._dpr || 1;
-      const p = new THREE.Vector3(cx, S.yHit, zf).project(camera);
+      const p = new THREE.Vector3(cx, vy, zf).project(camera);
       const px = (p.x * 0.5 + 0.5) * window.innerWidth, py = (-p.y * 0.5 + 0.5) * window.innerHeight;
       c2.save(); c2.scale(dpr, dpr); c2.strokeStyle = 'rgba(255,255,255,0.55)'; c2.lineWidth = 2;
       for (let i = 0; i < 5; i++) { const kk = ((now * 0.002) + i / 5) % 1, xx = px + (i - 2) * 9; c2.beginPath(); c2.moveTo(xx, py - 30 * kk); c2.lineTo(xx, py - 30 * kk - 14); c2.stroke(); }
@@ -5316,8 +5357,8 @@ window.__puffSweep.arrowC = (s, th) => { const top = table.columnTop(); return {
 function drawAimArrowC(ctx, dpr, I, th, ghost) {
   if (!(th > 0.2)) return;
   const pc = table.pileCenter(), zf = pc.z + 1, top = table.columnTop();
-  const h0 = Sweep.hOfS(I.s, top), h1 = arrowTipC(I.s, th, top), good = th >= SW_TH_GOOD;
-  const P = (y) => { const v = new THREE.Vector3(pc.x, y, zf + 0.05).project(camera); return [(v.x * 0.5 + 0.5) * window.innerWidth, (-v.y * 0.5 + 0.5) * window.innerHeight]; };
+  const h0 = Sweep.hOfS(I.s, top), h1 = arrowTipC(I.s, th, top), good = th >= SW_TH_GOOD, V = swVisFn();
+  const P = (y) => { const v = new THREE.Vector3(pc.x, V(y), zf + 0.05).project(camera); return [(v.x * 0.5 + 0.5) * window.innerWidth, (-v.y * 0.5 + 0.5) * window.innerHeight]; }; // 물리 높이 → 보이는 딱지 높이(종이 대응)
   const [x0, y0] = P(h0), [x1, y1] = P(h1);
   const col = ghost ? (good ? '#bff0c8' : '#fff2b0') : good ? '#2fbf5b' : '#f2a91e';
   ctx.save(); ctx.scale(dpr, dpr); ctx.lineCap = 'round';
@@ -5561,25 +5602,28 @@ function sweepCoachDraw(ctx, dpr, now) {
 }
 
 // 옆모습 그림 바탕(작은 창 #swSide · 큰 영점 창 #swZero 공용): 바닥 · 분필 원 가장자리 눈금(입 쪽 r 3.2) · 더미 단면(딱지마다 x = 중심 평면 단면,
-//   길이 2R · 보이는 두께 VIS_H(paper.js) · 중심은 물리 그대로, 뒤집힘 금색) · 꼭대기 점선
-function drawSideBase(c, w, h, X, Y, s, pc, top0) {
+//   길이 2R · 보이는 두께 VIS_H(paper.js) · 자리·자세 = 3D 메시 그대로(받침에 닿게 내린 종이 배치 — 트윈 중인 장만 물리 중심을 V 로), 뒤집힘 금색)
+//   · 꼭대기 점선(물리 top0 → V). V = 물리 높이 → 보이는 높이(swVisFn)
+function drawSideBase(c, w, h, X, Y, s, pc, top0, V) {
   const zf = pc.z + 1;
   c.fillStyle = 'rgba(180,140,100,0.25)'; c.fillRect(0, Y(0), w, h - Y(0));
   c.strokeStyle = 'rgba(42,26,18,0.6)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, Y(0)); c.lineTo(w, Y(0)); c.stroke();
   c.strokeStyle = 'rgba(255,255,255,0.95)'; c.lineWidth = 2; c.beginPath(); c.moveTo(X(pc.z + 3.2), Y(0) - 1); c.lineTo(X(pc.z + 3.2), Y(0) + 5); c.stroke();
   c.lineCap = 'butt';
   for (const d of table.liveDiscs()) {
-    const p = d.body.translation(), q = d.body.rotation();
+    const m = meshes.get(d.id), mv = !!m && !m.userData.anim; // 보이는 딱지(종이 배치)
+    const p = mv ? m.position : d.body.translation(), q = mv ? m.quaternion : d.body.rotation(), py = mv ? p.y : V(p.y);
     const ny = 1 - 2 * (q.x * q.x + q.z * q.z), nz = 2 * (q.y * q.z + q.w * q.x);
     const L = Math.hypot(ny, nz) || 1, vz = -ny / L, vy = nz / L;
     c.strokeStyle = table.faceUp(d) > 0.5 ? '#f2a91e' : '#8a5a3c';
     c.globalAlpha = table.inCircle(d) ? 1 : 0.45;
-    c.lineWidth = Math.max(2, VIS_H * s * 0.9); // 보이는 두께(paper.js) — 물리 중심 그대로
-    c.beginPath(); c.moveTo(X(p.z - vz * DISC_R), Y(p.y - vy * DISC_R)); c.lineTo(X(p.z + vz * DISC_R), Y(p.y + vy * DISC_R)); c.stroke();
+    c.lineWidth = Math.max(2, VIS_H * s * 0.9); // 보이는 두께(paper.js)
+    c.beginPath(); c.moveTo(X(p.z - vz * DISC_R), Y(py - vy * DISC_R)); c.lineTo(X(p.z + vz * DISC_R), Y(py + vy * DISC_R)); c.stroke();
   }
   c.globalAlpha = 1;
   c.strokeStyle = 'rgba(42,26,18,0.55)'; c.setLineDash([4, 3]); c.lineWidth = 1;
-  c.beginPath(); c.moveTo(X(pc.z - 1.4), Y(top0)); c.lineTo(X(zf + 0.4), Y(top0)); c.stroke(); c.setLineDash([]);
+  const yt = Y(V(top0));
+  c.beginPath(); c.moveTo(X(pc.z - 1.4), yt); c.lineTo(X(zf + 0.4), yt); c.stroke(); c.setLineDash([]);
 }
 // 옆모습 창(스펙 §5.1, 오른쪽 위 최대 210 × 120): 얼굴 옆선·입·제트·더미 단면·기울기 호. 재윤님 영상처럼 '바닥에서 입이 고개와 함께 오르며
 //   바람이 더미를 아래에서 위로 쓴다'를 옆에서 그대로 보여 준다. 물리 값만 그린다(정답 표시 없음, 코치 숨에만 기울기 호에 눈금)
@@ -5606,27 +5650,29 @@ function drawSweepSide(on) {
   const s = w / (zMax - zMin);
   const X = (z) => (z - zMin) * s, Y = (y) => h - 7 - y * s;
   const top0 = ctl ? ctl.top0 : table.columnTop();
-  drawSideBase(c, w, h, X, Y, s, pc, top0);
+  const V = swVisFn(); // 앞면 높이(물리) → 보이는 딱지 높이(종이 대응). 입·얼굴(o)은 물리 그대로
+  drawSideBase(c, w, h, X, Y, s, pc, top0, V);
   // C 2단계: 영점 · 쓸기 부채꼴(입 → 앞면 α0 자국 → α0 + θ 자국)
   const I = sweep.input?.gc && sweep.input.stage === 'aim' ? sweep.input : null;
   if (I && I.s != null) {
-    const a0 = Sweep.a0Of(I.s, top0), th = gcThLive(I, performance.now()) || 0;
+    const a0 = Sweep.a0Of(I.s, top0), th = gcThLive(I, performance.now()) || 0, yz = Y(V(Sweep.hOfS(I.s, top0)));
     if (th > 0.2) {
       c.fillStyle = th >= SW_TH_GOOD ? 'rgba(47,191,91,0.3)' : 'rgba(255,138,31,0.28)'; // 16° 이상 = 초록(엄지 옆 눈금과 같은 색)
-      c.beginPath(); c.moveTo(X(o.z), Y(o.y)); c.lineTo(X(zf), Y(Sweep.hitC(a0))); c.lineTo(X(zf), Y(Sweep.hitC(a0 + th))); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(X(o.z), Y(o.y)); c.lineTo(X(zf), Y(V(Sweep.hitC(a0)))); c.lineTo(X(zf), Y(V(Sweep.hitC(a0 + th)))); c.closePath(); c.fill();
     }
-    c.strokeStyle = 'rgba(255,138,31,0.8)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(X(o.z), Y(o.y)); c.lineTo(X(zf), Y(Sweep.hOfS(I.s, top0))); c.stroke();
+    c.strokeStyle = 'rgba(255,138,31,0.8)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(X(o.z), Y(o.y)); c.lineTo(X(zf), yz); c.stroke();
     c.fillStyle = '#ff8a1f'; c.strokeStyle = '#fff'; c.lineWidth = 1.5;
-    c.beginPath(); c.arc(X(zf), Y(Sweep.hOfS(I.s, top0)), 4, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.beginPath(); c.arc(X(zf), yz, 4, 0, Math.PI * 2); c.fill(); c.stroke();
   }
   // 제트(숨 동안): 입 → 앞면 원뿔, 밝기 = 세기 × 봉투
   if (ctl && ctl.state.env > 0.01) {
     const S = ctl.state, a = (S.o.z - zf) / Math.max(0.2, Math.cos(S.alpha)), rj = table.T.jetR0 + a * table.T.jetSpread;
     const qq = sweep.shot?.q ?? sweep.lastQ;
     c.fillStyle = `rgba(120,200,255,${(0.18 + 0.5 * clamp(qq * S.env, 0, 1)).toFixed(3)})`;
-    c.beginPath(); c.moveTo(X(S.o.z), Y(S.o.y)); c.lineTo(X(zf), Y(S.yHit + rj)); c.lineTo(X(zf), Y(S.yHit - rj)); c.closePath(); c.fill();
+    const vy = V(S.yHit); // 자국 = 그 물리 높이의 딱지가 보이는 자리(숨 시작 때 얼린 종이 대응) · 원뿔 폭(공기)은 그대로
+    c.beginPath(); c.moveTo(X(S.o.z), Y(S.o.y)); c.lineTo(X(zf), Y(vy + rj)); c.lineTo(X(zf), Y(vy - rj)); c.closePath(); c.fill();
     c.fillStyle = '#ff8a1f'; c.strokeStyle = '#2a1a12'; c.lineWidth = 1.2;
-    c.beginPath(); c.arc(X(zf), Y(S.yHit), 3.5, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.beginPath(); c.arc(X(zf), Y(vy), 3.5, 0, Math.PI * 2); c.fill(); c.stroke();
   }
   // 얼굴 옆선(목 축 둘레로 젖힘 — 창 오른쪽 밖으로 잘림): 머리 · 코 · 눈 · 입술(= 물리 입 자리)
   const hc = rotH(1.3, 1.6);
@@ -5657,23 +5703,25 @@ function drawSweepZero(now) {
   if (!cv || cv.hidden || !table) return;
   const I = sweep.input?.gc ? sweep.input : null;
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  const top = table.columnTop(), M = zeroMap(cv, top), { w, h, k, pc, zf, X, Y } = M;
+  // 종이 대응: 기둥·띠·점·제트 끝은 보이는 딱지 높이(V), 창 틀(기둥 높이 = 창 × 0.45)도 보이는 꼭대기로. 입(p.o)·바닥은 물리 그대로
+  const top = table.columnTop(), V = swVisFn(), M = zeroMap(cv, V(top)), { w, h, k, pc, zf, X, Y } = M;
   if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
   const c = cv.getContext('2d');
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.clearRect(0, 0, w, h);
   c.fillStyle = 'rgba(255,248,232,0.97)'; c.fillRect(0, 0, w, h);
-  drawSideBase(c, w, h, X, Y, k, pc, top);
+  drawSideBase(c, w, h, X, Y, k, pc, top, V);
   const s = I ? gcSLive(I, now) : sweep.gcLastS ?? 0.7;
-  const hS = (v) => Y(Sweep.hOfS(v, top));
+  const hS = (v) => Y(V(Sweep.hOfS(v, top))); // 영점 s → 물리 앞면 높이 → 보이는 딱지 높이 → 창 y (zeroYOfS 와 같은 식)
   // 바닥 곡선(그림만): 둥근 모서리 → 앞 바닥 2 u
   const rr = 0.15 * k;
   c.strokeStyle = 'rgba(120,120,120,0.75)'; c.lineWidth = 3; c.setLineDash([6, 5]);
   c.beginPath(); c.moveTo(X(zf), Y(0) - rr); c.arcTo(X(zf), Y(0) - 2, X(zf) + rr, Y(0) - 2, rr); c.lineTo(X(zf + Sweep.GC.dFloor), Y(0) - 2); c.stroke(); c.setLineDash([]);
   // 고를 수 있는 곡선: 기둥 앞면(흰 테 + 노랑)
   c.lineCap = 'round';
-  c.strokeStyle = '#fff'; c.lineWidth = 8; c.beginPath(); c.moveTo(X(zf), Y(0)); c.lineTo(X(zf), Y(top)); c.stroke();
-  c.strokeStyle = '#ffd23f'; c.lineWidth = 4; c.beginPath(); c.moveTo(X(zf), Y(0)); c.lineTo(X(zf), Y(top)); c.stroke();
+  //   아래 끝 = 아래 모서리 s 0.4(물리 앞면 0 — 묻힌 바닥 장 위로 올라온 종이 배치에선 바닥선보다 조금 위) · 위 끝 = 보이는 꼭대기
+  c.strokeStyle = '#fff'; c.lineWidth = 8; c.beginPath(); c.moveTo(X(zf), hS(Sweep.GC.sMin)); c.lineTo(X(zf), hS(1)); c.stroke();
+  c.strokeStyle = '#ffd23f'; c.lineWidth = 4; c.beginPath(); c.moveTo(X(zf), hS(Sweep.GC.sMin)); c.lineTo(X(zf), hS(1)); c.stroke();
   if (I?.band) { // 배우는 숨만: 초록 띠 · 빨강(높은 영점 절벽)
     c.strokeStyle = '#2fbf5b'; c.lineWidth = 7; c.beginPath(); c.moveTo(X(zf), hS(Sweep.GC.band[0])); c.lineTo(X(zf), hS(Sweep.GC.band[1])); c.stroke();
     c.strokeStyle = 'rgba(224,69,69,0.55)'; c.lineWidth = 7; c.beginPath(); c.moveTo(X(zf), hS(Sweep.GC.red)); c.lineTo(X(zf), hS(1)); c.stroke();
@@ -5686,7 +5734,7 @@ function drawSweepZero(now) {
     else { let i = ws.length - 1; while (i > 1 && c.measureText(ws.slice(0, i).join(' ')).width > room) i--; c.fillText(ws.slice(0, i).join(' '), fx, Y(0) + 5); c.fillText(ws.slice(i).join(' '), fx, Y(0) + 18); } }
   // 제트: 입(창 밖) → 영점 원뿔(그 s 의 α0)
   const a0 = Sweep.a0Of(s, top), M0 = { x: pc.x, y: Sweep.GEO.ym, z: zf + Sweep.GEO.L };
-  const p = Sweep.poseAt(a0 * D2R, 'c', Sweep.GEO, M0), yHit = p.o.y + Math.tan(p.phi) * (p.o.z - zf);
+  const p = Sweep.poseAt(a0 * D2R, 'c', Sweep.GEO, M0), yHit = V(p.o.y + Math.tan(p.phi) * (p.o.z - zf)); // 앞면 닿는 높이 → 보이는 딱지 높이(= 영점 점)
   const rj = table.T.jetR0 + ((p.o.z - zf) / Math.cos(p.phi)) * table.T.jetSpread;
   c.save(); c.beginPath(); c.rect(0, 0, w, Y(0)); c.clip();
   c.fillStyle = 'rgba(120,200,255,0.2)';
@@ -5723,14 +5771,16 @@ function drawSweepZero(now) {
   c.fillStyle = '#2a1a12'; c.font = '700 13px sans-serif'; c.textBaseline = 'top';
   c.fillText(t('swZeroTitle'), 8, 7);
 }
-// '방금 숨' 카드 미니 기둥(C): 기둥 윤곽 · 초록 띠 0.50~0.65(늘) · 빨강 ≥ 0.75 · 내 영점 주황 점 · 눈금이면 '톡'
-function drawZCol(cv, s, tapped) {
+// '방금 숨' 카드 미니 기둥(C): 기둥 윤곽 · 초록 띠 0.50~0.65(늘) · 빨강 ≥ 0.75 · 내 영점 주황 점 · 눈금이면 '톡'.
+//   띠·점 높이 = 큰 영점 창과 같은 '보이는 기둥 높이의 몫'(숨 시작 때 얼린 종이 대응표 F — 카드 때 더미는 이미 흩어졌다). 표가 없으면 s 직선
+function drawZCol(cv, s, tapped, F = sweep.visFrz) {
   const dpr = Math.min(2, window.devicePixelRatio || 1), w = 40, h = 88;
   cv.width = w * dpr; cv.height = h * dpr;
   const c = cv.getContext('2d');
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   c.clearRect(0, 0, w, h);
-  const yb = 80, yt = 8, xL = 8, xR = 24, yOf = (v) => yb - ((yb - yt) * (v - Sweep.GC.sBase)) / (1 - Sweep.GC.sBase);
+  const fr = F && F.top > 0 ? (v) => swVisFrozen(F, Sweep.hOfS(v, F.top)) / swVisFrozen(F, F.top) : (v) => (v - Sweep.GC.sBase) / (1 - Sweep.GC.sBase);
+  const yb = 80, yt = 8, xL = 8, xR = 24, yOf = (v) => yb - (yb - yt) * fr(v);
   c.fillStyle = 'rgba(138,90,60,0.35)'; c.fillRect(xL, yt, xR - xL, yb - yt);
   c.strokeStyle = 'rgba(42,26,18,0.7)'; c.lineWidth = 1.5; c.strokeRect(xL, yt, xR - xL, yb - yt);
   c.beginPath(); c.moveTo(2, yb); c.lineTo(w - 2, yb); c.stroke();
