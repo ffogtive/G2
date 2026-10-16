@@ -276,6 +276,16 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 /* 옆모습 창(스펙 §5.1): 얼굴 옆선·제트·더미 단면·기울기 호 — 연습판에서만 */
 .sw-side { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 76px); right: 8px; z-index: 5; width: min(210px, 46vw); aspect-ratio: 210 / 120; pointer-events: none;
   background: rgba(235,246,255,0.9); border: 2px solid var(--ink); border-radius: 10px; box-shadow: 0 3px 0 rgba(42,26,18,0.5); }
+/* 문법 C '영점 조준' 1단계 큰 옆모습 창(HUD 아래, 좌우 16 px, 높이 36vh 220~360 px) — 뒤 3D 는 어둡게(--dim 0.5, 줄어들며 0). 확대·축소는 main.js 가 벽시계로 transform */
+.sw-zero { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 76px); left: 16px; right: 16px; width: calc(100% - 32px); height: clamp(220px, 36vh, 360px); z-index: 7; pointer-events: none;
+  background: rgba(255,248,232,0.97); border: 3px solid var(--ink); border-radius: 12px; box-sizing: border-box; transform-origin: top right; --dim: 0.5;
+  box-shadow: 0 4px 0 rgba(42,26,18,0.5), 0 0 0 200vmax rgba(0,0,0,var(--dim)); }
+.sw-zero-again { position: absolute; z-index: 8; top: calc(max(10px, env(safe-area-inset-top)) + 76px + min(210px, 46vw) * 120 / 210 + 8px); right: 8px; font-size: 0.85rem; padding: 4px 10px; }
+.hint.sw.swz { top: calc(max(10px, env(safe-area-inset-top)) + 76px + clamp(220px, 36vh, 360px) + 92px); z-index: 8; }
+#breath.swover { z-index: 8; } /* C 1단계: 코치 말풍선·'잠깐…'을 어둡게 깐 층(.sw-zero 그림자) 위로 */
+.sw-zcol { width: 40px; height: 88px; vertical-align: middle; margin-left: 4px; }
+.sw-cnote { display: block; font-family: var(--body); font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
+.exp-lab { font-size: 0.8rem; font-weight: 700; align-self: center; margin-right: 2px; }
 .diag-how { font-size: 0.82rem; text-align: left; margin: 2px 0 8px; opacity: 0.85; line-height: 1.35; white-space: pre-line; }
 .diag-btns { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 6px 0; }
 .diag-btns button { font-family: var(--body); font-size: 0.9rem; color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px 10px; box-shadow: 0 2px 0 var(--ink); cursor: pointer; }
@@ -404,8 +414,11 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <div id="swBadge" class="sw-badge" data-t="swBadge" hidden>Practice · no rewards</div>
     <!-- 쓸기 연습판 '방금 숨' 카드(docs/design/core-sweep.md §5·§8): 타임라인 한 줄 · 원인 칩(시험) · 숫자 · 단추 -->
     <canvas id="swSide" class="sw-side" aria-hidden="true" hidden></canvas>
+    <!-- 문법 C '영점 조준': 1단계 큰 옆모습 창(곡선 위 영점) · 2단계 '📍 영점 다시' -->
+    <canvas id="swZero" class="sw-zero" aria-hidden="true" hidden></canvas>
+    <button id="swZeroAgain" class="btn ghost sw-zero-again" type="button" data-t="swZeroAgain" hidden>ZERO AGAIN</button>
     <div id="sweepCard" class="sweep-card" hidden>
-      <div class="sw-head"><b id="swNum"></b><span id="swCause"></span></div>
+      <div class="sw-head"><b id="swNum"></b><span><span id="swCause"></span><canvas id="swZCol" class="sw-zcol" aria-hidden="true" hidden></canvas></span></div>
       <div id="swMain" class="sw-main"></div>
       <details id="swMore" class="sw-more"><summary data-t="swMore">MORE</summary>
         <canvas id="swTl" class="sw-tl" aria-hidden="true"></canvas>
@@ -494,7 +507,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <h2 class="disp" data-t="swBtn">SWEEP PRACTICE</h2>
     <p class="note" data-t="swPick">How many discs?</p>
     <div class="row"><button id="swP40" class="btn xl gold" type="button" data-t="swN40">40</button><button id="swP30" class="btn xl" type="button" data-t="swN30">30</button></div>
-    <p class="note" data-t="swPickNote"></p>
+    <p class="note" id="swPickNote"></p>
     <p class="note" id="swGNote"></p>
     <p class="note" data-t="swBadge">Practice · no rewards</p>
     <div class="row"><button id="swClose" class="btn blue" type="button" data-t="back">BACK</button></div>
