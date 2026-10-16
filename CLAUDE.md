@@ -35,12 +35,13 @@ mockup/src/      목업 소스 (ES 모듈)
   face.js   부는 얼굴(시안 B '뽀뽀 입') + 숨 주머니 고리
   cues.js   공략 단서 계산(숨 물결 = sweetHiFor 역함수, 2~4장째 창, 원인 분류) — 렌더러 독립
   audio.js  WebAudio 합성 효과음(앱에서는 navigator.audioSession 'playback' = 무음 모드에서도 소리, 끄면 'auto') / mic.js 마이크 불기 감지(켤 때 세션 'auto')
-  diag.js   ⚙ '소리·진동 시험'(삑·푸·진동 3단 + AudioContext·audioSession·햅틱 ACK 표) — 실기기 원인 판가름용
+  diag.js   ⚙ '소리·진동 시험'(삑·푸·진동 ③-1 생성기(옛 게임 길)·③-2 엔진·③-3 Core·③-4 지금 게임 길 + AudioContext·audioSession·햅틱 ACK 표 · '게임 진동 기록'·'게임 진동 길' 단추 · ④ 게임처럼 O/X) — 실기기 원인 판가름용(BLOCKERS G4)
   store.js  내 딱지 보관함(localStorage) / i18n.js 한·영
   turn.js   PvP 한 턴: ShotRun(새 월드·턴별 시드·스텝 판정 → 30Hz 궤적·post·해시), TrackPlayer/Chunker(13B 코덱), BeatClock, 꼭두각시 월드 — 렌더러 독립
   net.js    PvP 네트워크 한 겹: Net 인터페이스(아티팩트 db·room·user 모양) + LocalNet(같은 브라우저 두 탭, 상한을 실제처럼 강제)
             + ArtifactNet(claude.use('db'|'room'|'user') 어댑터: 크기 계량·일시 오류 재시도·끝난 방/구독 다시 잇기). resolveNet() = 없으면 null → PvP 버튼 숨김
   pvp.js    친선 대결 규칙(3판·판마다 선공 교대·가위바위보 커밋-리빌·문서 경로·샷 문서로 상태 다시 계산)
+  sweep.js  고개 쓸기(푸어억) 렌더러 독립 부분: 측정 식(sweepmap·sweepcheck 그대로)·엄지 인식기 Gesture(gesture.mjs + slowCancel 40)·SweepCtl(plan·thumb·puck) — 솔로 '쓸기 연습판' 전용(⚙ 조작 깃발 core · 홈 '쓸기 연습' 40·30장 · `?core=sweep` · `#p40` · `#p30`), PvP 해시 밖(ShotRun 이 prog·kind 거부). 화면·코치·옆모습 창은 main.js '고개 쓸기 연습판' 절(core-sweep §9 4번, BLOCKERS G13)
 mockup/index.html  UI 마크업 + CSS (빌드 템플릿)
 tools/build.mjs    → dist/puff.html (오프라인 단일 파일), dist/puff-artifact.html (claude.ai 아티팩트용)
 tools/tune.mjs     바람 물리 파라미터 자동 탐색
@@ -54,6 +55,8 @@ tools/physics-spike.mjs  물리 안정성/분포 측정
 tools/sweepmap.mjs · sweepcheck.mjs · coresweep/  고개 쓸기(푸어억) 코어 측정·재검증·모델 민감도(sens)·숨 풍선(econ)·엄지 인식기(gesture)·손 잡음 시험(gestnoise)·실물 3판 보정(ownclips: calreport / calreport2·choose2·verdict2, 원자료 data/own/calib·calib2, docs/research/06 §5·§7), 원자료 coresweep/data/ (docs/design/core-sweep.md §3.8). sim.js 바꾸면 `node tools/sweepmap.mjs verify` 필수(simsweep ≡ sim.js)
 tools/jetlagcheck.mjs  솔로 시험 토글 '실험: 바람 도달 시간'(⚙ 맨 위 스위치 4개 · 주소 ?jetlag=0.02&airfx=1&hscut=1&airlog=1, 기본 끔 · 값은 0.02 만 · PvP·마이크는 늘 끔, 06 §8.11) 이식 대조: sim.js 숨 인자 jetLag ≡ simsweep tune.jetLag(게임 경로 1~22장 + 방향·wind·테이프·입 높이·restack 변형, 매 스텝 비트 동일)·0 ≡ v1·ShotRun 거부 + 음성 대조(늘 돎: 한쪽만 jetLag ×1.0001 → (a)·(a2)·(b) 같음 0, 0.0001 ≢ v1 — 하나라도 같으면 틀림; `BLUNT=1e-3` = 무딘 비교 시험, 음성 대조가 하나라도 못 잡아야 맞음), 약 30초. sim.js·simsweep 바꾸면 필수. PvP 쪽 확인 = `EXPFEEL=1 pvp-check`(저장값 켬 → 대결 해시 100%·흔적 0)
 tools/feelclock.mjs  06 §8.11 손맛 실측 표: 지금 mockup 의 계측 사본(임시 폴더 · main.js 훅 자리가 정확히 1번 아니면 곧바로 멈춤, 그 밖의 main.js 변경은 check 가 결과로 잡음)을 Playwright 가짜 시계(rAF 16 ms)로 돌려 놓기 → 단서·멈칫·슬로모·보이는 첫 움직임 ms. 첫 인자 필수(없거나 모르면 exit 2): `PW=… node tools/feelclock.mjs run`(약 15분, 원자료 coresweep/data/feel/ 다시 씀 + 표) · `check`(다시 재서 판정 = 커밋본과 report 출력 글자 대조, 참고 = 샷 모든 필드·meta) · `report`(원자료로 표·프레임 맞춤만, 1초, mockup 해시 다르면 경고). main.js 실험 토글·멈칫·슬로모·단서 시각을 바꾸면 check → 다르면 run 하고 §8.11 표 갱신
+tools/sweepgame.mjs  쓸기 이식 대조: parity(sim.js blowProg ≡ simsweep 매 스텝 비트 + 고전 blow·blowLip) · chk(chk601 원자료 줄 대조) · ctl(엄지 표·따라가기·떼기 잠금·gesture.js ≡ gesture.mjs) · ref(주입 칸 Node 기준) · base(게임 고정 숨 기준선 보고). sim.js·sweep.js 바꾸면 parity·ctl 필수
+tools/sweepplay.mjs  쓸기 연습판 브라우저 게이트(가짜 시계 · `?norender` = 그리기만 끔, `window.__renderOnce` = 한 번 그림): 주입 5칸 = Node 해시 · 합성 엄지 · 시범 툭 열림 · 넛지·취소·퍽 · 보상 없음 · 레벨·일일 고전 · 실험 지연 무시 · 고전 조준 고리 그대로 · 콘솔 오류 0, 약 1분. main.js 쓸기·frame 바꾸면 필수
 tools/coresweep/react3.mjs  제트 도달 지연 회차(jetLag, 06 §8 — 판정 통과·물리 채택 아님, 솔로 시험 토글 있음 06 §8.11 → 채택은 재윤님 손맛 결정 G12): self3·list·run·choose3·verdict3·report, 단계·시드·동결을 코드가 강제(커밋된 choice3.json 없으면 평가·가드 거부), 원자료 coresweep/data/react3/. simsweep·ownclips·sweepmap·rules·sim 바꾸면 `node tools/coresweep/react3.mjs self3` 필수
 native/puff_v2/ + scripts/flatfloor.mjs  정직 엔진(3D 제트) 평평한 바닥 게이트(run·report, 원자료 data/flatfloor/ → docs/research/v2-flatfloor.md). 고치면 `CARGO_TARGET_DIR=../puff_sim/target cargo test --release --offline`
 tools/balloon-check.mjs  rules.js 숨 풍선(BALLOON·balloonCost·balloonStep) ≡ coresweep/econ.mjs 'new' 비트 대조(비용 격자·3판 DP) + econ gate 네 판정 (풍선 식·econ 바꾸면 필수, 1초)
@@ -87,6 +90,7 @@ NET=artifact PW=$(npm root -g)/playwright node tools/pvp-check.mjs 5   # 같은 
 - `npm run app:www` = 게임 빌드 → `tools/app-www.mjs`(dist/puff.html + `mockup/app/bridge.js` 다리 코드 → `app/assets/www/index.html`)
 - 앱 쪽 검증: `cd app && flutter analyze && flutter test`. 다리 코드(소리 세션·햅틱 ACK·진단)는 `npm run app:www && PW=$(npm root -g)/playwright node tools/app-bridge-check.mjs`. iOS 빌드·설치는 맥에서만 — **`docs/app/ios-local.md`**
 - 웹 진동(navigator.vibrate)은 iOS 웹뷰에 없다 → 다리 코드가 Flutter 채널 `PuffHaptic` 로 보내 햅틱으로
+  - 게임 진동 = 다리 `g:<route>:<id>:<ms>` → iOS 는 Core Haptics(tapLight·tapMedium·tapHeavy) 먼저 → 생성기 → 엔진(BLOCKERS G4). '게임 진동 길'(⚙ 소리·진동 시험, localStorage `puff.hapRoute` core|view, **끔은 이번 실행만**) · 예열 `w:` · Swift 엔진은 버리지 않고 멈춤 뒤 start() 만
 - **B 시제품(네이티브 경기 장면, 웹뷰 없이)**: `native/puff_sim/`(Rust rapier3d 0.36 물리 + C ABI, README) + `app/lib/native/`(flutter_scene 장면 + `live_sim.dart` 경기 루프, dart:ffi).
   기본은 언제나 웹뷰 게임. 데모 = `-t lib/native/demo_main.dart` · `--dart-define=NATIVE_DEMO=true` · 노치 옆 1.5초 누르기 (`NATIVE_BENCH=true` = 손 안 대고 벤치)
   - 숨 해석은 Dart(`rules.dart resolveShot`)가 하고 Rust 엔 세기·돌풍·조준점만. 초월함수는 `detmath.dart`(순수 Dart fdlibm) — dart:math 를 쓰면 기기마다 마지막 비트가 달라 PvP 해시가 갈라진다(리눅스에서 log 6%·cos 3%)
