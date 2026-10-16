@@ -19,6 +19,8 @@
 //   EXPFEEL=1   같은 실험 토글을 ⚙ 에서 켜고 '완료'로 저장한 것처럼 프로필(localStorage)에 넣고 두 탭을 다시 띄워 시작(재윤님 실제 경로)
 //               QX·EXPFEEL 이면: 해시·뒤 검증 100% 에 더해, 폴링마다 두 탭에 실험 흔적이 없어야 함 — 이 숨의 지연 0(expLag)·숨 기록 없음·
 //               공기 앞머리 숨 줄기·와류 고리 0·화면 수치/켬 표시 숨김. 실험이 정말 켜져 있었는지(feel.jetLag 0.02)도 확인
+//               조작 깃발 '쓸어 올리기'(feel.core, 솔로 연습판 전용)도 함께: EXPFEEL 저장값에 core 1, QX 에 core=sweep 을 넣으면 대결 중
+//               쓸기 흔적(문지기·입력·샷·숨 시계 0.5배·쓸기 숨 수·바람 리본)이 0 이어야 함
 //   RESIGN=a|b  그 탭이 RESIGNAT(기본 2) 턴쯤 뒤 HOME 을 두 번 눌러 기권 → 상대 화면이 2초 안에 '기권승'이고 '연결 끊김 — 기다리는 중'은 한 번도 안 뜬다.
 //               기권한 쪽은 홈 · 매치 문서 abandoned(result.by) · 자리 문서 resign. 기권 전 턴은 평소대로 비교(기권 때 날던 마지막 턴 하나는 빼고).
 //               매치 문서 구독이 폴링이면(NET=artifact SNAPPOLL=30000) presence 빠른 길만 남는다 — 옛 순서(문서 먼저 → presence → 곧바로 leave)는 여기서 걸렸다
@@ -54,7 +56,7 @@ if (ART) { await routeCdn(ctx, cdnLogs); await ctx.addInitScript({ content: awai
 // EXPFEEL: ⚙ 실험 칸에서 넷 다 켜고 '완료'를 누른 것과 같은 저장값(프로필 settings.feel)으로 두 탭을 띄운다.
 //   첫 부팅이 프로필을 만들고(store.js 는 v·inv 없는 프로필을 버림), 탭마다 자기 화면에서 저장값을 고친 뒤 새로고침 →
 //   손맛 값은 부팅 때 한 번 읽으므로 그 탭은 켜진 채로 뜬다(두 탭 localStorage 는 탭 사이에 늦게 맞춰질 수 있어 init 스크립트로는 안 함)
-const EXP_FEEL = { jetLag: 0.02, airFx: 1, hsCut: 1, airLog: 1 };
+const EXP_FEEL = { jetLag: 0.02, airFx: 1, hsCut: 1, airLog: 1, core: 1 }; // core = 조작 깃발 '쓸어 올리기'(솔로 연습판 전용) — 대결에 안 새는지 함께
 const expFeelOn = async (p) => {
   for (let i = 0; i < 3; i++) {
     await p.evaluate((f) => {
@@ -66,7 +68,7 @@ const expFeelOn = async (p) => {
     await p.reload();
     await p.waitForFunction(() => window.__puffBooted && !document.querySelector('#home').hidden && !document.querySelector('#pvpBtn').hidden, null, { timeout: 90000 });
     const f = await p.evaluate(() => window.__puffExp?.().feel);
-    if (f?.jetLag === 0.02 && f.airFx === 1) return f;
+    if (f?.jetLag === 0.02 && f.airFx === 1 && f.core === 1) return f;
   }
   return await p.evaluate(() => window.__puffExp?.().feel);
 };
@@ -119,8 +121,11 @@ const expPoll = async (p, k) => {
   const e = await p.evaluate(() => (window.__pvp?.()?.state === 'match' ? window.__puffExp?.() ?? null : null)).catch(() => null);
   if (!e) return;
   exp.inMatch++;
-  if (e.feel?.jetLag === 0.02 && e.feel.airFx === 1) exp.on[k]++;
-  const why = [e.lagNow !== 0 && `지연 ${e.lagNow}`, e.last && '실험 숨 기록', e.breathAir && '공기 앞머리 숨 줄기', e.rings && `고리 ${e.rings}`, e.readout != null && `화면 수치 '${e.readout}'`].filter(Boolean);
+  if ((e.feel?.jetLag === 0.02 && e.feel.airFx === 1) || e.feel?.core === 1) exp.on[k]++;
+  // 쓸기 흔적(대결 중 모두 꺼져 있어야): 문지기·입력·샷·숨 시계(0.5배)·쓸기 숨 수·바람 리본
+  const sw = e.sweep || {};
+  const why = [e.lagNow !== 0 && `지연 ${e.lagNow}`, e.last && '실험 숨 기록', e.breathAir && '공기 앞머리 숨 줄기', e.rings && `고리 ${e.rings}`, e.readout != null && `화면 수치 '${e.readout}'`,
+    sw.on && '쓸기 문지기', sw.input && '쓸기 입력', sw.shot && '쓸기 샷', sw.clock && '쓸기 숨 시계', sw.shots > 0 && `쓸기 숨 ${sw.shots}`, sw.ribbon && '바람 리본'].filter(Boolean);
   if (why.length && exp.trace.length < 10) exp.trace.push(`${k.toUpperCase()}: ${why.join(' · ')}`);
 };
 while (Date.now() - t0 < LIMIT) {

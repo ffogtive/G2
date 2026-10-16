@@ -344,7 +344,8 @@ function buildScene() {
   const canvas = $('#c');
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   // 자동 시험(tools/sweepplay.mjs): ?norender = 3D 그리기만 끔(장면·카메라 행렬은 갱신 → 화면 좌표·투영 계산은 그대로). 헤드리스 소프트웨어 렌더는 프레임당 약 1초라 가짜 시계 시험이 안 끝난다
-  if (param('norender') != null) renderer.render = (s, c) => { s.updateMatrixWorld(); c.updateMatrixWorld(); };
+  //   window.__renderOnce = true → 다음 프레임 한 번만 진짜로 그림(화면 캡처용)
+  if (param('norender') != null) { const r0 = renderer.render.bind(renderer); renderer.render = (s, c) => { if (window.__renderOnce) { window.__renderOnce = false; return r0(s, c); } s.updateMatrixWorld(); c.updateMatrixWorld(); }; }
   // 품질 프리셋: 터치(폰) 기기는 픽셀 배율·그림자 해상도를 낮춰 발열/프레임 저하를 줄인다
   const mobile = window.matchMedia?.('(pointer: coarse)').matches;
   renderer.setPixelRatio(Math.min(mobile ? 1.75 : 2, window.devicePixelRatio || 1));
@@ -4588,10 +4589,11 @@ function drawSweepTimeline(cv, ctl, last) {
   c.fillText('0', 2, Hc - 1); c.fillText('1.2 s', Wc - 26, Hc - 1);
 }
 
-// 시점: 낮은 앞-옆(1인칭 책상 자세 근처 + 옆 0.6 u). 피치 = 10°·tanh(α/10°) — 6° 까지 거의 1:1, 그 위는 부드러운 상한 10°(어지럼 방지). 줄인 움직임이면 0
+// 시점: 낮은 앞-옆(1인칭 책상 자세 lowP 근처 + 옆 0.6 u). lowP(z 4.9)는 입(z 5)과 같은 자리라 30·40장 더미가 화면 폭을 다 채우고 바람 리본 원뿔 안에 카메라가 들어간다
+//   → 1.7 u 뒤로(입이 카메라 앞 약 1.6 u — 리본이 화면 아래에서 더미로 뻗는다). 피치 = 10°·tanh(α/10°) — 6° 까지 거의 1:1, 그 위는 부드러운 상한 10°(어지럼 방지). 줄인 움직임이면 0
 function sweepView(top) {
   const portrait = window.innerWidth / window.innerHeight < 0.85;
-  const pos = new THREE.Vector3(0.6, 0.36, portrait ? 4.9 : 4.4);
+  const pos = new THREE.Vector3(0.6, 0.45, portrait ? 6.6 : 5.8);
   const d = new THREE.Vector3(0, 0.12 + 0.5 * top, 0).sub(pos);
   const h = Math.hypot(d.x, d.z) || 1, L = d.length();
   const pitch = reducedMotion ? 0 : 10 * Math.tanh(sweep.dispA / 10) * D2R;
@@ -4632,7 +4634,7 @@ function sweepDraw(now) {
     if (blowing) {
       // 바람 리본: 입 → 자국 원뿔(프레임마다)
       if (!sweep.ribbon) {
-        const g = new THREE.CylinderGeometry(1, 0.25, 1, 20, 1, true);
+        const g = new THREE.CylinderGeometry(0.75, 0.2, 1, 20, 1, true); // 위 = 자국 쪽(제트 폭의 0.75), 아래 = 입
         g.translate(0, 0.5, 0);
         sweep.ribbon = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xe2f6ff, transparent: true, opacity: 0.2, depthWrite: false, side: THREE.DoubleSide }));
         sweep.ribbon.renderOrder = 8;
@@ -4643,7 +4645,7 @@ function sweepDraw(now) {
       sweep.ribbon.position.copy(from);
       sweep.ribbon.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
       sweep.ribbon.scale.set(rj, L, rj);
-      sweep.ribbon.material.opacity = 0.05 + 0.25 * clamp(q * S.env, 0, 1);
+      sweep.ribbon.material.opacity = 0.04 + 0.16 * clamp(q * S.env, 0, 1);
       sweep.ribbon.visible = true;
       sweep.snd?.set(S.env, top0 > 0 ? S.yHit / top0 : 0, q);
     }
