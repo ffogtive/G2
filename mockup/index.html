@@ -19,6 +19,17 @@
   --display-ko: "Black Han Sans", "Lilita One", "Arial Black", system-ui, sans-serif;
   --body: "Jua", "Lilita One", system-ui, sans-serif;
   color-scheme: light;
+  /* ── UI 체계 토큰: 단일 출처 = docs/design/ui-system.md (값을 바꾸면 거기 표도 같이) ── */
+  --ui-line: #232323; --ui-line-w: 1.5px;              /* 단추 테두리: 회흑 1.5px · 바깥 그림자 없음 */
+  --ui-ink: #111;                                      /* 숫자·단추 글자의 테두리와 그림자 */
+  --ui-stroke: 0.06em;                                 /* 보이는 글자 테두리(그릴 때는 2배 두께 + paint-order 로 바깥 절반만) */
+  --ui-drop: 0 0.16em 0 var(--ui-ink);                 /* 아래로만, 흐림 없음 */
+  --ui-plus: #3ae449;                                  /* 늘어난 값 '+N' */
+  --btn-g-hi: #6beb77; --btn-g: #3ae449; --btn-g-lip: #159529;   /* 초록 = 성장·받기·다음 */
+  --btn-y-hi: #ffca51; --btn-y: #ffbe2b; --btn-y-lip: #ff930b;   /* 노랑 = 실행(화면마다 주 단추 하나) */
+  --btn-b-hi: #7cc6ff; --btn-b: #3d9bf2; --btn-b-lip: #1d5fc4;   /* 파랑 = 이동·보조(제안값, 미측정) */
+  --btn-x-hi: #d6d6d6; --btn-x: #b4b4b4; --btn-x-lip: #868686;   /* 회색 = 조건이 안 됨 */
+  --btn-h: 52px; --btn-h-sm: 44px; --btn-h-xl: 74px;   /* 보조 92×44 · 주 131×74 이상 */
 }
 html, body { height: 100%; }
 [hidden] { display: none !important; }
@@ -35,20 +46,38 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 /* 공통: 굵은 외곽선 글자 */
 .stroke { color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 0 4px 0 var(--ink); }
 
+/* 단추(ui-system.md §단추): 위 34% 딱 끊긴 밝은 띠 · 아래 12% 어두운 턱 · 맨 위 1px 흰 줄 · 오른쪽 위 흰 점 · 둥글기 = 높이의 12% · 바깥 그림자 없음 */
 .btn {
-  font-family: var(--display); font-size: 1.15rem; letter-spacing: 0.02em; color: #fff; cursor: pointer;
-  -webkit-text-stroke: 1.5px var(--ink); paint-order: stroke fill; text-shadow: 0 2px 0 var(--ink);
-  background: linear-gradient(#8ef05a, var(--go) 55%, var(--go-dark));
-  border: 3px solid var(--ink); border-radius: 18px; padding: 0.55em 1.2em;
-  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.18), inset 0 3px 0 rgba(255,255,255,0.55), 0 5px 0 var(--ink);
-  transition: transform 0.06s, box-shadow 0.06s;
+  --hi: var(--btn-g-hi); --face: var(--btn-g); --lip: var(--btn-g-lip); --h: var(--btn-h);
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.3em; box-sizing: border-box; min-height: var(--h); position: relative;
+  font-family: var(--display); font-size: 1.15rem; line-height: 1.1; letter-spacing: 0.02em; color: #fff; cursor: pointer;
+  -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop);
+  background:
+    radial-gradient(circle at calc(100% - 9px) 7px, rgba(255,255,255,0.95) 0 2.2px, rgba(255,255,255,0) 3px),
+    linear-gradient(var(--hi) 0 34%, var(--face) 34% 88%, var(--lip) 88% 100%);
+  border: var(--ui-line-w) solid var(--ui-line); border-radius: calc(var(--h) * 0.12); padding: 0.2em 1.1em 0.3em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+  transition: transform 0.06s, filter 0.06s;
 }
-.btn:active { transform: translateY(4px); box-shadow: inset 0 -4px 0 rgba(0,0,0,0.18), inset 0 3px 0 rgba(255,255,255,0.55), 0 1px 0 var(--ink); }
+.btn:active { transform: translateY(1px) scale(0.97); filter: brightness(0.94); }
 .btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.btn.blue { background: linear-gradient(#7fc1ff, var(--sky) 55%, var(--sky-dark)); }
-.btn.gold { background: linear-gradient(#fff07a, var(--gold) 55%, #e09a00); }
-.btn.ghost { background: rgba(255,255,255,0.18); font-size: 0.85rem; padding: 0.45em 0.9em; box-shadow: 0 3px 0 var(--ink); }
-.btn.xl { font-size: 2rem; padding: 0.35em 1.6em; border-radius: 24px; }
+.btn.gold { --hi: var(--btn-y-hi); --face: var(--btn-y); --lip: var(--btn-y-lip); }
+.btn.blue { --hi: var(--btn-b-hi); --face: var(--btn-b); --lip: var(--btn-b-lip); }
+.btn.ghost { --hi: rgba(255,255,255,0.32); --face: rgba(255,255,255,0.2); --lip: rgba(0,0,0,0.22); --h: 36px; font-size: 0.85rem; padding: 0.15em 0.9em 0.25em; }
+.btn.sm { --h: var(--btn-h-sm); min-width: 92px; font-size: 0.95rem; padding: 0.15em 0.8em 0.25em; }
+.btn.xl { --h: var(--btn-h-xl); min-width: 131px; font-size: 2rem; padding: 0.1em 1.4em 0.2em; }
+/* 못 누르는 상태 네 가지(ui-system.md §못 누르는 상태): 모양은 그대로, 색만 바뀐다 */
+.btn:disabled, .btn.is-off { --hi: var(--btn-x-hi); --face: var(--btn-x); --lip: var(--btn-x-lip); cursor: default; }  /* ① 조건이 안 됨 = 같은 모양 회색 */
+.btn.is-locked { filter: brightness(0.5); cursor: default; }                                                             /* ② 잠김 = 밝기 50% */
+.btn.is-poor { filter: grayscale(1); cursor: default; }                                                                  /* ③ 비용 부족 = 흑백 */
+.btn.is-soon { filter: grayscale(1); cursor: default; flex-direction: column; gap: 0; }                                  /* ④ 아직 없음 = 흑백 + 여는 조건 */
+.btn.is-soon::after { content: attr(data-cond); font-family: var(--body); font-size: 0.6em; line-height: 1.1; -webkit-text-stroke: 0; text-shadow: none; color: #fff; opacity: 0.95; }
+.btn:disabled:active, .btn.is-off:active { transform: none; filter: none; }
+.btn.is-locked:active { transform: none; filter: brightness(0.5); }
+.btn.is-poor:active, .btn.is-soon:active { transform: none; filter: grayscale(1); }
+/* 숫자 글자(ui-system.md §숫자): 흰 글자 · 얇은 테두리 0.06em · 아래로만 딱 끊긴 그림자 · 고정폭 숫자. 늘어난 값은 초록 '+N' */
+.num { font-family: var(--display); color: #fff; -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); font-variant-numeric: tabular-nums; }
+.num.plus { color: var(--ui-plus); }
 .btn small { font-size: 0.7em; opacity: 0.9; }
 .pill { font-family: var(--display); font-size: 1rem; color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; background: rgba(42,26,18,0.6); border: 2px solid var(--ink); border-radius: 999px; padding: 0.3em 0.8em; display: inline-flex; align-items: center; gap: 0.4em; cursor: pointer; }
 .pill.off { opacity: 0.55; }
@@ -91,7 +120,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 
 /* HUD */
 #hud .top { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 12px; right: 12px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; pointer-events: none; }
-.score { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 2rem; color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); }
+.score { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-size: 2rem; color: #fff; -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); font-variant-numeric: tabular-nums; } /* 숫자 규칙(.num) */
 .score.ai { justify-content: flex-end; }
 .score .who { font-size: 0.9rem; -webkit-text-stroke: 1px var(--ink); display: block; line-height: 1; word-break: keep-all; } /* '연습 · 보상 없음'이 글자 가운데서 꺾이지 않게(i18n 은 '보상\u00a0없음' 붙임) */
 .score .ava { width: 48px; height: 48px; border-radius: 50%; border: 3px solid var(--ink); background: #ffd8a8; display: grid; place-items: center; overflow: hidden; box-shadow: 0 3px 0 var(--ink); }
@@ -100,7 +129,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 @keyframes bump { 40% { transform: scale(1.45); color: var(--gold); } }
 .pot { font-family: var(--display); text-align: center; background: rgba(42,26,18,0.6); border: 3px solid var(--ink); border-radius: 14px; padding: 2px 12px; color: #fff; -webkit-text-stroke: 1px var(--ink); paint-order: stroke fill; }
 .pot span { font-size: 0.8rem; display: block; line-height: 1; opacity: 0.85; }
-.pot b { font-size: 1.6rem; line-height: 1.1; }
+.pot b { font-size: 1.6rem; line-height: 1.1; -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); text-shadow: var(--ui-drop); font-variant-numeric: tabular-nums; }
 #hud.no-pot .pot { visibility: hidden; } /* 레벨 라이벌 판: 판돈 상자 없음(가운데 칸 자리는 유지) */
 #quitBtn { position: absolute; left: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
 /* 9차: 입술 높이 2단 레일(오른쪽 아래, HOME 과 거울 자리). 탭으로 칸 고르기. 누르는 동안·상대 차례엔 숨김 */
@@ -152,8 +181,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.2) rotate(-12deg); opacity: 0; } 22% { transform: translate(-50%, -50%) scale(1.15) rotate(3deg); opacity: 1; } 34% { transform: translate(-50%, -50%) scale(0.97) rotate(-1deg); } 82% { opacity: 1; } 100% { transform: translate(-50%, -70%) scale(1) rotate(0); opacity: 0; } }
 
 /* 떠오르는 글자 */
-.float { position: absolute; transform: translate(-50%, -50%); font-family: var(--display); font-size: 1.6rem; color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 0 3px 0 var(--ink); animation: rise 1.3s ease-out both; white-space: nowrap; }
-.float.plus { color: #9ff07a; font-size: 2rem; }
+.float { position: absolute; transform: translate(-50%, -50%); font-family: var(--display); font-size: 1.6rem; color: #fff; -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); animation: rise 1.3s ease-out both; white-space: nowrap; }
+.float.plus { color: var(--ui-plus); font-size: 2rem; } /* '+N' = 숫자 규칙의 초록 */
 .breath-fb.fbCough { color: #ffb3b3; }
 .float.out { color: #ffffff; font-size: 1.5rem; background: #e2452f; padding: 0 8px; border-radius: 8px; -webkit-text-stroke: 0; }
 .big small.outs { display: block; color: #ffd1c9; font-size: 0.42em; }
@@ -180,10 +209,10 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .res-title { margin: 0; font-family: var(--display); font-size: clamp(2.6rem, 11vw, 4rem); color: var(--gold); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); }
 .res-title.lose { color: #b9c3d9; }
 .res-title.draw { color: #fff; }
-#resScore { font-family: var(--display); font-size: 2.6rem; display: flex; justify-content: center; gap: 14px; align-items: baseline; }
+#resScore { font-family: var(--display); font-size: 2.6rem; display: flex; justify-content: center; gap: 14px; align-items: baseline; color: #fff; -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); font-variant-numeric: tabular-nums; }
 #resScore span { opacity: 0.5; }
 #resNet { font-size: 1.2rem; }
-#resNet .pos { color: var(--go-dark); } #resNet .neg { color: var(--red); }
+#resNet .pos { color: var(--ui-plus); -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); } #resNet .neg { color: var(--red); }
 #resCards { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin: 12px 0; }
 .rc { position: relative; animation: cardIn 0.4s cubic-bezier(.2,1.5,.4,1) both; }
 .rc img { width: 100%; display: block; filter: drop-shadow(0 3px 0 var(--ink)); }
@@ -255,16 +284,35 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .exp.core { border-color: #2f7fd0; background: rgba(140,200,255,0.22); }
 .exp-sw:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
 .sw-badge { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 58px); left: 50%; transform: translateX(-50%); z-index: 6; pointer-events: none; font-family: var(--display); font-size: 0.95rem; color: #fff; -webkit-text-stroke: 1.2px var(--ink); paint-order: stroke fill; background: rgba(47,127,208,0.85); border: 2px solid var(--ink); border-radius: 10px; padding: 1px 10px; white-space: nowrap; }
-.sweep-card { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20; width: min(94vw, 560px); box-sizing: border-box; background: #fff8e8; /* 불투명: 뒤 '홈' 단추가 비쳐 보였다(영어 카드가 더 길어 겹침) */ border: 3px solid var(--ink); border-radius: 16px; padding: 8px 10px 6px; box-shadow: 0 5px 0 var(--ink); text-align: left; }
-.sweep-card .row { margin-top: 4px; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.sweep-card .btn { font-size: 0.95rem; padding: 6px 12px; }
-.sw-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; font-family: var(--display); }
-#swNum { white-space: nowrap; }
+/* 쓸기 결과 카드 = 한 길(ui-system.md §결과 카드·§결과 연출): 첫 줄 장수 + 박자 별 · 둘째 줄 원인 하나 + '자세히'(접힘) · 단추 줄 [새 더미][같은 더미][홈] */
+.sweep-card { position: absolute; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20; width: min(calc(100vw - 16px), 560px); box-sizing: border-box; background: #fff8e8; /* 불투명: 뒤 '홈' 단추가 비쳐 보였다(영어 카드가 더 길어 겹침) */ border: 3px solid var(--ink); border-radius: 16px; padding: 6px 10px 8px; box-shadow: 0 5px 0 var(--ink); text-align: left; }
+.sw-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 46px; }
+.sw-main { font-family: var(--display); font-size: 1rem; line-height: 1.15; margin: 0; min-width: 0; }
+.sw-main .num { font-size: 2.6rem; line-height: 1; display: inline-block; min-width: 1.15em; text-align: right; }
+.sw-main .sw-of { font-size: 1.05rem; opacity: 0.55; margin-right: 4px; }
+.sw-main b { font-variant-numeric: tabular-nums; }
+.sw-stars { display: flex; gap: 2px; flex: none; }
+.sw-stars span { display: inline-block; font-size: 2.2rem; line-height: 1; color: #d8cfbd; -webkit-text-stroke: 2.5px var(--ink); paint-order: stroke fill; }
+.sw-stars span.on { color: var(--gold); }
+.sw-stars span.land { animation: swStar 350ms ease-out backwards; } /* 1.1 → 1.0 · 흰 번쩍 */
+@keyframes swStar { 0% { transform: scale(1.1); color: #fff; text-shadow: 0 0 10px #fff, 0 0 3px #fff; } 45% { color: #fff4b8; text-shadow: 0 0 6px rgba(255,255,255,0.6); } 100% { transform: scale(1); color: var(--gold); text-shadow: none; } }
+.sw-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; min-height: 26px; font-family: var(--display); }
+.sw-head > details { margin-left: auto; }
+.sw-head > details[open] { flex-basis: 100%; margin-left: 0; }
 .sw-chip { display: inline-block; font-family: var(--body); font-weight: 700; font-size: 0.92rem; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 1px 8px; }
-.sw-main { font-family: var(--display); font-size: 1.15rem; margin: 2px 0 0; }
-.sw-main b { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-.sw-main small { font-size: 0.9rem; opacity: 0.75; }
-.sw-more summary { cursor: pointer; font-size: 0.85rem; font-weight: 700; margin: 2px 0; }
+.sw-more summary { cursor: pointer; font-family: var(--body); font-size: 0.78rem; font-weight: 700; opacity: 0.6; padding: 2px 0; }
+.sw-kind { font-family: var(--body); font-weight: 700; font-size: 0.8rem; margin: 2px 0; } /* 개발 이름표('방금 숨 · 주입'·조합 글)는 자세히 안에만 */
+.sw-btns { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; }
+.sw-btns .btn.sm { flex: 0 1 92px; padding-inline: 0.4em; white-space: nowrap; }
+.sw-btns .sw-primary { --h: var(--btn-h-xl); flex: 1 1 auto; min-width: 131px; max-width: 240px; font-size: 1.45rem; padding: 0.1em 0.5em 0.2em; white-space: nowrap; }
+@media (max-width: 359px) { .sw-btns { flex-wrap: wrap; } .sw-btns .sw-primary { order: -1; flex-basis: 100%; max-width: none; } .sw-btns .btn.sm { flex: 1 1 0; } }
+/* 연출 상태: 값·글은 처음부터 DOM 에 있고(시험·자세히가 읽음) 보이기만 늦춘다 */
+.sweep-card .rv-wait { visibility: hidden; }
+.sweep-card .rv-in { animation: swIn 180ms ease-out backwards; }
+@keyframes swIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: none; } }
+.sw-btns .sw-primary.rv-pop { animation: swPop 300ms cubic-bezier(.25,.9,.35,1) backwards; } /* 0 → 1.08 → 1 */
+@keyframes swPop { 0% { transform: scale(0); } 70% { transform: scale(1.08); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .sw-stars span.land, .sweep-card .rv-in, .sw-btns .sw-primary.rv-pop { animation: none; } }
 .sw-tl { display: block; width: 100%; height: 110px; border: 2px solid rgba(42,26,18,0.25); border-radius: 8px; margin: 4px 0 3px; }
 .sw-leg { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 0.74rem; margin-bottom: 3px; }
 .sw-leg i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 4px; }
@@ -281,16 +329,13 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
   box-shadow: 0 4px 0 rgba(42,26,18,0.5), 0 0 0 200vmax rgba(0,0,0,var(--dim)); }
 .sw-zero-again { position: absolute; z-index: 8; top: calc(max(10px, env(safe-area-inset-top)) + 76px + min(210px, 46vw) * 120 / 210 + 8px); right: 8px; font-size: 0.85rem; padding: 4px 10px; }
 .hint.sw.swz { top: calc(max(10px, env(safe-area-inset-top)) + 76px + clamp(220px, 36vh, 360px) + 92px); z-index: 8; }
-/* 문법 D '세 박자': 다시 단추 = 왼쪽 아래 입술 그림 위(손 닿는 44 px) · 힌트 = HUD 바로 아래(더미 위 여백) · 카드 세 점 */
+/* 문법 D '세 박자': 다시 단추 = 왼쪽 아래 입술 그림 위(손 닿는 44 px) · 힌트 = HUD 바로 아래(더미 위 여백) */
 .sw-again-d { top: auto; right: auto; left: max(12px, env(safe-area-inset-left)); bottom: calc(max(12px, env(safe-area-inset-bottom)) + 23vh); min-height: 44px; font-size: 0.85rem; padding: 4px 10px; position: absolute; z-index: 8; }
 .sw-angle-again { left: calc(max(12px, env(safe-area-inset-left)) + 124px); }
 .hint.sw.swd { top: calc(max(10px, env(safe-area-inset-top)) + 80px); }
-.sw-dots { display: inline-flex; align-items: center; gap: 2px; font-family: var(--body); font-weight: 700; font-size: 0.8rem; margin-left: 6px; vertical-align: middle; }
-.sw-dots i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); margin-right: 4px; box-sizing: border-box; }
-.sw-dots i.t-g { background: #2fbf5b; } .sw-dots i.t-y { background: #f2c21e; } .sw-dots i.t-r { background: #e04545; } .sw-dots i.t-w { background: #9aa0a6; }
 #breath.swover { z-index: 8; } /* C 1단계: 코치 말풍선·'잠깐…'을 어둡게 깐 층(.sw-zero 그림자) 위로 */
 .sw-zcol { width: 40px; height: 88px; vertical-align: middle; margin-left: 4px; }
-.sw-combo { display: block; font-family: var(--body); font-size: 0.72rem; font-weight: 600; opacity: 0.7; margin-top: 1px; } /* D 비교 토글 조합(작게) */
+.sw-combo { display: block; font-family: var(--body); font-size: 0.72rem; font-weight: 600; opacity: 0.7; margin-top: 1px; } /* D 비교 토글 조합(작게, 자세히 안) */
 .sw-cnote { display: block; font-family: var(--body); font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
 .exp-lab { font-size: 0.8rem; font-weight: 700; align-self: center; margin-right: 2px; }
 .diag-how { font-size: 0.82rem; text-align: left; margin: 2px 0 8px; opacity: 0.85; line-height: 1.35; white-space: pre-line; }
@@ -306,7 +351,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .diag-tab { width: 100%; border-collapse: collapse; font-size: 0.78rem; text-align: left; }
 .diag-tab td { padding: 3px 4px; border-bottom: 1px solid rgba(0,0,0,0.1); vertical-align: top; overflow-wrap: anywhere; }
 .diag-tab td:first-child { width: 38%; font-weight: bold; }
-.daily-score { font-family: var(--display); font-size: 4rem; color: var(--gold); -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 0 5px 0 var(--ink); line-height: 1.1; }
+.daily-score { font-family: var(--display); font-size: 4rem; color: var(--gold); -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); line-height: 1.1; font-variant-numeric: tabular-nums; }
 #dailyCard h2 { margin: 0; font-family: var(--display); }
 #dailyShare { width: 100%; box-sizing: border-box; font-family: var(--body); font-size: 1rem; border: 3px solid var(--ink); border-radius: 12px; padding: 8px; resize: none; margin: 8px 0 12px; background: #fff; color: var(--ink); user-select: text; -webkit-user-select: text; }
 #breath { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -350,6 +395,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
 .tier-tag.superhard { background: #7a2fd6; }
 .li-img { width: 92px; height: 92px; margin: 10px auto 4px; display: block; filter: drop-shadow(0 4px 0 var(--ink)); }
 .li-goal { font-size: 1.25rem; margin: 6px 0; }
+#lrDetail { font-family: var(--display); font-size: 1.7rem; color: #fff; -webkit-text-stroke: calc(2 * var(--ui-stroke)) var(--ui-ink); paint-order: stroke fill; text-shadow: var(--ui-drop); font-variant-numeric: tabular-nums; } /* 레벨 결과 숫자 = 숫자 규칙 */
 .li-new { background: #fff3c4; border: 3px dashed #e08a00; border-radius: 14px; padding: 8px 10px; margin: 8px 0 12px; text-align: left; font-size: 1rem; }
 .li-new b { color: var(--red); font-family: var(--display); }
 .lr-stars { display: flex; justify-content: center; gap: 6px; font-size: 3.2rem; line-height: 1; margin: 6px 0; }
@@ -396,15 +442,15 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     </div>
     <div class="logo"><h1 class="disp">PUFF<span>!</span></h1><p data-t="subtitle">Blow. Flip. Keep.</p></div>
     <div class="home-bottom">
-      <button id="playBtn" class="btn xl" type="button"><span data-t="play">PLAY</span> <small id="playLv"></small></button>
+      <button id="playBtn" class="btn xl gold" type="button"><span data-t="play">PLAY</span> <small id="playLv"></small></button>
       <div class="row">
-        <button id="freeBtn" class="btn" type="button" data-t="freeMatch">FREE MATCH</button>
+        <button id="freeBtn" class="btn blue" type="button" data-t="freeMatch">FREE MATCH</button>
         <button id="dailyBtn" class="btn blue" type="button">DAILY STACK</button>
-        <button id="sheetBtn" class="btn gold" type="button" data-t="sheet">FREE SHEET</button>
+        <button id="sheetBtn" class="btn" type="button" data-t="sheet">FREE SHEET</button>
         <button id="albumBtn" class="btn blue" type="button"><span data-t="collection">ALBUM</span> <small id="albumProg">0/24</small></button>
         <button id="micBtn" class="btn ghost" type="button">Mic: OFF</button>
-        <button id="pvpBtn" class="btn gold" type="button" data-t="pvpBtn" hidden>PvP (2 TABS)</button>
-        <button id="sweepBtn" class="btn gold" type="button" data-t="swBtn" hidden>SWEEP PRACTICE</button>
+        <button id="pvpBtn" class="btn blue" type="button" data-t="pvpBtn" hidden>PvP (2 TABS)</button>
+        <button id="sweepBtn" class="btn blue" type="button" data-t="swBtn" hidden>SWEEP PRACTICE</button>
       </div>
     </div>
   </section>
@@ -419,22 +465,23 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <div id="breathFb" class="breath-fb" hidden></div>
     <div id="expLog" class="exp-log" hidden></div>
     <div id="swBadge" class="sw-badge" data-t="swBadge" hidden>Practice · no rewards</div>
-    <!-- 쓸기 연습판 '방금 숨' 카드(docs/design/core-sweep.md §5·§8): 타임라인 한 줄 · 원인 칩(시험) · 숫자 · 단추 -->
     <canvas id="swSide" class="sw-side" aria-hidden="true" hidden></canvas>
     <!-- 문법 C '영점 조준': 1단계 큰 옆모습 창(곡선 위 영점) · 2단계 '📍 영점 다시' -->
     <canvas id="swZero" class="sw-zero" aria-hidden="true" hidden></canvas>
     <button id="swZeroAgain" class="btn ghost sw-zero-again" type="button" data-t="swZeroAgain" hidden>ZERO AGAIN</button>
     <!-- 문법 D '세 박자': ③ 누르기 전 '📐 각도 다시'(영점 다시와 나란히 왼쪽 아래) -->
     <button id="swAngleAgain" class="btn ghost sw-again-d sw-angle-again" type="button" data-t="swAngleAgain" hidden>ANGLE AGAIN</button>
+    <!-- 쓸기 결과 카드 = 한 길(docs/design/ui-system.md §결과 카드): 장수 · 박자 별 · 원인 하나 · '같은 더미'(노랑 주 단추, 맨 끝) · 새 더미·홈(작은 보조) · 자세히(개발 숫자). 기록 복사 = ⚙ -->
     <div id="sweepCard" class="sweep-card" hidden>
-      <div class="sw-head"><b id="swNum"></b><span><span id="swCause"></span><canvas id="swZCol" class="sw-zcol" aria-hidden="true" hidden></canvas></span></div>
-      <div id="swMain" class="sw-main"></div>
-      <details id="swMore" class="sw-more"><summary data-t="swMore">MORE</summary>
-        <canvas id="swTl" class="sw-tl" aria-hidden="true"></canvas>
-        <div id="swLeg" class="sw-leg"></div>
-        <div id="swNums" class="sw-nums"></div>
-      </details>
-      <div class="row"><button id="swSame" class="btn" type="button" data-t="swSame">SAME PILE</button><button id="swNew" class="btn gold" type="button" data-t="swNew">NEW PILE</button><button id="swHome" class="btn blue" type="button" data-t="home">HOME</button><button id="swCopy" class="btn ghost" type="button" data-t="swCopy">COPY LOG</button></div>
+      <div class="sw-top"><div id="swMain" class="sw-main"></div><div id="swStars" class="sw-stars" role="img" hidden></div></div>
+      <div class="sw-head"><span id="swCause"></span><canvas id="swZCol" class="sw-zcol" aria-hidden="true" hidden></canvas>
+        <details id="swMore" class="sw-more"><summary data-t="swMore">MORE</summary>
+          <div id="swNum" class="sw-kind"></div>
+          <canvas id="swTl" class="sw-tl" aria-hidden="true"></canvas>
+          <div id="swLeg" class="sw-leg"></div>
+          <div id="swNums" class="sw-nums"></div>
+        </details></div>
+      <div class="sw-btns"><button id="swNew" class="btn blue sm" type="button" data-t="swNew">NEW PILE</button><button id="swSame" class="btn gold sw-primary" type="button" data-t="swSame">SAME PILE</button><button id="swHome" class="btn blue sm" type="button" data-t="home">HOME</button></div>
     </div>
     <div id="hint" class="hint" hidden><div class="hand"></div><span id="hintText"></span></div>
     <div id="banner" class="banner" hidden></div>
@@ -455,7 +502,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
       <div id="resNet"></div>
       <div id="resBest" class="note"></div>
       <div id="resCards"></div>
-      <div class="row"><button id="againBtn" class="btn" type="button" data-t="again">REMATCH</button><button id="homeBtn" class="btn blue" type="button" data-t="home">HOME</button></div>
+      <div class="row"><button id="againBtn" class="btn gold" type="button" data-t="again">REMATCH</button><button id="homeBtn" class="btn blue" type="button" data-t="home">HOME</button></div>
     </div>
   </section>
 
@@ -489,7 +536,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <p id="liGoal" class="li-goal"></p>
     <p id="liHeavy" class="note" hidden></p>
     <div id="liNew" class="li-new" hidden><b>NEW!</b> <span id="liNewText"></span></div>
-    <div class="row"><button id="liClose" class="btn blue" type="button" data-t="back">BACK</button><button id="liPlay" class="btn xl" type="button" data-t="play">PLAY</button></div>
+    <div class="row"><button id="liClose" class="btn blue" type="button" data-t="back">BACK</button><button id="liPlay" class="btn xl gold" type="button" data-t="play">PLAY</button></div>
   </div></div>
   <div id="lvResult" class="modal" hidden><div class="panel lv-panel">
     <h2 id="lrTitle" class="res-title">CLEAR!</h2>
@@ -507,7 +554,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <div class="free-pick">
       <div id="modes" class="seg"><button type="button" data-m="fun" data-t="modeFun">FOR FUN</button><button type="button" data-m="keeps" data-t="modeKeeps">TAKE-HOME</button></div>
       <div class="bet"><span class="lbl" data-t="stake">POT</span><div id="chips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
-      <button id="freeGo" class="btn xl" type="button" data-t="play">PLAY</button>
+      <button id="freeGo" class="btn xl gold" type="button" data-t="play">PLAY</button>
     </div>
     <div class="row"><button id="freeClose" class="btn blue" type="button" data-t="back">BACK</button></div>
   </div></div>
@@ -526,7 +573,7 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <h2 class="disp" data-t="pvpTitle">Play a friend</h2>
     <div id="pvpPick">
       <div class="bet"><span class="lbl" data-t="pvpSize">Discs each</span><div id="pvpChips"><button type="button" data-n="5">5</button><button type="button" data-n="10">10</button><button type="button" data-n="20">20</button></div></div>
-      <button id="pvpCreate" class="btn xl" type="button" data-t="pvpCreate">CREATE</button>
+      <button id="pvpCreate" class="btn xl gold" type="button" data-t="pvpCreate">CREATE</button>
       <p class="note" data-t="pvpOr">or type a code</p>
       <div class="row"><input id="pvpCodeIn" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="code" placeholder="CODE"><button id="pvpJoin" class="btn blue" type="button" data-t="pvpJoin">JOIN</button></div>
     </div>

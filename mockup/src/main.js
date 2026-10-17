@@ -4217,6 +4217,7 @@ async function netApplyResult(M, g, ti, seat, P, o) {
 const D2R = Math.PI / 180;
 const sweep = {
   N: 40, idx: 0, total: 0, // 연습판 장수·시드 번호 · 이번 실행에서 분 숨 수(프로필에 안 적는다)
+  rv: null, // 결과 카드 연출(sweepReveal) — 마지막 카드의 계획·기록(시험이 state().reveal 로 읽음)
   totalBy: { A: 0, B: 0, C: 0, D: 0 }, // 문법별 숨 수(첫 3숨 손가락 시범·코치·띠 — A/B 로 3숨 넘게 분 뒤 ⚙ 에서 C 로 바꾸면 C 안내가 하나도 안 나오던 것, 검토)
   coachShot: false, openAt: 0, nudge: false, moreOpen: null, mark: null, // 이 숨이 코치 숨인가 · '푸' 열린 시각 · 안 열림 넛지 · 카드 '자세히' 펼침 · 바람 자국 메시
   input: null, // 진행 중 엄지 입력(playerSweepShot)
@@ -4240,7 +4241,9 @@ window.__puffSweep = { log: [], last: null, shots: 0 };
 // 자동 시험용(tools/sweepplay.mjs): 지금 연습판 상태
 window.__puffSweep.state = () => ({
   on: sweepOn(), N: sweep.N, seed: match?.seed ?? null, waiting: !!(sweep.input && !sweep.input.g && !sweep.input.ctl), input: !!sweep.input, pressed: !!sweep.input?.g,
-  clock: sweep.clock, shot: !!sweep.shot, card: !$('#sweepCard').hidden, total: sweep.total, totalBy: { ...sweep.totalBy }, guide: performance.now() < sweep.guideUntil, slowCancels: sweep.slowCancels,
+  clock: sweep.clock, shot: !!sweep.shot, card: !$('#sweepCard').hidden, total: sweep.total,
+  totalBy: { ...sweep.totalBy }, guide: performance.now() < sweep.guideUntil, slowCancels: sweep.slowCancels,
+  reveal: sweep.rv ? { done: sweep.rv.done, age: performance.now() - sweep.rv.t0, plan: { ...sweep.rv.plan }, log: sweep.rv.log.map((x) => [...x]) } : null, // 결과 카드 연출(마지막 카드, 끝나도 남음 · age = 카드가 뜬 뒤 ms)
   air: !!table?.air, lag: expLag(), timeScale, state,
   nudge: sweep.nudge, coach: sweepCoachOn(), coachShot: sweep.coachShot, side: !$('#swSide').hidden, mark: !!sweep.mark?.visible,
   grammar: sweepGrammar(), mode: sweep.ctl?.mode ?? null, t0: sweep.ctl?.t0 ?? null, flickReq: sweep.ctl?.flickReq ?? null, cueT: sweep.ctl?.rec?.cueT ?? null, coachKey: sweep.coachKey,
@@ -5687,14 +5690,16 @@ function sweepChip2(raw, last, sum) {
 const SW_LEGEND = [['#ff8a1f', 'swTlHit'], ['dash', 'swTlTop'], ['#e0457b', 'swTlTilt'], ['rgba(80,170,255,0.6)', 'swTlEnv'], ['dot:#ffd23f', 'swTlCross'], ['dot:#3a8fe0', 'swTlRel']];
 const SW_LEGEND_B = [['#ff8a1f', 'swTlHit'], ['dash', 'swTlTop'], ['#e0457b', 'swTlTilt'], ['rgba(80,170,255,0.6)', 'swTlEnv'], ['dot:#ffd23f', 'swTlCross'], ['dot:#3a8fe0', 'swTlFlick']];
 const SW_LEGEND_C = [['#ff8a1f', 'swTlHit'], ['dash', 'swTlTop'], ['#e0457b', 'swTlTilt'], ['rgba(80,170,255,0.6)', 'swTlEnv'], ['dot:#ffd23f', 'swTlCross'], ['dot:#3a8fe0', 'swTlUp']];
-// '방금 숨' 카드: 첫 화면 = 원인 칩 · 뒤집힘/원 밖 · 단추. 타임라인·범례·숫자는 '자세히'(작은 폰은 처음에 접힘 → 결과 더미가 보이게).
+// '방금 숨' 카드 = 한 길(docs/design/ui-system.md §결과 카드 · 리서치 08 A3·A5): 첫 줄 = 뒤집힌 장수(세어 올림) + D 박자 별 · 둘째 줄 = 원인 칩 하나 ·
+//   단추 = [새 더미(보조)] [같은 더미(노랑 주 단추, 맨 끝 팝)] [홈(보조)]. 개발 이름표('방금 숨 · 주입/세 박자'·조합 글)·타임라인·범례·숫자는 '자세히'(접힘) 안, 기록 복사는 ⚙.
 // 측정 정답 박자(예전 swRef 줄)는 보이지 않는다 — 스펙 §5 '정답 띠는 미리 보여 주지 않는다', 손 게이트가 지시 따르기를 재지 않게(검토 1·3)
 function showSweepCard(raw, last, sum) {
   const box = $('#sweepCard');
   const g = ctlG(raw.ctl), gbShot = g === 'B', gcShot = g === 'C', gdShot = g === 'D';
   const kindTxt = raw.inject || raw.kind === 'plan' ? t('swKindPlan') : raw.kind === 'puck' ? t('swKindPuck') : gdShot ? t('swKindGd') : gcShot ? t('swKindGc') : gbShot ? t('swKindGb') : t('swKindPueok');
   const ck = last.chip, ck2 = last.chip2;
-  $('#swNum').textContent = `${t('rcpTitle')} · ${kindTxt}`;
+  // 개발 이름표: 자세히 안 첫 줄(D 는 비교 토글 조합 글 #swCombo 도 여기 — sweepplay (12e) 가 글자를 대조)
+  $('#swNum').innerHTML = `${t('rcpTitle')} · ${kindTxt}` + (gdShot ? `<span id="swCombo" class="sw-combo">${swGdModeTxt(last.gdm)}</span>` : '');
   // D 말: 약한 숨 = '조금 더 당겨요'('꽉까지'는 D 에선 돌풍) · 영점 높음·낮음 = '초록 띠에서 톡'(C 의 '아래쪽 4분의 1'은 D 화면에 없는 말 — D 는 더미에 초록 띠를 그린다)
   const chipKey = (k) => ((gcShot || gdShot) && k === 'mixed' ? 'swCause_mixedC' : gdShot && ['qWeak', 'zHigh', 'zLow'].includes(k) ? `swCause_${k}D` : 'swCause_' + k);
   // '시험' 딱지는 화면에서 뺐다(재윤님 손 검토 2026-10-17: 모든 칩이 '좋아요 시험'으로 읽혔다) — 칩이 아직 검증 전이라는 표시는 기록 복사(chipsTest)에만
@@ -5704,14 +5709,18 @@ function showSweepCard(raw, last, sum) {
   //   '꽉까지 당겨요'만으로는 따를 수 없는 처방이었다)
   const note = (gcShot && ck === 'qWeak' && last.s < 0.5 ? ` <small class="sw-cnote">${t('swCauseQLow')}</small>` : '')
     + (gcShot && last.q < SW_Q_GOOD && last.edgePx != null && last.edgePx < 24 ? ` <small class="sw-cnote">${t('swCauseEdge')}</small>` : '');
-  // D: 글 없는 세 점 ①●②●③● = 잠긴 박자 칸 색(Sweep.gdZone — 고리 띠·부채꼴·게이지와 같은 함수라 말이 엇갈리지 않는다)
-  const dots = gdShot ? ` <span class="sw-dots" aria-hidden="true">${[last.zoneS, last.zoneTh, last.zoneQ].map((z, i) => `${'①②③'[i]}<i class="t-${Sweep.gdTone(z)}"></i>`).join('')}</span>` : '';
-  $('#swCause').innerHTML = chip(ck) + (ck2 ? ' ' + chip(ck2) : '') + note + dots;
+  // D: 박자 별 ①②③ = 잠긴 박자 칸이 초록이면 그 자리에 별(Sweep.gdTone — 고리 띠·부채꼴·게이지와 같은 함수라 말이 엇갈리지 않는다). 예전 세 점(①●②●③●) 대신
+  const tones = gdShot ? [last.zoneS, last.zoneTh, last.zoneQ].map((z) => Sweep.gdTone(z)) : null;
+  const starsEl = $('#swStars');
+  starsEl.hidden = !tones;
+  starsEl.innerHTML = tones ? tones.map((tn, i) => `<span data-beat="${i + 1}" data-tone="${tn}">★</span>`).join('') : '';
+  if (tones) starsEl.setAttribute('aria-label', fmt(t('swStarsAria'), { k: tones.filter((x) => x === 'g').length }));
+  $('#swCause').innerHTML = chip(ck) + (ck2 ? ' ' + chip(ck2) : '') + note;
   const zc = $('#swZCol');
   zc.hidden = !gcShot;
   if (gcShot) drawZCol(zc, last.s, last.meter === 's' && last.tapMs != null);
-  $('#swMain').innerHTML = `<b>${last.flips}</b><small>/${sum.n}</small> ${t('swNumFlip')} · ${t(gdShot ? (last.gdm?.out === 'r5' ? 'swNumOutR' : 'swNumOutD') : 'swNumOut')} <b>${last.outs}</b>`
-    + (gdShot ? `<span id="swCombo" class="sw-combo">${swGdModeTxt(last.gdm)}</span>` : ''); // D: 비교 토글 조합(작게)
+  // 첫 줄: 큰 흰 숫자(숫자 규칙 .num, 0 부터 세어 올림 — sweepReveal) + '/40 뒤집힘 · 책상 밖 1'
+  $('#swMain').innerHTML = `<b id="swFlipN" class="num">${last.flips}</b><span class="sw-of">/${sum.n}</span>${t('swNumFlip')} · ${t(gdShot ? (last.gdm?.out === 'r5' ? 'swNumOutR' : 'swNumOutD') : 'swNumOut')} <b>${last.outs}</b>`;
   const ms = (v) => (v == null ? '–' : `${v} ms`);
   const st = last.stats;
   const meterTxt = (m) => t({ s: 'swMeterS', th: 'swMeterTh', q: 'swMeterQ', off: 'swMeterOff' }[m] || 'swMeterOff');
@@ -5749,17 +5758,84 @@ function showSweepCard(raw, last, sum) {
   more.ontoggle = () => { if (more.open) drawSweepTimeline($('#swTl'), raw.ctl, last); };
   box.hidden = false; // 먼저 보이게(캔버스 크기를 읽으려면)
   if (more.open) drawSweepTimeline($('#swTl'), raw.ctl, last);
+  sweepReveal(box, last.flips, tones);
   return new Promise((resolve) => {
-    const done = (v) => { box.hidden = true; sweep.card = null; resolve(v); };
+    const done = (v) => { if (sweep.card?.resolve !== done) return; sweepRevealStop(); box.hidden = true; sweep.card = null; resolve(v); };
     sweep.card = { resolve: done };
+    // 단추는 처음부터 받는다('같은 더미'는 연출 끝까지 안 보이지만 — visibility 라 손으로는 못 누름 — 새 더미·홈은 바로 보임)
     $('#swSame').onclick = () => { sfx.pop(); done('same'); };
     $('#swNew').onclick = () => { sfx.pop(); done('new'); };
     $('#swHome').onclick = () => { sfx.pop(); done('home'); };
-    $('#swCopy').onclick = async () => {
-      const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, chipsTest: true, gdMode: Sweep.gdKey(swGdModeFeel()), gdGuide: +feel.gdGuide === 1 ? 'always' : 'first', log: window.__puffSweep.log }); // chipsTest = 원인 칩은 시험(검증 전) — 화면 딱지 대신 · gdMode = 지금 ⚙ 조합(줄마다 mode = 그 숨의 조합) · gdGuide = ⚙ 가이드 띠(줄마다 guide = 그 숨의 띠)
-      try { await navigator.clipboard.writeText(txt); toast(t('swCopied')); } catch (e) { console.log('[쓸기 기록]', txt); toast(t('copyManual')); }
-    };
   });
+}
+// ⚙ '쓸기 기록 복사'(예전 카드 단추 — 결과 카드는 한 길만 남기고 개발 단추는 ⚙ 로, 리서치 08 A3): 이번 실행의 쓸기 기록(최근 20숨)
+async function copySweepLog() {
+  const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, chipsTest: true, gdMode: Sweep.gdKey(swGdModeFeel()), gdGuide: +feel.gdGuide === 1 ? 'always' : 'first', log: window.__puffSweep.log }); // chipsTest = 원인 칩은 시험(검증 전) — 화면 딱지 대신 · gdMode = 지금 ⚙ 조합(줄마다 mode = 그 숨의 조합) · gdGuide = ⚙ 가이드 띠(줄마다 guide = 그 숨의 띠)
+  try { await navigator.clipboard.writeText(txt); toast(t('swCopied')); } catch (e) { console.log('[쓸기 기록]', txt); toast(t('copyManual')); }
+}
+// 결과 카드 연출(ui-system.md §결과 연출 · 리서치 08 A3 — 시간은 제안값): ① 뒤집힌 장수 0 → N 세어 올림(≤ 0.8 s) → ② 초록 박자마다 별 하나씩
+//   (별 350 ms · 사이 250 ms · 1.1 → 1.0 배 + 흰 번쩍 · 진동 SW_STAR_VIB = 앱 tapMedium · 동전 소리) → ③ 원인 칩(하나) → ④ 300 ms 뒤 '같은 더미' 팝 0 → 1.08 → 1.
+//   값·글은 처음부터 DOM 에 있다(보이기만 늦춤). 카드 빈 곳을 톡 = 끝 상태로 건너뜀(남은 별 진동 없음). 움직임 줄이기 설정 = 처음부터 끝 상태.
+//   시계는 setTimeout·rAF(가짜 시계 시험이 그대로 돌린다). 물리·판정·기록과 무관 — 카드가 닫히면(단추·홈·sweepStop) sweepRevealStop
+const SW_RV = { countMax: 800, countBase: 250, countPer: 15, preStar: 150, starMs: 350, starGap: 250, chipGap: 150, popLate: 300 };
+const SW_STAR_VIB = 24; // 별 착지 = 16~32 ms → 앱 다리 tapMedium(app/lib/haptics.dart) · 쓸기 진동(35·25·20·12)과 다른 값이라 기록에서 갈린다
+function sweepRevealPlan(flips, tones) {
+  const count = flips > 0 ? Math.min(SW_RV.countMax, SW_RV.countBase + SW_RV.countPer * flips) : 0;
+  const lit = tones ? tones.map((tn, i) => (tn === 'g' ? i : -1)).filter((i) => i >= 0) : [];
+  const stars = lit.map((beat, k) => ({ beat, at: count + SW_RV.preStar + k * (SW_RV.starMs + SW_RV.starGap) }));
+  const chip = (stars.length ? stars[stars.length - 1].at + SW_RV.starMs : count) + SW_RV.chipGap;
+  return { count, stars, chip, pop: chip + SW_RV.popLate };
+}
+function sweepRevealStop() {
+  const R = sweep.rv;
+  if (!R) return;
+  for (const id of R.timers) clearTimeout(id);
+  R.timers.length = 0;
+  cancelAnimationFrame(R.raf);
+  if (R.box) R.box.onpointerdown = null;
+}
+function sweepReveal(box, flips, tones) {
+  sweepRevealStop();
+  const plan = sweepRevealPlan(flips, tones);
+  const R = { timers: [], raf: 0, done: false, plan, log: [], box, t0: performance.now() };
+  sweep.rv = R;
+  const numEl = $('#swFlipN'), stars = [...box.querySelectorAll('#swStars span')], same = $('#swSame');
+  const late = [$('#swCause'), $('#swZCol')];
+  const at = (ms, fn) => R.timers.push(setTimeout(fn, ms));
+  const mark = (what, extra) => R.log.push([what, Math.round(performance.now() - R.t0), ...(extra != null ? [extra] : [])]);
+  const showChip = (anim) => { for (const el of late) { el.classList.remove('rv-wait'); if (anim) el.classList.add('rv-in'); } };
+  const showSame = (anim) => { same.classList.remove('rv-wait'); if (anim) same.classList.add('rv-pop'); };
+  const finish = (why) => { // 끝 상태(건너뛰기·움직임 줄이기)
+    sweepRevealStop();
+    numEl.textContent = String(flips);
+    for (const st of plan.stars) stars[st.beat]?.classList.add('on');
+    showChip(false); showSame(false);
+    R.done = true; mark(why);
+  };
+  numEl.textContent = '0';
+  for (const el of [...late, same]) el.classList.remove('rv-in', 'rv-pop');
+  for (const el of [...late, same]) el.classList.add('rv-wait');
+  for (const el of stars) el.classList.remove('on', 'land');
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { finish('reduced'); return; }
+  box.onpointerdown = (ev) => { if (!R.done && !ev.target.closest?.('button, summary, details[open]')) finish('skip'); };
+  if (plan.count) {
+    const step = () => {
+      const k = Math.min(1, (performance.now() - R.t0) / plan.count);
+      numEl.textContent = String(Math.round(flips * (1 - (1 - k) ** 3)));
+      if (k < 1) R.raf = requestAnimationFrame(step);
+    };
+    R.raf = requestAnimationFrame(step);
+    at(plan.count, () => { cancelAnimationFrame(R.raf); numEl.textContent = String(flips); mark('count'); });
+  } else mark('count');
+  plan.stars.forEach((st, k) => at(st.at, () => {
+    const el = stars[st.beat];
+    el.classList.add('on', 'land');
+    navigator.vibrate?.(SW_STAR_VIB);
+    sfx.coin(4 * k);
+    mark('star', st.beat + 1);
+  }));
+  at(plan.chip, () => { showChip(true); mark('chip'); });
+  at(plan.pop, () => { showSame(true); R.done = true; mark('pop'); if (box.onpointerdown) box.onpointerdown = null; });
 }
 // 타임라인(가로 = 손 시간 = 벽시계 초: 숨 동안 0.5배라 물리 초 × 2, 숨이 끝난 뒤 × 1 · 물리 0~1.2 s — 카드 숫자(벽시계 ms)와 같은 단위):
 //   위 띠 = 높이(바람 자국 주황 · 더미 꼭대기 점선 · 꼭대기 넘음 노란 점 · 떼기(A)/휙(B) 파란 점), 가운데 띠 = 위 절반 기울기(0~90°, 분홍), 아래 띠 = 숨 봉투(파랑).
@@ -6483,7 +6559,10 @@ function coreSection() {
         + `<span class="exp-lab">${t('coreGdOut')}</span>${btn('core-o0', t('coreGdOut0'), +feel.gdOut === 0)}${btn('core-o1', t('coreGdOut1'), +feel.gdOut === 1)}</div>`
         // D 만: ① 가이드 띠(처음만 기본 = 첫 3숨 튜토리얼 · 늘 = 앞으로 올 가이드 아이템 자리)
         + `<div class="exp-btns"><span class="exp-lab">${t('coreGdGuide')}</span>${btn('core-gg0', t('coreGdGuide0'), +feel.gdGuide === 0)}${btn('core-gg1', t('coreGdGuide1'), +feel.gdGuide === 1)}</div>` : '')
+      // 쓸기 기록 복사(예전 결과 카드 단추 — 카드는 한 길만, 리서치 08 A3): 이번 실행 기록이 없으면 '조건이 안 됨'(회색). 깃발과 상관없이(#p40 주소로 연 판도 기록됨)
+      + `<div class="exp-btns"><button type="button" class="exp-sw" id="core-copy"${window.__puffSweep.log.length ? '' : ' disabled'}>${t('swCopy')} <b>${fmt(t('coreCopyN'), { k: window.__puffSweep.log.length })}</b></button></div>`
       + `<p class="exp-how">${t('coreNote')}<br>${t('coreGNote')}</p>`;
+    wrap.querySelector('#core-copy').addEventListener('click', () => { if (!window.__puffSweep.log.length) return; sfx.pop(); copySweepLog(); });
     wrap.querySelector('#core-sw').addEventListener('click', () => { sfx.pop(); feel.core = feel.core >= 0.5 ? 0 : 1; $('#sweepBtn').hidden = feel.core < 0.5; render(); });
     for (const [id, v] of [['core-gd', 0], ['core-gc', 3], ['core-gb', 2], ['core-ga', 1]]) wrap.querySelector('#' + id).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.swg = v; render(); });
     if (g === 'C') for (let i = 0; i < 4; i++) wrap.querySelector('#core-m' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.swm = i; render(); });

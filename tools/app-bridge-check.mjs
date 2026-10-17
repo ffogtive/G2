@@ -5,7 +5,8 @@
 //  [app]       부팅 오류 0 · ③-1 생성기(옛 게임 길, 'd:native:heavy') = 'OK · view' · ③-2 engine · ③-3 core · ③-4 지금 게임 길 = 'OK · core'(다리 'g:auto' → Dart 기본 길 Core Haptics 흉내)
 //              · 보냄/응답 5/5(시험 전 게임 진동 없음) · ④ 게임처럼: 네 줄(native·native·native·core 길) 응답 + O/X 단추 · ④ 도는 동안 [시험] 잠김
 //              · '게임 진동 길' 스위치 view → 다음 게임 메시지 'g:view' · off → 안 보냄·기록 'off'·저장 안 함(이번 실행만) · ③-4 '보내지 않음(길 끔)'
-//              · 레벨 1 한 숨 뒤 '게임 진동 기록' ≥ 1줄(길·응답 ms·'소리 puff ±60 ms') · 터치 모드 type=playback · '지금 재생' 제목 PUFF! · ⚙ 소리·진동 시험 → 진동 3길 응답(view/engine/core)·앱 정보 표·예상 범주
+//              · 레벨 1 한 숨 뒤 '게임 진동 기록' ≥ 1줄(길·응답 ms·'소리 puff ±60 ms')
+//  [stars]     쓸기 결과 카드(#p40 D 주입 셋 다 초록): 별마다 진동 24 → 'g:auto:…:24' 3개 = Dart medium(tapMedium) · 응답 길 core (리서치 08 E4) · 터치 모드 type=playback · '지금 재생' 제목 PUFF! · ⚙ 소리·진동 시험 → 진동 3길 응답(view/engine/core)·앱 정보 표·예상 범주
 //              · 마이크 켬 → getUserMedia 때 type=auto(= 'playback' 이면 iOS 가 녹음을 안 함) · 소리 키움 · 무음 단추 잠김 · 끔 → playback
 //              · '무음 모드에서도 소리' 끔 → auto · 마이크 단추 두 번 연타 = 녹음 한 번 · 수명주기 pause/resume = 'playback' 안 거치고 auto
 //              · 게임 소리 끔 → auto(음악 안 끊음) · 켬 → playback
@@ -354,6 +355,24 @@ async function runDiag(page) {
   await page.waitForTimeout(700);
   const rows = await page.evaluate(() => (window.__puffDiagLast?.rows || []).filter(([k], i, a) => k === '게임 진동 기록' || (k === '' && a.slice(0, i).some(([kk]) => kk === '게임 진동 기록'))).map(([, v]) => v));
   ok("게임 진동 기록 ≥ 1줄: 길 core · 응답 ms · '소리 puff ±60 ms'", rows.length >= 1 && rows.some((v) => /· core · \d+ms · 소리 puff [+-]\d+ms$/.test(v)), rows.join(' / '));
+  ok('오류 0', !errs.length, errs.join(' | '));
+  await ctx.close();
+}
+
+{ // ── 쓸기 결과 카드 별 → 게임 진동 길(리서치 08 E4: 별마다 tapMedium) ──
+  console.log("[stars] 쓸기 연습판 결과 카드: 초록 박자 별마다 진동 24 → 다리 'g:auto:…:24' → Dart medium(tapMedium) · 길 core");
+  const { ctx, page, errs } = await open('app', '?norender#p40');
+  await page.waitForFunction(() => window.__puffSweep?.state?.()?.waiting === true, null, { timeout: 60000 });
+  await page.waitForTimeout(300);
+  const n0 = await page.evaluate(() => window.__hapt.length);
+  await page.evaluate(() => { window.__sweepPlan = { kind: 'gd', s: 0.55, q: 0.9, th: 30 }; window.__sweepFire(); }); // 세 박자 모두 초록 → 별 셋
+  await page.waitForFunction(() => window.__puffSweep.state().reveal?.done === true && window.__puffSweep.state().card, null, { timeout: 60000 });
+  await page.waitForTimeout(300);
+  const r = await page.evaluate((n) => ({ msgs: window.__hapt.slice(n).filter((m) => m.startsWith('g:')), games: window.__puffApp.games.slice(), stars: window.__puffSweep.state().reveal.log.filter((x) => x[0] === 'star').length }), n0);
+  const star = r.msgs.filter((m) => /^g:auto:g\d+:24$/.test(m));
+  const kinds = star.map((m) => (+m.split(':')[3] <= 15 ? 'light' : +m.split(':')[3] <= 32 ? 'medium' : 'heavy')); // = app/lib/haptics.dart 기준(16~32 ms → tapMedium)
+  const recs = r.games.filter((g) => g.payload === '24');
+  ok("별 3개 = 다리 메시지 'g:auto:…:24' 3개(medium = tapMedium) · 응답 길 core", r.stars === 3 && star.length === 3 && kinds.every((k) => k === 'medium') && recs.length === 3 && recs.every((g) => g.path === 'core' && g.ok === true), `${JSON.stringify(star)} · 기록 ${JSON.stringify(recs.map((g) => [g.path, g.ms]))}`);
   ok('오류 0', !errs.length, errs.join(' | '));
   await ctx.close();
 }

@@ -26,6 +26,7 @@
 ```
 docs/research/   리서치 리포트 (출처·검증 결과 포함)
 docs/design/     GDD (게임 기획서)
+docs/design/ui-system.md  UI 체계 단일 출처: 단추(세 색 · 못 누르는 상태 넷 · 크기)·숫자 글자·쓸기 결과 카드 한 길·결과 연출 시각 — 값은 mockup/index.html `:root` 토큰 한 곳(바꾸면 표도), 연출 시각은 main.js `SW_RV`. 화면 바꾸면 sweepplay (12g)
 docs/BLOCKERS.md 막힌 것 / 확인 필요한 결정 메모
 mockup/src/      목업 소스 (ES 모듈)
   sim.js    물리(Rapier). 렌더러 독립 → Node 에서 튜닝/테스트 가능

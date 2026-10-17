@@ -45,6 +45,9 @@
 //      (f) ① 가이드 띠(⚙ '가이드 띠: 처음만|늘' · ?gdguide=always — 재윤님 2026-10-17 '색깔 가이드는 아이템·튜토리얼 때만, 평상시 스킵'): 새 프로필 = 처음만 · ⚙ D 줄 · 저장 · 주소
 //          · 첫 3숨 = 색 띠 메시 6(초록·노랑 둘·빨강 + 흰 테두리 둘) · 노란 '튜토리얼' 표 · 힌트 '바람 시작 높이 · 초록에서 톡' · 기록 줄 guide 'tut'
 //          · 넷째 숨(평상시) = 띠 메시 0 · 표 없음 · 주황 영점 점 · 힌트 '① 바람 시작 높이에서 톡' · guide 'off' · '늘' 이면 넷째 숨도 띠 · guide 'always'
+//  (12g) 결과 카드 한 길·결과 연출(리서치 08 E3·E4 · docs/design/ui-system.md): 단추 [새 더미(파랑 보조 92×44↑)][같은 더미(노랑 주 131×74↑)][홈(보조)] · 카드에 노랑 하나 · '기록 복사' 없음(⚙)
+//          · 개발 이름표('방금 숨 · 주입'·조합 글) = 자세히(접힘) 안 · 연출 = 장수 0 부터 세어 올림(≤ 0.8 s) → 초록 박자마다 별(350 ms · 사이 250 ms) + 진동 24(앱 tapMedium) → 칩 하나 → 300 ms 뒤 같은 더미 팝
+//          · 볼(θ 5) = 별 ①·③ 둘 · 진동 둘 · 세어 올리는 중 톡 = 끝 상태(남은 진동 없음) · 움직임 줄이기 = 처음부터 끝 상태 · ⚙ '쓸기 기록 복사' 숨 전 꺼짐 → 4숨 뒤 켜짐 · 누르면 기록 JSON
 //  (1)·(11) 은 ?swg=c 로 C 를 연다(기본이 D 로 바뀜). C·B·A 는 분필 원 판정 그대로(비교용 — 측정·칩 기준이 원)
 // 쓰기: npm run build && PW=$(npm root -g)/playwright node tools/sweepplay.mjs   (약 5~7분, 소프트웨어 렌더)
 import { createRequire } from 'node:module';
@@ -1148,6 +1151,116 @@ console.log("(12f) 문법 D ① 가이드 띠(⚙ 처음만|늘): 설정·저장
     allErrs.push(...P.errs);
     await P.ctx.close();
   }
+}
+
+// ── (12g) 결과 카드 한 길 · 결과 연출(리서치 08 E3·E4 · docs/design/ui-system.md) ──
+console.log("(12g) 결과 카드 한 길: 단추 [새 더미 · 보조][같은 더미 · 노랑 주][홈 · 보조] · 기록 복사 = ⚙ · 개발 이름표 = 자세히 안 · 연출: 장수 세어 올림 → 초록 박자마다 별(진동 24 = 앱 tapMedium) → 칩 하나 → 300 ms 뒤 '같은 더미' 팝 · 톡 = 건너뜀 · 움직임 줄이기");
+{
+  const clipInit = () => { window.__clip = []; try { Object.defineProperty(navigator, 'clipboard', { value: { writeText: async (x) => { window.__clip.push(x); } }, configurable: true }); } catch (e) { /* 없음 */ } };
+  // ⚙ 숨 전: '쓸기 기록 복사' = 조건이 안 됨(꺼짐 · 0숨)
+  const P0 = await open('core=sweep', '', clipInit);
+  await P0.page.$eval('#tuneBtn', (e) => e.click()); await P0.run(64);
+  const c0 = await P0.page.evaluate(() => { const b = document.querySelector('#core-copy'); return b ? { dis: b.disabled, txt: b.textContent } : null; });
+  allErrs.push(...P0.errs); await P0.ctx.close();
+  const P = await open('core=sweep', '#p40', clipInit);
+  const { page, run } = P;
+  const vibs = () => page.evaluate(() => window.__vib.map((v) => [Math.round(v.t), v.p]));
+  const look = () => page.evaluate(() => {
+    const vis = (sel) => { const e = document.querySelector(sel); return !!e && !e.closest('[hidden]') && getComputedStyle(e).visibility === 'visible'; };
+    const box = (sel) => { const e = document.querySelector(sel); return e ? { w: e.offsetWidth, h: e.offsetHeight } : null; };
+    const card = document.querySelector('#sweepCard');
+    return {
+      order: [...card.querySelectorAll('.sw-btns button')].map((b) => b.id), sameCls: document.querySelector('#swSame').className,
+      newCls: document.querySelector('#swNew').className, homeCls: document.querySelector('#swHome').className, golds: card.querySelectorAll('.btn.gold').length,
+      copyInCard: !!card.querySelector('#swCopy, [data-t="swCopy"]'), kindInMore: !!document.querySelector('#swMore #swNum'), comboInMore: !!document.querySelector('#swMore #swCombo'),
+      moreOpen: document.querySelector('#swMore').open, same: vis('#swSame'), nw: vis('#swNew'), home: vis('#swHome'), chip: vis('#swCause'),
+      sameBox: box('#swSame'), newBox: box('#swNew'), homeBox: box('#swHome'), n: document.querySelector('#swFlipN')?.textContent ?? null,
+      stars: [...document.querySelectorAll('#swStars span')].map((e) => (e.classList.contains('on') ? 1 : 0)).join(''), tones: [...document.querySelectorAll('#swStars span')].map((e) => e.dataset.tone).join(''),
+      starsShown: vis('#swStars'), rv: window.__puffSweep.state().reveal,
+    };
+  });
+  const shotD = async (pl) => {
+    await waitTurn(P); await run(48);
+    await page.evaluate((x) => { window.__sweepPlan = x; }, { kind: 'gd', ...pl });
+    const fired = await page.evaluate(() => window.__sweepFire());
+    const done = await waitCard(P, 60000);
+    return fired && done;
+  };
+  // ① 셋 다 초록(s 0.55 · q 0.9 · θ 30): 별 셋
+  const v0 = (await vibs()).length;
+  const f1 = await shotD({ s: 0.55, q: 0.9, th: 30 });
+  const a = await look();
+  const L1 = await page.evaluate(() => window.__puffSweep.last);
+  const plan = a.rv.plan;
+  await run(Math.max(0, Math.round(plan.count / 2 - a.rv.age)));
+  const mid = await look();
+  await run(Math.round(plan.pop + 40 - plan.count / 2));
+  const z = await look();
+  const v1 = (await vibs()).slice(v0);
+  const tCard = (await page.evaluate(() => performance.now())) - z.rv.age;
+  const starVib = v1.filter(([tt]) => tt >= tCard - 1);
+  const log = z.rv.log, at = (w) => log.filter((x) => x[0] === w).map((x) => x[1]);
+  const wantStars = plan.stars.map((x) => x.at);
+  ok("카드 한 길: 단추 순서 [새 더미][같은 더미][홈] · 같은 더미 = 노랑 주(74 px 이상 · 131 px 이상) · 새 더미·홈 = 파랑 보조(92×44 이상) · 노랑 하나 · '기록 복사' 카드에 없음 · '방금 숨 · 종류'·조합 글 = 자세히(접힘) 안",
+    f1 && a.order.join() === 'swNew,swSame,swHome' && /\bgold\b/.test(a.sameCls) && /\bsw-primary\b/.test(a.sameCls) && /\bblue\b.*\bsm\b|\bsm\b.*\bblue\b/.test(a.newCls) && /\bsm\b/.test(a.homeCls)
+      && a.sameBox.h >= 74 && a.sameBox.w >= 131 && a.newBox.w >= 92 && a.newBox.h >= 44 && a.homeBox.w >= 92 && a.homeBox.h >= 44 && a.golds === 1 && !a.copyInCard && a.kindInMore && a.comboInMore && a.moreOpen === false,
+    JSON.stringify({ order: a.order, same: a.sameBox, nw: a.newBox, home: a.homeBox, golds: a.golds, copy: a.copyInCard, kind: a.kindInMore, combo: a.comboInMore, open: a.moreOpen }));
+  ok(`연출 처음: 같은 더미·칩 안 보임 · 새 더미·홈 보임 · 장수 0 부터 → 중간 ${mid.n}(0 < n < ${L1.flips}) · 별 칸 셋 비어 있음`,
+    !a.same && !a.chip && a.nw && a.home && a.starsShown && a.stars === '000' && +mid.n > 0 && +mid.n < L1.flips && mid.stars === '000', JSON.stringify({ n0: a.n, mid: mid.n, age: a.rv.age }));
+  ok(`연출 순서(카드 뜬 뒤 ms): 세어 올림 끝 ${at('count')} ≤ 800 · 별 ${JSON.stringify(at('star'))} = 계획 ${JSON.stringify(wantStars)}(별 350 + 사이 250 = 600 간격) · 칩 ${at('chip')} = 마지막 별 + 350 + 150 · 팝 ${at('pop')} = 칩 + 300 · 끝: ${z.n}장 · 별 ${z.stars} · 같은 더미 보임`,
+    L1.zoneS === 'green' && L1.zoneTh === 'strike' && L1.zoneQ === 'green' && z.tones === 'ggg' && at('count')[0] === plan.count && plan.count <= 800
+      && JSON.stringify(at('star')) === JSON.stringify(wantStars) && wantStars[1] - wantStars[0] === 600 && wantStars[2] - wantStars[1] === 600
+      && at('chip')[0] === wantStars[2] + 500 && at('pop')[0] === at('chip')[0] + 300 && z.n === String(L1.flips) && z.stars === '111' && z.same && z.chip && z.rv.done,
+    JSON.stringify(log));
+  ok(`별마다 진동 24 ms(앱 다리 16~32 ms = tapMedium) 한 번씩 · 별 시각과 같음 · 그 밖의 진동 없음`,
+    starVib.length === 3 && starVib.every(([, p]) => p === 24) && starVib.every(([tt], i) => Math.abs(tt - tCard - wantStars[i]) <= 1),
+    JSON.stringify(starVib.map(([tt, p]) => [Math.round(tt - tCard), p])));
+  // ② 볼(θ 5 → ② 빨강): 별 둘(①·③ 자리) · 진동 둘
+  await page.$eval('#swSame', (e) => e.click());
+  const v2a = (await vibs()).length;
+  const f2 = await shotD({ s: 0.55, q: 0.9, th: 5 });
+  const b0 = await look();
+  await run(Math.round(b0.rv.plan.pop + 40 - b0.rv.age));
+  const b = await look();
+  const v2 = (await vibs()).slice(v2a), tCard2 = (await page.evaluate(() => performance.now())) - b.rv.age, sv2 = v2.filter(([tt]) => tt >= tCard2 - 1);
+  ok(`볼(θ 5): 별 칸 색 ${b.tones} · 별 ${b.stars}(①·③ 자리만) · 진동 24 둘 · 칩 하나(⚾)`,
+    f2 && b.tones === 'grg' && b.stars === '101' && b.rv.plan.stars.map((x) => x.beat).join() === '0,2' && sv2.length === 2 && sv2.every(([, p]) => p === 24) && b.rv.log.filter((x) => x[0] === 'star').map((x) => x[2]).join() === '1,3'
+      && (await page.evaluate(() => document.querySelectorAll('#swCause .sw-chip').length)) === 1 && (await page.evaluate(() => window.__puffSweep.last.chip)) === 'thBall',
+    JSON.stringify({ tones: b.tones, stars: b.stars, vib: sv2, log: b.rv.log }));
+  // ③ 톡 = 건너뜀: 세어 올리는 중 카드 빈 곳(장수 줄)을 누르면 끝 상태 · 남은 별 진동 없음 · 같은 더미 보임
+  await page.$eval('#swSame', (e) => e.click());
+  const f3 = await shotD({ s: 0.55, q: 0.9, th: 30 });
+  await run(200);
+  const v3a = (await vibs()).length;
+  await page.$eval('#swMain', (e) => e.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 5 })));
+  const k1 = await look();
+  await run(3200);
+  const v3 = (await vibs()).slice(v3a);
+  ok(`톡 = 건너뜀(세어 올리는 중): 바로 ${k1.n}장 · 별 ${k1.stars} · 칩·같은 더미 보임 · 기록 'skip' · 그 뒤 3.2 s 진동 ${v3.length}`,
+    f3 && k1.n === String(await page.evaluate(() => window.__puffSweep.last.flips)) && k1.stars === '111' && k1.same && k1.chip && k1.rv.done && k1.rv.log.at(-1)[0] === 'skip' && v3.length === 0,
+    JSON.stringify({ log: k1.rv.log, vib: v3 }));
+  // ④ 움직임 줄이기(prefers-reduced-motion): 처음부터 끝 상태 · 별 진동 없음
+  await page.$eval('#swSame', (e) => e.click());
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const v4a = (await vibs()).length;
+  const f4 = await shotD({ s: 0.55, q: 0.9, th: 30 });
+  const r1 = await look();
+  const v4 = (await vibs()).slice(v4a).filter(([, p]) => p === 24);
+  ok(`움직임 줄이기: 카드가 뜨자마자 끝 상태(${r1.n}장 · 별 ${r1.stars} · 같은 더미 보임) · 기록 'reduced' · 별 진동 0`,
+    f4 && r1.stars === '111' && r1.same && r1.chip && r1.rv.log.map((x) => x[0]).join() === 'reduced' && v4.length === 0, JSON.stringify({ n: r1.n, log: r1.rv.log, vib: v4 }));
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  // ⚙ 쓸기 기록 복사: 홈 → ⚙ → 켜짐 · '4숨' · 누르면 기록 JSON(줄 4 · 최신 = D)
+  await page.$eval('#swHome', (e) => e.click()); await run(320);
+  await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+  const c1 = await page.evaluate(() => { const b = document.querySelector('#core-copy'); return b ? { dis: b.disabled, txt: b.textContent } : null; });
+  await page.$eval('#core-copy', (e) => e.click()); await run(64);
+  const clip = await page.evaluate(() => window.__clip.slice());
+  let J = null; try { J = JSON.parse(clip[0]); } catch (e) { /* 없음 */ }
+  ok(`⚙ '쓸기 기록 복사': 숨 전 = 꺼짐(${c0?.txt}) · 4숨 뒤 = 켜짐(${c1?.txt}) · 누르면 기록 JSON(v 1 · 줄 ${J?.log?.length} · 최신 g ${J?.log?.[0]?.g} · gdMode ${J?.gdMode})`,
+    c0?.dis === true && /0숨/.test(c0.txt) && c1?.dis === false && /4숨/.test(c1.txt) && clip.length === 1 && J?.v === 1 && J.log.length === 4 && J.log[0].g === 'D' && J.gdMode === 'desk|normal' && J.chipsTest === true,
+    JSON.stringify({ c0, c1, n: clip.length }));
+  allErrs.push(...P.errs);
+  await P.ctx.close();
 }
 
 ok('콘솔 오류 0', !allErrs.length, allErrs.slice(0, 6).join(' | '));
