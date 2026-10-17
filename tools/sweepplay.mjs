@@ -34,13 +34,16 @@
 //      (c) 손 경로(가짜 시계): ① 띠 가운데 때 톡 → s = gdMeterAt(탭 − 16 ms) · 머묾 중 톡 = '잠깐…' · ② 30° 때 톡 → θ = 식 · ③ 5 px 당김 = 취소 · '📐 각도 다시'
 //          · 80 px 당김 → 마지막 40 ms 에 3 px 올라가 놓기 → q = qOfPull(80) · 해시 = Node gdShot(같은 s·q·θ) · 큰 영점 창 한 번도 안 열림 · 기록 줄 g 'D'
 //      (d) 판·배치: D 판 분필 원 숨김 → 레벨 1 은 보임 · 390×844 ③ 에서 HUD·부채꼴·게이지·다시 단추 사각형 교차 0
+//      (e) 비교 토글(⚙ '숨 난이도' 보통|어려움 × '아웃 범위' 책상|반지름 5 — D 만): 새 프로필 = 보통·책상 · ⚙ 두 줄은 D 에서만(C 면 없음) · 누르면 feel · 완료 = 저장 → 다시 열어도 그대로
+//          · 주소 ?gdq=normal&gdout=desk 가 저장값을 이김 · 조합마다 페이지 하나(?gdq=…&gdout=…) 주입 1칸 = Node gdShot(mode)(sweepgame ref gdm):
+//          뒤집힘·밖·걸침·원 밖·스텝·칩·해시 · 기록 줄 mode · 카드 조합 글 · 넓은 점선 원은 반지름 5 일 때만 보임(옛 분필 원은 늘 숨김)
 //  (1)·(11) 은 ?swg=c 로 C 를 연다(기본이 D 로 바뀜). C·B·A 는 분필 원 판정 그대로(비교용 — 측정·칩 기준이 원)
 // 쓰기: npm run build && PW=$(npm root -g)/playwright node tools/sweepplay.mjs   (약 5~7분, 소프트웨어 렌더)
 import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { refRows, refRowsGB, refRowsGC, refRowsGD } from './sweepgame.mjs';
+import { refRows, refRowsGB, refRowsGC, refRowsGD, refRowsGDModes } from './sweepgame.mjs';
 import * as V1 from '../mockup/src/sim.js';
 import * as G from '../mockup/src/sweep.js';
 
@@ -58,6 +61,7 @@ const REF = await refRows();
 const REF_GB = await refRowsGB();
 const REF_GC = await refRowsGC();
 const REF_GD = await refRowsGD();
+const REF_GDM = await refRowsGDModes();
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const allErrs = [];
 
@@ -906,6 +910,66 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
     await P.until(() => window.__puffSweep.state().state === 'match' && window.__puffSweep.state().chalk === true, null, 60000);
     const s = await st(P.page);
     ok('분필 원: 레벨 1(쓸기 깃발 켬) = 보임 · 책상 판정 아님', s.chalk === true && s.desk === false && !s.on, JSON.stringify({ chalk: s.chalk, desk: s.desk, on: s.on }));
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+}
+
+// ── (12e) 문법 D 비교 토글 ──
+console.log("(12e) 문법 D 비교 토글(⚙ 숨 난이도 × 아웃 범위): 설정·저장·주소 · 조합마다 주입 = Node gdShot(mode) · 카드 글 · 반지름 5 원");
+{
+  {
+    const P = await open('core=sweep');
+    const { page, run } = P;
+    const tb = () => page.evaluate(() => ({ q: [0, 1].map((i) => document.querySelector('#core-q' + i)?.getAttribute('aria-pressed') ?? null), o: [0, 1].map((i) => document.querySelector('#core-o' + i)?.getAttribute('aria-pressed') ?? null), f: [window.__puffExp().feel.gdQ, window.__puffExp().feel.gdOut], m: window.__puffSweep.state().gdMode }));
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const b0 = await tb();
+    await page.$eval('#core-q1', (e) => e.click()); await run(32);
+    await page.$eval('#core-o1', (e) => e.click()); await run(32);
+    const b1 = await tb();
+    await page.$eval('#core-gc', (e) => e.click()); await run(32);
+    const inC = await page.evaluate(() => [!!document.querySelector('#core-q0'), !!document.querySelector('#core-o0')]);
+    await page.$eval('#core-gd', (e) => e.click()); await run(32);
+    await page.$eval('#tuneClose', (e) => e.click()); await run(64);
+    await page.reload();
+    await P.until(() => window.__puffBooted);
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const b2 = await tb();
+    await P.ctx.close(); allErrs.push(...P.errs);
+    const Q = await open('core=sweep&gdq=hard&gdout=r5'), q1 = await Q.page.evaluate(() => [window.__puffExp().feel.gdQ, window.__puffExp().feel.gdOut, window.__puffSweep.state().gdMode]); allErrs.push(...Q.errs); await Q.ctx.close();
+    const R = await open('core=sweep&gdq=bogus&gdout=desk'), q2 = await R.page.evaluate(() => [window.__puffExp().feel.gdQ, window.__puffExp().feel.gdOut]); allErrs.push(...R.errs.filter((e) => !/gdq 값 무시/.test(e))); await R.ctx.close();
+    ok("비교 토글 설정: 새 프로필 = 보통·책상(0/0) · ⚙ D 두 줄 · 어려움·반지름 5 누름 → feel 1/1 · C 에선 두 줄 없음 · 완료 → 다시 열어도 1/1(저장) · ?gdq=hard&gdout=r5 = r5|hard · 모르는 값 무시",
+      b0.q.join() === 'true,false' && b0.o.join() === 'true,false' && b0.f.join() === '0,0' && b0.m === 'desk|normal' && b1.q.join() === 'false,true' && b1.o.join() === 'false,true' && b1.f.join() === '1,1'
+        && inC.join() === 'false,false' && b2.f.join() === '1,1' && b2.q.join() === 'false,true' && b2.o.join() === 'false,true' && b2.m === 'r5|hard' && q1.join() === '1,1,r5|hard' && q2.join() === '0,0',
+      JSON.stringify({ b0, b1, inC, b2, q1, q2 }));
+  }
+  for (const r of REF_GDM) {
+    const P = await open(`core=sweep&gdq=${r.q_}&gdout=${r.out_}`, `#p${r.N}`);
+    const okTurn = await waitTurn(P);
+    await P.run(48);
+    const s0 = await st(P.page);
+    await P.page.evaluate((pl) => { window.__sweepPlan = pl; }, { kind: 'gd', s: r.s, q: r.q, th: r.th });
+    const fired = await P.page.evaluate(() => window.__sweepFire());
+    await P.run(160);
+    const sB = await st(P.page);
+    const done = await waitCard(P);
+    const L = await P.page.evaluate(() => window.__puffSweep.last), log = await P.page.evaluate(() => window.__puffSweep.log[0]);
+    const combo = await P.page.evaluate(() => document.querySelector('#swCombo')?.textContent ?? null);
+    const wantTxt = `숨 난이도 ${r.q_ === 'hard' ? '어려움' : '보통'} · 아웃 범위 ${r.out_ === 'r5' ? '반지름 5' : '책상'}`;
+    const same = L && L.g === 'D' && L.mode === r.mode && L.flips === r.flips && L.outs === r.outs && L.hang === r.hang && L.ring === r.ring && L.hash === r.hash && L.steps === r.steps && L.chip === r.chip && Math.abs(L.blast - r.blast) < 1e-12;
+    const ringWant = r.out_ === 'r5';
+    ok(`D 조합 ${r.mode} 주입 ${r.N}장 ${r.seed} (${r.s}, ${r.q}, ${r.th}°): 뒤집힘·밖·걸침·원 밖·스텝·칩·해시 = Node gdShot(mode) · 기록 mode · 카드 '${wantTxt}' · 넓은 원 ${ringWant ? '보임' : '숨김'} · 분필 원 숨김`,
+      okTurn && fired && done && s0?.gdMode === r.mode && same && log?.mode === r.mode && combo === wantTxt && s0?.ring === ringWant && sB?.ring === ringWant && s0?.chalk === false,
+      `게임 ${L ? `${L.flips}/${L.outs} 걸침 ${L.hang} 원 밖 ${L.ring} ${L.chip} ${L.hash}` : '없음'} · Node ${r.flips}/${r.outs} 걸침 ${r.hang} 원 밖 ${r.ring} ${r.chip} ${r.hash} · 글 ${combo} · 원 ${s0?.ring}/${sB?.ring}`);
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+  // 레벨 1 은 넓은 원 없음(?gdout=r5 여도)
+  {
+    const P = await open('core=sweep&gdout=r5', '#lv1');
+    await P.until(() => window.__puffSweep.state().state === 'match' && window.__puffSweep.state().chalk === true, null, 60000);
+    const s = await st(P.page);
+    ok('레벨 1(?gdout=r5): 분필 원 보임 · 넓은 원 숨김 · 책상 판정 아님', s.chalk === true && s.ring === false && s.desk === false, JSON.stringify({ chalk: s.chalk, ring: s.ring, desk: s.desk }));
     allErrs.push(...P.errs);
     await P.ctx.close();
   }

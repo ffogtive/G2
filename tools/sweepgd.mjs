@@ -22,10 +22,14 @@
 //   반영 (2026-10-17): sweep.js GD 를 위 '바꿈' 값으로 옮김(q.weak 40장 0.75 · 30장 0.6 · q.red 1.2 · th.near 10 = ball · peak 30장 28 — blastSpan 은 그대로, 손잡이는 재윤님 손맛 결정)
 //     → report 의 잠정 비교가 13개 모두 '버팀'(`sweepgame ctl` 이 report --json 으로 확인). 줄에 칩·칸(chip · zs · zt · zq)이 기록되므로 held·knob 를 새 GD 로
 //     다시 돌려 묶었다 — 물리 칸(뒤집힘·OUT·걸침·원·스텝·해시 …)은 옛 원자료와 줄마다 같고 칩·칸만 새 값(classic 은 GD 를 안 써 바이트 같음)
+//   비교 토글 (2026-10-17 늦은 밤, ⚙ '숨 난이도' 보통|어려움 × '아웃 범위' 책상|반지름 5 — 확인됨): held·knob 를 다시 돌려 같은 최종 월드를 반지름 5 로도 읽었다
+//     (줄에 flipR · outR · ringR — G.judgeDesk(t, { out: 'r5' }), 게임과 같은 함수). 책상 칸은 옛 원자료와 1,296줄 모두 같다. report '비교 토글 4 조합' 절이 조합마다
+//     위와 같은 문턱 맞추기를 G.gdCfg(조합)에 한다 → sweep.js GD_COMBO: 책상·어려움 빨강 1.125 · 반지름 5·보통 빨강 1.125 · 40장 영점 초록 0.50~ · peak 40장 35 · 반지름 5·어려움 빨강 1.1
 //
 // 판정·용어
 //   flip/out/hang = 책상 판정(G.judgeDesk: 떨어짐 · 판 옆으로 내려감 y < −0.5 · 중심이 책상 밖 = OUT, 걸침 = hang) — 게임 문법 D 숨의 판정
 //   flipC/outC    = 같은 월드의 분필 원 판정(table.judgeResult, 반지름 3.2) — G15 비교용
+//   flipR/outR/ringR = 같은 월드의 '아웃 범위 반지름 5' 판정(G.judgeDesk out 'r5': 책상 밖 또는 원점에서 5 밖 · ringR = 책상 위인데 원 밖) — 비교 토글용
 //   띠: 줄 최고의 ≥ 90% = 초록/스트라이크 · ≥ 75% = 노랑(아슬·조금 약함·영점 높음/낮음) · < 75% = 빨강/회색(sweepgc band 그대로, 격자점 + 이웃 선형 보간)
 //   잠정 비교 = 문턱 후보를 G.GD 에 잠깐 넣고(되돌림) 게임 gdZone 그대로 매긴 칸 ≠ 측정 갈래(≥ 90 · 75~90 · < 75)인 격자점 수를 센다 → 최소 집합에 잠정이 들면 '버팀',
 //     아니면 그 집합에서 잠정에 가장 가까운 값(문턱 차례로 2바퀴 = 서로 맞는 한 벌) · 공유 문턱이 장수별로 더 잘 맞으면 '버팀*' + 장수별 값
@@ -34,7 +38,8 @@
 //
 // 명령 (CPU 4코어 — 다른 게이트(pvp-check·sweepplay·artifact-check·app-bridge-check)가 돌면 W=1, 아니면 W=2)
 //   node tools/sweepgd.mjs self                      gdShot ≡ zeroShot(q ≤ 1) 해시 · q > 1 = gdArm 꼴(돌풍 (q − 1)/0.4) · 볼 θ < 10 ≡ θ 0 해시
-//                                                   · 기록한 책상 수 = judgeDesk · 손잡이 샷(armShot) 'a' ≡ gdShot · 'b' ≡ gdShot(GD.blastSpan 0.25) (약 30초)
+//                                                   · 기록한 책상 수 = judgeDesk · 손잡이 샷(armShot) 'a' ≡ gdShot · 'b' ≡ gdShot(GD.blastSpan 0.25) ≡ gdShot(mode 어려움)
+//                                                   · 줄의 반지름 5 칸(flipR · outR · ringR) = gdShot(mode 반지름 5) (약 40초)
 //   node tools/sweepgd.mjs list                      단계별 샷 수
 //   node tools/sweepgd.mjs run <단계> <out.jsonl> [W=2]   이어 돌리기(있는 (장수, 시드, 키) 건너뜀) · 끝나면 키 순 정렬 → gzip -n -9 로 묶음
 //        held     보류 시드 40장 413~424 · 30장 613~624(고르기에 안 쓴 판) · 지배 칸 (s 0.55 · θ 30 · q 0.9) 한 손잡이씩:
@@ -99,12 +104,13 @@ export function shotRow(job) {
   if (job.kind === 'classic') return classicRow(job);
   const { N, seed, s, q, th } = job, map = job.map || 'a';
   const r = job.kind === 'raw' ? G.zeroShot(V1.Table, { N, seed, s, q, th, judge: 'desk' }) : map === 'a' ? G.gdShot(V1.Table, { N, seed, s, q, th }) : armShot({ N, seed, s, q, th, map });
-  const t = r.table, J = G.judgeDesk(t), C = t.judgeResult();
+  const t = r.table, J = G.judgeDesk(t), C = t.judgeResult(), J5 = G.judgeDesk(t, { out: 'r5' }); // 같은 최종 월드를 넓은 원(반지름 5)으로도 — 읽기만
   if (J.flipped.length !== r.flips || J.outs.length !== r.outs) throw new Error(`책상 판정 다름 ${N}/${seed} ${job.key}`);
   const row = {
     N, seed, key: job.key, kind: job.kind, map, s, q, th, swing: job.kind === 'raw' ? th : G.gdSwing(th),
     power: job.kind === 'raw' ? q : G.gdPower(q), blast: job.kind === 'raw' ? 0 : +(map === 'a' ? G.gdBlast(q) : blastOf(map, q)).toFixed(4),
     flip: r.flips, out: r.outs, hang: J.hang, off: t.liveDiscs().filter((d) => d.off).length, flipC: C.flipped.length, outC: C.outs.length,
+    flipR: J5.flipped.length, outR: J5.outs.length, ringR: J5.ring,
     steps: r.steps, tUp: r.tUp, cueT: r.cueT, chip: job.kind === 'raw' ? null : r.chip,
     zs: G.gdZone('s', s, N), zt: G.gdZone('th', th, N), zq: G.gdZone('q', q, N), hash: r.hash,
   };
@@ -263,6 +269,14 @@ async function self() {
   { const a = classicRow(clJob(12, 3, 'z', 0.95, 1.1)), b = classicRow(clJob(12, 3, 'z', 0.95, 1.1)), x = classicRow(clJob(6, 2, 'x', 0.95, 1));
     ok('고전 줄 두 번 = 같은 줄(결정적) · 원 = runUntilSettled · 책상 ≥ 원(뒤집힘)', JSON.stringify(a) === JSON.stringify(b) && a.flip >= a.flipC && x.flip >= x.flipC, `12장 1.1: 원 ${a.flipC}/${a.outC} · 책상 ${a.flip}/${a.out} · 6장 +x: 원 ${x.flipC} · 책상 ${x.flip}`);
   }
+  // (5) 비교 토글: 'b' 손잡이 = 게임 '숨 어려움'(gdShot mode hard 해시·뒤집힘) · 줄의 반지름 5 칸(flipR · outR · ringR) = 게임 gdShot(mode r5) 의 수(같은 월드 = 같은 해시)
+  for (const c of [{ N: 40, seed: 421, s: 0.55, q: 1.15, th: 30 }, { N: 30, seed: 621, s: 0.55, q: 1.2, th: 30 }]) {
+    const b = armShot({ ...c, map: 'b' }), h = G.gdShot(V1.Table, { ...c, mode: { q: 'hard' } }), row = shotRow(gdJob(c.N, c.seed, c.s, c.q, c.th, 'b'));
+    const r5 = G.gdShot(V1.Table, { ...c, mode: { q: 'hard', out: 'r5' } });
+    ok(`비교 토글 ${c.N}장 ${c.seed} q ${c.q}: armShot('b') ≡ gdShot(어려움)(칩 = 어려움 칸) · 줄 flipR/outR/ringR = gdShot(어려움 · 반지름 5) · 같은 해시`, b.hash === h.hash && b.flips === h.flips && b.outs === h.outs && h.chip === G.gdChip({ n: c.N, s: c.s, q: c.q, th: c.th, flip: h.flips, mode: { q: 'hard' } }) && row.flipR === r5.flips && row.outR === r5.outs && row.ringR === r5.ring && r5.hash === h.hash,
+      `책상 ${h.flips}/${h.outs} · 반지름 5 ${r5.flips}/${r5.outs}(원 밖 ${r5.ring}) · 칩 ${h.chip}/${r5.chip}`);
+    free(b, h, r5);
+  }
   console.log(`\nsweepgd self: ${bad ? `틀림 ${bad}` : '맞음'}`);
   if (bad) process.exitCode = 1;
 }
@@ -282,19 +296,20 @@ const zoneOk = (knob, z, c, x) => zoneCls(z) === c || (knob === 's' && z === 'lo
 const DEF_FILES = ['held', 'knob', 'classic'].map((s) => `${DATA}${s}.jsonl.gz`).filter((f) => existsSync(f)).join(',');
 
 // 줄: 지배 칸을 지나는 한 손잡이 줄(같은 kind·map) → [{ x, n, flip, flipC, out, outC, hang, rows }]
-function lineOf(rows, N, knob, map = 'a', kind = 'gd') {
-  const other = Object.keys(DOM).filter((k) => k !== knob);
+//   fld = 뒤집힘 칸('flip' 책상 판정 · 'flipR' 같은 월드의 반지름 5 판정 — 비교 토글 '아웃 범위') · 'out' 도 짝(outR)
+function lineOf(rows, N, knob, map = 'a', kind = 'gd', fld = 'flip') {
+  const other = Object.keys(DOM).filter((k) => k !== knob), ofld = fld === 'flipR' ? 'outR' : 'out';
   const rs = rows.filter((r) => r.kind === kind && r.N === N && (r.map || 'a') === map && other.every((k) => r[k] === DOM[k]));
   const xs = [...new Set(rs.map((r) => r[knob]))].sort((a, b) => a - b);
-  return xs.map((x) => { const c = rs.filter((r) => r[knob] === x); const m = (f) => mean(c.map(f)); return { x, n: c.length, flip: m((r) => r.flip), flipC: m((r) => r.flipC), out: m((r) => r.out), outC: m((r) => r.outC), hang: m((r) => r.hang), off: m((r) => r.off), rows: c }; });
+  return xs.map((x) => { const c = rs.filter((r) => r[knob] === x); const m = (f) => mean(c.map(f)); return { x, n: c.length, flip: m((r) => r[fld]), flipC: m((r) => r.flipC), out: m((r) => r[ofld]), outC: m((r) => r.outC), hang: m((r) => r.hang), off: m((r) => r.off), rows: c }; });
 }
 const bandOf = (L, frac) => band(L.map((c) => c.x), L.map((c) => c.flip), frac);
 const bestOf = (L) => Math.max(...L.map((c) => c.flip));
 // 숨 손잡이 줄: map 의 q0 이하는 'a' 와 같은 물리(돌풍 0 — 비트 동일)라 'a' 줄을 빌린다
-function qLineMap(rows, N, map) {
-  const a = lineOf(rows, N, 'q', 'a');
+function qLineMap(rows, N, map, fld = 'flip') {
+  const a = lineOf(rows, N, 'q', 'a', 'gd', fld);
   if (map === 'a') return a;
-  const m = lineOf(rows, N, 'q', map);
+  const m = lineOf(rows, N, 'q', map, 'gd', fld);
   return [...a.filter((c) => c.x <= MAPS[map].q0 && !m.some((d) => d.x === c.x)), ...m].sort((x, y) => x.x - y.x);
 }
 const pxOfQ = (q) => G.pullOfQ(q, PHONE);
@@ -475,8 +490,91 @@ function report(files, json) {
     P(`  같은 세기·돌풍인 다른 손잡이 칸 ${multi.length}묶음 중 정지 해시 같음 ${eq} → ${eq === multi.length ? '맞음' : '틀림'} (손잡이는 물리가 아니라 당김 → 돌풍 대응만 바꿈)`);
     out.knob.sameBlast = { groups: multi.length, equal: eq };
   }
+  // ━━ 비교 토글 4 조합(⚙ '숨 난이도' × '아웃 범위') ━━ 같은 월드(held · knob 줄)를 판정 둘(책상 flip · 반지름 5 flipR) × 숨 대응 둘('a' 보통 · 'b' 어려움 = (q − 1)/0.25)로.
+  //   조합마다 위 '잠정 비교'와 같은 문턱 맞추기(G.gdCfg(조합) 객체를 잠깐 바꿔 게임 gdZone(…, 조합) 그대로) · peak · 줄 전체 칩 근거 · 돌풍 기울기 · 초록 폭 px
+  if (gd.some((r) => r.flipR != null)) out.combos = combos(rows, Ns, P);
   if (json) console.log(JSON.stringify(out));
   return out;
+}
+
+export const COMBOS = ['desk|normal', 'desk|hard', 'r5|normal', 'r5|hard'];
+function combos(rows, Ns, P) {
+  const res = {};
+  P(`\n━━ 비교 토글 4 조합 (⚙ 숨 난이도 보통|어려움 × 아웃 범위 책상|반지름 ${G.GD_RING}) — 보류 시드 · 같은 월드를 두 판정으로(물리·해시 무변화) ━━`);
+  const THR = [
+    { name: '영점 초록 아래 끝 s.green[N][0]', path: (N) => ['s', 'green', N, 0], knob: 's', per: true, step: 0.05, lo: 0.4, hi: 0.95 },
+    { name: '영점 초록 위 끝 s.green[N][1]', path: (N) => ['s', 'green', N, 1], knob: 's', per: true, step: 0.05, lo: 0.4, hi: 0.95 },
+    { name: '영점 빨강 s.red', path: () => ['s', 'red'], knob: 's', per: false, step: 0.05, lo: 0.45, hi: 1 },
+    { name: '숨 회색 끝 q.weak[N]', path: (N) => ['q', 'weak', N], knob: 'q', per: true, step: 0.05, lo: 0.6, hi: 0.9 },
+    { name: '숨 초록 시작 q.green[N]', path: (N) => ['q', 'green', N], knob: 'q', per: true, step: 0.05, lo: 0.6, hi: 1 },
+    { name: '숨 빨강(돌풍) q.red', path: () => ['q', 'red'], knob: 'q', per: false, step: 0.025, lo: 1, hi: 1.3 },
+    { name: '각도 스트라이크 th.near', path: () => ['th', 'near'], knob: 'th', per: false, step: 1, lo: 10, hi: 45 },
+  ];
+  const KNOB = { zHigh: 's', zLow: 's', qWeak: 'q', qGust: 'q', thBall: 'th', thNear: 'th' };
+  for (const key of COMBOS) {
+    const mode = G.gdModeOf(key), cfg = G.gdCfg(mode), fld = mode.out === 'r5' ? 'flipR' : 'flip', map = mode.q === 'hard' ? 'b' : 'a';
+    if (map === 'b' && !rows.some((r) => r.kind === 'gd' && r.map === 'b')) continue;
+    const lineK = (N, knob) => (knob === 'q' ? qLineMap(rows, N, map, fld) : lineOf(rows, N, knob, 'a', 'gd', fld));
+    const lineC = (N, knob) => { const L = lineK(N, knob), best = bestOf(L); return L.map((c) => ({ x: c.x, c: cls(c.flip, best) })); };
+    const misOf = (N, knob) => lineC(N, knob).filter((p) => !zoneOk(knob, G.gdZone(knob, p.x, N, mode), p.c, p.x));
+    const setP = (path, v) => { let o = cfg; for (const k of path.slice(0, -1)) o = o[k]; o[path.at(-1)] = v; };
+    const getP = (path) => path.reduce((o, k) => o[k], cfg);
+    const cands = (t) => Array.from({ length: Math.round((t.hi - t.lo) / t.step) + 1 }, (_, i) => +(t.lo + i * t.step).toFixed(3));
+    const pick = (set, g) => set.reduce((a, v) => (Math.abs(v - g) < Math.abs(a - g) - 1e-9 ? v : a), set[0]);
+    const rng = (set) => (set.length ? (set.length === 1 ? `${set[0]}` : `${set[0]}~${set.at(-1)}`) : '—');
+    const units = THR.flatMap((t) => (t.per ? Ns.map((N) => ({ t, N, path: t.path(N) })) : [{ t, N: null, path: t.path() }]));
+    const orig = units.map((u) => getP(u.path));
+    const fit = (u) => { const sc = cands(u.t).map((v) => { const old = getP(u.path); setP(u.path, v); try { return [v, (u.N == null ? Ns : [u.N]).reduce((a, N) => a + misOf(N, u.t.knob).length, 0)]; } finally { setP(u.path, old); } }); const min = Math.min(...sc.map((x) => x[1])); return { min, set: sc.filter((x) => x[1] === min).map((x) => x[0]) }; };
+    const props = [];
+    P(`\n  ▸ ${key} (판정 ${fld === 'flip' ? '책상' : '반지름 ' + G.GD_RING} · 돌풍 (q − 1)/${cfg.blastSpan}${map === 'b' ? ' = 손잡이 (b)' : ''})`);
+    try {
+      for (let pass = 0; pass < 2; pass++) for (const [i, u] of units.entries()) setP(u.path, pick(fit(u).set, orig[i]));
+      for (const [i, u] of units.entries()) {
+        const g = orig[i], f = fit(u), holds = f.set.some((v) => Math.abs(v - g) < 1e-9), nv = pick(f.set, g);
+        const name = u.t.per ? u.t.name.replace('[N]', `[${u.N}]`) : u.t.name;
+        props.push({ name, game: g, holds, proposed: holds ? g : nv, info: `최소 어긋남 ${f.min}칸 ${rng(f.set)}` });
+      }
+    } finally { for (const [i, u] of units.entries()) setP(u.path, orig[i]); }
+    if (units.some((u, i) => getP(u.path) !== orig[i])) throw new Error('조합 cfg 되돌리기 실패 ' + key);
+    const peak = {}, zones = {}, chips = {}, gust = {}, green = {};
+    for (const N of Ns) {
+      const D = lineK(N, 'th').find((c) => c.x === DOM.th); if (!D) continue;
+      const se = Math.sqrt(mean(D.rows.map((r) => (r[fld] - D.flip) ** 2)) / Math.max(1, D.rows.length - 1));
+      const hp = Math.abs(D.flip - cfg.peak[N]) <= Math.max(0.5, 2 * se);
+      props.push({ name: `peak[${N}]`, game: cfg.peak[N], holds: hp, proposed: hp ? cfg.peak[N] : Math.round(D.flip), info: `지배 칸 ${f2(D.flip)} ± ${f2(se)}` });
+      peak[N] = { mean: f3(D.flip), se: f3(se), out: f3(D.out) };
+      zones[N] = {};
+      for (const knob of ['s', 'th', 'q']) { const L = lineK(N, knob), best = bestOf(L), b9 = bandOf(L, 0.9), b75 = bandOf(L, 0.75); zones[N][knob] = { best: f3(best), g: [b9.lo, b9.hi], gI: [f3(b9.loI), f3(b9.hiI)], y: [b75.lo, b75.hi], line: L.map((c) => [c.x, f3(c.flip), f3(c.out)]) }; }
+      // 돌풍 절벽: 숨 줄 최고의 90% → 10% 로 떨어지는 q 구간(위쪽 보간 끝) · 기울기 = 80%p ÷ 그 폭(0.05 q 당 %p) · 폭 px(390 px 폰 당김) · 빨강 시작 격자의 %
+      const Lq = lineK(N, 'q'), bq = bestOf(Lq), rG = Lq.find((c) => c.x >= cfg.q.red - 1e-9), q90 = bandOf(Lq, 0.9).hiI, q10 = bandOf(Lq, 0.1).hiI;
+      const slope = q10 > q90 ? (80 * 0.05) / (q10 - q90) : NaN;
+      gust[N] = { red: cfg.q.red, atRed: f3(rG ? rG.flip / bq : NaN), q90: f3(q90), q10: f3(q10), cliffPx: f3(pxOfQ(q10) - pxOfQ(q90)), slope: f3(slope), above1: Lq.filter((c) => c.x >= 1).map((c) => [c.x, f3(c.flip / bq)]) };
+      green[N] = { q: [cfg.q.green[N], cfg.q.red], px: f3(pxOfQ(Math.min(cfg.q.red, G.GD.q.max)) - pxOfQ(cfg.q.green[N])), meas90: [f3(bandOf(Lq, 0.9).loI), f3(bandOf(Lq, 0.9).hiI)] };
+      // 줄 전체 칩(조합 칸으로 다시 매김 · 뒤집힘 = 이 판정): 칩이 이름 붙인 손잡이만 지배 값으로 옮긴 같은 시드 칸이 더 넘긴 비율
+      const rs = [...new Set(['s', 'th', 'q'].flatMap((k) => lineK(N, k).flatMap((c) => c.rows)))];
+      const by = new Map(rs.map((r) => [`${r.seed}|${r.s}|${r.q}|${r.th}`, r]));
+      const all = {};
+      for (const r of rs) {
+        const ch = G.gdChip({ n: N, s: r.s, q: r.q, th: r.th, flip: r[fld], mode }), k = KNOB[ch];
+        const h = (all[ch] ||= { n: 0, m: 0, up: 0 }); h.n++;
+        if (!k) continue;
+        const mv = { s: r.s, q: r.q, th: r.th, [k]: DOM[k] }, o = by.get(`${r.seed}|${mv.s}|${mv.q}|${mv.th}`);
+        if (o && o !== r) { h.m++; if (o[fld] > r[fld]) h.up++; }
+      }
+      chips[N] = Object.fromEntries(Object.entries(all).map(([c, h]) => [c, KNOB[c] ? { n: h.n, moved: h.m, up: h.m ? f3(h.up / h.m) : null } : { n: h.n }]));
+    }
+    for (const x of props) P(`    ${x.holds ? '버팀' : '바꿈'}  ${x.name}: ${JSON.stringify(x.game)}${x.holds ? '' : ` → ${JSON.stringify(x.proposed)}`} (${x.info})`);
+    for (const N of Ns) if (peak[N]) {
+      P(`    ${N}장: 지배 칸 ${f2(peak[N].mean)}장(밖 ${f2(peak[N].out)}) · 숨 초록 ${green[N].q[0]}~${green[N].q[1]} = ${f1(green[N].px)} px(측정 ≥ 90% ${f2(green[N].meas90[0])}~${f2(green[N].meas90[1])}) · 빨강 ${cfg.q.red} 격자 ${pct(gust[N].atRed)} · 돌풍 절벽 90→10% q ${f2(gust[N].q90)}→${f2(gust[N].q10)} = ${f1(gust[N].cliffPx)} px · ${f1(gust[N].slope)}%p/0.05`);
+      P(`      q ≥ 1 줄(% 최고): ${gust[N].above1.map(([x, v]) => `${x} ${pct(v)}`).join(' · ')} · 칩 ${Object.entries(chips[N]).map(([c, h]) => (h.moved != null ? `${c} ${h.n}(옮김 ${h.moved} 도움 ${pct(h.up)})` : `${c} ${h.n}`)).join(' · ')}`);
+    }
+    res[key] = { blastSpan: cfg.blastSpan, proposals: props, peak, zones, chips, gust, green, cfg: { s: cfg.s, q: cfg.q, th: cfg.th, peak: cfg.peak } };
+  }
+  // 한 표
+  P(`\n  조합 | 지배 칸 40장 (peak) · 30장 (peak) | 숨 초록 40장 · 30장 (당김 px) | 빨강 시작 | 돌풍 절벽 90→10% 40장 · 30장 (px · %p/0.05) | 문턱 바꿈`);
+  for (const key of COMBOS) { const r = res[key]; if (!r) continue; const ch = r.proposals.filter((x) => !x.holds).length, gt = (N) => `${f1(r.gust[N]?.cliffPx)} px · ${f1(r.gust[N]?.slope)}`;
+    P(`  ${key} | ${f1(r.peak[40]?.mean)} (${r.cfg.peak[40]}) · ${f1(r.peak[30]?.mean)} (${r.cfg.peak[30]}) | ${r.green[40]?.q.join('~')} ${f1(r.green[40]?.px)} · ${r.green[30]?.q.join('~')} ${f1(r.green[30]?.px)} | ${r.cfg.q.red} | ${gt(40)} · ${gt(30)} | ${ch ? `바꿈 ${ch}` : '0'}`); }
+  return res;
 }
 
 // ───────────────────────── 진입 ─────────────────────────

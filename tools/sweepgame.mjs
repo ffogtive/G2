@@ -29,11 +29,14 @@
 //                                        · GD 숫자 = 보류 시드 측정(node tools/sweepgd.mjs report --json 문턱·peak 13개 모두 버팀) · judgeDesk ≡ 독립 식(측정 스크래치 deskOut 꼴)
 //                                        · gdZone 경계표(아슬 칸 없음) · gdTipH 연속·단조 · gdChip 단위 예
 //                                        · 정적 검사: main.js 조종 모드 직접 비교('zero')가 ctlG 밖에 0건 · 판정은 Sweep.judgeDesk/deskOut 만(자체 책상 식 없음)
+//                                        · 비교 토글(⚙ 숨 난이도 × 아웃 범위): 기본 조합 = 옛 결과(주입 4칸 해시·뒤집힘·칩 = 바꾸기 전 커밋 값 · gdCfg() 가 GD 자신 · 칸 격자 같음)
+//                                          · 어려움 = sweepgd 손잡이 (b)(armShot 'b' 해시 · 돌풍 (q − 1)/0.25 · q ≤ 1 은 보통과 같은 해시) · 반지름 5 판정: 게임 함수 = 독립 식 = sweepgd 줄(flipR·outR)
+//                                          · GD_COMBO 숫자 = sweepgd report --json 4 조합 문턱·peak 모두 버팀 · main.js 정적 검사(판정·실시간·돌풍이 조합을 넘김)
 //   node tools/sweepgame.mjs ref [--json]   주입 훅(window.__sweepPlan) 칸들의 Node 기준: #p30 시드 601 t0 .05/.25/.45 · #p40 시드 401 t0 .10/.35 → 뒤집힘·원 밖·D·스텝·정지 해시
 //                                      + 문법 B 주입({ kind: 'gb', q, ts }) 칸: #p40 401 q0.85 ts 0.3·안 휙 · #p30 601 q0.7 ts 0.3 (tools/sweepplay.mjs 가 게임과 비교)
 //                                      + 문법 C 주입({ kind: 'gc', s, q, th }) 칸: #p40 401 (0.55, 0.9, 40)·(0.8, 0.9, 40)·(0.55, 0.9, 0) · #p30 601 (0.55, 0.85, 20)
 //                                        — sweepgc gcShot 과 한 번 더 대조('맞음') + 문법 D 주입({ kind: 'gd', s, q, th }) 칸: #p40 401 (0.55, 0.9, 40)·(0.55, 1.2, 40) · #p30 601 (0.55, 0.95, 30)
-//                                        (책상 판정 — gdShot). --json = { plan, gb, gc, gd }. 약 25초
+//                                        (책상 판정 — gdShot) + D 비교 토글 4 조합 같은 칸 #p40 401 (0.55, 1.15, 40) (gdShot mode). --json = { plan, gb, gc, gd, gdm }. 약 25초
 //   node tools/sweepgame.mjs base     게임 문법의 고정 숨 기준선(검토 2): '툭 연 높이(엄지 18 px → α ≈ 0.9°)에서 버티다 떼기' D 0.375·0.45·0.525·0.6 대
 //                                      쓸기(꼭대기 떼기) t0 0.25·0.35 — 30장 q0.7 시드 601~606 · 40장 q0.85 시드 401~406. 장수별 평균 · 시드마다 (최고 쓸기 − 최고 고정) 짝 차.
 //                                      문서·카드의 이득 주장은 이 기준으로 말한다(측정 표의 α = 0 고정보다 게임 버티기가 세다). 판정 없음(보고만). 약 30초
@@ -81,6 +84,11 @@ export const REF_GD_CELLS = [
   { N: 30, seed: 601, s: 0.55, q: 0.95, th: 30 },
   { N: 40, seed: 401, s: 0.55, q: 0.92, th: 5 }, // 볼 = 헛스윙(gdSwing → 쓸기 각 0) · 칩 ⚾
 ];
+// 바꾸기 전(커밋 d2ebb42) REF_GD_CELLS 의 Node 결과 [뒤집힘, 책상 밖, 걸침, 스텝, 칩, 해시] — 비교 토글을 넣은 뒤에도 기본 조합이 그대로인지(ctl)
+export const REF_GD_BEFORE = [[38, 1, 0, 324, 'good', '03545235288ca3d0'], [25, 14, 4, 289, 'qGust', 'f3c2c961eb14950d'], [28, 2, 0, 345, 'good', 'c7a3ad9a005d624a'], [25, 0, 0, 280, 'thBall', '54c48810ba973641']];
+// 문법 D 비교 토글 주입 칸(sweepplay (12) 가 조합마다 페이지 하나 ?gdq=…&gdout=… 로 같은 칸을 쏜다): 40장 401 (0.55, 1.15, 40°) — 보통 = 초록 · 어려움 = 돌풍 빨강
+export const REF_GD_MODE_CELL = { N: 40, seed: 401, s: 0.55, q: 1.15, th: 40 };
+export const GD_MODE_LIST = [{ q: 'normal', out: 'desk' }, { q: 'hard', out: 'desk' }, { q: 'normal', out: 'r5' }, { q: 'hard', out: 'r5' }];
 const PARITY_CELLS = [
   { name: '퍽 0.131', q: 0.85, plan: { kind: 'puck' } },
   { name: 'rel q0.7 w40 t.05 꼭대기', q: 0.7, plan: { A: 'top', w: 40, t0: 0.05, D: 'top' } },
@@ -119,6 +127,16 @@ export async function refRowsGD() {
   return REF_GD_CELLS.map((c) => {
     const r = G.gdShot(V1.Table, c);
     const row = { N: c.N, seed: c.seed, s: c.s, q: c.q, th: c.th, a0: r.a0, D: r.D, steps: r.steps, flips: r.flips, outs: r.outs, hang: r.hang, hash: r.hash, tUp: r.tUp, cueT: r.cueT, blast: r.blast, chip: r.chip };
+    r.table.world.free();
+    return row;
+  });
+}
+// 비교 토글 조합마다 같은 주입 칸 하나(REF_GD_MODE_CELL) — gdShot(mode)
+export async function refRowsGDModes() {
+  await V1.initPhysics();
+  return GD_MODE_LIST.map((m) => {
+    const c = REF_GD_MODE_CELL, r = G.gdShot(V1.Table, { ...c, mode: m });
+    const row = { ...c, mode: G.gdKey(m), q_: m.q, out_: m.out, D: r.D, steps: r.steps, flips: r.flips, outs: r.outs, hang: r.hang, ring: r.ring, hash: r.hash, tUp: r.tUp, blast: r.blast, chip: r.chip };
     r.table.world.free();
     return row;
   });
@@ -545,9 +563,61 @@ async function ctlGD(mk) {
   const lines = src.split('\n'), zeroCmp = lines.filter((l) => /mode\s*[!=]==\s*'zero'/.test(l));
   const inCtlG = zeroCmp.filter((l) => /function ctlG\(/.test(l)).length;
   const ownDesk = /DESK_HX|DESK_HZ|Math\.abs\(p\.x\)\s*>\s*11/.test(src);
-  ok("main.js 정적 검사: 조종 모드 'zero' 직접 비교 = ctlG 안 1건뿐 · 자체 책상 식 없음(Sweep.judgeDesk·deskOut 만) · D 발사 = Sweep.gdPower + Sweep.gdArm · 손·주입 발사 둘 다 Sweep.gdSwing",
-    zeroCmp.length === 1 && inCtlG === 1 && !ownDesk && /Sweep\.judgeDesk\(table\)/.test(src) && /Sweep\.deskOut\(d\)/.test(src) && /Sweep\.gdArm\(P, raw\.q\)/.test(src) && /Sweep\.gdPower\(raw\.q\)/.test(src) && (src.match(/th: Sweep\.gdSwing\(/g) || []).length === 2,
-    `'zero' 비교 ${zeroCmp.length}줄(ctlG ${inCtlG}) · 자체 책상 식 ${ownDesk}`);
+  const ownRing = /Math\.hypot\(p\.x, p\.z\)\s*>\s*(5|Sweep\.GD_RING)/.test(src);
+  ok("main.js 정적 검사: 조종 모드 'zero' 직접 비교 = ctlG 안 1건뿐 · 자체 책상·원 식 없음(Sweep.judgeDesk·deskOut 만, 조합 out 을 넘김) · D 발사 = Sweep.gdPower + Sweep.gdArm(조합) · 손·주입 발사 둘 다 Sweep.gdSwing",
+    zeroCmp.length === 1 && inCtlG === 1 && !ownDesk && !ownRing && /Sweep\.judgeDesk\(table, \{ out: swGdMode\(\)\.out \}\)/.test(src) && /Sweep\.deskOut\(d, out\)/.test(src) && /Sweep\.deskOut\(d, swGdMode\(\)\.out\)/.test(src)
+      && /Sweep\.gdArm\(P, raw\.q, swGdMode\(\)\)/.test(src) && /Sweep\.gdPower\(raw\.q\)/.test(src) && (src.match(/th: Sweep\.gdSwing\(/g) || []).length === 2 && !/Sweep\.GD\b(?!_)/.test(src.replace(/Sweep\.GD_RING/g, '')),
+    `'zero' 비교 ${zeroCmp.length}줄(ctlG ${inCtlG}) · 자체 책상 식 ${ownDesk} · 자체 원 식 ${ownRing}`);
+  await ctlGDModes();
+}
+
+// ───────────────────────── ctl: 문법 D 비교 토글(⚙ '숨 난이도' × '아웃 범위') ─────────────────────────
+async function ctlGDModes() {
+  console.log("문법 D 비교 토글 (sweep.js gdMode · gdCfg · GD_COMBO · judgeDesk out 'r5' — 기본 = 옛 결과 · 어려움 = 손잡이 (b) · 반지름 5 판정 게임 = 측정 도구)");
+  const GDT = await import('./sweepgd.mjs');
+  // (1) 기본 조합 = 바꾸기 전: gdCfg() 가 GD 자신 · gdKey · 주입 4칸 = 커밋 d2ebb42 결과 · 같은 칸 mode 명시 = 같은 해시
+  const def = [undefined, {}, { q: 'normal', out: 'desk' }, 'desk|normal'];
+  const same = REF_GD_CELLS.map((c, i) => { const a = G.gdShot(V1.Table, c), b = G.gdShot(V1.Table, { ...c, mode: { q: 'normal', out: 'desk' } }), w = REF_GD_BEFORE[i];
+    const good = [a.flips, a.outs, a.hang, a.steps, a.chip, a.hash].join() === w.join() && b.hash === a.hash && b.flips === a.flips && b.chip === a.chip && a.mode === 'desk|normal';
+    a.table.world.free(); b.table.world.free(); return good; });
+  ok('기본 조합 = 바꾸기 전: gdCfg(없음 · {} · 보통/책상 · "desk|normal") === GD · 주입 4칸 뒤집힘·책상 밖·걸침·스텝·칩·해시 = 커밋 d2ebb42 값 · mode 명시 = 같은 해시',
+    def.every((m) => G.gdCfg(m) === G.GD && G.gdKey(m) === 'desk|normal') && same.every(Boolean), same.map((x) => (x ? 'O' : 'X')).join(''));
+  // (2) 기본 칸·돌풍 = 옛 식(GD 직접 읽는 독립 식): s · th · q 격자(30·40장) · gdBlast · gdPeakRef · gdChip(단위 예 ≡ mode 없음)
+  const oldZone = (k, v, n) => { const kk = n >= 35 ? 40 : 30, D = G.GD; if (k === 's') { const [lo, hi] = D.s.green[kk]; return v >= D.s.red ? 'red' : v > hi ? 'high' : v >= lo ? 'green' : 'low'; } if (k === 'th') return v < D.th.ball ? 'ball' : v < D.th.near ? 'near' : 'strike'; return v >= D.q.red ? 'red' : v >= D.q.green[kk] ? 'green' : v >= D.q.weak[kk] ? 'soft' : 'weak'; };
+  let zb = 0, zt = 0;
+  for (const n of [30, 40]) for (const [k, a, b, st] of [['s', 0.4, 1, 0.005], ['th', 0, 45, 0.05], ['q', 0.6, 1.25, 0.0025]]) for (let v = a; v <= b + 1e-9; v += st) { zt++; for (const m of def) if (G.gdZone(k, v, n, m) !== oldZone(k, v, n)) zb++; }
+  let bb = 0; for (let q = 0.6; q <= 1.25 + 1e-9; q += 0.005) if (!Object.is(G.gdBlast(q), q > 1 ? Math.min(1.4, (q - 1) / 0.4) : 0) || !Object.is(G.gdBlast(q, { q: 'normal', out: 'r5' }), G.gdBlast(q))) bb++;
+  ok(`기본 칸 = 옛 식(격자 ${zt}점 × 기본 표기 4가지 다름 ${zb}) · gdBlast(보통, 책상·반지름 5) = (q − 1)/0.4 비트 · gdPeakRef 36·28`, zb === 0 && bb === 0 && G.gdPeakRef(40) === 36 && G.gdPeakRef(30) === 28 && G.gdPeakRef(40, {}) === 36, `칸 ${zb} · 돌풍 ${bb}`);
+  // (3) 어려움 = sweepgd 손잡이 (b): blastSpan 0.25 = MAPS.b · gdBlast(1.2, 어려움) = 0.8 · gdShot(어려움) ≡ armShot('b') 해시 2칸 · q ≤ 1 은 보통과 같은 해시 · 어려움 ≢ 보통(q 1.15)
+  const H = { q: 'hard', out: 'desk' }, cH = G.gdCfg(H);
+  const hc = [{ N: 40, seed: 402, s: 0.55, q: 1.15, th: 30 }, { N: 30, seed: 602, s: 0.55, q: 1.225, th: 30 }].map((c) => { const g = G.gdShot(V1.Table, { ...c, mode: H }), a = GDT.armShot({ ...c, map: 'b' }), n = G.gdShot(V1.Table, c);
+    const r = [g.hash === a.hash && g.flips === a.flips && g.outs === a.outs && g.steps === a.steps && Math.abs(g.blast - a.blast) < 1e-12, g.hash !== n.hash, `${c.N}장 ${c.seed} q ${c.q}: 어려움 ${g.flips}/${g.outs} 보통 ${n.flips}/${n.outs}`];
+    for (const x of [g, a, n]) x.table.world.free(); return r; });
+  const lo = G.gdShot(V1.Table, { N: 40, seed: 403, s: 0.55, q: 0.95, th: 30, mode: H }), ln = G.gdShot(V1.Table, { N: 40, seed: 403, s: 0.55, q: 0.95, th: 30 });
+  ok("어려움 = 손잡이 (b): blastSpan 0.25 = sweepgd MAPS.b · gdBlast(1.2) 0.8 · gdShot(어려움) ≡ armShot('b') 해시 2칸 · ≢ 보통 · q 0.95(≤ 1) 어려움 = 보통 해시 · 영점·각도·peak 숫자 = 보통",
+    cH.blastSpan === GDT.MAPS.b.span && GDT.MAPS.b.q0 === 1 && Math.abs(G.gdBlast(1.2, H) - 0.8) < 1e-12 && hc.every((x) => x[0] && x[1]) && lo.hash === ln.hash && lo.flips === ln.flips
+      && JSON.stringify(cH.s) === JSON.stringify(G.GD.s) && JSON.stringify(cH.th) === JSON.stringify(G.GD.th) && JSON.stringify(cH.peak) === JSON.stringify(G.GD.peak) && cH.q.red < G.GD.q.red,
+    hc.map((x) => x[2]).join(' · ') + ` · 빨강 ${cH.q.red}`);
+  lo.table.world.free(); ln.table.world.free();
+  // (4) 반지름 5 판정: gdShot(r5) = 같은 월드(해시 = 책상) · judgeDesk(t, { out: 'r5' }) = 독립 식(책상 밖 또는 원점에서 5 밖) · = sweepgd shotRow(flipR · outR · ringR) · OUT ≥ 책상 · 뒤집힘 ≤ 책상
+  let rOk = 0; const rtx = [];
+  for (const c of [{ N: 40, seed: 405, s: 0.55, q: 1.15, th: 40 }, { N: 30, seed: 605, s: 0.7, q: 1.0, th: 30 }, { N: 40, seed: 406, s: 0.55, q: 1.22, th: 40 }]) {
+    const d = G.gdShot(V1.Table, c), r = G.gdShot(V1.Table, { ...c, mode: { out: 'r5' } }), t = r.table;
+    const own = (x) => { if (x.off) return true; const p = x.body.translation(); return p.y < -0.5 || Math.abs(p.x) > V1.DESK_HX || Math.abs(p.z) > V1.DESK_HZ || Math.hypot(p.x, p.z) > 5; };
+    const L = t.liveDiscs(), f = L.filter((x) => t.faceUp(x) > 0.2 && !own(x)).length, o = L.filter(own).length;
+    const row = GDT.shotRow({ N: c.N, seed: c.seed, kind: 'gd', map: 'a', s: c.s, q: c.q, th: c.th, key: 'ctl' });
+    const good = r.hash === d.hash && r.flips === f && r.outs === o && row.flipR === r.flips && row.outR === r.outs && row.ringR === r.ring && row.flip === d.flips && r.outs >= d.outs && r.flips <= d.flips && r.mode === 'r5|normal' && G.GD_RING === 5;
+    if (good) rOk++; rtx.push(`${c.N}장 ${c.seed} q ${c.q}: 책상 ${d.flips}/${d.outs} · 반지름 5 ${r.flips}/${r.outs}(원 밖 책상 위 ${r.ring})${good ? '' : ' ×'}`);
+    d.table.world.free(); t.world.free();
+  }
+  ok("반지름 5 판정: 같은 월드(해시 = 책상) · 게임 함수 judgeDesk(out 'r5') = 독립 식 = sweepgd 줄(flipR·outR·ringR) · OUT ≥ 책상 · 뒤집힘 ≤ 책상 3칸", rOk === 3, rtx.join(' · '));
+  // (5) GD_COMBO 숫자 = 측정(sweepgd report --json '비교 토글 4 조합': 조합마다 문턱 11 + peak 2 모두 버팀)
+  { const { execFileSync } = await import('node:child_process');
+    const J = JSON.parse(execFileSync(process.execPath, [new URL('./sweepgd.mjs', import.meta.url).pathname, 'report', '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 << 20 }));
+    const C = J.combos || {}, keys = Object.keys(C), bad = keys.flatMap((k) => C[k].proposals.filter((x) => !x.holds).map((x) => `${k} ${x.name} ${JSON.stringify(x.game)} → ${JSON.stringify(x.proposed)}`));
+    const cfgSame = keys.every((k) => JSON.stringify(C[k].cfg.q) === JSON.stringify(G.gdCfg(k).q) && JSON.stringify(C[k].cfg.s) === JSON.stringify(G.gdCfg(k).s) && JSON.stringify(C[k].cfg.peak) === JSON.stringify(G.gdCfg(k).peak));
+    ok(`GD_COMBO 숫자 = 보류 시드 측정(sweepgd report): 4 조합 × 문턱·peak 13개 모두 버팀`, keys.join() === GDT.COMBOS.join() && keys.every((k) => C[k].proposals.length === 13) && !bad.length && cfgSame,
+      bad.length ? bad.join(' · ') : keys.map((k) => `${k} peak ${C[k].cfg.peak[40]}/${C[k].cfg.peak[30]} 빨강 ${C[k].cfg.q.red}`).join(' · ')); }
 }
 
 // ───────────────────────── ctl: 문법 B '놓고 쓸기' ─────────────────────────
@@ -754,12 +824,13 @@ if (!isMainThread && workerData?.sweepgameWorker) {
   else if (cmd === 'ctl') await ctl();
   else if (cmd === 'base') await base();
   else if (cmd === 'ref') {
-    const rows = await refRows(), gb = await refRowsGB(), gc = await refRowsGC(), gd = await refRowsGD();
-    if (a.includes('--json')) console.log(JSON.stringify({ plan: rows, gb, gc, gd }));
+    const rows = await refRows(), gb = await refRowsGB(), gc = await refRowsGC(), gd = await refRowsGD(), gdm = await refRowsGDModes();
+    if (a.includes('--json')) console.log(JSON.stringify({ plan: rows, gb, gc, gd, gdm }));
     else {
       for (const r of rows) console.log(`${r.N}장 시드 ${r.seed} q${r.q} A ${r.plan.A}° w ${r.plan.w} t0 ${r.plan.t0} D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 원 밖 ${r.outs} · 꼭대기 넘음 ${r.tTop} · 해시 ${r.hash}`);
       for (const r of gb) console.log(`B ${r.N}장 시드 ${r.seed} q${r.q} ts ${r.ts ?? '안 휙'} D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 원 밖 ${r.outs} · 꼭대기 넘음 ${r.tTop} · ttF ${r.ttF} · 단서 ${r.cueT} · 칩 ${r.chip} · 해시 ${r.hash}`);
       for (const r of gd) console.log(`D ${r.N}장 시드 ${r.seed} 영점 s ${r.s}(α0 ${r.a0}°) q${r.q}${r.blast ? ` 돌풍 ${r.blast}` : ''} θ ${r.th}° D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 책상 밖 ${r.outs}(걸침 ${r.hang}) · 단서 ${r.cueT} · tUp ${r.tUp} · 칩 ${r.chip} · 해시 ${r.hash}`);
+      for (const r of gdm) console.log(`D 조합 ${r.mode} ${r.N}장 시드 ${r.seed} (${r.s}, ${r.q}, ${r.th}°) 돌풍 ${+r.blast.toFixed(3)} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 밖 ${r.outs}(걸침 ${r.hang} · 원 밖 책상 위 ${r.ring}) · 칩 ${r.chip} · 해시 ${r.hash}`);
       for (const r of gc) console.log(`C ${r.N}장 시드 ${r.seed} 영점 s ${r.s}(α0 ${r.a0}°) q${r.q} θ ${r.th}° D ${r.D} → 스텝 ${r.steps} · 뒤집힘 ${r.flips} · 원 밖 ${r.outs} · 단서 ${r.cueT} · tUp ${r.tUp} · ttUp ${r.ttUp} · 칩 ${r.chip}${r.chip2 ? '+' + r.chip2 : ''} · 해시 ${r.hash}`);
       // C 칸은 측정 도구(sweepgc gcShot)로 한 번 더 — 주입 기준이 측정과 같은 샷인지(θ 0 은 측정 'fix0' 줄)
       const SC = await import('./sweepgc.mjs');

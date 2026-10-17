@@ -681,15 +681,21 @@ export function zeroShot(Table, { N, seed, s = null, q, th, cards, a0 = null, tU
 // 🧭 가설 수정(2026-10-17, 확인됨 Node 40장 시드 401): 스크래치 측정의 '책상 윗면 아래(y < −딱지 두께 0.11)' 문턱은 40장 맨 아래 장이 무게로 책상에
 //   묻힌 것(y −0.111)을 OUT 으로 셌다(숨 전부터 OUT 1장). 떨어진 장은 판 옆으로 내려가므로 문턱 = 판 두께 절반(y < −0.5 — 판 속에는 있을 수 없는 높이)
 export const DESK = { hx: 11, hz: 8, drop: 0.5 };
-export function deskOut(d) {
+// 아웃 범위(⚙ '아웃 범위' 비교 토글, 2026-10-17 · 연습판 D 만): 'desk' = 책상 밖만(기본 — 옛 judgeDesk 그대로) · 'r5' = 책상 밖 또는
+//   더미 자리(원점 — 연습판 더미는 addPile 기본 at 0,0)에서 반지름 GD_RING 5 u 밖(옛 분필 원 3.2 보다 넓은 원, 판에 점선 원으로 보임)
+export const GD_RING = 5;
+export function deskOut(d, out = 'desk') {
   if (d.off) return true;
   const p = d.body.translation();
-  return p.y < -DESK.drop || Math.abs(p.x) > DESK.hx || Math.abs(p.z) > DESK.hz;
+  if (p.y < -DESK.drop || Math.abs(p.x) > DESK.hx || Math.abs(p.z) > DESK.hz) return true;
+  return out === 'r5' && Math.hypot(p.x, p.z) > GD_RING;
 }
-// 판정(table.judgeResult 의 책상 판): 책상 위에서 그림이 위 = 뒤집힘 · 책상 밖(떨어짐 · 걸침) = OUT · hang = 떨어지지 않고 중심만 밖에 걸친 장 수
-export function judgeDesk(t) {
-  const L = t.liveDiscs(), outs = L.filter(deskOut);
-  return { flipped: L.filter((d) => t.faceUp(d) > 0.2 && !deskOut(d)), outs, hang: outs.filter((d) => !d.off).length };
+// 판정(table.judgeResult 의 책상 판 · 게임·Node 공용 한 함수): 판 안에서 그림이 위 = 뒤집힘 · 판 밖 = OUT
+//   hang = 떨어지지 않고 중심만 책상 밖에 걸친 장 수 · ring = 책상 위인데 반지름 5 밖이라 OUT 인 장 수('r5' 만, 'desk' 는 늘 0)
+//   opts.out 'desk'(기본) | 'r5' — 기본이면 옛 judgeDesk(t) 와 같은 장·같은 수(sweepgame ctl 이 독립 식으로 대조)
+export function judgeDesk(t, { out = 'desk' } = {}) {
+  const L = t.liveDiscs(), outs = L.filter((d) => deskOut(d, out));
+  return { flipped: L.filter((d) => t.faceUp(d) > 0.2 && !deskOut(d, out)), outs, hang: outs.filter((d) => !d.off && deskOut(d)).length, ring: outs.filter((d) => !deskOut(d)).length };
 }
 export const GD = {
   // ① 영점 s(C 와 같은 곡선 0.4 ~ 1): 초록 [lo, hi] 장수별(40장 0.40~0.45 = 아래 노랑 · 30장은 0.40 까지 초록) · 위 노랑 ~ red · 빨강 ≥ red
@@ -706,6 +712,37 @@ export const GD = {
   peak: { 40: 36, 30: 28 }, good: 0.85, // 칩 '좋아요' = 뒤집힘 ≥ 0.85 × 책상 판정 지배 칸 평균(보류: 40장 35.9 ± 0.5 · 30장 27.9 ± 0.2 — 스크래치 36.1 · 27.0)
 };
 const gdN = (n) => (n >= 35 ? 40 : 30); // 장수별 값은 30·40장만 잼 → 가까운 쪽
+// ───── 비교 토글(⚙ '숨 난이도' × '아웃 범위', 2026-10-17 · 재윤님 아이폰 한 번에 고르기 · 솔로 연습판 D 만) ─────
+//   숨 난이도 q: 'normal'(기본 — 돌풍 (q − 1)/0.4 · 빨강 1.2) | 'hard'(숨 손잡이 (b): 돌풍 (q − 1)/0.25 — 같은 당김이 더 센 돌풍. 물리 식은 같고 당김 → 돌풍 대응만)
+//   아웃 범위 out: 'desk'(기본 — 책상 밖) | 'r5'(책상 밖 또는 반지름 GD_RING 5 밖 — judgeDesk(t, { out: 'r5' }) · 판에 점선 원)
+//   기본 조합 'desk|normal' = 위 GD 그대로(같은 객체 — 숫자·칸·칩·해시 무변화, sweepgame ctl 이 대조). 그 밖 조합은 GD 를 복사해 GD_COMBO 만 덮어쓴다
+//   조합마다 칸 경계·peak = 보류 시드 측정(tools/sweepgd.mjs report '비교 토글 4 조합' 절 — 같은 월드를 책상 · 반지름 5 두 판정으로 읽음, 원자료 tools/coresweep/data/gd/)
+export const GD_MODES = { q: ['normal', 'hard'], out: ['desk', 'r5'] };
+export const gdMode = (m) => ({ q: m?.q === 'hard' ? 'hard' : 'normal', out: m?.out === 'r5' ? 'r5' : 'desk' });
+export const gdKey = (m) => { const k = typeof m === 'string' ? gdMode({ out: m.split('|')[0], q: m.split('|')[1] }) : gdMode(m); return `${k.out}|${k.q}`; };
+export const gdModeOf = (key) => gdMode({ out: String(key).split('|')[0], q: String(key).split('|')[1] });
+//   측정(확인됨, 보류 40장 413~424 · 30장 613~624 × 12판, held 744 + knob 552샷 — 책상 칸은 옛 원자료와 줄마다 같음):
+//   · 'desk|hard': 바뀌는 문턱은 돌풍 빨강 하나 1.2 → 1.125(40장 q 1.1 = 최고의 96% · 1.125 = 52% · 1.15 = 5% / 30장 1.1 = 97% · 1.125 = 86% · 1.15 = 6%)
+//     — q ≤ 1 은 보통과 같은 물리(해시 같음)라 영점·각도·숨 아래쪽 칸·peak 는 보통 그대로(40장 35.9 · 30장 27.9장)
+//   · 'r5|normal': 반지름 5 밖도 OUT 이면 돌풍이 일찍 아프다 — 40장 q 1.05 = 88% · 1.1 = 81% · 1.125 = 72% · 1.15 = 52% · 1.2 = 6% / 30장 1.1 = 89% · 1.15 = 70% · 1.2 = 12%
+//     → 빨강 1.125(어긋남 0칸 구간 1.075~1.125 중 지금 값에 가까운 쪽) · 영점 초록 아래 끝 40장 0.45 → 0.5(s 0.45 가 반지름 5 에선 노랑) · peak 40장 35(지배 칸 34.6 ± 0.75장) · 30장 28(27.7 ± 0.14)
+//   · 'r5|hard': 위 둘이 겹침 — 40장 1.05 = 84% · 1.1 = 43% · 1.125 = 6% / 30장 1.05 = 94% · 1.1 = 59% · 1.125 = 12% → 빨강 1.1(구간 1.075~1.1) · 영점 · peak 는 'r5|normal' 과 같음
+//   숫자를 바꾸면 node tools/sweepgd.mjs report('비교 토글 4 조합' 절 바꿈 0줄) · node tools/sweepgame.mjs ctl 필수
+export const GD_COMBO = {
+  'desk|normal': {},
+  'desk|hard': { blastSpan: 0.25, q: { red: 1.125 } },
+  'r5|normal': { s: { green: { 40: [0.5, 0.65], 30: [0.4, 0.65] } }, q: { red: 1.125 }, peak: { 40: 35, 30: 28 } },
+  'r5|hard': { blastSpan: 0.25, s: { green: { 40: [0.5, 0.65], 30: [0.4, 0.65] } }, q: { red: 1.1 }, peak: { 40: 35, 30: 28 } },
+};
+const GD_CFG = {};
+function gdMerge(o) {
+  const c = structuredClone(GD);
+  for (const [k, v] of Object.entries(o)) { if (v && typeof v === 'object' && !Array.isArray(v)) { c[k] = { ...c[k] }; for (const [k2, v2] of Object.entries(v)) c[k][k2] = v2 && typeof v2 === 'object' ? structuredClone(v2) : v2; } else c[k] = v; }
+  return c;
+}
+for (const k of Object.keys(GD_COMBO)) if (k !== 'desk|normal') GD_CFG[k] = gdMerge(GD_COMBO[k]);
+// 조합의 숫자 묶음(GD 와 같은 모양): 기본 = GD 자신 · 그 밖 = 미리 만든 복사본(측정 report 가 문턱을 잠깐 바꿔 볼 때도 이 객체)
+export function gdCfg(m) { const k = gdKey(m); return k === 'desk|normal' ? GD : GD_CFG[k]; }
 // 왔다 갔다 눈금(벽시계 ms): 's' = C 영점 눈금 그대로(꼭대기 출발) · 'th' = 0° 출발 → 45° → 0° 삼각파(같은 준비 delayMs · 같은 왕복 T)
 export function gdMeterAt(knob, ms, T = GC.meter.T) {
   if (knob === 's') return meterAt('s', ms, T);
@@ -717,29 +754,30 @@ export function gdMeterAt(knob, ms, T = GC.meter.T) {
 export const qOfPull = (px, minDim) => GD.q.min + (GD.q.max - GD.q.min) * Math.min(1, Math.max(0, px / (GD.pullPx * minDim)));
 export const pullOfQ = (q, minDim) => ((q - GD.q.min) / (GD.q.max - GD.q.min)) * GD.pullPx * minDim; // 그림용 거꾸로
 export const gdPower = (q) => Math.min(q, 1); // 물리 세기(SweepCtl q = blowProg power) — 1 넘는 숨은 돌풍으로
-export const gdBlast = (q) => (q > 1 ? Math.min(GD.blastMax, (q - 1) / GD.blastSpan) : 0);
-// 돌풍: blowProg 숨 객체에 P.blast(sim.js applyWind 가 P.blast || 0 을 읽음). q ≤ 1 이면 아무것도 안 함(= 문법 C 비트 그대로)
-export function gdArm(P, q) { const b = gdBlast(q); if (b > 0) P.blast = b; return P; }
+export const gdBlast = (q, m) => { const c = gdCfg(m); return q > 1 ? Math.min(c.blastMax, (q - 1) / c.blastSpan) : 0; };
+// 돌풍: blowProg 숨 객체에 P.blast(sim.js applyWind 가 P.blast || 0 을 읽음). q ≤ 1 이면 아무것도 안 함(= 문법 C 비트 그대로) · m = 비교 토글 조합(숨 난이도)
+export function gdArm(P, q, m) { const b = gdBlast(q, m); if (b > 0) P.blast = b; return P; }
 // 박자 칸: 's' → low | green | high | red · 'th' → ball | near | strike · 'q' → weak | soft | green | red (띠·게이지·부채꼴·카드 점·칩이 모두 이것을 쓴다)
-export function gdZone(knob, v, n = 40) {
-  const k = gdN(n);
-  if (knob === 's') { const [lo, hi] = GD.s.green[k]; return v >= GD.s.red ? 'red' : v > hi ? 'high' : v >= lo ? 'green' : 'low'; }
-  if (knob === 'th') return v < GD.th.ball ? 'ball' : v < GD.th.near ? 'near' : 'strike';
-  if (knob === 'q') return v >= GD.q.red ? 'red' : v >= GD.q.green[k] ? 'green' : v >= GD.q.weak[k] ? 'soft' : 'weak';
+//   m = 비교 토글 조합(없으면 기본 = GD)
+export function gdZone(knob, v, n = 40, m) {
+  const k = gdN(n), c = gdCfg(m);
+  if (knob === 's') { const [lo, hi] = c.s.green[k]; return v >= c.s.red ? 'red' : v > hi ? 'high' : v >= lo ? 'green' : 'low'; }
+  if (knob === 'th') return v < c.th.ball ? 'ball' : v < c.th.near ? 'near' : 'strike';
+  if (knob === 'q') return v >= c.q.red ? 'red' : v >= c.q.green[k] ? 'green' : v >= c.q.weak[k] ? 'soft' : 'weak';
   throw new Error('gdZone: ' + knob);
 }
 // 칸 → 색 갈래: g 초록 · y 노랑 · r 빨강(높은 영점 · 볼 · 돌풍) · w 회색(약한 숨)
 export const gdTone = (z) => (z === 'green' || z === 'strike' ? 'g' : z === 'red' || z === 'ball' ? 'r' : z === 'weak' ? 'w' : 'y');
-export const gdPeakRef = (n) => GD.peak[n] ?? 0.9 * n;
+export const gdPeakRef = (n, m) => gdCfg(m).peak[n] ?? 0.9 * n;
 // 볼(θ < 10°) = 헛스윙: 물리에 보내는 쓸기 각 0(손 리뷰 6시드: 40장은 θ 5° 도 30° 와 같은 36장이라 빨간 화살표·⚾ 칩과 결과가 어긋났음 · θ 0 = 21.7장).
 //   칸·칩·카드·기록은 탭한 θ 그대로. 게임 발사(손·주입)와 gdShot 이 이 함수 하나를 쓴다
 export const gdSwing = (th) => (th < GD.th.ball ? 0 : th);
 // 원인 칩(근거 = tools/sweepgd.mjs report '칩 근거': 칩이 나온 판에서 이름 붙은 손잡이만 지배 값으로 옮기면 100% 더 넘김): 결과 먼저(좋아요) → 가장 나쁜 박자 하나.
 //   빨강(돌풍 · 높은 영점) → 약한 숨 → 볼 → 노랑(영점 높음/낮음 · 조금 약함 · 아슬 — 아슬은 th.near > th.ball 일 때만, 지금은 칸 없음)
 //   → 셋 다 초록인데 덜 넘겼으면 mixed('같은 걸로 한 번 더' — 같은 칸 안 시드 흩어짐). '각도 큼' 칩은 없다(가설 2)
-export function gdChip({ n, s, q, th, flip }) {
-  if (flip >= GD.good * gdPeakRef(n)) return 'good';
-  const zs = gdZone('s', s, n), zq = gdZone('q', q, n), zt = gdZone('th', th, n);
+export function gdChip({ n, s, q, th, flip, mode }) {
+  if (flip >= gdCfg(mode).good * gdPeakRef(n, mode)) return 'good';
+  const zs = gdZone('s', s, n, mode), zq = gdZone('q', q, n, mode), zt = gdZone('th', th, n, mode);
   if (zq === 'red') return 'qGust';
   if (zs === 'red') return 'zHigh';
   if (zq === 'weak') return 'qWeak';
@@ -758,20 +796,21 @@ export function gdTipH(th, s, top) {
 }
 // Node·게임 공용: 문법 D 한 샷 — 영점 s · 각도 θ · 숨 q(≤ 1.25) → SweepCtl 'zero'(q = gdPower) + 돌풍(gdArm) → 판정(기본 책상).
 //   q ≤ 1 이면 zeroShot(s, q, θ) 와 같은 호출 순서·같은 비트(sweepgame ctl 이 해시로 대조). 게임 주입 훅 { kind: 'gd', s, q, th } 와 같은 순서
-export function gdShot(Table, { N, seed, s, q, th, cards, judge = 'desk' }) {
+//   mode = 비교 토글 조합 { q: 'normal'|'hard', out: 'desk'|'r5' }(없으면 기본) — 숨 난이도는 돌풍 대응(gdArm)만, 아웃 범위는 판정(judgeDesk out)만 바꾼다
+export function gdShot(Table, { N, seed, s, q, th, cards, judge = 'desk', mode }) {
   const t = new Table(practiceTableSeed(N, seed), { lift: 519.59 });
   t.addPile(cards || Array.from({ length: N }, (_, i) => i));
   t.settle(600);
   const top = t.columnTop(), power = gdPower(q);
   const ctl = new SweepCtl(t, { mode: 'zero', s, q: power, th: gdSwing(th) });
-  ctl.attach(gdArm(t.blowProg({ prog: ctl.prog, power, dur: ctl.durCap }), q));
+  ctl.attach(gdArm(t.blowProg({ prog: ctl.prog, power, dur: ctl.durCap }), q, mode));
   const j = { n: 0, quiet: 0 };
   let steps = 0;
   do { t.step(); ctl.after(t); steps++; } while (!t.stepJudge(j));
-  const R = judge === 'desk' ? judgeDesk(t) : t.judgeResult();
+  const R = judge === 'desk' ? judgeDesk(t, { out: gdMode(mode).out }) : t.judgeResult();
   const flips = R.flipped.length, outs = R.outs.length, n = t.liveDiscs().length, r = ctl.rec;
   return {
-    table: t, ctl, D: ctl.D, a0: ctl.a0, steps, flips, outs, hang: R.hang ?? null, hash: poseHash(t), tUp: ctl.tUp, cueT: r.cueT, tTop: r.tTop, top,
-    q, power, blast: gdBlast(q), judge, chip: gdChip({ n, s, q, th, flip: flips }),
+    table: t, ctl, D: ctl.D, a0: ctl.a0, steps, flips, outs, hang: R.hang ?? null, ring: R.ring ?? null, hash: poseHash(t), tUp: ctl.tUp, cueT: r.cueT, tTop: r.tTop, top,
+    q, power, blast: gdBlast(q, mode), judge, mode: gdKey(mode), chip: gdChip({ n, s, q, th, flip: flips, mode }),
   };
 }
