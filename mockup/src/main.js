@@ -4311,6 +4311,8 @@ async function startPractice(N = 40, seedIdx = 0) {
   for (;;) {
     const seed = Sweep.practiceSeed(N, sweep.idx);
     buildPracticePile(N, seed);
+    // 판 판정(분필 원 숨김 · 넓은 원)을 더미를 만들자마자 정한다 — 첫 판 인트로·배너 동안 D 인데 분필 원이 보이던 것(playerSweepShot 이 숨마다 다시 정함)
+    { const g0 = sweepGrammar(); sweep.desk = g0 === 'D'; sweep.gdm = g0 === 'D' ? swGdModeFeel() : null; }
     if (first) {
       show('#hud');
       await introDrop();
@@ -4967,7 +4969,7 @@ function playerSweepShotD() {
       coach: { s: coach || !!ag.s, th: coach || !!ag.th, q: coach || !!ag.q },
       s: null, th: null, q: null, meterT0: 0, locked: null, tapS: null, tapT: null, nudgeAt: 0, waitStage: null, judge: null,
       pull: null, pullPx: null, pullMaxPx: null, ctl: null, trail: [], listening: false, released: false, inh: null,
-      redo: { zero: 0, angle: 0 }, cancels: 0, waitTaps: 0, Rp: gdRp(), beatAt: 0,
+      redo: { zero: 0, angle: 0 }, cancels: 0, sysCancels: 0, waitTaps: 0, Rp: gdRp(), beatAt: 0, // cancels = 사람이 덜 당겨 놓음 · sysCancels = 포인터 취소·창 흐림·숨김
     };
     sweep.input = I;
     const vis = () => { if (document.hidden) lose(); };
@@ -5012,7 +5014,7 @@ function playerSweepShotD() {
     const hint = (key) => { $('#hint').hidden = false; $('#hint').className = 'hint sw swd'; $('#hintText').textContent = t(key); };
     // ── ① 영점 ──
     const enterZero = (now = performance.now()) => {
-      I.stage = 'zero'; I.stageAt = now; I.s = null; I.th = null; I.q = null; I.locked = null; I.tapS = null; I.tapT = null; I.judge = null; I.pull = null;
+      I.stage = 'zero'; I.stageAt = now; I.s = null; I.th = null; I.q = null; I.locked = null; I.tapS = null; I.tapT = null; I.judge = null; I.pull = null; I.waitStage = null; // 새로 연 박자 = '잠깐…' 다시 한 번(다시 단추로 같은 박자에 돌아와도)
       inhStop(); puffer.mode = 'idle'; puffer.p = 0; puffer.strain = 0;
       I.Rp = gdRp();
       I.meterT0 = now; I.nudgeAt = now + Sweep.GC.meter.delayMs + SW_TAP_NUDGE_MS;
@@ -5021,7 +5023,7 @@ function playerSweepShotD() {
     };
     // ── ② 각도(영점 유지) ──
     const enterAngle = (now = performance.now()) => {
-      I.stage = 'angle'; I.stageAt = now; I.th = null; I.q = null; I.locked = null; I.tapT = null; I.judge = null; I.pull = null;
+      I.stage = 'angle'; I.stageAt = now; I.th = null; I.q = null; I.locked = null; I.tapT = null; I.judge = null; I.pull = null; I.waitStage = null;
       inhStop(); puffer.mode = 'idle'; puffer.p = 0; puffer.strain = 0;
       I.meterT0 = now; I.nudgeAt = now + Sweep.GC.meter.delayMs + SW_TAP_NUDGE_MS;
       hint('swHintD2');
@@ -5029,7 +5031,7 @@ function playerSweepShotD() {
     };
     // ── ③ 숨(영점·각도 유지) ──
     const enterBreath = (now = performance.now()) => {
-      I.stage = 'breath'; I.stageAt = now; I.locked = null; I.q = null; I.pull = null; I.judge = null;
+      I.stage = 'breath'; I.stageAt = now; I.locked = null; I.q = null; I.pull = null; I.judge = null; I.waitStage = null;
       I.nudgeAt = now + SW_TAP_NUDGE_MS;
       hint('swHintD3');
       myTurn.pressed = false; myTurn.t0 = now;
@@ -5054,11 +5056,13 @@ function playerSweepShotD() {
       puffer.mode = 'charge'; puffer.p = Math.min(q, 1) * F; puffer.strain = q >= GD.q.red ? 1 : 0; puffer.full = false;
       I.inh?.set(clamp((q - GD.q.min) / (1 - GD.q.min), 0, 1));
     };
-    const cancelPull = (now) => {
-      inhStop(); I.pull = null; I.cancels++;
+    // why: 'tiny' = 사람이 거의 안 당기고(또는 되돌려) 놓음 → '아래로 당겨요' + 취소 수(손 게이트 지표) · 'sys' = 포인터 취소·창 흐림·숨김 → 말 없이 따로 셈
+    const cancelPull = (now, why) => {
+      inhStop(); I.pull = null;
+      if (why === 'tiny') I.cancels++; else I.sysCancels++;
       puffer.mode = 'idle'; puffer.p = 0; puffer.strain = 0;
       myTurn.pressed = false;
-      swPopSet('swD3Tiny', now);
+      if (why === 'tiny') swPopSet('swD3Tiny', now);
       hint('swHintD3'); I.nudgeAt = now + SW_TAP_NUDGE_MS;
     };
     const fire = (q, now) => {
@@ -5092,6 +5096,7 @@ function playerSweepShotD() {
     const skip = (ev) => !!ev.target?.closest?.('button, summary, .btn, a, input, select, label, details, .modal, .sweep-card');
     const down = (ev) => {
       if (state !== 'match' || !sweepOn() || skip(ev)) return;
+      if (ev.pointerType === 'mouse' && ev.button !== 0) return; // 마우스는 주 단추만(오른쪽·가운데 = 무시 · 메뉴는 contextmenu 처리기가 막음)
       const now = performance.now();
       if (I.stage === 'blow' || I.ctl) { swPopSet('swJudgeWait', now); return; }
       sfx.unlock();
@@ -5132,17 +5137,19 @@ function playerSweepShotD() {
       move(ev);
       const now = performance.now();
       I.pull = null; myTurn.pressed = false;
-      // 놓기 직전 60 ms 안 가장 깊은 당김(뗄 때 몇 px 올라가는 흔들림 방지) · 거의 안 당겼거나 되돌려 놓으면(< 8 px) 취소
+      // 놓는 순간 당김이 8 px 미만이면(거의 안 당김 · 시작점으로 되돌려 놓음) 취소 — 창 보정보다 먼저 본다(되돌려 놓아도 창 앞 깊이로 숨이 나가던 것)
+      if (P.px < GD.tapPx) { cancelPull(now, 'tiny'); return; }
+      // 놓기 직전 60 ms 안 가장 깊은 당김(뗄 때 몇 px 올라가는 흔들림 방지) — 보정은 놓는 순간 당김 + relUpPx(6 px)까지만
       //   당김 기록은 움직일 때만 쌓이므로(엄지가 멈춰 있으면 사건 없음) 창 시작 때 쥐고 있던 값(창 앞 마지막 기록)도 넣는다
       let px = P.px, before = null;
       for (const e of P.tr) { if (now - e[0] <= GD.relMs) px = Math.max(px, e[1]); else before = e; }
       if (before) px = Math.max(px, before[1]);
-      if (px < GD.tapPx) { cancelPull(now); return; }
+      px = Math.min(px, P.px + GD.relUpPx);
       I.pullPx = Math.round(px); I.pullMaxPx = Math.round(P.maxPx);
       fire(Sweep.qOfPull(px, P.minDim), now);
     };
     // 포인터 취소·창 흐림·숨김: 당기던 것을 버리고 ③ 에 머문다(영점·각도 유지). 눈금 박자는 그대로
-    const lose = () => { if (I.pull) cancelPull(performance.now()); };
+    const lose = () => { if (I.pull) cancelPull(performance.now(), 'sys'); };
     const cancelEv = (ev) => { if (I.pull && (ev?.pointerId == null || I.pull.id == null || ev.pointerId === I.pull.id)) lose(); };
     listen(true);
     enterZero();
@@ -5155,7 +5162,7 @@ function sweepStateD() {
   return {
     stage: I.stage, s: I.s, sLive: gdSLive(I, now), th: I.th, thLive: gdThLive(I, now), q: I.q, qLive: I.pull ? gdQLive(I) : null, pullPx: I.pull?.px ?? null,
     T: I.T, meterT0: I.meterT0, locked: I.locked, coach: { ...I.coach }, again: { zero: !$('#swZeroAgain').hidden, angle: !$('#swAngleAgain').hidden },
-    zeroBig: !$('#swZero').hidden, side: !$('#swSide').hidden, redo: { ...I.redo }, cancels: I.cancels, waitTaps: I.waitTaps, rects: sweep.gdRects || null, pile: sweep.gdPile || null, Rp: I.Rp,
+    zeroBig: !$('#swZero').hidden, side: !$('#swSide').hidden, redo: { ...I.redo }, cancels: I.cancels, sysCancels: I.sysCancels, waitTaps: I.waitTaps, rects: sweep.gdRects || null, pile: sweep.gdPile || null, Rp: I.Rp,
     hint: $('#hint').hidden ? null : $('#hintText').textContent,
   };
 }
@@ -5517,7 +5524,8 @@ async function sweepResult(raw, res, seed, my) {
       s: ctl.s, a0: ctl.a0, th: raw.th, power: Sweep.gdPower(raw.q), blast: Sweep.gdBlast(raw.q, gdm), tUp: ctl.tUp, ttUp: ctl.rec.ttUp, cueT: ctl.rec.cueT, hang: res.hang,
       mode: Sweep.gdKey(gdm), gdm, ring: res.ring, // 비교 토글 조합('desk|normal' …) · 반지름 5 때문에 OUT 인 장(책상 위)
       zoneS: zs, zoneTh: zt, zoneQ: zq, T: I?.gd ? I.T : null, tapS: I?.tapS ?? null, tapT: I?.tapT ?? null, pullPx: I?.pullPx ?? null, pullMaxPx: I?.pullMaxPx ?? null,
-      redo: I?.gd ? { ...I.redo } : null, cancels: I?.cancels ?? 0, waitTaps: I?.waitTaps ?? 0,
+      redo: I?.gd ? { ...I.redo } : null, cancels: I?.cancels ?? 0, sysCancels: I?.sysCancels ?? 0, waitTaps: I?.waitTaps ?? 0,
+      coachBeats: I?.gd ? { ...I.coach } : null, // 박자별 코치(첫 3숨 · 지난 숨 빨강·회색 박자 다음 한 숨) — coach 는 '첫 3숨' 만
     });
   }
   last.chip = sweepChip(raw, last, sum);
@@ -5527,7 +5535,7 @@ async function sweepResult(raw, res, seed, my) {
     ? { g: 'D', s: last.s, th: +last.th.toFixed(2), q: last.q, power: last.power, blast: +last.blast.toFixed(4), T: last.T, tapMsS: last.tapS?.tapMs ?? null, tapSrcS: last.tapS?.src ?? null, evLagMsS: last.tapS?.evLagMs ?? null,
       tapMsT: last.tapT?.tapMs ?? null, tapSrcT: last.tapT?.src ?? null, evLagMsT: last.tapT?.evLagMs ?? null, lag: SWM_LAG, frameMs: last.tapS?.frameMs ?? null,
       zoneS: last.zoneS, zoneTh: last.zoneTh, zoneQ: last.zoneQ, pullPx: last.pullPx, pullMaxPx: last.pullMaxPx, a0: last.a0, D: last.D, tUp: last.tUp, cueT: last.cueT, tTop: last.tTop,
-      flips: res.flips, outs: res.outs, hang: res.hang, ring: last.ring, mode: last.mode, chip: last.chip, coach: last.coach, redo: last.redo, cancels: last.cancels, waitTaps: last.waitTaps, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
+      flips: res.flips, outs: res.outs, hang: res.hang, ring: last.ring, mode: last.mode, chip: last.chip, coach: last.coach, coachBeats: last.coachBeats, redo: last.redo, cancels: last.cancels, sysCancels: last.sysCancels, waitTaps: last.waitTaps, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
     : gcShot
     ? { g: 'C', s: last.s, meter: last.meter, T: last.T, tapMs: last.tapMs, tapSrc: last.tapSrc, evLagMs: last.evLagMs, lag: last.lag, frameMs: last.frameMs, inBand: last.inBand, edgePx: last.edgePx, q: last.q, th: +last.th.toFixed(2), a0: last.a0, D: last.D, tUp: last.tUp, cueT: last.cueT, ttUp: last.ttUp, tTop: last.tTop, flips: res.flips, outs: res.outs, chip: last.chip, chip2: last.chip2, coach: last.coach, n: sum.n, seed, pullPx: I?.pullPx ?? null, pushPx: I?.pushPx ?? null, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
     : gbShot
@@ -6500,8 +6508,12 @@ function wireUI() {
       netResign().finally(() => goHome());
       return;
     }
-    const wasLevel = match && match.level; simOn = false; table = null; goHome(); if (wasLevel) openMap();
+    // 쓸기 연습판이면 표를 비우지 않고 goHome 에 넘긴다 — goHome 이 연습판 Rapier 월드를 반납한다(먼저 비우면 반납을 건너뛰어 나갈 때마다 월드가 남았다).
+    //   그 밖(고전·레벨·일일)은 예전 그대로 여기서 비운다
+    const wasLevel = match && match.level; simOn = false; if (!match?.sweep) table = null; goHome(); if (wasLevel) openMap();
   });
+  // 쓸기 연습판 동안 오른쪽 단추 메뉴를 막는다(D 입력은 주 단추만 받는다 — 메뉴가 떠서 당김이 끊기지 않게). 그 밖 판은 그대로
+  window.addEventListener('contextmenu', (e) => { if (sweepOn() && state === 'match') e.preventDefault(); });
   // PvP 로비 (두 탭: ?pvplocal)
   $('#pvpBtn').addEventListener('click', openPvpLobby);
   $('#pvpClose').addEventListener('click', closePvpLobby);

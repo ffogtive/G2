@@ -673,7 +673,8 @@ export function zeroShot(Table, { N, seed, s = null, q, th, cards, a0 = null, tU
 //   꼭대기를 넘어 θ 15~60° 결과가 같다(위 경계 없음) → 각도를 끌기로 줘도 실력 깊이가 없다. 숨은 양쪽 과녁(40장 q 0.6 → 최고의 47~81% · 0.8~1.15 고원 ·
 //   1.2 → 72% · 1.25 → 6%)이고 고원 시작이 더미마다 다르다(30장 0.7 · 40장 0.8) → 숨 = 실력(끌기), 각도 = 때 맞춤 게이지(PO 2026-10-17).
 // 판정 = 책상 밖 OUT(재윤님 '흰 원 테두리는 없애고 책상 밖으로 떨어지는 것만 아웃'): DESK · deskOut · judgeDesk 를 게임·Node 가 같이 쓴다(떨어짐 · 판 옆으로 내려감 · 중심이 판 밖).
-//   중심이 책상 밖에 걸친 장도 OUT(진짜라면 떨어진다 — 돌풍 1.2 한 숨 평균 40장 3.3장 · 30장 2.4장, 그 밖에선 거의 없음). 물리(sim.js)는 그대로.
+//   중심이 책상 밖에 걸친 장도 OUT(진짜라면 떨어진다 — 보류 시드 40장 413~424 · 30장 613~624, s 0.55 · θ 30 · q 1.2 한 숨 평균 걸침 40장 3.9장(OUT 18.8 중) ·
+//   30장 1.7장(OUT 4.4 중), q ≤ 1.15 에선 0.3장 이하 — tools/sweepgd.mjs report 'G15 ①'). 물리(sim.js)는 그대로.
 // 숫자 = 보류 시드 확인(확인됨, 40장 413~424 · 30장 613~624, tools/sweepgd.mjs report · 원자료 tools/coresweep/data/gd/ · docs/design/core-sweep.md §4.1 D):
 //   스크래치 시드로 정한 초록 띠(영점 · 숨 시작)는 버팀 · 바깥 칸 경계만 옮김(숨 회색 끝 40장 0.7 → 0.75 · 30장 0.65 → 0.6 · 돌풍 빨강 1.175 → 1.2 · 아슬 끝 15 → 10 · peak 30장 27 → 28).
 //   이 숫자·칩을 바꾸면 node tools/sweepgd.mjs report(바꿈 0줄이어야) · node tools/sweepgame.mjs ctl 필수
@@ -707,9 +708,9 @@ export const GD = {
   //   보류 시드: 40장 q 0.7 = 최고의 73% → 회색 끝 0.75 · 30장 q 0.6 = 77% → 회색 끝 0.6(= 당김 0, 30장은 회색 칸 없음) · 30장 1.175 = 96% → 빨강 1.2(40장 1.2 = 52%)
   q: { min: 0.6, max: 1.25, weak: { 40: 0.75, 30: 0.6 }, green: { 40: 0.8, 30: 0.7 }, red: 1.2 },
   blastSpan: 0.4, blastMax: 1.4,
-  pullPx: 0.36, tapPx: 8, relMs: 60, // 당김 0.36 × 짧은 변(390 px 폰 = 140 px) = q 끝 1.25 · 8 px 미만 당김 = 취소 · 놓기 직전 60 ms 안 가장 깊은 당김
+  pullPx: 0.36, tapPx: 8, relMs: 60, relUpPx: 6, // 당김 0.36 × 짧은 변(390 px 폰 = 140 px) = q 끝 1.25 · 놓는 순간 8 px 미만 당김 = 취소 · 놓기 직전 60 ms 안 가장 깊은 당김(놓는 순간 + 6 px 까지만 — 뗄 때 흔들림만 덮음)
   dom: { s: 0.55, q: 0.9, th: 40 }, // 지배 칸(C 와 같음)
-  peak: { 40: 36, 30: 28 }, good: 0.85, // 칩 '좋아요' = 뒤집힘 ≥ 0.85 × 책상 판정 지배 칸 평균(보류: 40장 35.9 ± 0.5 · 30장 27.9 ± 0.2 — 스크래치 36.1 · 27.0)
+  peak: { 40: 36, 30: 28 }, good: 0.85, // 칩 '좋아요' = 뒤집힘 ≥ 0.85 × 책상 판정 지배 칸 평균(보류: 40장 35.9 ± 0.5 · 30장 27.9 ± 0.2 — 스크래치 36.1 · 27.9, 옛 잠정 27 은 옮겨 적다 틀린 값)
 };
 const gdN = (n) => (n >= 35 ? 40 : 30); // 장수별 값은 30·40장만 잼 → 가까운 쪽
 // ───── 비교 토글(⚙ '숨 난이도' × '아웃 범위', 2026-10-17 · 재윤님 아이폰 한 번에 고르기 · 솔로 연습판 D 만) ─────
@@ -795,7 +796,8 @@ export function gdTipH(th, s, top) {
   return top + (0.3 * top * (th - thTop)) / Math.max(1e-6, GD.th.max - thTop);
 }
 // Node·게임 공용: 문법 D 한 샷 — 영점 s · 각도 θ · 숨 q(≤ 1.25) → SweepCtl 'zero'(q = gdPower) + 돌풍(gdArm) → 판정(기본 책상).
-//   q ≤ 1 이면 zeroShot(s, q, θ) 와 같은 호출 순서·같은 비트(sweepgame ctl 이 해시로 대조). 게임 주입 훅 { kind: 'gd', s, q, th } 와 같은 순서
+//   q ≤ 1 · θ ≥ 10 이면 zeroShot(s, q, θ) 와 같은 호출 순서·같은 비트(sweepgame ctl 이 해시로 대조) · θ < 10(볼)은 gdSwing 이 쓸기 각 0 으로 보냄 = zeroShot(s, q, 0).
+//   게임 주입 훅 { kind: 'gd', s, q, th } 와 같은 순서
 //   mode = 비교 토글 조합 { q: 'normal'|'hard', out: 'desk'|'r5' }(없으면 기본) — 숨 난이도는 돌풍 대응(gdArm)만, 아웃 범위는 판정(judgeDesk out)만 바꾼다
 export function gdShot(Table, { N, seed, s, q, th, cards, judge = 'desk', mode }) {
   const t = new Table(practiceTableSeed(N, seed), { lift: 519.59 });
