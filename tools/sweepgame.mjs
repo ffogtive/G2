@@ -25,18 +25,20 @@
 //                                        · zero prog ≡ GcCtl prog 비트(고정 tUp) · α0 0 이면 plan 과 같음 · zeroShot ≡ gcShot(6칸) · zeroShot ≡ 원자료 줄(map 10 · held 8)
 //                                        · meterAt·thOfRise·sOfH/hOfS 표 · GC_LINES ≡ sweepgc lines --json · gcChip ≡ sweepgc chipOf(기둥 원자료 전 줄) · 단위 예 · 사건 cue·lock·up. 약 1.5분
 //                                      · 문법 D '세 박자'(2026-10-17 기본): DESK ≡ sim.js · blastSpan ≡ rules.js · gdMeterAt('s') ≡ meterAt('s') 비트 · 각도 눈금·당김 표
-//                                        · gdShot(q ≤ 1) ≡ zeroShot(같은 s·q·θ) 해시(원·책상 판정 모두) · gdShot(q > 1) ≡ 인라인 참조(SweepCtl + blowProg + P.blast)
-//                                        · GD 숫자 = 보류 시드 측정(node tools/sweepgd.mjs report --json 문턱·peak 13개 모두 버팀) · judgeDesk ≡ 독립 식(측정 스크래치 deskOut 꼴)
+//                                        · gdShot(q ≤ 1 · θ ≥ 10) ≡ zeroShot(같은 s·q·θ) 해시(원·책상 판정 모두) · 볼(θ < 10) = gdSwing → zeroShot(θ 0) · gdShot(q > 1) ≡ 인라인 참조(SweepCtl + blowProg + P.blast)
+//                                        · GD 숫자 = 보류 시드 측정(node tools/sweepgd.mjs report --json 문턱·peak 13개 모두 버팀) · judgeDesk ≡ 독립 식(떨어짐 · 판 옆 y < −0.5 · 중심 책상 밖 —
+//                                          스크래치 측정의 y < −0.11 문턱이 아님) + 판정이 갈리는 장(x 11.3 = OUT·걸침 · x 10.5 = 안 · z 8.3 = OUT · y −0.111 = 안 · y −0.6 = OUT)
 //                                        · gdZone 경계표(아슬 칸 없음) · gdTipH 연속·단조 · gdChip 단위 예
-//                                        · 정적 검사: main.js 조종 모드 직접 비교('zero')가 ctlG 밖에 0건 · 판정은 Sweep.judgeDesk/deskOut 만(자체 책상 식 없음)
+//                                        · 정적 검사: main.js 조종 모드 직접 비교('zero')가 ctlG 밖에 0건 · 판정은 Sweep.judgeDesk/deskOut 만(자체 책상 식 없음: Sweep.DESK · DESK_HX/HZ ·
+//                                          p.y < −0.5 · Math.abs(p.x|z) > · Math.hypot(p.x, p.z) > 0건, 주석 밖 deskOut(·judgeDesk( 는 'Sweep.' 로만)
 //                                        · 비교 토글(⚙ 숨 난이도 × 아웃 범위): 기본 조합 = 옛 결과(주입 4칸 해시·뒤집힘·칩 = 바꾸기 전 커밋 값 · gdCfg() 가 GD 자신 · 칸 격자 같음)
 //                                          · 어려움 = sweepgd 손잡이 (b)(armShot 'b' 해시 · 돌풍 (q − 1)/0.25 · q ≤ 1 은 보통과 같은 해시) · 반지름 5 판정: 게임 함수 = 독립 식 = sweepgd 줄(flipR·outR)
 //                                          · GD_COMBO 숫자 = sweepgd report --json 4 조합 문턱·peak 모두 버팀 · main.js 정적 검사(판정·실시간·돌풍이 조합을 넘김)
 //   node tools/sweepgame.mjs ref [--json]   주입 훅(window.__sweepPlan) 칸들의 Node 기준: #p30 시드 601 t0 .05/.25/.45 · #p40 시드 401 t0 .10/.35 → 뒤집힘·원 밖·D·스텝·정지 해시
 //                                      + 문법 B 주입({ kind: 'gb', q, ts }) 칸: #p40 401 q0.85 ts 0.3·안 휙 · #p30 601 q0.7 ts 0.3 (tools/sweepplay.mjs 가 게임과 비교)
 //                                      + 문법 C 주입({ kind: 'gc', s, q, th }) 칸: #p40 401 (0.55, 0.9, 40)·(0.8, 0.9, 40)·(0.55, 0.9, 0) · #p30 601 (0.55, 0.85, 20)
-//                                        — sweepgc gcShot 과 한 번 더 대조('맞음') + 문법 D 주입({ kind: 'gd', s, q, th }) 칸: #p40 401 (0.55, 0.9, 40)·(0.55, 1.2, 40) · #p30 601 (0.55, 0.95, 30)
-//                                        (책상 판정 — gdShot) + D 비교 토글 4 조합 같은 칸 #p40 401 (0.55, 1.15, 40) (gdShot mode). --json = { plan, gb, gc, gd, gdm }. 약 25초
+//                                        — sweepgc gcShot 과 한 번 더 대조('맞음') + 문법 D 주입({ kind: 'gd', s, q, th }) 4칸: #p40 401 (0.55, 0.9, 40)·(0.55, 1.2, 40)·(0.55, 0.92, 5 = 볼)
+//                                        · #p30 601 (0.55, 0.95, 30) (책상 판정 — gdShot) + D 비교 토글 4 조합 같은 칸 #p40 401 (0.55, 1.15, 40) (gdShot mode). --json = { plan, gb, gc, gd, gdm }. 약 25초
 //   node tools/sweepgame.mjs base     게임 문법의 고정 숨 기준선(검토 2): '툭 연 높이(엄지 18 px → α ≈ 0.9°)에서 버티다 떼기' D 0.375·0.45·0.525·0.6 대
 //                                      쓸기(꼭대기 떼기) t0 0.25·0.35 — 30장 q0.7 시드 601~606 · 40장 q0.85 시드 401~406. 장수별 평균 · 시드마다 (최고 쓸기 − 최고 고정) 짝 차.
 //                                      문서·카드의 이득 주장은 이 기준으로 말한다(측정 표의 α = 0 고정보다 게임 버티기가 세다). 판정 없음(보고만). 약 30초
@@ -77,7 +79,7 @@ export const REF_GC_CELLS = [
   { N: 40, seed: 401, s: 0.55, q: 0.9, th: 0 },
   { N: 30, seed: 601, s: 0.55, q: 0.85, th: 20 },
 ];
-// 문법 D 주입 칸({ kind: 'gd', s, q, th } — sweepplay (12) 가 같은 판에서 게임과 비교): 지배 칸 · 돌풍 1.2 · 30장
+// 문법 D 주입 칸({ kind: 'gd', s, q, th } — sweepplay (12) 가 같은 판에서 게임과 비교): 지배 칸 · 돌풍 1.2 · 30장 · 볼(θ 5)
 export const REF_GD_CELLS = [
   { N: 40, seed: 401, s: 0.55, q: 0.9, th: 40 },
   { N: 40, seed: 401, s: 0.55, q: 1.2, th: 40 },
@@ -493,7 +495,7 @@ async function ctlGD(mk) {
   const thOk = thT.every(([, w, g]) => Math.abs(w - g) <= 1e-9);
   ok("gdMeterAt('s') ≡ meterAt('s') 비트(0~3000 ms · 7 ms · 왕복 1.6/1.2/1.0 s) · 'th' 표(T 1.2 s: 0/400/700/1000/1300/1600/1700 ms = 0/0/22.5/45/22.5/0/7.5°)", bad === 0 && thOk,
     `${tot - bad}/${tot} · θ ${thT.map(([, , g]) => +g.toFixed(2)).join('/')}`);
-  // (3) 당김 → 숨: 390 px 폰(짧은 변) 0/8/43.1/124.6/140/200 px · 거꾸로 왕복
+  // (3) 당김 → 숨: 390 px 폰(짧은 변) 0/8/43.2/124.2/140.4/200 px · 거꾸로 왕복
   const qs = [0, 8, 43.2, 124.2, 140.4, 200].map((px) => G.qOfPull(px, 390));
   let rt = 0; for (let q = 0.6; q <= 1.25; q += 0.01) rt = Math.max(rt, Math.abs(G.qOfPull(G.pullOfQ(q, 390), 390) - q));
   ok('qOfPull(390): 0/8/43.2/124.2/140.4/200 px = 0.6/0.637/0.8/1.175/1.25/1.25 · pullOfQ 왕복 ≤ 1e-12 · gdPower = min(q, 1) · gdBlast(1.2) = 0.5 · gdBlast(≤ 1) = 0',
@@ -531,17 +533,27 @@ async function ctlGD(mk) {
     a.table.world.free();
   }
   ok('gdShot(q > 1) ≡ 인라인 참조(SweepCtl q 1 · power 1 · P.blast) 3칸(1.05 · 1.2 · 1.25): 해시·스텝', gOk === 3, gtx.join(' · '));
-  // (6) judgeDesk ≡ 독립 식(떨어짐 · 판 옆으로 내려감 · 중심이 책상 사각형 밖) — 돌풍 샷의 최종 월드에서 장마다 · 40장 맨 아래 묻힌 장(y ≈ −0.11)은 OUT 아님
+  // (6) judgeDesk ≡ 독립 식(떨어짐 · 판 옆으로 내려감 y < −0.5 · 중심이 책상 사각형 밖) — 돌풍 샷의 최종 월드에서 장마다 · 40장 맨 아래 묻힌 장(y ≈ −0.11)은 OUT 아님
+  //     + 판정이 갈리는 장을 손으로 놓아 본다(책상 OUT ⊆ 원 OUT 이라 'OUT ≤ 원' 은 늘 참 — 갈리는 경계를 직접 찌른다): 책상 11 × 8(반 폭) · 판 두께 절반 0.5
   { const t = G.gdShot(V1.Table, { N: 40, seed: 405, s: 0.55, q: 1.22, th: 40 }).table;
     const own = (d) => { if (d.off) return true; const p = d.body.translation(); return p.y < -0.5 || Math.abs(p.x) > V1.DESK_HX || Math.abs(p.z) > V1.DESK_HZ; };
     const L = t.liveDiscs(), J = G.judgeDesk(t);
     const f = L.filter((d) => t.faceUp(d) > 0.2 && !own(d)).length, o = L.filter(own).length, h = L.filter((d) => own(d) && !d.off).length;
     const u = new V1.Table(G.practiceTableSeed(40, 401), { lift: 519.59 }); u.addPile(Array.from({ length: 40 }, (_, i) => i)); u.settle(600);
     const buried = u.liveDiscs().filter((d) => d.body.translation().y < -0.1).length, out0 = G.judgeDesk(u).outs.length;
-    ok('judgeDesk ≡ 독립 식(40장 405 q 1.22): 뒤집힘·OUT·걸침 같음 · OUT 이 원 판정보다 적다 · 숨 전 40장 401 묻힌 맨 아래 장은 OUT 아님',
-      J.flipped.length === f && J.outs.length === o && J.hang === h && o <= t.judgeResult().outs.length && buried >= 1 && out0 === 0,
-      `책상 ${f}/${o} 걸침 ${h} · 원 ${t.judgeResult().flipped.length}/${t.judgeResult().outs.length} · 숨 전 묻힌 장 ${buried} · OUT ${out0}`);
-    t.world.free(); u.world.free(); }
+    // 경계 찌르기(스텝 없이 자리만 옮겨 판정): [x, y, z, 책상 OUT, 반지름 5 OUT]
+    const W = [[11.3, 0.2, 0, true, true], [10.5, 0.2, 0, false, true], [0, 0.2, 8.3, true, true], [0, 0.2, 7.9, false, true], [0.5, -0.111, 0, false, false], [0.5, -0.6, 0, true, true], [3, 0.2, 3.9, false, false], [3, 0.2, 4.1, false, true]];
+    const v = new V1.Table(G.practiceTableSeed(30, 601), { lift: 519.59 }); v.addPile(Array.from({ length: W.length + 2 }, (_, i) => i)); v.settle(60);
+    const VD = v.liveDiscs();
+    W.forEach(([x, y, z], i) => VD[i].body.setTranslation({ x, y, z }, false));
+    const pokeOk = W.every(([, , , dOut, rOut], i) => G.deskOut(VD[i]) === dOut && G.deskOut(VD[i], 'r5') === rOut && own(VD[i]) === dOut);
+    const Jv = G.judgeDesk(v), Jr = G.judgeDesk(v, { out: 'r5' });
+    const wantOut = W.filter((w) => w[3]).length, wantR = W.filter((w) => w[4]).length;
+    const pokeJ = Jv.outs.length === wantOut && Jv.hang === wantOut && Jr.outs.length === wantR && Jr.ring === wantR - wantOut && Jv.outs.every((d) => VD.indexOf(d) < W.length && W[VD.indexOf(d)][3]);
+    ok('judgeDesk ≡ 독립 식(40장 405 q 1.22): 뒤집힘·OUT·걸침 같음 · 숨 전 40장 401 묻힌 맨 아래 장은 OUT 아님 · 경계 장 8개(x 11.3 OUT·걸침 · x 10.5 안 · z 8.3 OUT · z 7.9 안 · y −0.111 안 · y −0.6 OUT · 반지름 3.9/4.1 → 5 안/밖) = 책상·반지름 5 판정',
+      J.flipped.length === f && J.outs.length === o && J.hang === h && buried >= 1 && out0 === 0 && pokeOk && pokeJ,
+      `책상 ${f}/${o} 걸침 ${h} · 원 ${t.judgeResult().flipped.length}/${t.judgeResult().outs.length} · 숨 전 묻힌 장 ${buried} · OUT ${out0} · 경계 책상 OUT ${Jv.outs.length}/${wantOut} 걸침 ${Jv.hang} · 반지름 5 ${Jr.outs.length}/${wantR}(책상 위 ${Jr.ring})${pokeOk ? '' : ' · 장마다 ×'}`);
+    t.world.free(); u.world.free(); v.world.free(); }
   // (7) gdZone 경계표(보류 시드 확인 값 — tools/sweepgd.mjs report: 숨 회색 끝 40장 0.75 · 30장 0.6 · 빨강 1.2 · 스트라이크 ≥ 10 = 아슬 칸 없음) · gdTone · gdTipH(θtop 에서 꼭대기 · 연속 · 단조)
   const Z = [['s', 0.4, 40, 'low'], ['s', 0.45, 40, 'green'], ['s', 0.65, 40, 'green'], ['s', 0.66, 40, 'high'], ['s', 0.75, 40, 'red'], ['s', 0.4, 30, 'green'], ['th', 9.99, 40, 'ball'], ['th', 10, 40, 'strike'], ['th', 12, 30, 'strike'], ['th', 15, 30, 'strike'], ['th', 45, 30, 'strike'],
     ['q', 0.6, 40, 'weak'], ['q', 0.749, 40, 'weak'], ['q', 0.75, 40, 'soft'], ['q', 0.8, 40, 'green'], ['q', 1.199, 40, 'green'], ['q', 1.2, 40, 'red'], ['q', 0.6, 30, 'soft'], ['q', 0.66, 30, 'soft'], ['q', 0.7, 30, 'green'], ['q', 1.199, 30, 'green'], ['q', 1.2, 30, 'red']];
@@ -562,12 +574,21 @@ async function ctlGD(mk) {
   const src = readFileSync(new URL('../mockup/src/main.js', import.meta.url), 'utf8');
   const lines = src.split('\n'), zeroCmp = lines.filter((l) => /mode\s*[!=]==\s*'zero'/.test(l));
   const inCtlG = zeroCmp.filter((l) => /function ctlG\(/.test(l)).length;
-  const ownDesk = /DESK_HX|DESK_HZ|Math\.abs\(p\.x\)\s*>\s*11/.test(src);
-  const ownRing = /Math\.hypot\(p\.x, p\.z\)\s*>\s*(5|Sweep\.GD_RING)/.test(src);
-  ok("main.js 정적 검사: 조종 모드 'zero' 직접 비교 = ctlG 안 1건뿐 · 자체 책상·원 식 없음(Sweep.judgeDesk·deskOut 만, 조합 out 을 넘김) · D 발사 = Sweep.gdPower + Sweep.gdArm(조합) · 손·주입 발사 둘 다 Sweep.gdSwing",
-    zeroCmp.length === 1 && inCtlG === 1 && !ownDesk && !ownRing && /Sweep\.judgeDesk\(table, \{ out: swGdMode\(\)\.out \}\)/.test(src) && /Sweep\.deskOut\(d, out\)/.test(src) && /Sweep\.deskOut\(d, swGdMode\(\)\.out\)/.test(src)
+  // 자체 책상·원 식: 주석을 뺀 코드에서 책상 상수(Sweep.DESK.* · DESK_HX/HZ) · 판 옆 문턱(p.y < −0.5) · 축 비교(Math.abs(p.x|z) >) · 반지름 비교(Math.hypot(p.x, p.z) >) 0건,
+  //   deskOut( · judgeDesk( 는 'Sweep.' 로만 부른다(같은 이름의 지역 함수로 판정을 다시 쓰지 않게)
+  const uncomment = (t) => t.split('\n').map((l) => l.replace(/(^|[^:'"`\\])\/\/.*$/, '$1')).join('\n');
+  const deskIn = (c) => /Sweep\.DESK\b|DESK_H[XZ]|p\.y\s*<\s*-\s*0?\.5|Math\.abs\(p\.[xz]\)\s*>/.test(c) || /(^|[^.\w])(deskOut|judgeDesk)\s*\(/m.test(c) || /\w(?<!Sweep)\.(deskOut|judgeDesk)\s*\(/.test(c);
+  const ringIn = (c) => /Math\.hypot\(p\.x,\s*p\.z\)\s*>/.test(c);
+  const code = uncomment(src), ownDesk = deskIn(code), ownRing = ringIn(code);
+  // 음성 대조: 검사기가 잡아야 할 꼴(검토에서 옛 정규식을 빠져나간 것 포함) · 놓아도 되는 꼴(주석 · Sweep. 호출)
+  const mustHit = ['if (Math.abs(p.x) > Sweep.DESK.hx || Math.abs(p.z) > 8) out++;', 'const o = Math.abs(p.z) > 8;', 'if (p.y < -0.5) n++;', 'if (p.y < -.5) n++;', 'x > DESK_HX', 'function deskOut(d) { return 1; }', 'const r = judgeDesk(table);', 'const r = S.judgeDesk(table);'];
+  const mustRing = ['if (Math.hypot(p.x,p.z) > 11) n++;', 'Math.hypot(p.x, p.z) > Sweep.GD_RING'];
+  const mayPass = ['const R = Sweep.judgeDesk(table, { out: m });', 'if (Sweep.deskOut(d, out)) n++;', '// judgeDesk(t, { out: "r5" }) 와 같은 원 · Math.abs(p.x) > 11', "const u = 'file://x'; Sweep.deskOut(d);"];
+  const negOk = mustHit.every((c) => deskIn(uncomment(c))) && mustRing.every((c) => ringIn(uncomment(c))) && mayPass.every((c) => !deskIn(uncomment(c)) && !ringIn(uncomment(c)));
+  ok("main.js 정적 검사: 조종 모드 'zero' 직접 비교 = ctlG 밖 0건(ctlG 안 1건) · 자체 책상·원 식 없음(Sweep.DESK·DESK_HX/HZ·p.y < −0.5·Math.abs(p.x|z) >·Math.hypot(p.x, p.z) > 0건 · deskOut(·judgeDesk( 는 Sweep. 로만, 조합 out 을 넘김) · 검사기 음성 대조(잡아야 할 꼴 10 · 놓아도 될 꼴 4) · D 발사 = Sweep.gdPower + Sweep.gdArm(조합) · 손·주입 발사 둘 다 Sweep.gdSwing",
+    negOk && zeroCmp.length === 1 && inCtlG === 1 && !ownDesk && !ownRing && /Sweep\.judgeDesk\(table, \{ out: swGdMode\(\)\.out \}\)/.test(src) && /Sweep\.deskOut\(d, out\)/.test(src) && /Sweep\.deskOut\(d, swGdMode\(\)\.out\)/.test(src)
       && /Sweep\.gdArm\(P, raw\.q, swGdMode\(\)\)/.test(src) && /Sweep\.gdPower\(raw\.q\)/.test(src) && (src.match(/th: Sweep\.gdSwing\(/g) || []).length === 2 && !/Sweep\.GD\b(?!_)/.test(src.replace(/Sweep\.GD_RING/g, '')),
-    `'zero' 비교 ${zeroCmp.length}줄(ctlG ${inCtlG}) · 자체 책상 식 ${ownDesk} · 자체 원 식 ${ownRing}`);
+    `'zero' 비교 ${zeroCmp.length}줄(ctlG ${inCtlG}) · 자체 책상 식 ${ownDesk} · 자체 원 식 ${ownRing} · 음성 대조 ${negOk ? '맞음' : '틀림'}`);
   await ctlGDModes();
 }
 

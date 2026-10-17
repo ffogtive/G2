@@ -11,15 +11,15 @@
 //  (9) 검토 고침(2026-10-16): 시트 40장이 먼저 · '푸 시작' 톡 35(iOS 강) · 다른 손가락 pointercancel 은 숨을 안 끝냄 · 고전 조준 고리 불투명도 그대로 0.95
 //      · 시범 그대로의 툭(28 px/105 ms)은 밀기 시작 200 ms 안에 열림 · 느린 툭(28 px/300 ms)도 쓸기 전에 열림 · 작은 툭(10 px)은 안 열림 넛지 → 떼면 퍽(칩 '퍽')
 //      · 옆모습 창: 연습판 동안 보이고 홈에서 숨김 · 코치(첫 3숨) 켜짐
-//  (2)~(5)·(9) 의 엄지 시험은 문법 A('누른 채 쓸기(옛)', ?swg=a)로 돈다. 기본은 문법 C(아래 (11)) — (10) 은 ?swg=b 로 B 를 연다.
-//  (10) 문법 B '놓고 쓸기'(?swg=b, 2026-10-16 재윤님 실기기 기록): 문법 = B · 힌트(바탕 띠, '다시 눌러')·시트 한 줄 · 주입 { kind: 'gb', q, ts } = Node(sweepgame ref, (1) 안)
+//  (2)~(5)·(9) 의 엄지 시험은 문법 A('누른 채 쓸기(옛)', ?swg=a)로 돈다. 기본은 문법 D(아래 (12)) — (10) 은 ?swg=b 로 B, (11) 은 ?swg=c 로 C 를 연다.
+//  (10) 문법 B '놓고 쓸기'(?swg=b · 비교용, 2026-10-16 저녁 기본 · 재윤님 실기기 기록): 문법 = B · 힌트(바탕 띠, '다시 눌러')·시트 한 줄 · 주입 { kind: 'gb', q, ts } = Node(sweepgame ref, (1) 안)
 //      · 놓기만: 놓을 때 퍼— 시작, D(q) + 0.04 까지 저절로 · 해시 = Node 안 휙 · 코치 '놓으면 퍼—' → '퍼— 기다려…' → 위 절반 10° 스텝부터 '들렸다 — 다시 눌러 휙!' · 칩 '안 쓸었어요 — 놓은 뒤 다시 눌러 휙!'
 //      · 자연스러운 한 획(당김 → 빠른 휙 → 뗌)은 숨을 안 죽이고 휙으로 안 센다 → 숨 동안 '그 휙은 안 세요 — 기다려…' · 칩 🔁 '그 휙은 안 세요 — 놓고 다시 눌러 휙!'
 //      · 꽉 당긴 한 획(q 1) + 휙 동안 옆 125 px = 취소 아님 · 카드 글 '다시 눌러'(검토 blocker: 재윤님 버릇 q 1 한 획 = 40장 0장)
 //      · 당김 → 놓기 → 벽시계 0/0.3/0.6/1.0 s 뒤 다시 눌러 휙: t0 ≈ 휙 ÷ 2(화면) · α 단조 ≤ 24° · 해시 = Node planShot(그 t0) · 0 s = 이름(💨 덧칩 없음) · 0.6 s = 좋아요
 //      · 두 번째 휙 무시 · 숨 끝 뒤 0.5 s 안 휙 = 물리 그대로 + 칩 '늦었어요' · 그 뒤(판정 기다림) 누름 = '잠깐…'만, 칩 '안 쓸었어요'
 //      · 탭 = '위로 휙!' 신호 · 머무는 손가락 + 다른 손가락 휙 = 받음 · 진동 35·20, 꼭대기 25 없음 · 프로필 바이트 동일 · ⚙ 문법 단추(놓고 쓸기 ↔ 누른 채 쓸기)
-//  (11) 문법 C '영점 조준'(기본, 2026-10-16 재윤님 설계 · 측정 tools/sweepgc.mjs): 기본 문법 = C · ⚙ 문법 3 + 눈금 4 + 빠르기 3 단추 · 주입 { kind: 'gc', s, q, th } 4칸 = Node(sweepgame ref, (1) 안)
+//  (11) 문법 C '영점 조준'(?swg=c · 비교용, 2026-10-16 밤 기본 · 재윤님 설계 · 측정 tools/sweepgc.mjs): ?swg=c 문법 = C · ⚙ 문법 4(#core-gd 꺼짐 · #core-gc 켜짐) + 눈금 4 + 빠르기 3 단추 · 주입 { kind: 'gc', s, q, th } 4칸 = Node(sweepgame ref, (1) 안)
 //      · 영점 눈금: 창 확대(400 ms 안) · 준비 400 ms 탭 무시('잠깐…') · sLive = meterAt 식(표본 3개) · 띠 가운데 시각 탭 → s 0.55 ± 0.01 · '딱!' · 350 ms 뒤 2단계 · 축소 400 ms 안
 //      · 2단계 한 획(당김 156 px → 90 px 위 → 놓기): q = 당김 식 ± 1e-9 · θ = thOfRise ± 1e-9 · 해시 = Node zeroShot(같은 s·q·θ) · 코치 말 차례(당겨 숨 → 위로 밀어 → 놓으면 퍼—)
 //      · 자동 쓸기: tUp = 단서 + 0.15(또는 0.55) · α 단조 · 진동 35 뒤 20 한 번 · 25 없음 · 카드 칩 = Node gcChip · 미니 기둥 · 기록 줄 g 'C'
@@ -31,9 +31,14 @@
 //        · 문법별 첫 3숨(B 3숨 뒤 C 첫 숨 코치) · 중간에 홈 다섯 경우 정리
 //  (12) 문법 D '세 박자'(기본, 2026-10-17 · sweep.js GD 절 · 시제품 최소 4칸): (a) 설정: 새 프로필 = D · ⚙ 문법 4단추 · ?swg=d|c · 빠르기 줄(C·D) · 눈금 줄 없음
 //      (b) 주입 { kind: 'gd', s, q, th } 4칸(q 0.9 · 돌풍 1.2 · 30장 · 볼 θ 5 = 헛스윙) = Node gdShot(책상 판정): 뒤집힘·책상 밖·걸침·스텝·해시·칩 · 분필 원 숨김
+//          · 첫 판 인트로·배너 동안(① 전)에도 분필 원 숨김
 //      (c) 손 경로(가짜 시계): ① 띠 가운데 때 톡 → s = gdMeterAt(탭 − 16 ms) · 머묾 중 톡 = '잠깐…' · ② 30° 때 톡 → θ = 식 · ③ 5 px 당김 = 취소 · '📐 각도 다시'
-//          · 80 px 당김 → 마지막 40 ms 에 3 px 올라가 놓기 → q = qOfPull(80) · 해시 = Node gdShot(같은 s·q·θ) · 큰 영점 창 한 번도 안 열림 · 기록 줄 g 'D'
+//          · ② 머묾 중 톡 뒤 '📐 각도 다시' → 준비 중 톡 = '잠깐…' 다시(박자마다 한 번 — 다시 연 박자도) · ③ 80 px 당겼다 48 ms 에 0 px 로 되돌려 놓기 = 취소(숨 안 나감)
+//          · 당기다 pointercancel = 말 없는 취소(sysCancels, 취소 수·'아래로 당겨요' 안 셈) · 오른쪽 단추 누름 = 무시 · contextmenu 막힘
+//          · 80 px 당김 → 마지막 40 ms 에 3 px 올라가 놓기 → q = qOfPull(80) · 해시 = Node gdShot(같은 s·q·θ) · 큰 영점 창 한 번도 안 열림(MutationObserver 로 셈) · 기록 줄 g 'D'(coachBeats · sysCancels)
 //      (d) 판·배치: D 판 분필 원 숨김 → 레벨 1 은 보임 · 390×844 ③ 에서 HUD·부채꼴·게이지·다시 단추 사각형 교차 0
+//          · 같은 페이지: D 카드 → 홈(분필 원 다시 보임 · 책상 판정 끔) → ⚙ '영점 조준'(C) → 40장 더미 1(같은 더미) = 분필 원 보임 · C 주입 = Node zeroShot(원 판정)
+//          · HUD 홈 왕복 4번(① 2번 · 숨 도중 1번 · 앱 '뒤로' 1번) → Rapier 월드(rawphysicspipeline) 새로 만듦 − 반납 = 0
 //      (e) 비교 토글(⚙ '숨 난이도' 보통|어려움 × '아웃 범위' 책상|반지름 5 — D 만): 새 프로필 = 보통·책상 · ⚙ 두 줄은 D 에서만(C 면 없음) · 누르면 feel · 완료 = 저장 → 다시 열어도 그대로
 //          · 주소 ?gdq=normal&gdout=desk 가 저장값을 이김 · 조합마다 페이지 하나(?gdq=…&gdout=…) 주입 1칸 = Node gdShot(mode)(sweepgame ref gdm):
 //          뒤집힘·밖·걸침·원 밖·스텝·칩·해시 · 기록 줄 mode · 카드 조합 글 · 넓은 점선 원은 반지름 5 일 때만 보임(옛 분필 원은 늘 숨김)
@@ -264,7 +269,7 @@ console.log('(6) 레벨·일일은 고전 조작·고전 물리');
   await P.ctx.close();
 }
 
-// ── (10) 문법 B '놓고 쓸기'(기본) ──
+// ── (10) 문법 B '놓고 쓸기'(?swg=b · 비교용) ──
 console.log("(10) 문법 B '놓고 쓸기'(?swg=b): 놓기만 · 한 획 · 꽉 한 획 + 옆 흐름 · 놓고 0/0.3/0.6/1.0 s 뒤 휙 · 두 번째 휙 · 숨 끝 뒤 휙(창 안·밖) · 머무는 손가락 · 탭 · 코치 · ⚙ 단추");
 {
   const P = await open('core=sweep&swg=b');
@@ -428,8 +433,8 @@ console.log("(10) 문법 B '놓고 쓸기'(?swg=b): 놓기만 · 한 획 · 꽉 
   await P.ctx.close();
 }
 
-// ── (11) 문법 C '영점 조준'(기본) ──
-console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(창 확대·준비·표본·띠 가운데 탭·축소) · 한 획 = Node · 자동 쓸기 · 취소·영점 다시 · 띠/코치 · 끌기 · 각도·세기 눈금 = Node · 실험 토글 무시");
+// ── (11) 문법 C '영점 조준'(?swg=c · 비교용) ──
+console.log("(11) 문법 C '영점 조준'(?swg=c): ⚙ 단추 · 영점 눈금(창 확대·준비·표본·띠 가운데 탭·축소) · 한 획 = Node · 자동 쓸기 · 취소·영점 다시 · 띠/코치 · 끌기 · 각도·세기 눈금 = Node · 실험 토글 무시");
 {
   const T = 1200, PULL = 156, PUSH = 90, X = 195, Y = 520;
   const qOf = (px) => G.pouchPower(px / (VW * 0.42)) / G.POUCH_FULL;
@@ -455,7 +460,7 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
     return { ...P, drag, pull, now, runTo, card, same, dragZero, toAim };
   };
 
-  // (a) 기본 = C · ⚙ 문법 3 · 눈금 4 · 빠르기 3 단추 · B 로 바꾸면 눈금 줄이 사라짐 · 시트 한 줄
+  // (a) ?swg=c = C · ⚙ 문법 4(세 박자 꺼짐 · 영점 조준 켜짐) · 눈금 4 · 빠르기 3 단추 · B 로 바꾸면 눈금 줄이 사라짐 · 시트 한 줄
   {
     const P = await mk('');
     const { page, run } = P;
@@ -465,7 +470,7 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
     await page.$eval('#swClose', (e) => e.click());
     await page.$eval('#tuneBtn', (e) => e.click());
     await run(64);
-    const btns = () => page.evaluate(() => ({ g: ['gc', 'gb', 'ga'].map((k) => document.querySelector('#core-' + k)?.getAttribute('aria-pressed')), m: [0, 1, 2, 3].map((i) => document.querySelector('#core-m' + i)?.getAttribute('aria-pressed') ?? null), t: [0, 1, 2].map((i) => document.querySelector('#core-t' + i)?.getAttribute('aria-pressed') ?? null), feel: window.__puffExp().feel, grammar: window.__puffSweep.state().grammar }));
+    const btns = () => page.evaluate(() => ({ g: ['gd', 'gc', 'gb', 'ga'].map((k) => document.querySelector('#core-' + k)?.getAttribute('aria-pressed')), m: [0, 1, 2, 3].map((i) => document.querySelector('#core-m' + i)?.getAttribute('aria-pressed') ?? null), t: [0, 1, 2].map((i) => document.querySelector('#core-t' + i)?.getAttribute('aria-pressed') ?? null), feel: window.__puffExp().feel, grammar: window.__puffSweep.state().grammar }));
     const b0 = await btns();
     await page.$eval('#core-m1', (e) => e.click()); await page.$eval('#core-t0', (e) => e.click()); await run(32);
     const b1 = await btns();
@@ -473,8 +478,8 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
     const b2 = await btns();
     await page.$eval('#core-gc', (e) => e.click()); await page.$eval('#core-m0', (e) => e.click()); await page.$eval('#core-t1', (e) => e.click()); await run(32);
     const b3 = await btns();
-    ok("기본 문법 = C · ⚙ 문법 3단추(영점 조준 켜짐) + 눈금 4(영점 켜짐) + 빠르기 3(보통 켜짐) · 각도·느림 누름 = 저장값 · B 면 눈금 줄 없음 · 시트 한 줄 = 영점 톡",
-      b0.grammar === 'C' && b0.g.join() === 'true,false,false' && b0.m.join() === 'true,false,false,false' && b0.t.join() === 'false,true,false'
+    ok("?swg=c 문법 = C · ⚙ 문법 4단추(#core-gd 꺼짐 · 영점 조준 켜짐) + 눈금 4(영점 켜짐) + 빠르기 3(보통 켜짐) · 각도·느림 누름 = 저장값 · B 면 눈금 줄 없음 · 시트 한 줄 = 영점 톡",
+      b0.grammar === 'C' && b0.g.join() === 'false,true,false,false' && b0.m.join() === 'true,false,false,false' && b0.t.join() === 'false,true,false'
         && b1.m.join() === 'false,true,false,false' && b1.t.join() === 'true,false,false' && b2.grammar === 'B' && b2.m.every((x) => x === null) && b3.grammar === 'C' && b3.m[0] === 'true' && b3.t[1] === 'true' && /영점 톡/.test(note),
       JSON.stringify({ b0: [b0.g, b0.m, b0.t], b1: [b1.m, b1.t], b2: [b2.grammar, b2.m], b3: [b3.grammar, b3.m, b3.t], note }));
     const pick = await page.evaluate(() => document.querySelector('#swPickNote').textContent);
@@ -775,7 +780,7 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
 }
 
 // ── (12) 문법 D '세 박자'(기본) ──
-console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(책상) · 손 경로(① 톡 → ② 톡 → ③ 당겼다 놓기) = Node · 분필 원 · 배치");
+console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(책상) · 손 경로(① 톡 → ② 톡 → ③ 당겼다 놓기) = Node · 분필 원(인트로 · 같은 페이지 D → 홈 → C) · 배치 · HUD 홈 왕복 월드 반납");
 {
   // (a) 설정
   {
@@ -801,6 +806,14 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
   for (const N of [40, 30]) {
     const P = await open('core=sweep', `#p${N}`);
     let first = true;
+    // 첫 판 인트로·배너(① 전) 동안 분필 원: 판이 열린 뒤 첫 그리기 프레임부터 ① 까지 32 ms 마다 표본 — 모두 숨김이어야 한다(예전엔 ① 이 열려야 숨었다).
+    //   분필 원 보임은 프레임마다 sweepDraw 가 render 바로 앞에서 정한다 → 판이 열린(state 'match') 그 순간·첫 프레임 전 값은 화면에 안 그려짐 — 한 프레임(16 ms) 뒤부터 잰다
+    { const samp = [];
+      await P.until(() => window.__puffSweep?.state?.()?.state === 'match', null, 60000, 16);
+      await P.run(16);
+      for (let k = 0; k < 400; k++) { const s = await st(P.page); if (s?.waiting) break; samp.push({ chalk: s?.chalk, desk: s?.desk, d: !!s?.d }); await P.run(32); }
+      const pre = samp.filter((x) => !x.d);
+      ok(`${N}장 첫 판 인트로·배너 동안(① 전 표본 ${pre.length}개) 분필 원 숨김 · 책상 판정`, pre.length >= 10 && pre.every((x) => x.chalk === false && x.desk === true), JSON.stringify(samp.filter((x, i) => i % 15 === 0 || x.chalk !== false))); }
     for (const r of REF_GD.filter((x) => x.N === N)) {
       if (!first) await P.page.$eval('#swSame', (e) => e.click());
       first = false;
@@ -830,6 +843,8 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
     await waitTurn(P);
     let big = false;
     const watchBig = async () => { const d = await sd(); if (d?.zeroBig) big = true; return d; };
+    // 큰 영점 창(#swZero)이 열린 횟수를 사건으로 센다(표본 시점 사이에 잠깐 열렸다 닫혀도 잡힘)
+    await page.evaluate(() => { const z = document.querySelector('#swZero'); window.__bigOpen = z.hidden ? 0 : 1; new MutationObserver(() => { if (!z.hidden) window.__bigOpen++; }).observe(z, { attributes: true, attributeFilter: ['hidden'] }); });
     const d0 = await watchBig();
     const T = d0.T;
     // ① 띠 가운데(s 0.55) 때 + 화면 지연 16 ms
@@ -850,14 +865,43 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
     const tT = await now();
     await page.mouse.click(195, 300);
     const wantTh = G.gdMeterAt('th', tT - dA.meterT0 - 16, T);
+    await run(100);
+    await page.mouse.click(195, 300); // ② 머묾 중 톡 = '잠깐…'(이 박자의 한 번) — 아래 '📐 각도 다시' 뒤에 다시 한 번 떠야 한다
+    const popHoldA = (await st(page)).pop;
     for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
     await run(100);
     const dB = await watchBig();
     // ③ 5 px 당김 = 취소 · '📐 각도 다시' → ② (영점 유지) → 다시 30° 톡
     await page.mouse.move(240, 560); await page.mouse.down(); await run(16); await page.mouse.move(240, 565); await run(16); await page.mouse.up(); await run(32);
     const dC = await watchBig(), popC = (await st(page)).pop;
+    await run(700); // 'swD3Tiny' 글이 사라질 때까지
+    // ③ 80 px 당김 → 200 ms 멈춤 → 48 ms 에 40 · 2 · 0 px 로 되돌려 바로 놓기 = 취소(창 앞 깊이 80 px 로 숨이 나가면 안 됨)
+    { const X = 300, Y = 450;
+      await page.mouse.move(X, Y); await page.mouse.down(); for (let i = 1; i <= 10; i++) { await run(16); await page.mouse.move(X, Y + 8 * i); }
+      await run(200);
+      for (const y of [Y + 40, Y + 2, Y]) { await run(16); await page.mouse.move(X, y); }
+      await page.mouse.up(); await run(16); }
+    const dRet = await watchBig(), popRet = (await st(page)).pop, shotsRet = await page.evaluate(() => window.__puffSweep.shots);
+    await run(700);
+    // ③ 당기다 pointercancel(시스템) = 말 없는 취소: 취소 수·'아래로 당겨요' 안 늘고 sysCancels 만 · 그 뒤 뗌은 발사 안 함
+    { const X = 300, Y = 450;
+      await page.mouse.move(X, Y); await page.mouse.down(); for (let i = 1; i <= 10; i++) { await run(16); await page.mouse.move(X, Y + 8 * i); }
+      await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1, bubbles: true })));
+      await run(16); }
+    const dSys = await watchBig(), popSys = (await st(page)).pop;
+    await page.mouse.up(); await run(32);
+    const shotsSys = await page.evaluate(() => window.__puffSweep.shots);
+    // 오른쪽 단추 누름·끌기 = 무시(당김 안 시작) · contextmenu = 막힘(연습판 동안)
+    await page.mouse.move(300, 450); await page.mouse.down({ button: 'right' }); await run(16); await page.mouse.move(300, 530); await run(16);
+    const dRight = await watchBig();
+    await page.mouse.up({ button: 'right' }); await run(16);
+    const ctxPrevented = await page.evaluate(() => { const e = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }); document.querySelector('canvas')?.dispatchEvent(e) ?? window.dispatchEvent(e); return e.defaultPrevented; });
+    const dRight2 = await watchBig();
     await page.$eval('#swAngleAgain', (e) => e.click()); await run(32);
     const dR = await watchBig();
+    await runTo(dR.meterT0 + 100);
+    await page.mouse.click(195, 300); // 다시 연 ② 의 준비 중 톡 = '잠깐…' 다시(예전엔 waitStage 가 남아 말 없이 버려짐)
+    const popPrepA = (await st(page)).pop, dPrep = await sd();
     await runTo(dR.meterT0 + msT);
     const tT2 = await now();
     await page.mouse.click(195, 300);
@@ -876,15 +920,21 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
     const sBlow = await st(page);
     await waitCard(P);
     const L = await page.evaluate(() => window.__puffSweep.last), log = await page.evaluate(() => window.__puffSweep.log[0]);
+    const bigN = await page.evaluate(() => window.__bigOpen);
     const wantQ = G.qOfPull(80, 390);
     const nd = G.gdShot(V1.Table, { N: 40, seed: L.seed, s: L.s, q: L.qRaw, th: L.th });
-    ok("손 경로: ① 띠 가운데 톡 → s = gdMeterAt(탭 − 16) · 머묾 중 톡 '잠깐…' · ② 30° 톡 → θ = 식 · ③ 5 px = 취소 · '📐 각도 다시' → ② (영점 유지) · 80 px → 3 px 올려 놓기 → q = qOfPull(80) · 해시 = Node gdShot · 큰 영점 창 0번 · 기록 g 'D'",
-      Math.abs(d1.s - wantS) <= 1e-9 && Math.abs(d1.s - 0.55) < 0.01 && popHold === 'swJudgeWait' && waitTaps === 1 && dA.stage === 'angle' && dA.s === d1.s
+    ok("손 경로: ① 띠 가운데 톡 → s = gdMeterAt(탭 − 16) · 머묾 중 톡 '잠깐…' · ② 30° 톡 → θ = 식 · ③ 5 px = 취소 · '📐 각도 다시' → ② (영점 유지) · 80 px → 3 px 올려 놓기 → q = qOfPull(80) · 해시 = Node gdShot · 큰 영점 창 0번(사건) · 기록 g 'D'(coachBeats · sysCancels)",
+      Math.abs(d1.s - wantS) <= 1e-9 && Math.abs(d1.s - 0.55) < 0.01 && popHold === 'swJudgeWait' && waitTaps === 1 && dA.stage === 'angle' && dA.s === d1.s && popHoldA === 'swJudgeWait'
         && dB.stage === 'breath' && Math.abs(dB.th - wantTh) <= 1e-9 && dB.again.zero && dB.again.angle && dC.stage === 'breath' && dC.cancels === 1 && popC === 'swD3Tiny'
         && dR.stage === 'angle' && dR.s === d1.s && dR.redo.angle === 1 && dP.qLive > 0.9 && sBlow.clock && sBlow.mode === 'zero'
-        && L.g === 'D' && L.s === d1.s && Math.abs(L.th - wantTh2) <= 1e-9 && Math.abs(L.qRaw - wantQ) <= 1e-9 && L.pullPx === 80 && L.hash === nd.hash && L.flips === nd.flips && L.outs === nd.outs && !big
-        && log.g === 'D' && log.redo?.angle === 1 && log.cancels === 1 && log.zoneS === 'green' && log.zoneTh === 'strike' && log.zoneQ === 'green',
-      `s ${d1.s}(식 ${wantS.toFixed(6)}) · 잠깐 ${popHold}/${waitTaps} · θ ${dB.th?.toFixed(3)}(식 ${wantTh.toFixed(3)}) · 취소 ${dC.cancels} ${popC} · 각도 다시 ${dR.stage} · q ${L.qRaw}(식 ${wantQ.toFixed(6)}) 당김 ${L.pullPx} · 게임 ${L.flips}/${L.outs} ${L.hash} · Node ${nd.flips}/${nd.outs} ${nd.hash} · 큰 창 ${big} · 칸 ${log.zoneS}/${log.zoneTh}/${log.zoneQ}`);
+        && L.g === 'D' && L.s === d1.s && Math.abs(L.th - wantTh2) <= 1e-9 && Math.abs(L.qRaw - wantQ) <= 1e-9 && L.pullPx === 80 && L.hash === nd.hash && L.flips === nd.flips && L.outs === nd.outs && !big && bigN === 0
+        && log.g === 'D' && log.redo?.angle === 1 && log.cancels === 2 && log.sysCancels === 1 && log.zoneS === 'green' && log.zoneTh === 'strike' && log.zoneQ === 'green'
+        && log.coachBeats && log.coachBeats.s === true && log.coachBeats.th === true && log.coachBeats.q === true && log.coach === true,
+      `s ${d1.s}(식 ${wantS.toFixed(6)}) · 잠깐 ${popHold}/${waitTaps} · ② 머묾 ${popHoldA} · θ ${dB.th?.toFixed(3)}(식 ${wantTh.toFixed(3)}) · 취소 ${dC.cancels} ${popC} · 각도 다시 ${dR.stage} · q ${L.qRaw}(식 ${wantQ.toFixed(6)}) 당김 ${L.pullPx} · 게임 ${L.flips}/${L.outs} ${L.hash} · Node ${nd.flips}/${nd.outs} ${nd.hash} · 큰 창 ${big}/${bigN}번 · 칸 ${log.zoneS}/${log.zoneTh}/${log.zoneQ} · 취소 ${log.cancels}/시스템 ${log.sysCancels} · 박자 코치 ${JSON.stringify(log.coachBeats)}`);
+    ok("③ 되돌려 놓기·시스템 취소·오른쪽 단추·다시 연 박자: 80 px → 48 ms 에 0 px 로 놓기 = 취소(숨 안 나감 · '아래로 당겨요' · 취소 2) · pointercancel = 말 없는 취소(취소 수 그대로 · sysCancels 1 · 뒤 뗌 발사 없음) · 오른쪽 단추 = 당김 없음 · contextmenu 막힘 · 다시 연 ② 준비 중 톡 = '잠깐…'",
+      dRet.stage === 'breath' && dRet.cancels === 2 && popRet === 'swD3Tiny' && shotsRet === 0 && dSys.stage === 'breath' && dSys.cancels === 2 && dSys.sysCancels === 1 && popSys !== 'swD3Tiny' && shotsSys === 0
+        && dRight.stage === 'breath' && dRight.pullPx == null && dRight2.cancels === 2 && ctxPrevented === true && popPrepA === 'swJudgeWait' && dPrep.stage === 'angle' && dPrep.locked == null,
+      JSON.stringify({ ret: [dRet.stage, dRet.cancels, popRet, shotsRet], sys: [dSys.stage, dSys.cancels, dSys.sysCancels, popSys, shotsSys], right: [dRight.stage, dRight.pullPx], ctxPrevented, prep: [popPrepA, dPrep.stage, dPrep.locked] }));
     nd.table.world.free();
     // (d) 배치: 390×844 ③ 사각형 교차 0 (다음 숨, '같은 더미 다시')
     await page.$eval('#swSame', (e) => e.click());
@@ -901,6 +951,75 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
     for (let i = 0; i < box.length; i++) for (let j = i + 1; j < box.length; j++) { const [na, a] = box[i], [nb, b] = box[j]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) hit.push(`${na}×${nb}`); }
     const inside = box.every(([, r]) => r.x >= -1 && r.x + r.w <= VW + 1);
     ok('배치(390×844, ③): HUD·부채꼴·게이지·다시 단추 2개·힌트 사각형 교차 0 · 모두 화면 안', box.length >= 5 && !hit.length && inside, `${box.map(([n, r]) => `${n} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.w)}×${Math.round(r.h)}`).join(' · ')}${hit.length ? ' · 교차 ' + hit.join(',') : ''}`);
+    // (d2) 같은 페이지 D → 홈 → ⚙ '영점 조준'(C) → 40장 더미 1(같은 더미): 분필 원이 돌아오고(홈 · C 인트로 · C 숨) C 주입 = Node zeroShot(원 판정)
+    await page.evaluate(() => { window.__sweepPlan = { kind: 'gd', s: 0.55, q: 0.9, th: 40 }; });
+    const firedD = await page.evaluate(() => window.__sweepFire());
+    await waitCard(P);
+    await page.$eval('#swHome', (e) => e.click()); await run(200);
+    const sHome = await st(page);
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    await page.$eval('#core-gc', (e) => e.click()); await run(32);
+    await page.$eval('#tuneClose', (e) => e.click()); await run(64);
+    await page.$eval('#sweepBtn', (e) => e.click()); await run(160);
+    await page.$eval('#swP40', (e) => e.click());
+    await P.until(() => window.__puffSweep.state().state === 'match', null, 60000, 16);
+    await run(64);
+    const sIntroC = await st(page);
+    await waitTurn(P); await run(32);
+    const sC = await st(page);
+    const rC = REF_GC.find((x) => x.N === 40 && x.seed === 401 && x.s === 0.55 && x.q === 0.9 && x.th === 40);
+    await page.evaluate((pl) => { window.__sweepPlan = pl; }, { kind: 'gc', s: rC.s, q: rC.q, th: rC.th });
+    const firedC = await page.evaluate(() => window.__sweepFire());
+    await run(160);
+    const sCB = await st(page);
+    await waitCard(P);
+    const LC = await page.evaluate(() => window.__puffSweep.last);
+    ok("같은 페이지 D → 홈 → ⚙ C → 같은 더미: 홈 분필 원 보임·책상 판정 끔 · C 인트로·숨 전·숨 동안 분필 원 보임 · C 주입(40장 401 · 0.55, 0.9, 40°) = Node zeroShot(원 판정)",
+      firedD && sHome.state === 'home' && sHome.chalk === true && sHome.desk === false && sIntroC.chalk === true && sIntroC.desk === false && sC.grammar === 'C' && sC.seed === 401 && sC.chalk === true && sC.desk === false
+        && firedC && sCB.chalk === true && sCB.desk === false && LC?.g === 'C' && LC.flips === rC.flips && LC.outs === rC.outs && LC.hash === rC.hash && LC.steps === rC.steps,
+      JSON.stringify({ home: [sHome.state, sHome.chalk, sHome.desk], introC: [sIntroC.chalk, sIntroC.desk], C: [sC.grammar, sC.seed, sC.chalk, sCB.chalk], game: LC && [LC.flips, LC.outs, LC.hash], node: [rC.flips, rC.outs, rC.hash] }));
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+  // (d3) HUD 홈 왕복 4번 → Rapier 월드 반납: WASM 내보내기(rawphysicspipeline_new · __wbg_rawphysicspipeline_free)를 감싸 직접 센다.
+  //      ① 에서 HUD 홈 2번(40·30장) · 숨 도중 HUD 홈 1번 · 앱 '뒤로'(__puffBack → HUD 홈) 1번 — 홈으로 돌아올 때마다 새로 만듦 − 반납 = 처음 값
+  {
+    const INIT = () => {
+      window.__pp = { n: 0, f: 0 };
+      const oi = WebAssembly.instantiate;
+      WebAssembly.instantiate = async function (...a) {
+        const r = await oi.apply(this, a);
+        const ex = (r.instance || r).exports;
+        if (!ex || !ex.rawphysicspipeline_new) return r;
+        const px = {};
+        for (const k of Object.keys(ex)) px[k] = ex[k];
+        px.rawphysicspipeline_new = (...x) => { window.__pp.n++; return ex.rawphysicspipeline_new(...x); };
+        px.__wbg_rawphysicspipeline_free = (...x) => { window.__pp.f++; return ex.__wbg_rawphysicspipeline_free(...x); };
+        const ni = { exports: px };
+        return r.instance ? { instance: ni, module: r.module } : ni;
+      };
+    };
+    const P = await open('core=sweep', '', INIT);
+    const { page, run } = P;
+    const live = () => page.evaluate(() => (window.__pp ? window.__pp.n - window.__pp.f : null));
+    const hooked = await page.evaluate(() => !!window.__pp && window.__pp.n >= 0);
+    const live0 = await live();
+    const rows = [];
+    for (const [i, how] of ['quit', 'quit', 'blow', 'back'].entries()) {
+      await page.$eval('#sweepBtn', (e) => e.click()); await run(160);
+      await page.$eval(i % 2 ? '#swP30' : '#swP40', (e) => e.click());
+      const z = await P.until(() => window.__puffSweep.state()?.d?.stage === 'zero', null, 60000, 32);
+      const inMatch = await live();
+      if (how === 'blow') { await page.evaluate(() => { window.__sweepPlan = { kind: 'gd', s: 0.55, q: 0.9, th: 30 }; }); await page.evaluate(() => window.__sweepFire()); await run(200); }
+      const clock = (await st(page)).clock;
+      if (how === 'back') await page.evaluate(() => window.__puffBack()); else await page.$eval('#quitBtn', (e) => e.click());
+      await run(200);
+      rows.push({ how, z, inMatch, clock, state: (await st(page)).state, live: await live() });
+    }
+    const pp = await page.evaluate(() => window.__pp);
+    ok("HUD 홈 왕복 4번(① 40·30장 · 숨 도중 · 앱 '뒤로'): Rapier 월드 새로 만듦 − 반납 = 처음 값(남는 월드 0) · 판마다 월드가 있었음 · 숨 도중 나감 오류 없음",
+      hooked && live0 != null && rows.every((r) => r.z && r.state === 'home' && r.live === live0 && r.inMatch >= live0 + 1) && rows[2].clock === true && pp.n >= live0 + 4,
+      `처음 ${live0} · ${rows.map((r) => `${r.how}: 판 ${r.inMatch} → 홈 ${r.live}${r.how === 'blow' ? `(숨 ${r.clock})` : ''}`).join(' · ')} · 만듦 ${pp.n} 반납 ${pp.f}`);
     allErrs.push(...P.errs);
     await P.ctx.close();
   }
