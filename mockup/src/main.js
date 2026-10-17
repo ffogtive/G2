@@ -5021,7 +5021,7 @@ function playerSweepShotD() {
       I.q = q; I.relAt = now;
       inhStop();
       puffer.strain = 0;
-      startCtl('zero', { s: I.s, q: Sweep.gdPower(q), th: I.th }, 'D');
+      startCtl('zero', { s: I.s, q: Sweep.gdPower(q), th: Sweep.gdSwing(I.th) }, 'D'); // 볼 = 헛스윙(쓸기 각 0) · 칸·카드는 I.th
       I.released = true; I.stage = 'blow';
       $('#hint').hidden = true; btnZ.hidden = true; btnA.hidden = true;
       settle({ kind: 'gd', g: 'D', q, s: I.s, th: I.th, ctl: I.ctl });
@@ -5330,7 +5330,7 @@ function sweepFirePlan(I, plan, startCtl, end, settle) {
   let v;
   if (plan.kind === 'gd') { // D: 영점 s · 각도 θ(0~45) · 숨 q(≤ 1.25, 1 넘으면 돌풍) — 세 박자를 건너뛰고 바로 발사
     const s = clamp(+plan.s, Sweep.GD.s.min, Sweep.GD.s.max), th = clamp(+plan.th || 0, 0, Sweep.GD.th.max);
-    startCtl('zero', { s, q: Sweep.gdPower(q), th }, 'D');
+    startCtl('zero', { s, q: Sweep.gdPower(q), th: Sweep.gdSwing(th) }, 'D');
     v = { kind: 'gd', g: 'D', q, s, th, ctl: I.ctl, plan: { kind: 'gd', s, q, th }, inject: true };
   } else if (plan.kind === 'gc') {
     const s = clamp(+plan.s, Sweep.GC.sMin, Sweep.GC.sMax), th = clamp(+plan.th || 0, 0, Sweep.GC.thMax);
@@ -5462,9 +5462,9 @@ async function sweepResult(raw, res, seed, my) {
   });
   // D: 영점 s · 각도 θ · 숨 q(게이지 값, 1 넘으면 돌풍) · 박자 칸 · 탭 시각(눈금 시작부터 ms) · 당김 px · 걸친 장 · 다시·취소 수
   if (gdShot) {
-    const zs = Sweep.gdZone('s', ctl.s, sum.n), zt = Sweep.gdZone('th', ctl.th, sum.n), zq = Sweep.gdZone('q', raw.q, sum.n);
+    const zs = Sweep.gdZone('s', ctl.s, sum.n), zt = Sweep.gdZone('th', raw.th, sum.n), zq = Sweep.gdZone('q', raw.q, sum.n); // θ = 탭한 각(볼이면 물리 ctl.th = 0)
     Object.assign(last, {
-      s: ctl.s, a0: ctl.a0, th: ctl.th, power: Sweep.gdPower(raw.q), blast: Sweep.gdBlast(raw.q), tUp: ctl.tUp, ttUp: ctl.rec.ttUp, cueT: ctl.rec.cueT, hang: res.hang,
+      s: ctl.s, a0: ctl.a0, th: raw.th, power: Sweep.gdPower(raw.q), blast: Sweep.gdBlast(raw.q), tUp: ctl.tUp, ttUp: ctl.rec.ttUp, cueT: ctl.rec.cueT, hang: res.hang,
       zoneS: zs, zoneTh: zt, zoneQ: zq, T: I?.gd ? I.T : null, tapS: I?.tapS ?? null, tapT: I?.tapT ?? null, pullPx: I?.pullPx ?? null, pullMaxPx: I?.pullMaxPx ?? null,
       redo: I?.gd ? { ...I.redo } : null, cancels: I?.cancels ?? 0, waitTaps: I?.waitTaps ?? 0,
     });

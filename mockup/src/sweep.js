@@ -727,6 +727,9 @@ export function gdZone(knob, v, n = 40) {
 // 칸 → 색 갈래: g 초록 · y 노랑 · r 빨강(높은 영점 · 볼 · 돌풍) · w 회색(약한 숨)
 export const gdTone = (z) => (z === 'green' || z === 'strike' ? 'g' : z === 'red' || z === 'ball' ? 'r' : z === 'weak' ? 'w' : 'y');
 export const gdPeakRef = (n) => GD.peak[n] ?? 0.9 * n;
+// 볼(θ < 10°) = 헛스윙: 물리에 보내는 쓸기 각 0(손 리뷰 6시드: 40장은 θ 5° 도 30° 와 같은 36장이라 빨간 화살표·⚾ 칩과 결과가 어긋났음 · θ 0 = 21.7장).
+//   칸·칩·카드·기록은 탭한 θ 그대로. 게임 발사(손·주입)와 gdShot 이 이 함수 하나를 쓴다
+export const gdSwing = (th) => (th < GD.th.ball ? 0 : th);
 // 원인 칩(잠정 — 근거 측정은 다음 조각): 결과 먼저(좋아요) → 가장 나쁜 박자 하나. 빨강(돌풍 · 높은 영점) → 약한 숨 → 볼 → 노랑(영점 높음/낮음 · 조금 약함 · 아슬)
 //   → 셋 다 초록인데 덜 넘겼으면 mixed('같은 걸로 한 번 더' — 같은 칸 안 시드 흩어짐). '각도 큼' 칩은 없다(가설 2)
 export function gdChip({ n, s, q, th, flip }) {
@@ -755,7 +758,7 @@ export function gdShot(Table, { N, seed, s, q, th, cards, judge = 'desk' }) {
   t.addPile(cards || Array.from({ length: N }, (_, i) => i));
   t.settle(600);
   const top = t.columnTop(), power = gdPower(q);
-  const ctl = new SweepCtl(t, { mode: 'zero', s, q: power, th });
+  const ctl = new SweepCtl(t, { mode: 'zero', s, q: power, th: gdSwing(th) });
   ctl.attach(gdArm(t.blowProg({ prog: ctl.prog, power, dur: ctl.durCap }), q));
   const j = { n: 0, quiet: 0 };
   let steps = 0;

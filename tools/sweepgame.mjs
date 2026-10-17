@@ -78,6 +78,7 @@ export const REF_GD_CELLS = [
   { N: 40, seed: 401, s: 0.55, q: 0.9, th: 40 },
   { N: 40, seed: 401, s: 0.55, q: 1.2, th: 40 },
   { N: 30, seed: 601, s: 0.55, q: 0.95, th: 30 },
+  { N: 40, seed: 401, s: 0.55, q: 0.92, th: 5 }, // 볼 = 헛스윙(gdSwing → 쓸기 각 0) · 칩 ⚾
 ];
 const PARITY_CELLS = [
   { name: '퍽 0.131', q: 0.85, plan: { kind: 'puck' } },
@@ -486,6 +487,11 @@ async function ctlGD(mk) {
     for (const r of [a, z, ad, zd]) r.table.world.free();
   }
   ok('gdShot(q ≤ 1) ≡ zeroShot(s, q, θ) 4칸: 해시·스텝·뒤집힘·원 밖·tUp·단서 같음 · 책상 판정도 zeroShot(judge desk) 와 같음 · 돌풍 0', sOk === cells.length, txt.join(' · '));
+  // (4b) 볼 = 헛스윙: gdSwing 경계 · gdShot(θ 5) ≡ zeroShot(θ 0) 해시 · 칩 ⚾(탭한 θ 로)
+  { const sw = [0, 5, 9.99, 10, 30].map(G.gdSwing), a = G.gdShot(V1.Table, { N: 40, seed: 401, s: 0.55, q: 0.92, th: 5 }), z = G.zeroShot(V1.Table, { N: 40, seed: 401, s: 0.55, q: 0.92, th: 0, judge: 'desk' });
+    ok('볼 = 헛스윙: gdSwing 0/5/9.99/10/30 → 0/0/0/10/30 · gdShot(40장 401, θ 5) ≡ zeroShot(θ 0) 해시·뒤집힘 · 칩 thBall',
+      sw.join() === '0,0,0,10,30' && a.hash === z.hash && a.flips === z.flips && a.chip === 'thBall', `${sw.join('/')} · ${a.flips}/${a.outs} ${a.chip} · ${a.hash === z.hash ? '해시 같음' : '해시 다름 ×'}`);
+    a.table.world.free(); z.table.world.free(); }
   // (5) gdShot(q > 1) ≡ 인라인 참조(SweepCtl 'zero' q 1 + blowProg power 1 + P.blast = (q − 1)/0.4 — 측정 스크래치 cellShot 'gust' 꼴)
   const ref = (N, seed, s, q, th) => {
     const t = new V1.Table(G.practiceTableSeed(N, seed), { lift: 519.59 }); t.addPile(Array.from({ length: N }, (_, i) => i)); t.settle(600);
@@ -530,8 +536,8 @@ async function ctlGD(mk) {
   const lines = src.split('\n'), zeroCmp = lines.filter((l) => /mode\s*[!=]==\s*'zero'/.test(l));
   const inCtlG = zeroCmp.filter((l) => /function ctlG\(/.test(l)).length;
   const ownDesk = /DESK_HX|DESK_HZ|Math\.abs\(p\.x\)\s*>\s*11/.test(src);
-  ok("main.js 정적 검사: 조종 모드 'zero' 직접 비교 = ctlG 안 1건뿐 · 자체 책상 식 없음(Sweep.judgeDesk·deskOut 만) · D 발사 = Sweep.gdPower + Sweep.gdArm",
-    zeroCmp.length === 1 && inCtlG === 1 && !ownDesk && /Sweep\.judgeDesk\(table\)/.test(src) && /Sweep\.deskOut\(d\)/.test(src) && /Sweep\.gdArm\(P, raw\.q\)/.test(src) && /Sweep\.gdPower\(raw\.q\)/.test(src),
+  ok("main.js 정적 검사: 조종 모드 'zero' 직접 비교 = ctlG 안 1건뿐 · 자체 책상 식 없음(Sweep.judgeDesk·deskOut 만) · D 발사 = Sweep.gdPower + Sweep.gdArm · 손·주입 발사 둘 다 Sweep.gdSwing",
+    zeroCmp.length === 1 && inCtlG === 1 && !ownDesk && /Sweep\.judgeDesk\(table\)/.test(src) && /Sweep\.deskOut\(d\)/.test(src) && /Sweep\.gdArm\(P, raw\.q\)/.test(src) && /Sweep\.gdPower\(raw\.q\)/.test(src) && (src.match(/th: Sweep\.gdSwing\(/g) || []).length === 2,
     `'zero' 비교 ${zeroCmp.length}줄(ctlG ${inCtlG}) · 자체 책상 식 ${ownDesk}`);
 }
 
