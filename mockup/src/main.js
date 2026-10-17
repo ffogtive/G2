@@ -5261,7 +5261,8 @@ function drawSweepD(now, ctx, dpr, I) {
     ctx.globalAlpha = 1;
     rects.fan = { x: Math.min(apx, apx + sgn * (Rf + 20)), y: ay - (Rf + 20), w: Rf + 20, h: Rf + 32 };
   }
-  // ③ 숨 게이지(왼쪽 세로 캡슐): 아래 = 0.6 · 위 = 1.25 · 칸(회색 약함 · 노랑 조금 약함 · 초록 · 빨강 돌풍) — 코치 숨만 또렷, 그 밖은 옅은 테두리
+  // ③ 숨 게이지(왼쪽 세로 캡슐): 아래 = 0.6 · 위 = 1.25 · 칸(회색 약함 · 노랑 조금 약함 · 초록 · 빨강 돌풍) — 칸은 늘 옅게(35 %), 채움은 늘 꽉 찬 색
+  //   (재윤님 손 검토 2026-10-17: 코치 숨에서 칸을 채움만큼 진하게 칠해 초록 칸 안의 초록 채움이 안 보였다 — 칸·채움 진하기를 코치와 상관없이 나눈다)
   if (I.stage === 'breath') {
     // 세로 자리 = 더미 옆 가운데(크게 찍은 D 시점 — 이름표가 뒤 칠판 글 위로 덜 올라가게) · 아래 '다시' 단추(위 끝 0.77H − 56) 위
     const gh = clamp(0.3 * H, 180, 260), gw = 26, gx = 14, k = sweep.N >= 35 ? 40 : 30, pm = pile.y + pile.h / 2;
@@ -5274,15 +5275,16 @@ function drawSweepD(now, ctx, dpr, I) {
     const lbl = t('swGaugeQ'), lw = Math.max(gw + 8, ctx.measureText(lbl).width + 14), lx0 = Math.max(4, gx + gw / 2 - lw / 2);
     ctx.fillStyle = 'rgba(42,26,18,0.72)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx0, gy0 - 27, lw, 24, 9) : ctx.rect(lx0, gy0 - 27, lw, 24); ctx.fill();
     ctx.fillStyle = 'rgba(42,26,18,0.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(gx - 4, gy0 - 4, gw + 8, gh + 8, 10) : ctx.rect(gx - 4, gy0 - 4, gw + 8, gh + 8); ctx.fill();
-    for (const [a, b, tn] of segs) { ctx.globalAlpha = strong ? 0.9 : 0.2; ctx.fillStyle = SW_D_TONE[tn]; ctx.fillRect(gx, yq(b), gw, yq(a) - yq(b)); }
+    for (const [a, b, tn] of segs) { ctx.globalAlpha = 0.35; ctx.fillStyle = SW_D_TONE[tn]; ctx.fillRect(gx, yq(b), gw, yq(a) - yq(b)); }
     ctx.globalAlpha = 1;
-    if (!strong) { ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5; for (const v of [GD.q.green[k], GD.q.red]) { ctx.beginPath(); ctx.moveTo(gx, yq(v)); ctx.lineTo(gx + gw, yq(v)); ctx.stroke(); } }
+    ctx.strokeStyle = `rgba(255,255,255,${strong ? 0.85 : 0.55})`; ctx.lineWidth = strong ? 2 : 1.5; for (const v of [GD.q.green[k], GD.q.red]) { ctx.beginPath(); ctx.moveTo(gx, yq(v)); ctx.lineTo(gx + gw, yq(v)); ctx.stroke(); } // 초록 칸 아래·위 경계(코치 숨은 굵게)
     // 빨강 칸 사선 무늬(색약)
     ctx.save(); ctx.beginPath(); ctx.rect(gx, yq(GD.q.max), gw, yq(GD.q.red) - yq(GD.q.max)); ctx.clip(); ctx.strokeStyle = `rgba(42,26,18,${strong ? 0.45 : 0.2})`; ctx.lineWidth = 2;
     for (let i = -gw; i < gh; i += 7) { ctx.beginPath(); ctx.moveTo(gx, yq(GD.q.max) + i); ctx.lineTo(gx + gw, yq(GD.q.max) + i - gw); ctx.stroke(); } ctx.restore();
     if (q != null) {
       const tn = Sweep.gdTone(Sweep.gdZone('q', q, sweep.N));
-      ctx.fillStyle = SW_D_TONE[tn]; ctx.globalAlpha = 0.95; ctx.fillRect(gx + 5, yq(q), gw - 10, gy0 + gh - yq(q)); ctx.globalAlpha = 1;
+      ctx.fillStyle = SW_D_TONE[tn]; ctx.fillRect(gx + 4, yq(q), gw - 8, gy0 + gh - yq(q)); // 채움 = 꽉 찬 색 + 짙은 테두리(같은 색 칸 위에서도 갈리게)
+      ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 1.5; ctx.strokeRect(gx + 4, yq(q), gw - 8, gy0 + gh - yq(q));
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(gx - 6, yq(q)); ctx.lineTo(gx + gw + 6, yq(q)); ctx.stroke();
     }
     ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2; ctx.strokeRect(gx, gy0, gw, gh);
@@ -5587,8 +5589,10 @@ function showSweepCard(raw, last, sum) {
   const kindTxt = raw.inject || raw.kind === 'plan' ? t('swKindPlan') : raw.kind === 'puck' ? t('swKindPuck') : gdShot ? t('swKindGd') : gcShot ? t('swKindGc') : gbShot ? t('swKindGb') : t('swKindPueok');
   const ck = last.chip, ck2 = last.chip2;
   $('#swNum').textContent = `${t('rcpTitle')} · ${kindTxt}`;
-  const chipKey = (k) => ((gcShot || gdShot) && k === 'mixed' ? 'swCause_mixedC' : gdShot && k === 'qWeak' ? 'swCause_qWeakD' : 'swCause_' + k); // D 약한 숨 = '조금 더 당겨요'('꽉까지'는 D 에선 돌풍)
-  const chip = (k, test) => `<span class="sw-chip c-${k}">${SW_CAUSE[k] || ''} ${t(chipKey(k))}${test ? ` <i>${t('swTest')}</i>` : ''}</span>`;
+  // D 말: 약한 숨 = '조금 더 당겨요'('꽉까지'는 D 에선 돌풍) · 영점 높음·낮음 = '초록 띠에서 톡'(C 의 '아래쪽 4분의 1'은 D 화면에 없는 말 — D 는 더미에 초록 띠를 그린다)
+  const chipKey = (k) => ((gcShot || gdShot) && k === 'mixed' ? 'swCause_mixedC' : gdShot && ['qWeak', 'zHigh', 'zLow'].includes(k) ? `swCause_${k}D` : 'swCause_' + k);
+  // '시험' 딱지는 화면에서 뺐다(재윤님 손 검토 2026-10-17: 모든 칩이 '좋아요 시험'으로 읽혔다) — 칩이 아직 검증 전이라는 표시는 기록 복사(chipsTest)에만
+  const chip = (k) => `<span class="sw-chip c-${k}">${SW_CAUSE[k] || ''} ${t(chipKey(k))}</span>`;
   // C 덧말: 숨이 약하고 영점이 아래 모서리 가까이면 '약한 숨이면 영점을 조금 높게'(측정 맞물림: 40장 q 0.7 → s* 0.6)
   //   · 숨이 0.85 미만인데 당김 최저점이 화면 아래 끝 24 px 안이면 '화면 끝에 닿았어요 — 조금 더 위에서 눌러 시작해요'(검토: 아래쪽을 누르면 꽉까지 당길 자리가 없다 —
   //   '꽉까지 당겨요'만으로는 따를 수 없는 처방이었다)
@@ -5596,7 +5600,7 @@ function showSweepCard(raw, last, sum) {
     + (gcShot && last.q < SW_Q_GOOD && last.edgePx != null && last.edgePx < 24 ? ` <small class="sw-cnote">${t('swCauseEdge')}</small>` : '');
   // D: 글 없는 세 점 ①●②●③● = 잠긴 박자 칸 색(Sweep.gdZone — 고리 띠·부채꼴·게이지와 같은 함수라 말이 엇갈리지 않는다)
   const dots = gdShot ? ` <span class="sw-dots" aria-hidden="true">${[last.zoneS, last.zoneTh, last.zoneQ].map((z, i) => `${'①②③'[i]}<i class="t-${Sweep.gdTone(z)}"></i>`).join('')}</span>` : '';
-  $('#swCause').innerHTML = chip(ck, true) + (ck2 ? ' ' + chip(ck2, false) : '') + note + dots;
+  $('#swCause').innerHTML = chip(ck) + (ck2 ? ' ' + chip(ck2) : '') + note + dots;
   const zc = $('#swZCol');
   zc.hidden = !gcShot;
   if (gcShot) drawZCol(zc, last.s, last.meter === 's' && last.tapMs != null);
@@ -5631,8 +5635,11 @@ function showSweepCard(raw, last, sum) {
     ]).map((x) => `<span>${x}</span>`).join('');
   $('#swLeg').innerHTML = (gcShot || gdShot ? SW_LEGEND_C : gbShot ? SW_LEGEND_B : SW_LEGEND).map(([c, key]) => `<span><i${c.startsWith('dot:') ? ` class="dot" style="background:${c.slice(4)}"` : c === 'dash' ? ' class="dash"' : ` style="background:${c}"`}></i>${t(key)}</span>`).join('');
   const more = $('#swMore');
-  more.open = sweep.moreOpen ?? window.innerHeight >= 760; // 펼치거나 접으면 이번 실행 동안 기억
-  more.ontoggle = () => { sweep.moreOpen = more.open; if (more.open) drawSweepTimeline($('#swTl'), raw.ctl, last); };
+  // 처음 = D 는 늘 접힘(재윤님 손 검토 2026-10-17: 844 px 폰에서 펼친 '자세히'가 화면 47 %를 개발 숫자로 덮었다) · C·B·A 는 큰 화면(≥ 760 px)만 펼침.
+  //   사람이 '자세히'를 눌러 펼치거나 접으면 이번 실행 동안 그 선택을 기억(문법 상관없이). 코드가 연 것은 기억하지 않는다(toggle 은 코드로 열어도 뜨므로 summary 클릭만 센다)
+  more.open = sweep.moreOpen ?? (gdShot ? false : window.innerHeight >= 760);
+  more.querySelector('summary').onclick = () => { sweep.moreOpen = !more.open; };
+  more.ontoggle = () => { if (more.open) drawSweepTimeline($('#swTl'), raw.ctl, last); };
   box.hidden = false; // 먼저 보이게(캔버스 크기를 읽으려면)
   if (more.open) drawSweepTimeline($('#swTl'), raw.ctl, last);
   return new Promise((resolve) => {
@@ -5642,7 +5649,7 @@ function showSweepCard(raw, last, sum) {
     $('#swNew').onclick = () => { sfx.pop(); done('new'); };
     $('#swHome').onclick = () => { sfx.pop(); done('home'); };
     $('#swCopy').onclick = async () => {
-      const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, log: window.__puffSweep.log });
+      const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, chipsTest: true, log: window.__puffSweep.log }); // chipsTest = 원인 칩은 시험(검증 전) — 화면 딱지 대신
       try { await navigator.clipboard.writeText(txt); toast(t('swCopied')); } catch (e) { console.log('[쓸기 기록]', txt); toast(t('copyManual')); }
     };
   });
@@ -5989,12 +5996,15 @@ function drawSweepGuide(g, ctx, dpr) {
   const { x, y, y0, yL, FL, uTop } = g;
   ctx.save(); ctx.scale(dpr, dpr);
   const arrow = (ax, ay, dir) => { ctx.beginPath(); ctx.moveTo(ax - 7, ay - 9 * dir); ctx.lineTo(ax, ay); ctx.lineTo(ax + 7, ay - 9 * dir); ctx.stroke(); };
+  // 당김 길(점선): A·B·C = 손가락 오른쪽 30 px 옆 · D = 손가락 끝이 지나는 그 줄(재윤님 손 검토 2026-10-17: ③ 손가락이 점선보다 30 px 왼쪽 — 게임의 당김 고무줄도 누른 곳 바로 아래)
+  const px = g.d ? x : x + 30;
   ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 3; ctx.setLineDash([7, 6]);
-  ctx.beginPath(); ctx.moveTo(x + 30, y0); ctx.lineTo(x + 30, yL); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px, y0); ctx.lineTo(px, yL); ctx.stroke();
   if (g.d) {
-    // D ③: 내려가는 길(↓, 점선 = 당김) · 끝에서 놓기(작은 동그라미)
-    ctx.setLineDash([]); arrow(x + 30, yL, 1);
-    ctx.beginPath(); ctx.arc(x + 30, yL + 12, 5, 0, Math.PI * 2); ctx.stroke();
+    // D ③: 내려가는 길(↓, 점선 = 당김) · 끝에서 놓기(작은 동그라미 — 손가락이 떨어지며 드러남) · 누른 자리(흰 점, 게임 고무줄 시작점과 같은 모양)
+    ctx.setLineDash([]); arrow(px, yL, 1);
+    ctx.beginPath(); ctx.arc(px, yL + 12, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(px, y0, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   } else if (g.c) {
     // C: 내려가는 길(↓, 점선 = 숨, 끝에 '읍' = 꽉) · 이어서 올라가는 길(↑, 노랑 = 쓸기 각) · 끝에서 놓기(작은 동그라미). 세기 눈금은 내려가는 길 없음 · 각도 눈금은 올라가는 길 없음
     ctx.setLineDash([]);
