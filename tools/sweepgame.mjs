@@ -26,7 +26,8 @@
 //                                        · meterAt·thOfRise·sOfH/hOfS 표 · GC_LINES ≡ sweepgc lines --json · gcChip ≡ sweepgc chipOf(기둥 원자료 전 줄) · 단위 예 · 사건 cue·lock·up. 약 1.5분
 //                                      · 문법 D '세 박자'(2026-10-17 기본): DESK ≡ sim.js · blastSpan ≡ rules.js · gdMeterAt('s') ≡ meterAt('s') 비트 · 각도 눈금·당김 표
 //                                        · gdShot(q ≤ 1) ≡ zeroShot(같은 s·q·θ) 해시(원·책상 판정 모두) · gdShot(q > 1) ≡ 인라인 참조(SweepCtl + blowProg + P.blast)
-//                                        · judgeDesk ≡ 독립 식(측정 스크래치 deskOut 꼴) · gdZone 경계표 · gdTipH 연속·단조 · gdChip 단위 예
+//                                        · GD 숫자 = 보류 시드 측정(node tools/sweepgd.mjs report --json 문턱·peak 13개 모두 버팀) · judgeDesk ≡ 독립 식(측정 스크래치 deskOut 꼴)
+//                                        · gdZone 경계표(아슬 칸 없음) · gdTipH 연속·단조 · gdChip 단위 예
 //                                        · 정적 검사: main.js 조종 모드 직접 비교('zero')가 ctlG 밖에 0건 · 판정은 Sweep.judgeDesk/deskOut 만(자체 책상 식 없음)
 //   node tools/sweepgame.mjs ref [--json]   주입 훅(window.__sweepPlan) 칸들의 Node 기준: #p30 시드 601 t0 .05/.25/.45 · #p40 시드 401 t0 .10/.35 → 뒤집힘·원 밖·D·스텝·정지 해시
 //                                      + 문법 B 주입({ kind: 'gb', q, ts }) 칸: #p40 401 q0.85 ts 0.3·안 휙 · #p30 601 q0.7 ts 0.3 (tools/sweepplay.mjs 가 게임과 비교)
@@ -462,6 +463,11 @@ async function ctlGD(mk) {
   ok('DESK ≡ sim.js DESK_HX · DESK_HZ · 책상 판 두께 절반(cuboid(DESK_HX, 0.5, DESK_HZ)) · GD.blastSpan ≡ rules.js BLAST_SPAN · GD.s ≡ GC 곡선(0.4~1) · 지배 칸 ≡ GC.dom',
     G.DESK.hx === V1.DESK_HX && G.DESK.hz === V1.DESK_HZ && G.DESK.drop === 0.5 && simSrc.includes(`cuboid(DESK_HX, ${G.DESK.drop}, DESK_HZ)`) && G.GD.blastSpan === R.BLAST_SPAN && G.GD.s.min === G.GC.sMin && G.GD.s.max === G.GC.sMax && JSON.stringify(G.GD.dom) === JSON.stringify(G.GC.dom),
     `책상 ${G.DESK.hx}×${G.DESK.hz} · 떨어짐 문턱 y < −${G.DESK.drop} · 돌풍 폭 ${G.GD.blastSpan}`);
+  // (1b) GD 숫자 = 보류 시드 측정(node tools/sweepgd.mjs report --json · 원자료 tools/coresweep/data/gd/): 문턱 11 + peak 2 모두 '버팀'(바꿈 0)
+  { const { execFileSync } = await import('node:child_process');
+    const J = JSON.parse(execFileSync(process.execPath, [new URL('./sweepgd.mjs', import.meta.url).pathname, 'report', '--json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 << 20 }));
+    const P = J.proposals || [], ch = P.filter((x) => !x.holds);
+    ok(`GD 숫자 = 보류 시드 측정(sweepgd report): 문턱·peak ${P.length}개 모두 버팀`, P.length === 13 && ch.length === 0, ch.length ? ch.map((x) => `${x.name} ${JSON.stringify(x.game)} → ${JSON.stringify(x.proposed)}`).join(' · ') : `버팀 ${P.length}`); }
   // (2) 눈금: 's' ≡ meterAt('s') 비트(0~3000 ms, 7 ms, T 셋) · 'th' 표(0° 출발 → 45° → 0°)
   let bad = 0, tot = 0;
   for (const T of G.GC.meter.Ts) for (let ms = 0; ms <= 3000; ms += 7) { tot++; if (!Object.is(G.gdMeterAt('s', ms, T), G.meterAt('s', ms, T))) bad++; }
@@ -518,19 +524,22 @@ async function ctlGD(mk) {
       J.flipped.length === f && J.outs.length === o && J.hang === h && o <= t.judgeResult().outs.length && buried >= 1 && out0 === 0,
       `책상 ${f}/${o} 걸침 ${h} · 원 ${t.judgeResult().flipped.length}/${t.judgeResult().outs.length} · 숨 전 묻힌 장 ${buried} · OUT ${out0}`);
     t.world.free(); u.world.free(); }
-  // (7) gdZone 경계표 · gdTone · gdTipH(θtop 에서 꼭대기 · 연속 · 단조)
-  const Z = [['s', 0.4, 40, 'low'], ['s', 0.45, 40, 'green'], ['s', 0.65, 40, 'green'], ['s', 0.66, 40, 'high'], ['s', 0.75, 40, 'red'], ['s', 0.4, 30, 'green'], ['th', 9.99, 40, 'ball'], ['th', 10, 40, 'near'], ['th', 15, 30, 'strike'], ['th', 45, 30, 'strike'],
-    ['q', 0.69, 40, 'weak'], ['q', 0.7, 40, 'soft'], ['q', 0.8, 40, 'green'], ['q', 1.174, 40, 'green'], ['q', 1.175, 40, 'red'], ['q', 0.66, 30, 'soft'], ['q', 0.7, 30, 'green']];
+  // (7) gdZone 경계표(보류 시드 확인 값 — tools/sweepgd.mjs report: 숨 회색 끝 40장 0.75 · 30장 0.6 · 빨강 1.2 · 스트라이크 ≥ 10 = 아슬 칸 없음) · gdTone · gdTipH(θtop 에서 꼭대기 · 연속 · 단조)
+  const Z = [['s', 0.4, 40, 'low'], ['s', 0.45, 40, 'green'], ['s', 0.65, 40, 'green'], ['s', 0.66, 40, 'high'], ['s', 0.75, 40, 'red'], ['s', 0.4, 30, 'green'], ['th', 9.99, 40, 'ball'], ['th', 10, 40, 'strike'], ['th', 12, 30, 'strike'], ['th', 15, 30, 'strike'], ['th', 45, 30, 'strike'],
+    ['q', 0.6, 40, 'weak'], ['q', 0.749, 40, 'weak'], ['q', 0.75, 40, 'soft'], ['q', 0.8, 40, 'green'], ['q', 1.199, 40, 'green'], ['q', 1.2, 40, 'red'], ['q', 0.6, 30, 'soft'], ['q', 0.66, 30, 'soft'], ['q', 0.7, 30, 'green'], ['q', 1.199, 30, 'green'], ['q', 1.2, 30, 'red']];
+  let nearHit = 0; for (const n of [40, 30]) for (let th = 0; th <= 45; th += 0.05) if (G.gdZone('th', th, n) === 'near') nearHit++; // 아슬 칸 없음(near = ball)
   const zOk = Z.every(([k, v, n, w]) => G.gdZone(k, v, n) === w);
   let tipBad = 0; const top = 4.3, s = 0.55, a0 = G.a0Of(s, top), thTop = G.alphaTop(top) - a0;
   let prev = -1; for (let th = 0; th <= 45; th += 0.25) { const h = G.gdTipH(th, s, top); if (!(h >= prev - 1e-12)) tipBad++; prev = h; }
   const cont = Math.abs(G.gdTipH(thTop, s, top) - G.gdTipH(thTop + 1e-6, s, top)) < 1e-3 && Math.abs(G.gdTipH(thTop, s, top) - top) < 1e-6 && Math.abs(G.gdTipH(45, s, top) - 1.3 * top) < 1e-9;
-  ok('gdZone 경계표 17칸 · gdTone · gdTipH: θtop 에서 = 꼭대기 · 연속 · 0~45° 단조 · 45° = 1.3 × 꼭대기', zOk && cont && tipBad === 0 && G.gdTone('strike') === 'g' && G.gdTone('ball') === 'r' && G.gdTone('weak') === 'w' && G.gdTone('near') === 'y',
-    `${Z.map(([k, v, n]) => G.gdZone(k, v, n)).join(',')} · θtop ${thTop.toFixed(2)}°`);
+  ok(`gdZone 경계표 ${Z.length}칸 · θ 0~45°(0.05°) 에 'near' 0번 · gdTone · gdTipH: θtop 에서 = 꼭대기 · 연속 · 0~45° 단조 · 45° = 1.3 × 꼭대기`, zOk && nearHit === 0 && cont && tipBad === 0 && G.gdTone('strike') === 'g' && G.gdTone('ball') === 'r' && G.gdTone('weak') === 'w' && G.gdTone('near') === 'y',
+    `${Z.map(([k, v, n]) => G.gdZone(k, v, n)).join(',')} · near ${nearHit} · θtop ${thTop.toFixed(2)}°`);
   // (8) gdChip 단위 예(결과 먼저 → 가장 나쁜 박자)
   const U = [[{ n: 40, s: 0.55, q: 0.9, th: 40, flip: 31 }, 'good'], [{ n: 40, s: 0.55, q: 1.2, th: 40, flip: 25 }, 'qGust'], [{ n: 40, s: 0.8, q: 0.9, th: 40, flip: 28 }, 'zHigh'], [{ n: 40, s: 0.55, q: 0.65, th: 40, flip: 20 }, 'qWeak'],
-    [{ n: 40, s: 0.55, q: 0.9, th: 5, flip: 20 }, 'thBall'], [{ n: 40, s: 0.42, q: 0.9, th: 40, flip: 29 }, 'zLow'], [{ n: 40, s: 0.55, q: 0.9, th: 12, flip: 29 }, 'thNear'], [{ n: 40, s: 0.55, q: 0.9, th: 40, flip: 29 }, 'mixed'], [{ n: 30, s: 0.55, q: 0.95, th: 30, flip: 23 }, 'good']];
-  ok('gdChip 단위 예 9칸(좋아요 ≥ 0.85 × 책상 지배 칸 40장 36 · 30장 27)', U.every(([r, w]) => G.gdChip(r) === w), U.map(([r, w]) => `${G.gdChip(r)}${G.gdChip(r) === w ? '' : '×'}`).join(' · '));
+    [{ n: 40, s: 0.55, q: 0.9, th: 5, flip: 20 }, 'thBall'], [{ n: 40, s: 0.42, q: 0.9, th: 40, flip: 29 }, 'zLow'], [{ n: 40, s: 0.55, q: 0.9, th: 12, flip: 29 }, 'mixed'], [{ n: 40, s: 0.55, q: 0.9, th: 10, flip: 29 }, 'mixed'], [{ n: 40, s: 0.55, q: 0.9, th: 40, flip: 29 }, 'mixed'],
+    [{ n: 40, s: 0.55, q: 0.7, th: 40, flip: 27 }, 'qWeak'], [{ n: 40, s: 0.55, q: 1.19, th: 40, flip: 29 }, 'mixed'], [{ n: 30, s: 0.55, q: 0.6, th: 30, flip: 22 }, 'qWeak'],
+    [{ n: 30, s: 0.55, q: 0.95, th: 30, flip: 24 }, 'good'], [{ n: 30, s: 0.55, q: 0.95, th: 30, flip: 23 }, 'mixed']];
+  ok(`gdChip 단위 예 ${U.length}칸(좋아요 ≥ 0.85 × 책상 지배 칸 40장 36 · 30장 28 · θ 10~12 = 스트라이크(아슬 칩 없음) · 40장 q 0.7 = 회색 · 30장 q 0.6 = 노랑 · 1.19 = 초록)`, U.every(([r, w]) => G.gdChip(r) === w), U.map(([r, w]) => `${G.gdChip(r)}${G.gdChip(r) === w ? '' : '×'}`).join(' · '));
   // (9) 정적 검사(main.js): 조종 모드 직접 비교('zero')는 ctlG 안 1건뿐 · 책상 판정은 sweep.js 함수만 · D 발사는 gdPower + gdArm
   const src = readFileSync(new URL('../mockup/src/main.js', import.meta.url), 'utf8');
   const lines = src.split('\n'), zeroCmp = lines.filter((l) => /mode\s*[!=]==\s*'zero'/.test(l));

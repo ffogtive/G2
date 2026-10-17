@@ -5233,13 +5233,14 @@ function drawSweepD(now, ctx, dpr, I) {
     ctx.globalAlpha = dim;
     const wedge = (d0, d1, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(apx, ay); for (let i = 0; i <= 12; i++) { const [x, y] = pt(d0 + ((d1 - d0) * i) / 12, Rf); ctx.lineTo(x, y); } ctx.closePath(); ctx.fill(); };
     ctx.fillStyle = 'rgba(42,26,18,0.55)'; ctx.beginPath(); ctx.moveTo(apx, ay); for (let i = 0; i <= 24; i++) { const [x, y] = pt((GD.th.max * i) / 24, Rf + 5); ctx.lineTo(x, y); } ctx.closePath(); ctx.fill();
-    wedge(0, GD.th.ball, 'rgba(224,69,69,0.88)'); wedge(GD.th.ball, GD.th.near, 'rgba(242,194,30,0.92)'); wedge(GD.th.near, GD.th.max, 'rgba(47,191,91,0.88)');
+    // 볼(빨강) · 아슬(노랑 — GD.th.near > ball 일 때만, 보류 시드 확인 뒤 near = ball 이라 지금은 없음) · 스트라이크(초록)
+    wedge(0, GD.th.ball, 'rgba(224,69,69,0.88)'); if (GD.th.near > GD.th.ball) wedge(GD.th.ball, GD.th.near, 'rgba(242,194,30,0.92)'); wedge(GD.th.near, GD.th.max, 'rgba(47,191,91,0.88)');
     ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(apx, ay); for (let i = 0; i <= 24; i++) { const [x, y] = pt((GD.th.max * i) / 24, Rf); ctx.lineTo(x, y); } ctx.closePath(); ctx.stroke();
     // 스트라이크 존 틀(흰 2 px) — 바늘이 존 안이면 밝게
     const inZ = th >= GD.th.near;
     ctx.strokeStyle = inZ ? '#ffffff' : 'rgba(255,255,255,0.6)'; ctx.lineWidth = inZ ? 3 : 2;
     ctx.beginPath(); ctx.moveTo(apx, ay); for (let i = 0; i <= 12; i++) { const [x, y] = pt(GD.th.near + ((GD.th.max - GD.th.near) * i) / 12, Rf); ctx.lineTo(x, y); } ctx.closePath(); ctx.stroke();
-    // 눈금 0 · 15 · 45
+    // 눈금 0 · 스트라이크 시작(GD.th.near = 10) · 45
     ctx.font = '700 12px "Jua", sans-serif'; ctx.textBaseline = 'middle'; ctx.lineWidth = 3; ctx.strokeStyle = '#2a1a12'; ctx.fillStyle = '#fff';
     for (const d of [0, GD.th.near, GD.th.max]) { let [x, y] = pt(d, Rf + 15); x = clamp(x, 14, W - 14); if (d === 0) { y += 9; x = clamp(pt(0, Rf - 8)[0], 14, W - 14); } ctx.textAlign = 'center'; ctx.strokeText(`${d}°`, x, y); ctx.fillText(`${d}°`, x, y); }
     ctx.textAlign = 'start';
@@ -5268,7 +5269,7 @@ function drawSweepD(now, ctx, dpr, I) {
     const gh = clamp(0.3 * H, 180, 260), gw = 26, gx = 14, k = sweep.N >= 35 ? 40 : 30, pm = pile.y + pile.h / 2;
     const gy0 = clamp(pm - gh / 2, 140, 0.77 * H - 66 - gh);
     const yq = (q) => gy0 + gh * (1 - (clamp(q, GD.q.min, GD.q.max) - GD.q.min) / (GD.q.max - GD.q.min));
-    const segs = [[GD.q.min, GD.q.weak[k], 'w'], [GD.q.weak[k], GD.q.green[k], 'y'], [GD.q.green[k], GD.q.red, 'g'], [GD.q.red, GD.q.max, 'r']];
+    const segs = [[GD.q.min, GD.q.weak[k], 'w'], [GD.q.weak[k], GD.q.green[k], 'y'], [GD.q.green[k], GD.q.red, 'g'], [GD.q.red, GD.q.max, 'r']].filter(([a, b]) => b > a); // 30장 = 회색 칸 없음(weak = 0.6 = 당김 0)
     const strong = I.coach.q, q = gdQLive(I);
     // 받침 캡슐은 이름표('숨')까지 덮는다 — 뒤 칠판 글('오늘의 당번')과 겹쳐도 읽히게(재윤님 화면 2026-10-17)
     ctx.font = '700 14px "Jua", sans-serif';
