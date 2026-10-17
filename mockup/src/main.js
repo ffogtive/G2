@@ -2591,7 +2591,7 @@ function maybeOfferMic(then) {
     el.hidden = true;
     const ok = await mic.start();
     micEnabled = ok;
-    toast(ok ? t('micOn') : t('micFail'));
+    if (ok || mic.err !== 'aborted') toast(ok ? t('micOn') : t('micFail')); // aborted = 켜는 사이 앱이 뒤로 감 → 돌아오면 다시 켬
     refreshTexts();
     go();
   };
@@ -5973,7 +5973,7 @@ async function toggleMic() {
   sfx.unlock();
   const ok = await mic.start();
   micEnabled = ok;
-  if (!ok) toast(t('micFail'));
+  if (!ok && mic.err !== 'aborted') toast(t('micFail')); // aborted = 켜는 사이 앱이 뒤로 감 → 돌아오면 다시 켬
   refreshTexts();
 }
 
@@ -6022,15 +6022,21 @@ async function bootInner() {
 
 // 앱(Flutter) 수명주기 다리: 뒤로 가면 마이크·소리를 멈추고, 돌아오면 사용자가 켜 둔 마이크만 다시 켠다(코덱스 리뷰 — 백그라운드 녹음 금지)
 let micResume = false;
+let appPaused = false;
+mic.abortIf = () => appPaused;
 window.__puffLifecycle = {
   pause() {
+    appPaused = true;
     if (micEnabled && mic.ready) { mic.stop(); micResume = true; }
+    // 켜는 중(getUserMedia 대기 — iOS 는 첫 권한 창에도 inactive 가 온다): 대기 중에 받은 녹음은 Mic.open 이 닫고(abortIf), 돌아오면 다시 켠다(코덱스 리뷰)
+    else if (mic.starting) micResume = true;
     try { sfx.pause(); } catch (e) { /* 소리 없음 */ }
   },
   async resume() {
+    appPaused = false;
     if (micResume) AppAudio.setMic(true); // 앱: 마이크를 다시 켤 거면 세션부터 'auto'(playback → ambient → playAndRecord 로 세 번 바뀌며 소리가 툭 끊기지 않게)
     try { sfx.unlock('lifecycle'); } catch (e) { /* 소리 없음 */ } // 멈춤·끊김(interrupted)을 깨우고 앱 소리 세션을 다시 건다. 안 깨면 다음 터치 두 번 뒤 새로 만든다(audio.js)
-    if (micResume) { micResume = false; const ok = await mic.start(); micEnabled = ok; if (!ok) toast(t('micFail')); }
+    if (micResume) { micResume = false; const ok = await mic.start(); micEnabled = ok; if (!ok && mic.err !== 'aborted') toast(t('micFail')); refreshTexts(); }
   },
 };
 

@@ -44,7 +44,13 @@ function fakeHost({ variant }) {
   window.__fakeSess = sess;
   window.__gumTypes = [];
   const gum = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-  navigator.mediaDevices.getUserMedia = (c) => { window.__gumTypes.push(sess.type); return gum(c); };
+  // __gumHold = true 면 대답을 __gumRelease() 때까지 붙잡는다(권한 창·느린 getUserMedia 흉내). 받은 녹음은 __streams 에 모은다(트랙이 닫혔나 보려고)
+  window.__streams = [];
+  navigator.mediaDevices.getUserMedia = (c) => {
+    window.__gumTypes.push(sess.type);
+    const p = gum(c).then((s) => { window.__streams.push(s); return s; });
+    return window.__gumHold ? new Promise((ok, no) => { window.__gumRelease = () => p.then(ok, no); }) : p;
+  };
   window.__resumeTypes = []; // AudioContext.resume() 를 부른 순간의 type(수명주기: 마이크를 다시 켤 거면 'auto' 에서 깨워야 함)
   const res0 = AudioContext.prototype.resume;
   AudioContext.prototype.resume = function () { window.__resumeTypes.push(sess.type); return res0.call(this); };
@@ -208,6 +214,46 @@ async function runDiag(page) {
   ok("수명주기 resume(마이크 켬) → 'auto' 한 번 · 소리 깨움·getUserMedia 모두 auto 에서", lc.log.join(',') === 'auto' && lc.gum.join(',') === 'auto' && lc.res.length >= 1 && lc.res.every((x) => x === 'auto') && /켜짐/.test(lc.txt), `기록 ${JSON.stringify(lc.log)} · resume ${JSON.stringify(lc.res)} · gum ${JSON.stringify(lc.gum)}`);
   await page.click('#micBtn');
   await page.waitForTimeout(200);
+  // 켜는 중에 앱이 뒤로 감(코덱스 리뷰): getUserMedia 대답 전에 pause → 대답이 와도 녹음은 닫힘 · 실패 알림 없음 → resume 이면 다시 켬
+  const mid = await page.evaluate(async () => {
+    const live = (s) => s.getTracks().some((t) => t.readyState === 'live');
+    const btn = () => document.querySelector('#micBtn').textContent;
+    const toastTxt = () => { const el = document.querySelector('#toast'); return el.hidden ? '' : el.textContent; };
+    document.querySelector('#toast').hidden = true;
+    window.__gumHold = true;
+    const g0 = window.__gumTypes.length, s0 = window.__streams.length;
+    document.querySelector('#micBtn').click();
+    await new Promise((r) => setTimeout(r, 50));
+    window.__puffLifecycle.pause();
+    window.__gumRelease();
+    await new Promise((r) => setTimeout(r, 400));
+    const a = { gum: window.__gumTypes.length - g0, live: window.__streams.slice(s0).filter(live).length, btn: btn(), toast: toastTxt() };
+    window.__gumHold = false;
+    await window.__puffLifecycle.resume();
+    await new Promise((r) => setTimeout(r, 200));
+    const b = { gum: window.__gumTypes.length - g0, live: window.__streams.slice(s0).filter(live).length, btn: btn(), toast: toastTxt() };
+    document.querySelector('#micBtn').click(); // 끔
+    await new Promise((r) => setTimeout(r, 200));
+    // 권한 창 순서: pause → resume 이 대답보다 먼저 → 같은 요청이 이어져 한 번만 열림
+    window.__gumHold = true;
+    const g1 = window.__gumTypes.length, s1 = window.__streams.length;
+    document.querySelector('#micBtn').click();
+    await new Promise((r) => setTimeout(r, 50));
+    window.__puffLifecycle.pause();
+    const rp = window.__puffLifecycle.resume();
+    window.__gumRelease();
+    await rp;
+    await new Promise((r) => setTimeout(r, 200));
+    window.__gumHold = false;
+    const c = { gum: window.__gumTypes.length - g1, live: window.__streams.slice(s1).filter(live).length, btn: btn(), toast: toastTxt() };
+    document.querySelector('#micBtn').click(); // 끔
+    await new Promise((r) => setTimeout(r, 200));
+    return { a, b, c, offLive: window.__streams.filter(live).length };
+  });
+  ok('켜는 중 pause → 대답이 와도 녹음 닫힘 · 실패 알림 없음', mid.a.gum === 1 && mid.a.live === 0 && !/켜짐/.test(mid.a.btn) && !/마이크를 쓸 수 없/.test(mid.a.toast), JSON.stringify(mid.a));
+  ok('→ resume 이면 다시 켬(녹음 1개 · 켜짐 · 실패 알림 없음)', mid.b.gum === 2 && mid.b.live === 1 && /켜짐/.test(mid.b.btn) && !/마이크를 쓸 수 없/.test(mid.b.toast), JSON.stringify(mid.b));
+  ok('권한 창 순서(pause → resume → 대답): 한 번만 열고 켜짐', mid.c.gum === 1 && mid.c.live === 1 && /켜짐/.test(mid.c.btn) && !/마이크를 쓸 수 없/.test(mid.c.toast), JSON.stringify(mid.c));
+  ok('끝에 끄면 열린 녹음 0', mid.offLive === 0, `live ${mid.offLive}`);
   // 게임 소리 끔 → auto(소리를 안 내면서 다른 앱 음악을 끊지 않게) · 켬 → playback
   await page.click('#sndBtn');
   const sndOff = await page.evaluate(() => navigator.audioSession.type);
