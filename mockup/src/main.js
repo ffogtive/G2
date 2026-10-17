@@ -312,7 +312,7 @@ function buildScene() {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   // 자동 시험(tools/sweepplay.mjs): ?norender = 3D 그리기만 끔(장면·카메라 행렬은 갱신 → 화면 좌표·투영 계산은 그대로). 헤드리스 소프트웨어 렌더는 프레임당 약 1초라 가짜 시계 시험이 안 끝난다
   //   window.__renderOnce = true → 다음 프레임 한 번만 진짜로 그림(화면 캡처용)
-  if (param('norender') != null) { const r0 = renderer.render.bind(renderer); renderer.render = (s, c) => { if (window.__renderOnce) { window.__renderOnce = false; return r0(s, c); } s.updateMatrixWorld(); c.updateMatrixWorld(); }; }
+  if (param('norender') != null) { const r0 = renderer.render.bind(renderer); renderer.renderReal = r0; renderer.render = (s, c) => { if (window.__renderOnce) { window.__renderOnce = false; return r0(s, c); } s.updateMatrixWorld(); c.updateMatrixWorld(); }; }
   // 품질 프리셋: 터치(폰) 기기는 픽셀 배율·그림자 해상도를 낮춰 발열/프레임 저하를 줄인다
   const mobile = window.matchMedia?.('(pointer: coarse)').matches;
   renderer.setPixelRatio(Math.min(mobile ? 1.75 : 2, window.devicePixelRatio || 1));
@@ -5491,6 +5491,12 @@ function svRestore() {
 function svFrame(now) {
   const live = state === 'match' && !!table && sweepOn();
   if (!live) { if (sv.w > 0 || sv.fire || sv.sun) svReset(); return; }
+  // 첫 ② 끊김 막기: 머리를 붙인 뒤(머리 없음이 정해졌으면 소품만) 옆 시점 밖 판 프레임에서 한 번 숨은 그림(head.js warm — 셰이더·텍스처 미리) · D 장면만
+  if (sv.w === 0 && !sv.fire && sweepGrammar() === 'D' && +feel.gdAng === 0 && (sv.rig?.head || Head.headState.failed) && sv.rig?.warmed !== 'head' && !(sv.rig?.warmed && !sv.rig.head)) {
+    svSun(true); // 그림자 틀도 옆 시점 것으로(그림자 깊이 셰이더는 틀 안 물체 순서에 따라 갈래가 생김 — 같은 틀로 미리)
+    svRig().warm(renderer.renderReal || ((s, c) => renderer.render(s, c)), camera); // ?norender 에서도 진짜로 한 번(__renderOnce 를 안 씀)
+    svSun(false);
+  }
   const I = svSceneI(), F = sv.fire;
   // 장면에서 쏜 숨: 물리 쓸기(tUp + θ/80 °/s, 물리 초)가 끝나고 hold 뒤 넘김 · 숨이 먼저 끝나거나(볼 = 쓸기 없음 포함) cap 이 지나도 넘김
   if (F && F.handAt == null) {
@@ -6240,7 +6246,7 @@ function sweepDraw(now) {
     }
   }
   // 지난 숨 엄지 궤적(회색 점선) — 조준 동안
-  if (aiming && sweep.lastTrail && sweep.lastTrail.length > 1) {
+  if (aiming && sweep.lastTrail && sweep.lastTrail.length > 1 && !(sweep.input.gd && sweep.input.stage !== 'breath')) { // D: ③ 에서만(① · ② 책상 위 이유 모를 자국이었다 — 손 검수)
     c2.save(); c2.scale(dpr, dpr); c2.strokeStyle = 'rgba(90,90,90,0.55)'; c2.lineWidth = 3; c2.setLineDash([6, 6]);
     c2.beginPath(); sweep.lastTrail.forEach((p, i) => (i ? c2.lineTo(p[0], p[1]) : c2.moveTo(p[0], p[1]))); c2.stroke();
     if (sweep.lastFlTrail && sweep.lastFlTrail.length > 1) { // B: 놓은 뒤 휙 누름(따로 — 놓은 자리와 잇지 않는다)
@@ -6434,7 +6440,9 @@ function drawSweepGuide(g, ctx, dpr) {
     if (g.key) {
       const txt = t(g.key);
       ctx.font = '700 15px "Jua", sans-serif';
-      const tw = ctx.measureText(txt).width + 18, bx = g.d ? clamp(22, 8 - x, W - x - tw - 8) : clamp(-tw - 22, 8 - x, W - x - tw - 8); // D: 손가락 오른쪽(왼쪽 아래 다시 단추를 가리지 않게)
+      const tw = ctx.measureText(txt).width + 18, gr = g.d ? sweep.gdRects?.gauge : null;
+      let bx = g.d ? clamp(22, 8 - x, W - x - tw - 8) : clamp(-tw - 22, 8 - x, W - x - tw - 8); // D: 손가락 오른쪽(왼쪽 아래 다시 단추를 가리지 않게)
+      if (gr && x + bx + tw > gr.x - 6 && y - 34 < gr.y + gr.h && y - 6 > gr.y) bx = Math.max(-tw / 2, gr.x - 6 - x - tw); // D: 숨 게이지가 바로 오른쪽이면(장면 ③) 손가락 위로 당김 — 초록 칸을 가렸다(손 검수)
       ctx.fillStyle = g.key === 'swG3' || g.key === 'swGB5' || g.key === 'swGC4' || g.key === 'swGD3' ? '#ffd23f' : 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, -34, tw, 28, 10) : ctx.rect(bx, -34, tw, 28); ctx.fill(); ctx.stroke();
       ctx.fillStyle = '#2a1a12'; ctx.textBaseline = 'middle'; ctx.fillText(txt, bx + 9, -20);
@@ -6937,6 +6945,8 @@ async function bootInner() {
   // 쓸기 연습판 바로가기: #p30 · #p40 (· #p30s3 = 그 장수의 넷째 시드). 주소로 들어오면 조작 깃발 저장값과 상관없이 그 판은 쓸기
   const pHash = /#p(30|40)(?:s(\d+))?(?![\d])/.exec(location.hash || '');
   if (pHash) setTimeout(() => startPractice(+pHash[1], pHash[2] ? +pHash[2] : 0), 400);
+  // D ② 장면 머리: 부팅 뒤 쉴 때 미리 풀어 둠(첫 숨 ① 고리 도중에 안 풀게 — 손 검수). 쓸기 연습이 열려 있고(깃발 · #p) D · 장면일 때만 — 그 밖은 숨 시작 때 불러옴
+  if ((feel.core >= 0.5 || pHash) && sweepGrammar() === 'D' && +feel.gdAng === 0) (window.requestIdleCallback || ((f) => setTimeout(f, 300)))(() => Head.loadHead().then((h) => { if (h) svRig().attachHead(h); }), { timeout: 500 });
   requestAnimationFrame((t0) => { lastT = t0; frame(t0); });
   // 자동 테스트용 훅: 더미의 화면 좌표(꼭대기·바닥)와 상태
   window.__puff = () => {

@@ -17,11 +17,12 @@ let loadP = null, headObj = null;
 
 const tick = () => new Promise((r) => setTimeout(r, 0));
 async function b64Bytes(b64) {
-  const CH = 1 << 19, out = new Uint8Array(Math.floor((b64.length * 3) / 4) - (b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0));
+  // 64K 글자(48 KB)씩 · 되면 기본 풀이(Uint8Array.fromBase64) — 손 검수: 512K 조각은 폰에서 한 조각이 수십 ms 라 ① 고리가 끊길 수 있었다
+  const CH = 1 << 16, fast = typeof Uint8Array.fromBase64 === 'function', out = new Uint8Array(Math.floor((b64.length * 3) / 4) - (b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0));
   let o = 0;
   for (let i = 0; i < b64.length; i += CH) { // 조각마다 양보(긴 한 덩이로 메인 스레드를 안 막게) — CH 는 4 의 배수
-    const bin = atob(b64.slice(i, i + CH));
-    for (let k = 0; k < bin.length; k++) out[o++] = bin.charCodeAt(k);
+    if (fast) { const part = Uint8Array.fromBase64(b64.slice(i, i + CH)); out.set(part, o); o += part.length; }
+    else { const bin = atob(b64.slice(i, i + CH)); for (let k = 0; k < bin.length; k++) out[o++] = bin.charCodeAt(k); }
     await tick();
   }
   return out;
@@ -78,7 +79,7 @@ async function parseGlb(u8) {
   if (!map) throw new Error('색 텍스처 없음');
   const mat = new THREE.MeshStandardMaterial({
     map, normalMap, roughnessMap: mr, metalnessMap: mr, metalness: pbr.metallicFactor ?? 1, roughness: pbr.roughnessFactor ?? 1,
-    side: M.doubleSided ? THREE.DoubleSide : THREE.FrontSide, envMapIntensity: 1.25,
+    side: THREE.DoubleSide, transparent: true, envMapIntensity: 1.25, // 투명·양면은 늘 그대로(프레임마다 바꾸면 셰이더가 새로 생겨 첫 ② 가 끊겼다 — 손 검수). 불투명도 1 이면 그림은 불투명과 같음
   });
   // 머리에만 닿는 보조 키 빛(얼굴 쪽 · 카메라 위): 해는 옆 시점에서 얼굴 반대쪽이라 얼굴이 어둡다. 장면 빛을 더하면 책상의 머리 그림자까지 옅어져서 재질 안에만 넣는다
   mat.userData.key = { dir: { value: new THREE.Vector3(0, 0, 1) }, col: { value: new THREE.Color(0, 0, 0) } };
@@ -90,6 +91,8 @@ async function parseGlb(u8) {
   mat.customProgramCacheKey = () => 'puffHeadKey';
   const mesh = new THREE.Mesh(g, mat);
   mesh.castShadow = true; mesh.receiveShadow = false; // 얼굴에 받는 그림자는 끔(얼굴 쪽은 늘 해 반대편 — 그림자 여드름 없이)
+  // 그림자 깊이 재질을 머리 전용으로: three 의 공용 깊이 재질은 그리는 순서에 따라 셰이더 갈래가 바뀌어 미리 데우기(warm)로 못 잡았다(첫 ② 에 2개 새로 생김)
+  mesh.customDepthMaterial = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.DoubleSide });
   return { mesh, mat, tris: ia.count / 3 };
 }
 // 한 번만 불러온다(실패도 한 번 — 다시 안 시도). 결과 = 머리 Group(크기 1 · 모델 좌표) 또는 null
@@ -234,8 +237,23 @@ export class SceneProps {
     if (!this.used.has('wall')) this.wall.visible = false;
   }
   hide() { this.begin(); this.end(); }
+  // 첫 ② 끊김 막기(손 검수: 첫 ② 0.6 s 동안 셰이더 9 · 텍스처 18 이 한꺼번에): 머리·소품을 모두 켜고(화면·그림자 틀 밖이어도 그리게 frustumCulled 끔)
+  //   한 장을 그려 셰이더(머리 뒤·앞 면 · 그림자 깊이 · 소품)와 텍스처(머리 3장 · 벽 · 그늘)를 GPU 에 올린다. 게임 루프가 같은 프레임에 진짜 장면을
+  //   다시 그려 덮으므로(그림자 지도도 다시) 화면엔 안 남는다. 한 번만 — 머리를 붙인 뒤(머리 없으면 소품만)
+  warm(render, camera) {
+    if (this.warmed === 'head' || (this.warmed && !this.head)) return false;
+    this.warmed = this.head ? 'head' : 'props';
+    const keep = [];
+    this.root.traverse((o) => { keep.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false; });
+    const h = this.head, op = h?.mat.opacity, cs = h?.mesh.castShadow;
+    if (h) { h.mat.opacity = 0; h.mesh.castShadow = true; }
+    render(this.scene, camera);
+    if (h) { h.mat.opacity = op; h.mesh.castShadow = cs; }
+    for (const [o, v, f] of keep) { o.visible = v; o.frustumCulled = f; }
+    return true;
+  }
   setWall(on) { this.used.add('wall'); this.wall.visible = !!on; }
-  // 머리: 자세(sidecam headPose) · 불투명도 · 카메라(가까우면 앞면만 — 앞 시점 카메라는 머리 속 자리라 안쪽 면이 보이면 안 됨) · 보조 키 빛
+  // 머리: 자세(sidecam headPose) · 불투명도 · 카메라(가까우면 숨김 — 앞 시점 카메라는 머리 속 자리라 안쪽 면이 보이면 안 됨) · 보조 키 빛
   setHead(pose, op, camera, key = 1.5) {
     if (!this.head) return false;
     this.used.add('head');
@@ -244,19 +262,15 @@ export class SceneProps {
     g.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), pose.phi).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI));
     g.scale.setScalar(H);
     // 카메라와 머리 사이: 경계 상자 거리(상자 반폭 단위, 1 = 겉면). 앞 시점 카메라는 머리 속 → 빠져나오는 동안 머리카락이 화면을 덮지 않게
-    //   상자 1.25 배 안 = 안 그림 · 1.9 배까지 서서히 · 상자 안이면 앞면만(안쪽 면 숨김)
+    //   상자 1.25 배 안 = 안 그림(그래서 상자 안 = 늘 숨김 — 안쪽 면이 보일 일 없음) · 1.9 배까지 서서히
     g.updateMatrixWorld(true);
     const lc = g.worldToLocal(camera.position.clone()), [A, B] = HEAD.box;
     let e = 0; for (let k = 0; k < 3; k++) { const c = (A[k] + B[k]) / 2, h = (B[k] - A[k]) / 2, v = [lc.x, lc.y, lc.z][k]; e = Math.max(e, Math.abs(v - c) / h); }
-    const inside = e < 1.08;
     op *= Math.min(1, Math.max(0, (e - 1.25) / 0.65));
     g.visible = op > 0.004;
-    const m = this.head.mat, tr = op < 0.999;
-    if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; }
-    m.opacity = op; m.depthWrite = true;
+    const m = this.head.mat;
+    m.opacity = op;
     this.head.mesh.castShadow = op > 0.5;
-    const side = inside ? THREE.FrontSide : THREE.DoubleSide;
-    if (m.side !== side) { m.side = side; m.needsUpdate = true; }
     // 보조 키 빛: 머리에서 카메라 쪽 + 위로 35° · 세기 key(재질 안에서만)
     const ctr = new THREE.Vector3(0, 0.1, 0.1).applyMatrix4(g.matrixWorld);
     const d = camera.position.clone().sub(ctr).setY(0).normalize(); d.y = Math.tan(35 * Math.PI / 180); d.normalize();
