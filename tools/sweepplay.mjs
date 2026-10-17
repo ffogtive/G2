@@ -29,12 +29,18 @@
 //        · 1단계 2D 겹침이 어둡게 깐 층 위 · '영점 다시'는 창이 다 줄어든 뒤 · 시범 = 꽉까지(q ≥ 0.95, '읍') · 쓸기 각 화살표 16° = 꼭대기(8.5° 는 아래·주황)
 //        · ⚙ 저장·다시 열기 · 창 밖 톡(끌기) = 확정 아님 · 화면 끝 당김 덧말 · 각도 눈금 밀기 무시·콜록 없음 · 눈금별 힌트·코치
 //        · 문법별 첫 3숨(B 3숨 뒤 C 첫 숨 코치) · 중간에 홈 다섯 경우 정리
+//  (12) 문법 D '세 박자'(기본, 2026-10-17 · sweep.js GD 절 · 시제품 최소 4칸): (a) 설정: 새 프로필 = D · ⚙ 문법 4단추 · ?swg=d|c · 빠르기 줄(C·D) · 눈금 줄 없음
+//      (b) 주입 { kind: 'gd', s, q, th } 3칸(q 0.9 · 돌풍 1.2 · 30장) = Node gdShot(책상 판정): 뒤집힘·책상 밖·걸침·스텝·해시·칩 · 분필 원 숨김
+//      (c) 손 경로(가짜 시계): ① 띠 가운데 때 톡 → s = gdMeterAt(탭 − 16 ms) · 머묾 중 톡 = '잠깐…' · ② 30° 때 톡 → θ = 식 · ③ 5 px 당김 = 취소 · '📐 각도 다시'
+//          · 80 px 당김 → 마지막 40 ms 에 3 px 올라가 놓기 → q = qOfPull(80) · 해시 = Node gdShot(같은 s·q·θ) · 큰 영점 창 한 번도 안 열림 · 기록 줄 g 'D'
+//      (d) 판·배치: D 판 분필 원 숨김 → 레벨 1 은 보임 · 390×844 ③ 에서 HUD·부채꼴·게이지·다시 단추 사각형 교차 0
+//  (1)·(11) 은 ?swg=c 로 C 를 연다(기본이 D 로 바뀜). C·B·A 는 분필 원 판정 그대로(비교용 — 측정·칩 기준이 원)
 // 쓰기: npm run build && PW=$(npm root -g)/playwright node tools/sweepplay.mjs   (약 5~7분, 소프트웨어 렌더)
 import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { refRows, refRowsGB, refRowsGC } from './sweepgame.mjs';
+import { refRows, refRowsGB, refRowsGC, refRowsGD } from './sweepgame.mjs';
 import * as V1 from '../mockup/src/sim.js';
 import * as G from '../mockup/src/sweep.js';
 
@@ -51,6 +57,7 @@ const t0 = Date.now();
 const REF = await refRows();
 const REF_GB = await refRowsGB();
 const REF_GC = await refRowsGC();
+const REF_GD = await refRowsGD();
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const allErrs = [];
 
@@ -79,7 +86,7 @@ async function waitCard(P, max = 60000) { return P.until(() => window.__puffSwee
 console.log('(1) 주입 훅 샷 = Node 기준(sweepgame ref)');
 {
   for (const N of [30, 40]) {
-    const P = await open('core=sweep', `#p${N}`);
+    const P = await open('core=sweep&swg=c', `#p${N}`);
     const cells = REF.filter((r) => r.N === N);
     let first = true;
     for (const r of cells) {
@@ -424,7 +431,7 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
   const qOf = (px) => G.pouchPower(px / (VW * 0.42)) / G.POUCH_FULL;
   const nodeC = (L) => G.zeroShot(V1.Table, { N: L.n, seed: L.seed, s: L.s, q: L.qRaw, th: L.th });
   const mk = async (q, hash) => {
-    const P = await open('core=sweep' + q, hash);
+    const P = await open('core=sweep' + (/swg=/.test(q) ? '' : '&swg=c') + q, hash); // 기본이 D 로 바뀜 → C 는 ?swg=c
     const page = P.page, run = P.run;
     const drag = async (pts, dtMs = 16) => { for (const [x, y] of pts) { await page.mouse.move(x, y); await run(dtMs); } };
     const pull = async (px = PULL, x = X) => { await page.mouse.move(x, Y); await page.mouse.down(); await run(16); await drag(Array.from({ length: 19 }, (_, i) => [x, Y + (px * (i + 1)) / 19])); };
@@ -480,8 +487,8 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
     await page.evaluate(() => document.querySelector('#swP40').click());
     await waitTurn(P);
     const s4 = await st(page);
-    ok("⚙ 저장: 눈금 '끔'·'느림' + 완료 → 프로필 swg 0 · swm 3 · swmT 1.6 → 다시 열어도 단추 그대로 · 연습판 눈금 끔(끌기)·1.6 s · 시트 C 줄 '40장 먼저'",
-      saved?.swg === 0 && saved?.swm === 3 && saved?.swmT === 1.6 && b4.m.join() === 'false,false,false,true' && b4.t.join() === 'true,false,false' && s4.grammar === 'C' && s4.meter === 'off' && s4.meterT === 1600 && /40장 먼저/.test(pick),
+    ok("⚙ 저장: 눈금 '끔'·'느림' + 완료 → 프로필 swg 3(C) · swm 3 · swmT 1.6 → 다시 열어도 단추 그대로 · 연습판 눈금 끔(끌기)·1.6 s · 시트 C 줄 '40장 먼저'",
+      saved?.swg === 3 && saved?.swm === 3 && saved?.swmT === 1.6 && b4.m.join() === 'false,false,false,true' && b4.t.join() === 'true,false,false' && s4.grammar === 'C' && s4.meter === 'off' && s4.meterT === 1600 && /40장 먼저/.test(pick),
       JSON.stringify({ saved: saved && { swg: saved.swg, swm: saved.swm, swmT: saved.swmT }, m: b4.m, t: b4.t, meter: s4.meter, T: s4.meterT, pick }));
     allErrs.push(...P.errs);
     await P.ctx.close();
@@ -758,6 +765,147 @@ console.log("(11) 문법 C '영점 조준'(기본): ⚙ 단추 · 영점 눈금(
     const after = await st(page);
     ok('중간에 홈(눈금 중 · 확정 머묾 · 축소 중 · 당기는 중 · 숨 중): 리스너 꺼짐 · 영점 창·영점 다시·힌트·옆모습 숨김 · 입력 없음 · 카드 안 뜸',
       Object.values(res).every(clean) && blowing && !after.card && !after.input, JSON.stringify(res));
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+}
+
+// ── (12) 문법 D '세 박자'(기본) ──
+console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(책상) · 손 경로(① 톡 → ② 톡 → ③ 당겼다 놓기) = Node · 분필 원 · 배치");
+{
+  // (a) 설정
+  {
+    const P = await open('core=sweep');
+    const { page, run } = P;
+    const g0 = await page.evaluate(() => window.__puffSweep.state().grammar);
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const btns = () => page.evaluate(() => ({ g: ['gd', 'gc', 'gb', 'ga'].map((k) => document.querySelector('#core-' + k)?.getAttribute('aria-pressed')), m0: document.querySelector('#core-m0') ? 1 : 0, t: [0, 1, 2].map((i) => document.querySelector('#core-t' + i)?.getAttribute('aria-pressed') ?? null), swg: window.__puffExp().feel.swg, grammar: window.__puffSweep.state().grammar }));
+    const b0 = await btns();
+    await page.$eval('#core-gc', (e) => e.click()); await run(32);
+    const b1 = await btns();
+    await page.$eval('#core-gd', (e) => e.click()); await run(32);
+    const b2 = await btns();
+    await P.ctx.close();
+    const Q = await open('core=sweep&swg=c'), gc = await Q.page.evaluate(() => [window.__puffSweep.state().grammar, window.__puffExp().feel.swg]); allErrs.push(...Q.errs); await Q.ctx.close();
+    const R = await open('core=sweep&swg=d'), gdq = await R.page.evaluate(() => [window.__puffSweep.state().grammar, window.__puffExp().feel.swg]); allErrs.push(...R.errs); await R.ctx.close();
+    ok("새 프로필 = D(swg 0) · ⚙ 문법 4단추(세 박자 켜짐) · 빠르기 줄 있음(보통) · 눈금 줄 없음 · '영점 조준' = C(swg 3) → '세 박자' = D · ?swg=c = C(3) · ?swg=d = D(0)",
+      g0 === 'D' && b0.g.join() === 'true,false,false,false' && b0.m0 === 0 && b0.t.join() === 'false,true,false' && b1.grammar === 'C' && b1.swg === 3 && b1.m0 === 1 && b2.grammar === 'D' && b2.swg === 0 && gc.join() === 'C,3' && gdq.join() === 'D,0',
+      JSON.stringify({ g0, b0, b1: [b1.grammar, b1.swg, b1.m0], b2: [b2.grammar, b2.swg], gc, gdq }));
+    allErrs.push(...P.errs);
+  }
+  // (b) 주입 = Node gdShot(책상 판정)
+  for (const N of [40, 30]) {
+    const P = await open('core=sweep', `#p${N}`);
+    let first = true;
+    for (const r of REF_GD.filter((x) => x.N === N)) {
+      if (!first) await P.page.$eval('#swSame', (e) => e.click());
+      first = false;
+      const okTurn = await waitTurn(P);
+      await P.run(32); // 분필 원 숨김은 다음 그리기 프레임에
+      const s0 = await st(P.page);
+      await P.page.evaluate((pl) => { window.__sweepPlan = pl; }, { kind: 'gd', s: r.s, q: r.q, th: r.th });
+      const fired = await P.page.evaluate(() => window.__sweepFire());
+      await P.run(160);
+      const chalkBlow = (await st(P.page)).chalk;
+      const done = await waitCard(P);
+      const L = await P.page.evaluate(() => window.__puffSweep.last);
+      const same = L && L.g === 'D' && L.flips === r.flips && L.outs === r.outs && L.hang === r.hang && L.hash === r.hash && L.steps === r.steps && L.D === r.D && L.tUp === r.tUp && L.chip === r.chip;
+      ok(`D 주입 ${N}장 시드 ${r.seed} (s ${r.s}, q ${r.q}, θ ${r.th}°): 뒤집힘·책상 밖·걸침·스텝·D·tUp·칩·해시 = Node gdShot · 분필 원 숨김`, okTurn && fired && done && s0?.seed === r.seed && s0?.grammar === 'D' && same && chalkBlow === false && s0?.chalk === false,
+        `게임 ${L ? `${L.flips}/${L.outs} 걸침 ${L.hang} 스텝 ${L.steps} ${L.chip} ${L.hash}` : '없음'} · Node ${r.flips}/${r.outs} 걸침 ${r.hang} 스텝 ${r.steps} ${r.chip} ${r.hash} · 원 ${s0?.chalk}/${chalkBlow}`);
+    }
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+  // (c) 손 경로
+  {
+    const P = await open('core=sweep', '#p40');
+    const { page, run } = P;
+    const now = () => page.evaluate(() => performance.now());
+    const runTo = async (t) => { const n = await now(); if (t > n) await run(Math.round(t - n)); };
+    const sd = async () => (await st(page))?.d;
+    await waitTurn(P);
+    let big = false;
+    const watchBig = async () => { const d = await sd(); if (d?.zeroBig) big = true; return d; };
+    const d0 = await watchBig();
+    const T = d0.T;
+    // ① 띠 가운데(s 0.55) 때 + 화면 지연 16 ms
+    const msS = 400 + T * ((1 - 0.55) / 0.6 / 2) + 16;
+    await runTo(d0.meterT0 + msS);
+    const tS = await now();
+    await page.mouse.click(195, 300);
+    const d1 = await watchBig();
+    const wantS = G.gdMeterAt('s', tS - d0.meterT0 - 16, T);
+    await run(100);
+    await page.mouse.click(195, 300); // 머묾 중 톡 = '잠깐…'
+    const popHold = (await st(page)).pop, waitTaps = (await sd()).waitTaps;
+    for (let k = 0; k < 40 && (await sd()).stage !== 'angle'; k++) await run(16);
+    const dA = await watchBig();
+    // ② 30° 때
+    const msT = 400 + (T / 2) * (30 / 45) + 16;
+    await runTo(dA.meterT0 + msT);
+    const tT = await now();
+    await page.mouse.click(195, 300);
+    const wantTh = G.gdMeterAt('th', tT - dA.meterT0 - 16, T);
+    for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
+    await run(100);
+    const dB = await watchBig();
+    // ③ 5 px 당김 = 취소 · '📐 각도 다시' → ② (영점 유지) → 다시 30° 톡
+    await page.mouse.move(240, 560); await page.mouse.down(); await run(16); await page.mouse.move(240, 565); await run(16); await page.mouse.up(); await run(32);
+    const dC = await watchBig(), popC = (await st(page)).pop;
+    await page.$eval('#swAngleAgain', (e) => e.click()); await run(32);
+    const dR = await watchBig();
+    await runTo(dR.meterT0 + msT);
+    const tT2 = await now();
+    await page.mouse.click(195, 300);
+    const wantTh2 = G.gdMeterAt('th', tT2 - dR.meterT0 - 16, T);
+    for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
+    await run(100);
+    // 80 px 당김 → 마지막 40 ms 에 3 px 올라가 놓기 (놓기 직전 60 ms 안 가장 깊은 당김 = 80)
+    const X = 240, Y = 520;
+    await page.mouse.move(X, Y); await page.mouse.down(); await run(16);
+    for (let i = 1; i <= 10; i++) { await page.mouse.move(X, Y + 8 * i); await run(16); }
+    const dP = await watchBig();
+    await run(60);
+    await page.mouse.move(X, Y + 78.5); await run(16); await page.mouse.move(X, Y + 77); await run(16);
+    await page.mouse.up();
+    await run(64);
+    const sBlow = await st(page);
+    await waitCard(P);
+    const L = await page.evaluate(() => window.__puffSweep.last), log = await page.evaluate(() => window.__puffSweep.log[0]);
+    const wantQ = G.qOfPull(80, 390);
+    const nd = G.gdShot(V1.Table, { N: 40, seed: L.seed, s: L.s, q: L.qRaw, th: L.th });
+    ok("손 경로: ① 띠 가운데 톡 → s = gdMeterAt(탭 − 16) · 머묾 중 톡 '잠깐…' · ② 30° 톡 → θ = 식 · ③ 5 px = 취소 · '📐 각도 다시' → ② (영점 유지) · 80 px → 3 px 올려 놓기 → q = qOfPull(80) · 해시 = Node gdShot · 큰 영점 창 0번 · 기록 g 'D'",
+      Math.abs(d1.s - wantS) <= 1e-9 && Math.abs(d1.s - 0.55) < 0.01 && popHold === 'swJudgeWait' && waitTaps === 1 && dA.stage === 'angle' && dA.s === d1.s
+        && dB.stage === 'breath' && Math.abs(dB.th - wantTh) <= 1e-9 && dB.again.zero && dB.again.angle && dC.stage === 'breath' && dC.cancels === 1 && popC === 'swD3Tiny'
+        && dR.stage === 'angle' && dR.s === d1.s && dR.redo.angle === 1 && dP.qLive > 0.9 && sBlow.clock && sBlow.mode === 'zero'
+        && L.g === 'D' && L.s === d1.s && Math.abs(L.th - wantTh2) <= 1e-9 && Math.abs(L.qRaw - wantQ) <= 1e-9 && L.pullPx === 80 && L.hash === nd.hash && L.flips === nd.flips && L.outs === nd.outs && !big
+        && log.g === 'D' && log.redo?.angle === 1 && log.cancels === 1 && log.zoneS === 'green' && log.zoneTh === 'strike' && log.zoneQ === 'green',
+      `s ${d1.s}(식 ${wantS.toFixed(6)}) · 잠깐 ${popHold}/${waitTaps} · θ ${dB.th?.toFixed(3)}(식 ${wantTh.toFixed(3)}) · 취소 ${dC.cancels} ${popC} · 각도 다시 ${dR.stage} · q ${L.qRaw}(식 ${wantQ.toFixed(6)}) 당김 ${L.pullPx} · 게임 ${L.flips}/${L.outs} ${L.hash} · Node ${nd.flips}/${nd.outs} ${nd.hash} · 큰 창 ${big} · 칸 ${log.zoneS}/${log.zoneTh}/${log.zoneQ}`);
+    nd.table.world.free();
+    // (d) 배치: 390×844 ③ 사각형 교차 0 (다음 숨, '같은 더미 다시')
+    await page.$eval('#swSame', (e) => e.click());
+    await waitTurn(P);
+    let dd = await sd();
+    await runTo(dd.meterT0 + msS); await page.mouse.click(195, 300);
+    for (let k = 0; k < 40 && (await sd()).stage !== 'angle'; k++) await run(16);
+    dd = await sd(); await runTo(dd.meterT0 + msT); await page.mouse.click(195, 300);
+    for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
+    await run(200);
+    const rc = (await sd()).rects;
+    const box = Object.entries(rc || {}).filter(([, r]) => r);
+    const hit = [];
+    for (let i = 0; i < box.length; i++) for (let j = i + 1; j < box.length; j++) { const [na, a] = box[i], [nb, b] = box[j]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) hit.push(`${na}×${nb}`); }
+    const inside = box.every(([, r]) => r.x >= -1 && r.x + r.w <= VW + 1);
+    ok('배치(390×844, ③): HUD·부채꼴·게이지·다시 단추 2개·힌트 사각형 교차 0 · 모두 화면 안', box.length >= 5 && !hit.length && inside, `${box.map(([n, r]) => `${n} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.w)}×${Math.round(r.h)}`).join(' · ')}${hit.length ? ' · 교차 ' + hit.join(',') : ''}`);
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+  // (d) 분필 원: D 판 숨김 → 레벨 1 보임
+  {
+    const P = await open('core=sweep', '#lv1');
+    await P.until(() => window.__puffSweep.state().state === 'match' && window.__puffSweep.state().chalk === true, null, 60000);
+    const s = await st(P.page);
+    ok('분필 원: 레벨 1(쓸기 깃발 켬) = 보임 · 책상 판정 아님', s.chalk === true && s.desk === false && !s.on, JSON.stringify({ chalk: s.chalk, desk: s.desk, on: s.on }));
     allErrs.push(...P.errs);
     await P.ctx.close();
   }

@@ -282,6 +282,13 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
   box-shadow: 0 4px 0 rgba(42,26,18,0.5), 0 0 0 200vmax rgba(0,0,0,var(--dim)); }
 .sw-zero-again { position: absolute; z-index: 8; top: calc(max(10px, env(safe-area-inset-top)) + 76px + min(210px, 46vw) * 120 / 210 + 8px); right: 8px; font-size: 0.85rem; padding: 4px 10px; }
 .hint.sw.swz { top: calc(max(10px, env(safe-area-inset-top)) + 76px + clamp(220px, 36vh, 360px) + 92px); z-index: 8; }
+/* 문법 D '세 박자': 다시 단추 = 왼쪽 아래 입술 그림 위(손 닿는 44 px) · 힌트 = HUD 바로 아래(더미 위 여백) · 카드 세 점 */
+.sw-again-d { top: auto; right: auto; left: max(12px, env(safe-area-inset-left)); bottom: calc(max(12px, env(safe-area-inset-bottom)) + 23vh); min-height: 44px; font-size: 0.85rem; padding: 4px 10px; position: absolute; z-index: 8; }
+.sw-angle-again { left: calc(max(12px, env(safe-area-inset-left)) + 124px); }
+.hint.sw.swd { top: calc(max(10px, env(safe-area-inset-top)) + 80px); }
+.sw-dots { display: inline-flex; align-items: center; gap: 2px; font-family: var(--body); font-weight: 700; font-size: 0.8rem; margin-left: 6px; vertical-align: middle; }
+.sw-dots i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); margin-right: 4px; box-sizing: border-box; }
+.sw-dots i.t-g { background: #2fbf5b; } .sw-dots i.t-y { background: #f2c21e; } .sw-dots i.t-r { background: #e04545; } .sw-dots i.t-w { background: #9aa0a6; }
 #breath.swover { z-index: 8; } /* C 1단계: 코치 말풍선·'잠깐…'을 어둡게 깐 층(.sw-zero 그림자) 위로 */
 .sw-zcol { width: 40px; height: 88px; vertical-align: middle; margin-left: 4px; }
 .sw-cnote { display: block; font-family: var(--body); font-size: 0.78rem; font-weight: 600; opacity: 0.85; }
@@ -417,6 +424,8 @@ body { margin: 0; background: #7cc7ff; color: var(--ink); font-family: var(--bod
     <!-- 문법 C '영점 조준': 1단계 큰 옆모습 창(곡선 위 영점) · 2단계 '📍 영점 다시' -->
     <canvas id="swZero" class="sw-zero" aria-hidden="true" hidden></canvas>
     <button id="swZeroAgain" class="btn ghost sw-zero-again" type="button" data-t="swZeroAgain" hidden>ZERO AGAIN</button>
+    <!-- 문법 D '세 박자': ③ 누르기 전 '📐 각도 다시'(영점 다시와 나란히 왼쪽 아래) -->
+    <button id="swAngleAgain" class="btn ghost sw-again-d sw-angle-again" type="button" data-t="swAngleAgain" hidden>ANGLE AGAIN</button>
     <div id="sweepCard" class="sweep-card" hidden>
       <div class="sw-head"><b id="swNum"></b><span><span id="swCause"></span><canvas id="swZCol" class="sw-zcol" aria-hidden="true" hidden></canvas></span></div>
       <div id="swMain" class="sw-main"></div>
