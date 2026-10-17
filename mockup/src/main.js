@@ -5111,18 +5111,23 @@ function sweepStateD() {
   return {
     stage: I.stage, s: I.s, sLive: gdSLive(I, now), th: I.th, thLive: gdThLive(I, now), q: I.q, qLive: I.pull ? gdQLive(I) : null, pullPx: I.pull?.px ?? null,
     T: I.T, meterT0: I.meterT0, locked: I.locked, coach: { ...I.coach }, again: { zero: !$('#swZeroAgain').hidden, angle: !$('#swAngleAgain').hidden },
-    zeroBig: !$('#swZero').hidden, side: !$('#swSide').hidden, redo: { ...I.redo }, cancels: I.cancels, waitTaps: I.waitTaps, rects: sweep.gdRects || null, Rp: I.Rp,
+    zeroBig: !$('#swZero').hidden, side: !$('#swSide').hidden, redo: { ...I.redo }, cancels: I.cancels, waitTaps: I.waitTaps, rects: sweep.gdRects || null, pile: sweep.gdPile || null, Rp: I.Rp,
     hint: $('#hint').hidden ? null : $('#hintText').textContent,
   };
 }
-// D 시점: 더미 전체가 화면 가로의 52%(가로 화면 34%) 안 · 조금 내려다봄(22°, 뒤 칠판 글이 덜 보이게) · 더미 가운데 = 화면 위에서 60%(가로 56%)
-//   → 위 여백 = 쓸기 화살표 자리 · 오른쪽 여백 = 각도 부채꼴 · 아래 = 입술. 고개 피치는 C 시점과 같은 0.35·tanh(줄인 움직임이면 0)
+// D 시점: 더미 전체가 화면 가로의 80%(가로 화면 34%) 안 · 낮게 내려다봄(12° · 가로 화면 22°) · 더미 가운데 = 화면 위에서 52%(가로 56%)
+//   → 오른쪽 위 = 각도 부채꼴(더미 오른쪽 위에 겹침, drawSweepD) · 아래 = 다시 단추·당김·입술. 고개 피치는 C 시점과 같은 0.35·tanh(줄인 움직임이면 0)
 //   🧭 가설 수정(2026-10-17 화면 확인): 설계서 §2.7 식(세로만 맞춤)은 종이 딱지 더미(보이는 높이 ≈ 지름)가 가로로 넘쳤다 → 가로·세로 둘 다 맞춘다
+//   다듬기(2026-10-17 폰 화면 390×844): 52%·22°·60% 는 40장 앞면이 113 px(화면 13%)뿐이고 위 45% 가 칠판 글 → 80%·12°·52% 로 앞면 196 px(23%) · 30장 91 → 158 px.
+//   더 크게는 못 함: 보이는 40장 더미 높이(≈ 1.28)가 지름(≈ 2.37)의 절반 남짓이라 폭이 먼저 찬다(앞면 35% 면 더미 폭 > 화면 폭).
+//   시야각을 넓히면(80°) 앞면은 32% 지만 칠판 전체가 보이고 윗면이 사라져 버렸다 — 시야각(50°)은 그대로
 function sweepViewD(vtop) {
   const pc = table.pileCenter(), W = window.innerWidth, H = window.innerHeight, asp = W / H, L = asp > 1;
-  const half = Math.tan((camera.fov * D2R) / 2), R = sweep.input?.Rp || 1.2, e = 22 * D2R;
-  const dW = R / ((L ? 0.34 : 0.52) * half * asp), dH = (vtop + 0.3) / ((L ? 0.5 : 0.36) * 2 * half);
-  const d = clamp(Math.max(dW, dH), 5, 18), yc = L ? 0.56 : 0.6;
+  // 숨이 나가면(세 박자 끝 · '퍼' 열림부터 0.8 s) 거리 ×1.45 · +8° 로 물러나며 조금 올라감: 가까이 낮게 찍은 채로는 일어선 딱지가 화면을 가득 덮어 날아가는 게 안 읽혔다
+  const fk = sweep.input?.stage !== 'zero' && sweep.input?.stage !== 'angle' && sweep.input?.stage !== 'breath' && sweep.openAt ? clamp((performance.now() - sweep.openAt) / 800, 0, 1) : 0, fly = fk * fk * (3 - 2 * fk);
+  const half = Math.tan((camera.fov * D2R) / 2), R = sweep.input?.Rp || 1.2, e = ((L ? 22 : 12) + 8 * fly) * D2R;
+  const dW = R / ((L ? 0.34 : 0.8) * half * asp), dH = (vtop + 0.3) / ((L ? 0.5 : 0.42) * 2 * half);
+  const d = clamp(Math.max(dW, dH), 5, 18) * (1 + 0.45 * fly), yc = L ? 0.56 : 0.52;
   const P = new THREE.Vector3(pc.x, 0.5 * vtop, pc.z), dir = new THREE.Vector3(0, Math.sin(e), Math.cos(e)), up = new THREE.Vector3(0, Math.cos(e), -Math.sin(e));
   const pitch = reducedMotion ? 0 : 0.35 * 10 * Math.tanh(sweep.dispA / 10) * D2R;
   const pos = P.clone().addScaledVector(dir, d);
@@ -5196,15 +5201,20 @@ function swProj(x, y, z) { const v = new THREE.Vector3(x, y, z).project(camera);
 function drawSweepD(now, ctx, dpr, I) {
   const W = window.innerWidth, H = window.innerHeight, minDim = Math.min(W, H), GD = Sweep.GD;
   const pc = table.pileCenter(), top = table.columnTop(), V = swVisFn(), R = I.Rp, zf = pc.z + 1;
-  const rects = { hud: null, fan: null, gauge: null, zero: null, angle: null, hint: null };
+  const rects = { hud: null, fan: null, gauge: null, zero: null, angle: null, hint: null }; // 서로 안 겹쳐야 하는 2D 사각형(sweepplay (12) 배치 게이트)
   const rr = (el) => { if (!el || el.hidden) return null; const b = el.getBoundingClientRect(); return b.width ? { x: b.left, y: b.top, w: b.width, h: b.height } : null; };
   rects.hud = rr($('#hud .top')); rects.zero = rr($('#swZeroAgain')); rects.angle = rr($('#swAngleAgain')); rects.hint = rr($('#hint'));
+  let pile; { // 보이는 더미 화면 틀(시점 맞춤·시험용, 겹침 검사 밖 — 부채꼴·게이지는 일부러 더미 가장자리에 겹친다): 윗면 뒤 테두리 → 앞 바닥 · front = 앞면(앞 테두리 위 → 바닥) 높이 px
+    const vt = V(top), f0 = swProj(pc.x, 0, pc.z + R), f1 = swProj(pc.x, vt, pc.z + R), b1 = swProj(pc.x, vt, pc.z - R);
+    const xs = [swProj(pc.x - R, 0, pc.z)[0], swProj(pc.x - R, vt, pc.z)[0], swProj(pc.x + R, 0, pc.z)[0], swProj(pc.x + R, vt, pc.z)[0]];
+    pile = sweep.gdPile = { x: Math.min(...xs), y: b1[1], w: Math.max(...xs) - Math.min(...xs), h: f0[1] - b1[1], front: f0[1] - f1[1], vt: +vt.toFixed(3), R: +R.toFixed(3) };
+  }
   ctx.save(); ctx.scale(dpr, dpr);
   const blink = 0.5 + 0.5 * Math.sin(now / 120);
   // ① 코치: 초록 띠 오른쪽에 깜박이는 ◀('여기' 글 대신)
   if (I.stage === 'zero' && I.coach.s && I.locked == null) {
     const k = sweep.N >= 35 ? 40 : 30, [lo, hi] = GD.s.green[k], ym = V(Sweep.hOfS((lo + hi) / 2, top));
-    const [x, y] = swProj(pc.x + R + 0.12, ym, pc.z);
+    const [px, y] = swProj(pc.x + R + 0.12, ym, pc.z), x = Math.min(px, W - 28); // 크게 찍은 더미(D 시점)는 오른쪽 여백이 좁다 → 화면 안으로(띠 끝에 겹쳐도 초록 띠를 가리킴)
     ctx.globalAlpha = 0.45 + 0.55 * blink; ctx.fillStyle = '#2fbf5b'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(x + 4, y); ctx.lineTo(x + 22, y - 11); ctx.lineTo(x + 22, y + 11); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1;
   }
@@ -5212,9 +5222,11 @@ function drawSweepD(now, ctx, dpr, I) {
   if ((I.stage === 'angle' || I.stage === 'breath') && I.s != null) {
     const th = gdThLive(I, now) ?? 0, h0 = Sweep.hOfS(I.s, top);
     const [ax, ay] = swProj(pc.x + R + 0.045, V(h0), pc.z);
-    // 부채꼴: 영점 높이의 고리 오른쪽 끝에 붙음(넘치면 반지름을 줄이고, 그래도 모자라면 왼쪽으로 뒤집음)
-    let Rf = clamp(0.2 * minDim, 56, 96), sgn = 1, apx = ax;
-    if (ax + Rf + 20 > W - 4) { const lx = swProj(pc.x - R - 0.06, V(h0), pc.z)[0], roomR = W - 24 - ax, roomL = lx - 24; if (roomR >= 44 || roomR >= roomL) Rf = Math.max(36, Math.min(Rf, roomR)); else { sgn = -1; apx = lx; Rf = Math.max(36, Math.min(Rf, roomL)); } }
+    // 부채꼴: 영점 높이의 고리 오른쪽 끝에 붙음(오른쪽 여백이 모자라면 반지름을 줄이고, 그래도 56 px 이 안 되면 — 크게 찍은 D 시점 —
+    //   꼭짓점을 고리를 따라 안쪽으로 옮겨 더미 오른쪽 위에 겹친다: 바늘·눈금 글이 화면 안 · 더미 가운데 쓸기 화살표와 안 겹침)
+    let Rf = clamp(0.2 * minDim, 56, 96), apx = ax;
+    const sgn = 1;
+    if (ax + Rf + 20 > W - 4) { const roomR = W - 24 - ax; if (roomR >= 56) Rf = Math.min(Rf, roomR); else { Rf = Math.min(Rf, 80); apx = W - 30 - Rf; } }
     const A = (d) => (clamp(d, 0, GD.th.max) * Math.PI) / 180;
     const pt = (d, r) => [apx + sgn * r * Math.cos(A(d)), ay - r * Math.sin(A(d))];
     const dim = I.stage === 'breath' ? 0.55 : 1;
@@ -5251,10 +5263,16 @@ function drawSweepD(now, ctx, dpr, I) {
   }
   // ③ 숨 게이지(왼쪽 세로 캡슐): 아래 = 0.6 · 위 = 1.25 · 칸(회색 약함 · 노랑 조금 약함 · 초록 · 빨강 돌풍) — 코치 숨만 또렷, 그 밖은 옅은 테두리
   if (I.stage === 'breath') {
-    const gh = clamp(0.34 * H, 180, 300), gw = 26, gx = 16, gy0 = 0.48 * H - gh / 2, k = sweep.N >= 35 ? 40 : 30;
+    // 세로 자리 = 더미 옆 가운데(크게 찍은 D 시점 — 이름표가 뒤 칠판 글 위로 덜 올라가게) · 아래 '다시' 단추(위 끝 0.77H − 56) 위
+    const gh = clamp(0.3 * H, 180, 260), gw = 26, gx = 14, k = sweep.N >= 35 ? 40 : 30, pm = pile.y + pile.h / 2;
+    const gy0 = clamp(pm - gh / 2, 140, 0.77 * H - 66 - gh);
     const yq = (q) => gy0 + gh * (1 - (clamp(q, GD.q.min, GD.q.max) - GD.q.min) / (GD.q.max - GD.q.min));
     const segs = [[GD.q.min, GD.q.weak[k], 'w'], [GD.q.weak[k], GD.q.green[k], 'y'], [GD.q.green[k], GD.q.red, 'g'], [GD.q.red, GD.q.max, 'r']];
     const strong = I.coach.q, q = gdQLive(I);
+    // 받침 캡슐은 이름표('숨')까지 덮는다 — 뒤 칠판 글('오늘의 당번')과 겹쳐도 읽히게(재윤님 화면 2026-10-17)
+    ctx.font = '700 14px "Jua", sans-serif';
+    const lbl = t('swGaugeQ'), lw = Math.max(gw + 8, ctx.measureText(lbl).width + 14), lx0 = Math.max(4, gx + gw / 2 - lw / 2);
+    ctx.fillStyle = 'rgba(42,26,18,0.72)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(lx0, gy0 - 27, lw, 24, 9) : ctx.rect(lx0, gy0 - 27, lw, 24); ctx.fill();
     ctx.fillStyle = 'rgba(42,26,18,0.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(gx - 4, gy0 - 4, gw + 8, gh + 8, 10) : ctx.rect(gx - 4, gy0 - 4, gw + 8, gh + 8); ctx.fill();
     for (const [a, b, tn] of segs) { ctx.globalAlpha = strong ? 0.9 : 0.2; ctx.fillStyle = SW_D_TONE[tn]; ctx.fillRect(gx, yq(b), gw, yq(a) - yq(b)); }
     ctx.globalAlpha = 1;
@@ -5269,8 +5287,8 @@ function drawSweepD(now, ctx, dpr, I) {
     }
     ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2; ctx.strokeRect(gx, gy0, gw, gh);
     ctx.font = '700 14px "Jua", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.lineWidth = 3; ctx.strokeStyle = '#2a1a12'; ctx.fillStyle = '#fff';
-    ctx.strokeText(t('swGaugeQ'), gx + gw / 2, gy0 - 8); ctx.fillText(t('swGaugeQ'), gx + gw / 2, gy0 - 8); ctx.textAlign = 'start';
-    rects.gauge = { x: gx - 4, y: gy0 - 26, w: gw + 8, h: gh + 30 };
+    ctx.strokeText(lbl, lx0 + lw / 2, gy0 - 9); ctx.fillText(lbl, lx0 + lw / 2, gy0 - 9); ctx.textAlign = 'start';
+    rects.gauge = { x: Math.min(gx - 4, lx0), y: gy0 - 27, w: Math.max(gx + gw + 4, lx0 + lw) - Math.min(gx - 4, lx0), h: gh + 31 };
     // 당김 고무줄(누른 곳 → 엄지): 칸 색
     if (I.pull) {
       const P = I.pull, tn = Sweep.gdTone(Sweep.gdZone('q', q, sweep.N));
