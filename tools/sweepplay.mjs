@@ -45,6 +45,10 @@
 //      (f) ① 가이드 띠(⚙ '가이드 띠: 처음만|늘' · ?gdguide=always — 재윤님 2026-10-17 '색깔 가이드는 아이템·튜토리얼 때만, 평상시 스킵'): 새 프로필 = 처음만 · ⚙ D 줄 · 저장 · 주소
 //          · 첫 3숨 = 색 띠 메시 6(초록·노랑 둘·빨강 + 흰 테두리 둘) · 노란 '튜토리얼' 표 · 힌트 '바람 시작 높이 · 초록에서 톡' · 기록 줄 guide 'tut'
 //          · 넷째 숨(평상시) = 띠 메시 0 · 표 없음 · 주황 영점 점 · 힌트 '① 바람 시작 높이에서 톡' · guide 'off' · '늘' 이면 넷째 숨도 띠 · guide 'always'
+//  (12h) ② 장면(기본 · ⚙ '각도 화면: 장면 | 부채꼴' · ?gdang=scene|fan · sidecam.js · head.js): ⚙ 줄·저장·주소 · 머리 불러옴(부팅 뒤) · 그림자 켬 · 접촉 그늘 · 해 그림자 틀 옮김
+//          · 옆 시점 0.6 s(시야각 40) · 부채꼴 사각형 없음 · 얼굴 틀 · 눈금 = 들어간 뒤 +200 ms · '② 고개 들 때 톡!' · 고개 = 눈금(θ 5 볼 빨강 · 30 스트라이크 초록 꼭대기 넘음)
+//          · 30° 톡 = 식 · '딱!' 초록 · 고개 멈춤 · ③ 옆 시점 · 배치 교차 0(얼굴·더미·게이지) · 꾹 = 영점 자세 · 놓기 = Node gdShot · 숨 = 물리 고개 단조 → 넘김 → 앞 시점
+//          · 볼(θ 5) '딱!' 빨강 · 숨 동안 고개 그대로(쓸기 없음) · 부채꼴 모드 = 옛 화면(옆 시점 없음 · 머리 안 불러옴 · 부채꼴 사각형 · 교차 0) · #puffHead 없어도 ② (리본·색 띠)
 //  (12g) 결과 카드 한 길·결과 연출(리서치 08 E3·E4 · docs/design/ui-system.md): 단추 [새 더미(파랑 보조 92×44↑)][같은 더미(노랑 주 131×74↑)][홈(보조)] · 카드에 노랑 하나 · '기록 복사' 없음(⚙)
 //          · 개발 이름표('방금 숨 · 주입'·조합 글) = 자세히(접힘) 안 · 연출 = 장수 0 부터 세어 올림(≤ 0.8 s) → 초록 박자마다 별(350 ms · 사이 250 ms) + 진동 24(앱 tapMedium) → 칩 하나 → 300 ms 뒤 같은 더미 팝
 //          · 볼(θ 5) = 별 ①·③ 둘 · 진동 둘 · 세어 올리는 중 톡 = 끝 상태(남은 진동 없음) · 움직임 줄이기 = 처음부터 끝 상태 · ⚙ '쓸기 기록 복사' 숨 전 꺼짐 → 4숨 뒤 켜짐 · 누르면 기록 JSON
@@ -956,7 +960,7 @@ console.log("(12) 문법 D '세 박자'(기본): 설정 · 주입 = Node gdShot(
     const hit = [];
     for (let i = 0; i < box.length; i++) for (let j = i + 1; j < box.length; j++) { const [na, a] = box[i], [nb, b] = box[j]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) hit.push(`${na}×${nb}`); }
     const inside = box.every(([, r]) => r.x >= -1 && r.x + r.w <= VW + 1);
-    ok('배치(390×844, ③): HUD·부채꼴·게이지·다시 단추 2개·힌트 사각형 교차 0 · 모두 화면 안', box.length >= 5 && !hit.length && inside, `${box.map(([n, r]) => `${n} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.w)}×${Math.round(r.h)}`).join(' · ')}${hit.length ? ' · 교차 ' + hit.join(',') : ''}`);
+    ok('배치(390×844, ③ · 기본 ② 장면): HUD·게이지·다시 단추 2개·힌트·얼굴·더미 사각형 교차 0 · 모두 화면 안(부채꼴 모드 배치는 (12h))', box.length >= 5 && !hit.length && inside, `${box.map(([n, r]) => `${n} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.w)}×${Math.round(r.h)}`).join(' · ')}${hit.length ? ' · 교차 ' + hit.join(',') : ''}`);
     // (d2) 같은 페이지 D → 홈 → ⚙ '영점 조준'(C) → 40장 더미 1(같은 더미): 분필 원이 돌아오고(홈 · C 인트로 · C 숨) C 주입 = Node zeroShot(원 판정)
     await page.evaluate(() => { window.__sweepPlan = { kind: 'gd', s: 0.55, q: 0.9, th: 40 }; });
     const firedD = await page.evaluate(() => window.__sweepFire());
@@ -1261,6 +1265,179 @@ console.log("(12g) 결과 카드 한 길: 단추 [새 더미 · 보조][같은 �
     JSON.stringify({ c0, c1, n: clip.length }));
   allErrs.push(...P.errs);
   await P.ctx.close();
+}
+
+// ── (12h) 문법 D ② 장면(옆 시점 · 재윤님 머리 · 바람 리본 · 더미 색 띠 · '딱!') ──
+console.log("(12h) 문법 D ② 장면(기본 · ⚙ '각도 화면: 장면 | 부채꼴' · ?gdang=scene|fan): 설정·저장·주소 · 옆 시점 · 머리(그림자·접촉 그늘·해 그림자 틀) · 부채꼴 없음 · 눈금 +200 ms · 고개 = 눈금 · '딱!' 잠금 · ③ 배치·꾹 = 영점 자세 · 숨 = 물리 고개 → 넘김 · 볼 = 쓸기 없음 · 부채꼴 모드 · 머리 없이");
+{
+  const rectHits = (rc) => {
+    const box = Object.entries(rc || {}).filter(([, r]) => r), hit = [];
+    for (let i = 0; i < box.length; i++) for (let j = i + 1; j < box.length; j++) { const [na, a] = box[i], [nb, b] = box[j]; if (a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h) hit.push(`${na}×${nb}`); }
+    return { box, hit, inside: box.every(([, r]) => r.x >= -1 && r.x + r.w <= VW + 1) };
+  };
+  // (a) 설정
+  {
+    const P = await open('core=sweep');
+    const { page, run } = P;
+    const tb = () => page.evaluate(() => ({ a: [0, 1].map((i) => document.querySelector('#core-a' + i)?.getAttribute('aria-pressed') ?? null), f: window.__puffExp().feel.gdAng }));
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const b0 = await tb();
+    await page.$eval('#core-a1', (e) => e.click()); await run(32);
+    const b1 = await tb();
+    await page.$eval('#core-gc', (e) => e.click()); await run(32);
+    const inC = await page.evaluate(() => !!document.querySelector('#core-a0'));
+    await page.$eval('#core-gd', (e) => e.click()); await run(32);
+    await page.$eval('#tuneClose', (e) => e.click()); await run(64);
+    await page.reload();
+    await P.until(() => window.__puffBooted);
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const b2 = await tb();
+    await P.ctx.close(); allErrs.push(...P.errs);
+    const Q = await open('core=sweep&gdang=fan'), q1 = await Q.page.evaluate(() => window.__puffExp().feel.gdAng); allErrs.push(...Q.errs); await Q.ctx.close();
+    const R = await open('core=sweep&gdang=bogus'), q2 = await R.page.evaluate(() => window.__puffExp().feel.gdAng); allErrs.push(...R.errs.filter((e) => !/gdang 값 무시/.test(e))); await R.ctx.close();
+    ok("② 각도 화면 설정: 새 프로필 = 장면(0) · ⚙ D 줄 '부채꼴' 누름 → 1 · C 에선 줄 없음 · 완료 → 다시 열어도 1(저장) · ?gdang=fan = 1 · 모르는 값 무시(0)",
+      b0.a.join() === 'true,false' && b0.f === 0 && b1.a.join() === 'false,true' && b1.f === 1 && inC === false && b2.f === 1 && b2.a.join() === 'false,true' && q1 === 1 && q2 === 0,
+      JSON.stringify({ b0, b1, inC, b2, q1, q2 }));
+  }
+  // (b) 장면 손 경로(40장): ① 톡 → ② 옆 시점·머리·고개 = 눈금 → 30° 톡 '딱!' → ③ 배치 · 꾹 = 영점 자세 → 80 px 놓기 = Node gdShot · 숨 = 물리 고개 → 넘김
+  {
+    const P = await open('core=sweep', '#p40');
+    const { page, run } = P;
+    const now = () => page.evaluate(() => performance.now());
+    const runTo = async (t) => { const n = await now(); if (t > n) await run(Math.round(t - n)); };
+    const sd = async () => (await st(page))?.d;
+    const sc = async () => (await st(page))?.scene;
+    await waitTurn(P);
+    const headOk = await P.until(() => window.__puffSweep.state().scene.head.ready, null, 30000, 32);
+    const d0 = await sd(), T = d0.T, sc0 = await sc();
+    await runTo(d0.meterT0 + 400 + T * ((1 - 0.55) / 0.6 / 2) + 16);
+    await page.mouse.click(195, 300);
+    for (let k = 0; k < 60 && (await sd()).stage !== 'angle'; k++) await run(16);
+    const dA = await sd();
+    await run(16);
+    const scT = await sc(); // 옆 시점 이동 시작
+    await runTo(dA.stageAt + 650);
+    const sA = await st(page), scA = sA.scene, dA2 = sA.d;
+    // 고개 = 눈금: θ 5(볼 · 앞면 낮게 빨강) → 30(스트라이크 · 꼭대기 넘음 초록)
+    await runTo(dA.meterT0 + 400 + (5 / 45) * (T / 2)); const s5 = await sc();
+    await runTo(dA.meterT0 + 400 + (30 / 45) * (T / 2) - 30); const s30 = await sc();
+    const tT = dA.meterT0 + 400 + T + (30 / 45) * (T / 2) + 16; // 둘째 오름 30°
+    await runTo(tT);
+    const tTap = await now();
+    await page.mouse.click(195, 300);
+    const wantTh = G.gdMeterAt('th', tTap - dA.meterT0 - 16, T);
+    await run(48); const k1 = await sc();
+    await run(100); const k2 = await sc();
+    for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
+    await run(200);
+    const sB = await st(page), dB = sB.d, scB = sB.scene;
+    const L1 = rectHits(dB.rects);
+    // ③ 꾹 → 아래로 80 px → 머묾: 고개가 영점 자세로(dip 1) · 놓기 = 퍼—
+    const X = 240, Y = 520;
+    await page.mouse.move(X, Y); await page.mouse.down(); await run(16);
+    for (let i = 1; i <= 10; i++) { await page.mouse.move(X, Y + 8 * i); await run(16); }
+    await run(250);
+    const scP = await sc();
+    await page.mouse.up();
+    await run(32);
+    // 숨: 머리 = 물리 고개(쓸어 오름) → 쓸기 끝 → 넘김 → 앞 시점
+    const blow = [];
+    for (let k = 0; k < 400; k++) { const s = await st(page); if (s.card) break; blow.push({ w: s.scene.w, phi: s.scene.st?.phi ?? null, mode: s.scene.st?.mode ?? null, fire: s.scene.fire, up: s.upAt, clock: s.clock, headVis: s.scene.headVis }); await run(32); }
+    await waitCard(P);
+    const L = await page.evaluate(() => window.__puffSweep.last), log = await page.evaluate(() => window.__puffSweep.log[0]);
+    const nd = G.gdShot(V1.Table, { N: 40, seed: L.seed, s: L.s, q: L.qRaw, th: L.th });
+    const bphi = blow.filter((b) => b.mode === 'blow' && b.phi != null).map((b) => b.phi);
+    const mono = bphi.every((v, i) => i === 0 || v >= bphi[i - 1] - 1e-6);
+    const handAt = blow.findIndex((b) => b.fire?.hand), backAt = blow.findIndex((b, i) => i > handAt && b.w === 0);
+    ok("② 장면: 머리 불러옴(부팅 뒤 · 그림자 켬) · 옆 시점 0.6 s(w 0 → 1 · 시야각 40 · 해 그림자 틀 옮김) · 머리·접촉 그늘·리본·색 띠 보임 · 부채꼴 사각형 없음 · 얼굴 틀 있음 · 눈금 = 들어간 뒤 +200 ms · 힌트 '② 고개 들 때 톡!'",
+      headOk && sc0.w === 0 && dA.ang === 'scene' && Math.round(dA.meterT0 - dA.stageAt) === 200 && scT.w < 0.2 && scA.w === 1 && scA.fov === 40 && scA.sun === true && scA.headVis && scA.castShadow && scA.shade && scA.ribbon && scA.sleeve
+        && dA2.rects?.fan == null && !!dA2.rects?.face && dA2.hint === '② 고개 들 때 톡!',
+      JSON.stringify({ head: sc0.head, w: [sc0.w, scT.w, scA.w], fov: scA.fov, sun: scA.sun, vis: [scA.headVis, scA.castShadow, scA.shade, scA.ribbon, scA.sleeve], dT0: Math.round(dA.meterT0 - dA.stageAt), fan: dA2.rects?.fan ?? null, face: dA2.rects?.face, hint: dA2.hint }));
+    ok("② 고개 = 눈금: θ 5° = 볼(빨강 · 앞면 낮게) · θ 30° = 스트라이크(초록 · 꼭대기 넘음) · 고개 듦(phi 5° < 30°) · 30° 톡 → θ = 식 · '딱!'(초록) · 고개 멈춤(잠금 뒤 48·148 ms 같은 phi)",
+      s5.st.tone === 'r' && s5.st.over === false && s30.st.tone === 'g' && s30.st.over === true && s5.st.phi < s30.st.phi && Math.abs(dB.th - wantTh) <= 1e-9 && k1.tak === true && k1.takTone === 'g' && k1.st.phi === k2.st.phi,
+      JSON.stringify({ p5: [s5.st.tone, s5.st.over, s5.st.phi], p30: [s30.st.tone, s30.st.over, s30.st.phi], th: [dB.th, wantTh], tak: [k1.tak, k1.takTone], freeze: [k1.st.phi, k2.st.phi] }));
+    ok(`③ 장면: 옆 시점 그대로 · 머리 = 잠근 각 · 배치(390×844) HUD·게이지·다시 단추·힌트·얼굴·더미 교차 0 · 화면 안 · 꾹 → 영점 자세(dip 1 · phi < 잠근 각)`,
+      scB.w === 1 && scB.headVis && Math.abs(scB.st.phi - k2.st.phi) < 1e-9 && L1.box.length >= 7 && !L1.hit.length && L1.inside && scP.st.dip === 1 && scP.st.phi < scB.st.phi - 5 && scP.st.over === false,
+      `${L1.box.map(([n, r]) => `${n} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.w)}×${Math.round(r.h)}`).join(' · ')}${L1.hit.length ? ' · 교차 ' + L1.hit.join(',') : ''} · dip ${scP.st.dip} phi ${scB.st.phi} → ${scP.st.phi}`);
+    ok("숨(장면): 해시 = Node gdShot(같은 s·q·θ) · 머리 = 물리 고개(쓸어 오름 — phi 단조 · 끝 > 처음) · 쓸기 끝 → 넘김 → 앞 시점(w 0 · 머리 숨김) · 카드 전 · 기록 ang 'scene'",
+      L.g === 'D' && L.hash === nd.hash && L.flips === nd.flips && bphi.length >= 5 && mono && bphi.at(-1) > bphi[0] + 5 && handAt > 0 && backAt > handAt && !blow[backAt].headVis && log.ang === 'scene',
+      `게임 ${L.flips}/${L.outs} ${L.hash} · Node ${nd.flips}/${nd.outs} ${nd.hash} · phi ${bphi[0]} → ${bphi.at(-1)}(${bphi.length}표본, 단조 ${mono}) · 넘김 ${handAt} → 앞 ${backAt} · ang ${log.ang}`);
+    nd.table.world.free();
+    // (c) 볼(θ 5° 톡): '딱!' 빨강 · 숨 동안 머리 = 쓸기 없음(phi 그대로)
+    await page.$eval('#swSame', (e) => e.click());
+    await waitTurn(P);
+    let d1 = await sd();
+    await runTo(d1.meterT0 + 400 + T * ((1 - 0.55) / 0.6 / 2) + 16); await page.mouse.click(195, 300);
+    for (let k = 0; k < 60 && (await sd()).stage !== 'angle'; k++) await run(16);
+    d1 = await sd();
+    await runTo(d1.meterT0 + 400 + (5 / 45) * (T / 2) + 16); await page.mouse.click(195, 300);
+    await run(48); const kb = await sc();
+    for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
+    await run(100);
+    await page.mouse.move(X, Y); await page.mouse.down(); await run(16);
+    for (let i = 1; i <= 10; i++) { await page.mouse.move(X, Y + 8 * i); await run(16); }
+    await run(250); await page.mouse.up(); await run(32);
+    const bb = [];
+    for (let k = 0; k < 400; k++) { const s = await st(page); if (s.card) break; if (s.scene.st?.mode === 'blow') bb.push(s.scene.st.phi); await run(32); }
+    await waitCard(P);
+    const Lb = await page.evaluate(() => window.__puffSweep.last);
+    const ndb = G.gdShot(V1.Table, { N: 40, seed: Lb.seed, s: Lb.s, q: Lb.qRaw, th: Lb.th });
+    ok("볼(θ 5° 톡): '딱!' 빨강 · 숨 동안 머리 = 쓸기 없음(phi 움직임 < 0.01°, gdSwing 0) · 해시 = Node gdShot",
+      kb.tak && kb.takTone === 'r' && bb.length >= 5 && Math.max(...bb) - Math.min(...bb) < 0.01 && Lb.hash === ndb.hash && Lb.th < 10,
+      `θ ${Lb.th?.toFixed(2)} · phi ${Math.min(...bb)}~${Math.max(...bb)}(${bb.length}) · 게임 ${Lb.hash} · Node ${ndb.hash}`);
+    ndb.table.world.free();
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+  // (d) 부채꼴 모드(?gdang=fan): 옛 화면 — 옆 시점 없음 · 머리 안 불러옴 · 눈금 바로 · 힌트 '② 초록에서 톡' · ③ 부채꼴 사각형 있음 · 교차 0
+  {
+    const P = await open('core=sweep&gdang=fan', '#p40');
+    const { page, run } = P;
+    const now = () => page.evaluate(() => performance.now());
+    const runTo = async (t) => { const n = await now(); if (t > n) await run(Math.round(t - n)); };
+    const sd = async () => (await st(page))?.d;
+    await waitTurn(P);
+    let d = await sd();
+    const T = d.T;
+    await runTo(d.meterT0 + 400 + T * ((1 - 0.55) / 0.6 / 2) + 16); await page.mouse.click(195, 300);
+    for (let k = 0; k < 60 && (await sd()).stage !== 'angle'; k++) await run(16);
+    const dA = await sd();
+    await run(650);
+    const sA = await st(page);
+    await runTo(dA.meterT0 + 400 + (T / 2) * (30 / 45) + 16); await page.mouse.click(195, 300);
+    for (let k = 0; k < 40 && (await sd()).stage !== 'breath'; k++) await run(16);
+    await run(200);
+    const sB = await st(page), L1 = rectHits(sB.d.rects);
+    ok("부채꼴 모드(?gdang=fan): 옆 시점 없음(w 0 · 머리 숨김 · 안 불러옴) · 눈금 바로(+0 ms) · 힌트 '② 초록에서 톡' · ② 부채꼴 · ③ 부채꼴 사각형 있음 · HUD·부채꼴·게이지·다시·힌트 교차 0",
+      dA.ang === 'fan' && Math.round(dA.meterT0 - dA.stageAt) === 0 && sA.scene.w === 0 && !sA.scene.headVis && !sA.scene.head.ready && !sA.scene.head.loading && sA.d.hint === '② 초록에서 톡' && !!sA.d.rects?.fan && !!sB.d.rects?.fan && !sB.d.rects?.face && L1.box.length >= 5 && !L1.hit.length && L1.inside,
+      `${JSON.stringify({ w: sA.scene.w, head: sA.scene.head, hint: sA.d.hint })} · ${L1.box.map(([n, r]) => `${n} ${Math.round(r.x)},${Math.round(r.y)} ${Math.round(r.w)}×${Math.round(r.h)}`).join(' · ')}${L1.hit.length ? ' · 교차 ' + L1.hit.join(',') : ''}`);
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+  // (e) 머리 없이(#puffHead 가 없는 빌드): ② 옆 시점 · 리본 · 색 띠 그대로 · 머리 숨김 · 발사 됨
+  {
+    const P = await open('core=sweep', '#p40', () => { new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.id === 'puffHead') n.remove(); }).observe(document, { childList: true, subtree: true }); });
+    const { page, run } = P;
+    const now = () => page.evaluate(() => performance.now());
+    const runTo = async (t) => { const n = await now(); if (t > n) await run(Math.round(t - n)); };
+    const sd = async () => (await st(page))?.d;
+    await waitTurn(P);
+    let d = await sd();
+    const T = d.T;
+    await runTo(d.meterT0 + 400 + T * ((1 - 0.55) / 0.6 / 2) + 16); await page.mouse.click(195, 300);
+    for (let k = 0; k < 60 && (await sd()).stage !== 'angle'; k++) await run(16);
+    const dA = await sd();
+    await runTo(dA.stageAt + 700);
+    const sA = await st(page);
+    await page.evaluate(() => { window.__sweepPlan = { kind: 'gd', s: 0.55, q: 0.9, th: 30 }; });
+    const fired = await page.evaluate(() => window.__sweepFire());
+    const done = await waitCard(P);
+    ok("머리 없이(#puffHead 없음): 불러오기 = 'none'(오류 없음) · ② 옆 시점 w 1 · 머리 숨김 · 리본·색 띠 보임 · 게이지 자리(얼굴 틀 없음) · 주입 발사·카드",
+      sA.scene.head.failed === 'none' && !sA.scene.head.ready && sA.scene.w === 1 && !sA.scene.headVis && sA.scene.ribbon && sA.scene.sleeve && !sA.d.rects?.face && fired && done,
+      JSON.stringify({ head: sA.scene.head, w: sA.scene.w, vis: [sA.scene.headVis, sA.scene.ribbon, sA.scene.sleeve], fired, done }));
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
 }
 
 ok('콘솔 오류 0', !allErrs.length, allErrs.slice(0, 6).join(' | '));

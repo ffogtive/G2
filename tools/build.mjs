@@ -29,13 +29,21 @@ function sfxScript() {
   return Object.keys(map).length ? `<script>window.__PUFF_SFX__=${JSON.stringify(map)}</script>` : '';
 }
 
+// 재윤님 3D 머리(문법 D ② 장면 — mockup/src/head.js): mockup/assets/head.glb → 실행 안 되는 데이터 블록 <script type="application/octet-stream" id="puffHead">base64</script>.
+//   게임은 D 연습판이 열릴 때 이 글을 읽어 풀고(조각마다 양보) 노드를 지운다 — 부팅을 막지 않는다. 없으면 ② 는 머리 없이(리본·색 띠)
+function headScript() {
+  const f = join(root, 'mockup/assets/head.glb');
+  if (!existsSync(f)) return '';
+  return `<script type="application/octet-stream" id="puffHead">${readFileSync(f).toString('base64')}</script>`;
+}
+
 // PvP simV 에 물리·규칙·코덱 소스 해시를 넣는다(P0 이슈 6: TUNE·상수만으로는 코드가 바뀐 걸 못 잡는다).
 // 같은 소스로 만든 두 빌드(오프라인·아티팩트)는 같은 값 → 버전이 다른 사람끼리는 참가가 거절된다(pvpSimDiff). Node 도구는 이 값 없이 돈다
 const simSrc = createHash('sha256').update(['sim.js', 'rules.js', 'turn.js'].map((f) => readFileSync(join(root, 'mockup/src', f), 'utf8').replace(/\r\n/g, '\n')).join('\0')).digest('hex').slice(0, 12);
 const define = { __PUFF_SIMSRC__: JSON.stringify(simSrc) };
 
 async function build() {
-  const sfx = sfxScript();
+  const sfx = sfxScript() + headScript();
   const offline = await esbuild.build({ entryPoints: [entry], bundle: true, format: 'iife', minify: true, write: false, target: 'es2020', legalComments: 'none', define });
   const offJs = offline.outputFiles[0].text;
   const full = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n</head>\n<body>\n' + tpl.replace('<!--APP-->', () => `${sfx}<script>${safe(offJs)}</script>`) + '\n</body>\n</html>\n';

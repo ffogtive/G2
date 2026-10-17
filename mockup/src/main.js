@@ -30,6 +30,9 @@ import { resolveNet, param, makeCode } from './net.js';
 import * as Pvp from './pvp.js';
 // 고개 쓸기(푸어억) — 솔로 '쓸기 연습판'만 쓴다(docs/design/core-sweep.md §9 4번 줄, 깃발 feel.core). PvP·레벨·일일·AI 대전·봇은 고전 그대로
 import * as Sweep from './sweep.js';
+// 문법 D ② '장면'(각도 박자 = 옆 시점 · 재윤님 머리 · 바람 리본 · 더미 색 띠): 식은 sidecam.js(렌더러 독립), three.js 묶음·머리 불러오기는 head.js
+import * as SC from './sidecam.js';
+import * as Head from './head.js';
 
 const $ = (s) => document.querySelector(s);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -79,9 +82,11 @@ profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.c
 //   · gdOut '아웃 범위' 0 책상(기본) | 1 반지름 5(책상 밖 또는 반지름 5 밖 = OUT, 판에 점선 원) — 칸·칩·peak = sweep.js GD_COMBO(측정)
 // gdGuide = D ① 더미 위 색 띠(초록·노랑·빨강)를 언제 보이나(재윤님 2026-10-17 '색깔 가이드는 아이템을 쓰거나 초반에 튜토리얼용으로 제공하고 평상시는 스킵'):
 //   0 처음만(기본 — 이번 실행 첫 3숨 = 코치 숨에만) | 1 늘(앞으로 올 '가이드 아이템' 자리) — 그림만, 물리·판정·칸·칩 무변화
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0, swg: 0, swm: 0, swmT: 1.2, gdQ: 0, gdOut: 0, gdGuide: 0 };
+// gdAng = D ② 각도 박자 화면(재윤님 2026-10-17 '진행'): 0 장면(기본 — 카메라가 옆으로 돌아 재윤님 머리가 고개를 들었다 내림 · 바람 리본 · 더미 색 띠, 숫자 없음)
+//   | 1 부채꼴(옛 2D 부채꼴·바늘·0°/10°/45° — 비교용). 그림만, 박자 값·물리·판정 무변화
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0, swg: 0, swm: 0, swmT: 1.2, gdQ: 0, gdOut: 0, gdGuide: 0, gdAng: 0 };
 const EXP_KEYS = new Set(['jetLag', 'airFx', 'hsCut', 'airLog']);
-const SWITCH_KEYS = new Set([...EXP_KEYS, 'core', 'swg', 'swm', 'swmT', 'gdQ', 'gdOut', 'gdGuide']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
+const SWITCH_KEYS = new Set([...EXP_KEYS, 'core', 'swg', 'swm', 'swmT', 'gdQ', 'gdOut', 'gdGuide', 'gdAng']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
 const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
 // 9차: 콩닥 숨 1(차분)을 기본으로(재윤님 '1 차분이 지금보다 괜찮다') — 저장된 튜닝값도 한 번 옮긴다
 if ((profile.settings.feelV || 0) < 9) { profile.settings.feel = { ...(profile.settings.feel || {}), beat: 1 }; profile.settings.feelV = 9; Store.save(profile); }
@@ -110,6 +115,7 @@ function expSanitize() { // 저장값·주소·옛 빌드 값이 무엇이든 �
   feel.swmT = SWM_TS.includes(+feel.swmT) ? +feel.swmT : 1.2; // 눈금 왕복 초
   feel.gdQ = expBit(feel.gdQ); feel.gdOut = expBit(feel.gdOut); // D 비교 토글 0/1 만
   feel.gdGuide = expBit(feel.gdGuide); // D 가이드 띠 0 처음만 / 1 늘
+  feel.gdAng = expBit(feel.gdAng); // D ② 화면 0 장면 / 1 부채꼴
 }
 const SWM_TS = [1.6, 1.2, 1.0];
 {
@@ -134,6 +140,9 @@ const SWM_TS = [1.6, 1.2, 1.0];
   // D 가이드 띠: ?gdguide=first|always (이번 실행에만, ⚙ 완료를 누르면 저장)
   const gg = param('gdguide');
   if (gg === 'first') feel.gdGuide = 0; else if (gg === 'always') feel.gdGuide = 1; else if (gg != null) console.warn('[쓸기] gdguide 값 무시(first · always 만 받음):', gg);
+  // D ② 각도 화면: ?gdang=scene|fan (이번 실행에만, ⚙ 완료를 누르면 저장)
+  const ga = param('gdang');
+  if (ga === 'scene') feel.gdAng = 0; else if (ga === 'fan') feel.gdAng = 1; else if (ga != null) console.warn('[쓸기] gdang 값 무시(scene · fan 만 받음):', ga);
   expSanitize();
 }
 // 9차 물안경(재윤님: '초록 가이드는 아이템을 쓰면 보이게'): 이번 숨에 초록 구간이 보이는 아이템. 평생 첫 3숨은 무료(튜토리얼)
@@ -160,6 +169,7 @@ let micEnabled = false;
 const MIC_BLOW_LV = 0.12; // 마이크 세기(0~1.25)가 이만큼 120ms 이상이면 '불기 시작' (볼이 눈에 띄게 차오르는 정도)
 
 let renderer, scene, camera, fx;
+let sunLight = null, baseFov = 50; // 해(그림자) — D ② 옆 시점 동안 그림자 틀을 머리까지 옮김 · 게임 카메라 시야각(layout 이 정함, 옆 시점은 섞어 쓴 뒤 되돌림)
 let table = null; // 물리 테이블 (매치 중)
 const meshes = new Map(); // disc.id → mesh
 const paper = new PaperLook(); // 종이 그림(얇은 몸·휨·착지 휘청). 물리는 읽기만
@@ -330,6 +340,8 @@ function buildScene() {
   sun.shadow.bias = -0.0004;
   sun.shadow.radius = 4;
   scene.add(sun);
+  scene.add(sun.target); // 표적을 장면에 — 옆 시점 그림자 틀 옮김(svSun)이 표적 자리를 바꾼다(기본 = 원점, 그대로면 지금과 같음)
+  sunLight = sun;
   const rim = new THREE.DirectionalLight(0x9fd8ff, 0.7);
   rim.position.set(-6, 5, -8);
   scene.add(rim);
@@ -373,6 +385,7 @@ function layout() {
   const portrait = w / h < 0.85;
   // 세로: 더미를 화면 아래 1/3 쪽에(폰 마이크가 아래에 있어 '부는 방향'과 일치 — 리서치), 상대는 위쪽
   camera.fov = portrait ? 50 : 36;
+  baseFov = camera.fov;
   camBase.set(0, portrait ? 6.6 : 4.4, portrait ? 8.6 : 6.9);
   camTarget.set(0, portrait ? 0.4 : 0.9, portrait ? -2.4 : -0.8);
   // 낮고 가까이: 더미 옆면이 약 2배(10장 82→169px, 폭 164→266px, three.js 투영 계산)
@@ -788,7 +801,7 @@ const myTurn = { on: false, t0: 0, until: 0, pressed: false };
 function fpvOn() { return (feel.fpv ?? 1) >= 0.5 && state === 'match'; }
 function fpvVisible() { return fpvOn() && (myTurn.on || performance.now() < myTurn.until || (puffer.who === 'me' && (puffer.mode === 'blow' || puffer.mode === 'cough'))); }
 function drawFPV(now) {
-  if (!fpvVisible() || puffer.who !== 'me') return;
+  if (!fpvVisible() || puffer.who !== 'me' || sv.w >= 0.999) return; // D ② 장면 옆 시점: 얼굴이 장면 안에 있으니 1인칭 볼·입술은 아래로 빠져 사라짐
   const cv = $('#breath'), ctx = cv.getContext('2d'), dpr = cv._dpr || 1;
   const W = cv.width / dpr, H = cv.height / dpr;
   const F = Rules.POUCH_FULL;
@@ -805,7 +818,7 @@ function drawFPV(now) {
   const sx = Math.sin(now * 0.07) * shake, sy = Math.cos(now * 0.09) * shake * 0.6;
   // 쓸기 연습판: 고개를 젖힐수록 입술·볼이 화면 아래로 빠진다(α 10° = 화면 높이의 12%). 줄인 움직임에서도 남긴다 — 카메라 피치를 0 으로 둘 때의 대체 표현(스펙 §5.1)
   const swDy = sweepOn() ? H * 0.012 * clamp(sweepAlphaDeg(), 0, Sweep.SWEEP.maxDeg) : 0;
-  ctx.save(); ctx.scale(dpr, dpr); ctx.translate(sx, sy + swDy);
+  ctx.save(); ctx.scale(dpr, dpr); ctx.translate(sx, sy + swDy + H * 0.45 * sv.w);
   // 아래 그늘 (얼굴 아래쪽이 시야를 가리는 느낌)
   const vy0 = H * (0.78 - 0.08 * v);
   const vg = ctx.createLinearGradient(0, vy0, 0, H);
@@ -1422,6 +1435,7 @@ function frame(now) {
   paper.tick(now, dt * timeScale); // 배치 높이·휨 따라가기(실제 시간)·착지 휘청(게임 시간: 슬로모·멈칫 따라감)
   fx.update(dt * (0.4 + 0.6 * timeScale));
   // 카메라
+  svRestore(); // D ② 장면 옆 시점이 지난 프레임에 덮어쓴 카메라 자리·시야각을 게임 카메라 값으로 되돌림(게임 카메라의 부드러운 따라가기 상태 보존)
   shake *= Math.pow(0.02, dt);
   const sh = shake;
   const target = camTarget.clone();
@@ -1455,6 +1469,7 @@ function frame(now) {
   }
   camera.position.lerp(pos, state === 'home' ? 1 : 0.2);
   camera.lookAt(target);
+  svFrame(now); // D ② 장면: 옆 시점 섞기(② · ③ · 장면에서 쏜 숨의 쓸기) · 해 그림자 틀 · 머리·리본·색 띠 — 연습판 D 밖이면 아무것도 안 함
   if (state === 'home') for (const m of homeMeshes) m.rotation.y += dt * 0.15;
   if (puffer.mode !== puffer._m) { puffer._m = puffer.mode; puffer._t0 = performance.now(); } // drawFPV 도 이 시계를 씀
   const meFpv = fpvOn() && puffer.who === 'me'; // 이때 #puffWrap 은 숨김 → 그리지 않는다(성능)
@@ -2417,7 +2432,7 @@ function expReadout() {
 window.__puffExp = () => {
   const A = airShot, el = $('#expLog');
   return {
-    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core, swg: feel.swg, gdQ: feel.gdQ, gdOut: feel.gdOut, gdGuide: feel.gdGuide }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
+    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core, swg: feel.swg, gdQ: feel.gdQ, gdOut: feel.gdOut, gdGuide: feel.gdGuide, gdAng: feel.gdAng }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
     breathAir: !!breath.air, rings: ringLive,
     sweep: { core: feel.core, on: sweepOn(), clock: sweep.clock, input: !!sweep.input, shot: !!sweep.shot, shots: window.__puffSweep.shots, ribbon: !!sweep.ribbon?.visible }, // 쓸기 흔적(대결 중엔 모두 꺼져 있어야 — pvp-check)
     last: A && { seq: A.seq, who: A.who, lag: A.lag, air: A.air, cut: !!A.cut, hs: A.hs, hsImpact: A.hsImpact ?? null, arrPhys: A.arrPhys ?? null, hitPhys: A.hitPhys ?? null, movePhys: A.movePhys ?? null, moveWall: A.moveWall ?? null,
@@ -4252,6 +4267,7 @@ window.__puffSweep.state = () => ({
   reticle: reticle ? { op: reticle.material.opacity, vis: reticle.visible } : null, // 고전 조준 고리(연습판이 건드리면 안 됨)
   ...sweepStateC(),
   desk: sweep.desk, chalk: !!chalk?.visible, d: sweepStateD(), gdMode: Sweep.gdKey(swGdMode()), ring: !!gdRing?.visible,
+  scene: svState(), // D ② 장면: 옆 시점 무게 · 머리 불러옴/보임 · '딱!' · 숨 넘김 · 자세(시험용)
 });
 // C(영점 조준) 상태: 단계 · 영점 s · 지금 눈금 값(그리기와 무관하게 식으로) · 눈금 · 띠 보임 · 지금 숨·각 · α0 · 자동 쓸기 시작 · 영점 창 큼
 function sweepStateC() {
@@ -4974,9 +4990,13 @@ function playerSweepShotD() {
     // ① 색 띠(가이드): 이번 실행 첫 3숨(튜토리얼) 또는 ⚙ '가이드 띠: 늘'(앞으로 올 가이드 아이템 자리)만 — 평상시는 흰 고리 + 주황 영점 점만(재윤님 2026-10-17)
     //   지난 숨 빨강·회색 박자 다음 한 숨(ag.s)은 판정 말만 다시 — 띠·◀·초록 박자음은 안 켬(띠 = 가이드)
     const bandWhy = coach ? 'tut' : +feel.gdGuide === 1 ? 'always' : null;
+    // ② 각도 화면: 장면(기본 — 옆 시점 · 머리 · 리본 · 색 띠) | 부채꼴(⚙ 비교). 숨마다 시작 때 잡는다. 머리는 지금 불러오기 시작(부팅을 안 막음 — 안 끝났으면 ② 는 머리 없이)
+    const scene = +feel.gdAng === 0;
+    sv.fire = null; sv.lockAt = null;
+    if (scene) Head.loadHead().then((h) => { if (h) svRig().attachHead(h); });
     let settled = false;
     const I = {
-      gd: true, stage: 'zero', bands: !!bandWhy, bandWhy, stageAt: 0, T: Math.round((SWM_TS.includes(+feel.swmT) ? +feel.swmT : 1.2) * 1000),
+      gd: true, scene, stage: 'zero', bands: !!bandWhy, bandWhy, stageAt: 0, T: Math.round((SWM_TS.includes(+feel.swmT) ? +feel.swmT : 1.2) * 1000),
       // 코치(띠 또렷 · 판정 말 · 박자음 · ③ 손가락 시범): 이번 실행 첫 3숨 · 지난 숨에서 빨강·회색이었던 박자만 다음 한 숨
       coach: { s: coach || !!ag.s, th: coach || !!ag.th, q: coach || !!ag.q },
       s: null, th: null, q: null, meterT0: 0, locked: null, tapS: null, tapT: null, nudgeAt: 0, waitStage: null, judge: null,
@@ -5037,8 +5057,10 @@ function playerSweepShotD() {
     const enterAngle = (now = performance.now()) => {
       I.stage = 'angle'; I.stageAt = now; I.th = null; I.q = null; I.locked = null; I.tapT = null; I.judge = null; I.pull = null; I.waitStage = null;
       inhStop(); puffer.mode = 'idle'; puffer.p = 0; puffer.strain = 0;
-      I.meterT0 = now; I.nudgeAt = now + Sweep.GC.meter.delayMs + SW_TAP_NUDGE_MS;
-      hint('swHintD2');
+      sv.lockAt = null;
+      // 장면: 카메라가 옆으로 다 돈 뒤(SC.SV.delay)에 눈금 시작 — 그 앞 준비(400 ms)는 그대로 뒤에 붙는다(탭 값 식 무변화: 눈금 시각 = 탭 − meterT0)
+      I.meterT0 = now + (I.scene ? SC.SV.delay : 0); I.nudgeAt = I.meterT0 + Sweep.GC.meter.delayMs + SW_TAP_NUDGE_MS;
+      hint(I.scene ? 'swHintD2s' : 'swHintD2');
       myTurn.pressed = false; myTurn.t0 = now;
     };
     // ── ③ 숨(영점·각도 유지) ──
@@ -5053,6 +5075,7 @@ function playerSweepShotD() {
       if (knob === 's') { I.s = clamp(v, GD.s.min, GD.s.max); I.tapS = info; } else { I.th = clamp(v, 0, GD.th.max); I.tapT = info; }
       const z = Sweep.gdZone(knob, knob === 's' ? I.s : I.th, sweep.N, gdm);
       I.judge = I.coach[knob] ? { key: SW_D_JUDGE[knob][z], tone: Sweep.gdTone(z), at: now } : { key: null, tone: Sweep.gdTone(z), at: now }; // 판정 말은 코치 숨만 — 그 밖은 색 번쩍·소리만
+      if (knob === 'th' && I.scene) { sv.lockAt = now; sv.lockTone = Sweep.gdTone(z); } // ② 장면: '딱!' + 카메라 펀치 · 고개 멈춤(θ 잠금)
       sweepVib(20); sfx.pop();
       if (Sweep.gdTone(z) === 'r') sfx.tone(220, 0.08, 'triangle', 0.08);
       sweep.nudge = false;
@@ -5082,6 +5105,7 @@ function playerSweepShotD() {
       inhStop();
       puffer.strain = 0;
       startCtl('zero', { s: I.s, q: Sweep.gdPower(q), th: Sweep.gdSwing(I.th) }, 'D'); // 볼 = 헛스윙(쓸기 각 0) · 칸·카드는 I.th
+      if (I.scene) sv.fire = { at: now, ctl: I.ctl, q, rp: I.Rp, doneAt: null, handAt: null }; // 장면: 옆 시점 그대로 — 머리가 물리 고개(ctl.state)를 따라 쓸고, 쓸기가 끝나면 앞 시점으로
       I.released = true; I.stage = 'blow';
       $('#hint').hidden = true; btnZ.hidden = true; btnA.hidden = true;
       settle({ kind: 'gd', g: 'D', q, s: I.s, th: I.th, ctl: I.ctl });
@@ -5172,13 +5196,14 @@ function sweepStateD() {
   const I = sweep.input?.gd ? sweep.input : null, now = performance.now();
   if (!I) return null;
   return {
-    stage: I.stage, s: I.s, sLive: gdSLive(I, now), th: I.th, thLive: gdThLive(I, now), q: I.q, qLive: I.pull ? gdQLive(I) : null, pullPx: I.pull?.px ?? null,
+    stage: I.stage, stageAt: I.stageAt, s: I.s, sLive: gdSLive(I, now), th: I.th, thLive: gdThLive(I, now), q: I.q, qLive: I.pull ? gdQLive(I) : null, pullPx: I.pull?.px ?? null,
     T: I.T, meterT0: I.meterT0, locked: I.locked, coach: { ...I.coach }, again: { zero: !$('#swZeroAgain').hidden, angle: !$('#swAngleAgain').hidden },
     zeroBig: !$('#swZero').hidden, side: !$('#swSide').hidden, redo: { ...I.redo }, cancels: I.cancels, sysCancels: I.sysCancels, waitTaps: I.waitTaps, rects: sweep.gdRects || null, pile: sweep.gdPile || null, Rp: I.Rp,
     hint: $('#hint').hidden ? null : $('#hintText').textContent,
     // ① 가이드 띠: 이 숨의 띠 여부·까닭 · 지금 보이는 띠 메시 수(초록·노랑·빨강 + 초록 위아래 흰 테두리) · 주황 영점 점 · 작은 이름표 · 튜토리얼/가이드 표
     bands: I.bands, bandWhy: I.bandWhy, bandMeshes: sweep.gd?.root.visible ? [...Object.values(sweep.gd.bands), ...sweep.gd.edges].filter((m) => m.visible).length : 0,
     dot: sweep.gdDot || null, guideTag: sweep.gdGuideTag || null,
+    ang: I.scene ? 'scene' : 'fan', // ② 각도 화면(장면 · 부채꼴) — 옆 시점·머리·'딱!' 상태는 state().scene
   };
 }
 // D 시점: 더미 전체가 화면 가로의 80%(가로 화면 34%) 안 · 낮게 내려다봄(12° · 가로 화면 22°) · 더미 가운데 = 화면 위에서 52%(가로 56%)
@@ -5191,7 +5216,7 @@ function sweepViewD(vtop) {
   const pc = table.pileCenter(), W = window.innerWidth, H = window.innerHeight, asp = W / H, L = asp > 1;
   // 숨이 나가면(세 박자 끝 · '퍼' 열림부터 0.8 s) 거리 ×1.45 · +8° 로 물러나며 조금 올라감: 가까이 낮게 찍은 채로는 일어선 딱지가 화면을 가득 덮어 날아가는 게 안 읽혔다
   const fk = sweep.input?.stage !== 'zero' && sweep.input?.stage !== 'angle' && sweep.input?.stage !== 'breath' && sweep.openAt ? clamp((performance.now() - sweep.openAt) / 800, 0, 1) : 0, fly = fk * fk * (3 - 2 * fk);
-  const half = Math.tan((camera.fov * D2R) / 2), R = sweep.input?.Rp || 1.2, e = ((L ? 22 : 12) + 8 * fly) * D2R;
+  const half = Math.tan((baseFov * D2R) / 2), R = sweep.input?.Rp || 1.2, e = ((L ? 22 : 12) + 8 * fly) * D2R;
   const dW = R / ((L ? 0.34 : 0.8) * half * asp), dH = (vtop + 0.3) / ((L ? 0.5 : 0.42) * 2 * half);
   const d = clamp(Math.max(dW, dH), 5, 18) * (1 + 0.45 * fly), yc = L ? 0.56 : 0.52;
   const P = new THREE.Vector3(pc.x, 0.5 * vtop, pc.z), dir = new THREE.Vector3(0, Math.sin(e), Math.cos(e)), up = new THREE.Vector3(0, Math.cos(e), -Math.sin(e));
@@ -5251,7 +5276,7 @@ function sweepGdMeshes(I, now = performance.now()) {
   }
   G.edges.forEach((m, i) => { m.visible = showB; if (showB) { m.position.set(pc.x, yOf(i ? hi : lo), pc.z); m.scale.set(R + 0.024, 1, R + 0.024); } });
   const s = gdSLive(I, now);
-  G.ring.visible = s != null;
+  G.ring.visible = s != null && !(I.scene && !zero); // ② 장면: 흰 고리 대신 더미 색 띠(영점 → 바람 높이, head.js) + 주황 영점 점
   if (s == null) return;
   const prep = zero && I.locked == null && now < I.meterT0 + Sweep.GC.meter.delayMs; // 준비 400 ms: 꼭대기에서 깜박임
   const fk = zero && I.locked != null ? clamp(1 - (now - I.locked) / 250, 0, 1) : 0; // 잠금 순간 0.25 s 반짝
@@ -5320,8 +5345,17 @@ function drawSweepD(now, ctx, dpr, I) {
     }
     ctx.textAlign = 'start';
   }
+  // ② 장면: 주황 영점 점 · '딱!'(+ 코치 숨 판정 말) — 부채꼴·숫자 없음(고개·리본·색 띠는 3D, svProps) · 머리·더미 화면 틀은 배치 게이트에
+  if ((I.stage === 'angle' || I.stage === 'breath') && I.s != null && I.scene) {
+    svDraw2d(ctx, now, I);
+    if (sv.face) rects.face = sv.face;
+    // 옆 시점 더미 화면 틀: 바닥·꼭대기 둘레 24점(앞 시점 틀 식은 x 축 끝 4점이라 옆에서 좁게 나옴)
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; for (const y of [0, V(top)]) { const [u, v] = swProj(pc.x + Math.cos(a) * R, y, pc.z + Math.sin(a) * R); x0 = Math.min(x0, u); x1 = Math.max(x1, u); y0 = Math.min(y0, v); y1 = Math.max(y1, v); } }
+    rects.pile = { x: Math.round(x0), y: Math.round(y0), w: Math.round(x1 - x0), h: Math.round(y1 - y0) };
+  }
   // ② 부채꼴(영점에 붙음) + 쓸기 화살표
-  if ((I.stage === 'angle' || I.stage === 'breath') && I.s != null) {
+  else if ((I.stage === 'angle' || I.stage === 'breath') && I.s != null) {
     const th = gdThLive(I, now) ?? 0, h0 = Sweep.hOfS(I.s, top);
     const [ax, ay] = swProj(pc.x + R + 0.045, V(h0), pc.z);
     // 부채꼴: 영점 높이의 고리 오른쪽 끝에 붙음(오른쪽 여백이 모자라면 반지름을 줄이고, 그래도 56 px 이 안 되면 — 크게 찍은 D 시점 —
@@ -5368,8 +5402,13 @@ function drawSweepD(now, ctx, dpr, I) {
   //   (재윤님 손 검토 2026-10-17: 코치 숨에서 칸을 채움만큼 진하게 칠해 초록 칸 안의 초록 채움이 안 보였다 — 칸·채움 진하기를 코치와 상관없이 나눈다)
   if (I.stage === 'breath') {
     // 세로 자리 = 더미 옆 가운데(크게 찍은 D 시점 — 이름표가 뒤 칠판 글 위로 덜 올라가게) · 아래 '다시' 단추(위 끝 0.77H − 56) 위
-    const gh = clamp(0.3 * H, 180, 260), gw = 26, gx = 14, k = sweep.N >= 35 ? 40 : 30, pm = pile.y + pile.h / 2;
-    const gy0 = clamp(pm - gh / 2, 140, 0.77 * H - 66 - gh);
+    let gh = clamp(0.3 * H, 180, 260), gx = 14, gy0 = clamp(pile.y + pile.h / 2 - gh / 2, 140, 0.77 * H - 66 - gh);
+    const gw = 26, k = sweep.N >= 35 ? 40 : 30;
+    // ② 장면(옆 시점): 왼쪽은 더미 · 오른쪽 위는 얼굴 → 오른쪽 아래(얼굴 밑 책상 자리)에 세움. 이름표가 얼굴 아래 끝 밑으로
+    if (I.scene && sv.w > 0.5) {
+      const y0 = sv.face ? sv.face.y + sv.face.h + 36 : 0.6 * H, y1 = H - 30; // 머리가 아직 없으면(불러오는 중) 화면 60 % 아래
+      gh = clamp(y1 - y0, 140, 260); gy0 = Math.min(y0, y1 - gh); gx = W - gw - 18;
+    }
     const yq = (q) => gy0 + gh * (1 - (clamp(q, GD.q.min, GD.q.max) - GD.q.min) / (GD.q.max - GD.q.min));
     const segs = [[GD.q.min, GD.q.weak[k], 'w'], [GD.q.weak[k], GD.q.green[k], 'y'], [GD.q.green[k], GD.q.red, 'g'], [GD.q.red, GD.q.max, 'r']].filter(([a, b]) => b > a); // 30장 = 회색 칸 없음(weak = 0.6 = 당김 0)
     const strong = I.coach.q, q = gdQLive(I);
@@ -5403,7 +5442,7 @@ function drawSweepD(now, ctx, dpr, I) {
     }
   }
   // 판정 말(코치 숨 · 잠금 뒤 0.7 s): 박자 옆
-  if (I.judge?.key && now - I.judge.at < 700) {
+  if (I.judge?.key && now - I.judge.at < 700 && !(I.scene && I.stage !== 'zero')) { // ② 장면의 판정 말은 '딱!' 아래(svDraw2d)
     const kk = (now - I.judge.at) / 700, y = I.stage === 'zero' || (I.stage === 'angle' && I.locked == null && I.th == null) ? swProj(pc.x, V(Sweep.hOfS(I.s ?? 0.55, top)), zf)[1] - 34 : (rects.fan ? rects.fan.y - 6 : H * 0.3);
     ctx.globalAlpha = clamp(1.6 - 1.6 * kk, 0, 1);
     ctx.font = '700 30px "Jua", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 6; ctx.strokeStyle = '#2a1a12'; ctx.fillStyle = SW_D_TONE[I.judge.tone] === SW_D_TONE.g ? '#bff0c8' : SW_D_TONE[I.judge.tone];
@@ -5426,6 +5465,174 @@ function sweepGuidePoseD(now, I) {
   else if (cyc < 0.74) { y = y0 + pull; key = 'swGD3'; press = 1 - (cyc - 0.62) / 0.12; }
   else { press = 0; key = null; }
   return { d: true, x, y, y0, yL: y0 + pull, key, press };
+}
+
+// ── 문법 D ② '장면': 옆 시점 · 재윤님 머리 · 바람 리본 · 더미 색 띠 (식 = sidecam.js · three.js 묶음 = head.js) ──
+// 🧭 가설(재윤님 '진행' 2026-10-17, 시제품 화면 확인 · 손 미검증): ② 를 부채꼴 대신 '고개'로 보이면 숫자 없이 때가 읽힌다 → 카메라가 옆으로 돌고
+//   머리가 θ 눈금대로 고개를 든다(입술 → 정직한 바람 닿는 곳, 볼 = 앞면 낮게 빨강 · 스트라이크 = 꼭대기 넘어 초록). ③ 은 옆 시점 그대로
+//   (고개 = 잠근 각 · 꾹 누르면 영점 자세로 내림 = 숨이 출발하는 자세), 숨이 나가면 머리는 물리 고개(ctl.state.alpha · yHit)를 그대로 따라
+//   쓸어 올리고(볼 = 쓸기 없음, gdSwing) 쓸기가 끝나면 앞(물러난) 시점으로 넘긴다. 그림만: 박자 값·물리·판정·해시 무변화.
+//   재윤님 시제품 피드백 '얼굴 밑에 그림자가 없어서 어색' → 머리 해 그림자(그림자 틀을 머리까지 · 해 방향 그대로) + 턱 밑 접촉 그늘(head.js)
+const sv = { w: 0, goal: 0, w0: 0, t0: 0, dur: SC.SV.trans, saved: null, set: null, rig: null, lockAt: null, lockTone: null, fire: null, dipK: 0, dipT: 0, dipGoal: 0, sun: false, sunBase: null, st: null, face: null };
+const SV_SUN = { shift: new THREE.Vector3(0, 0, 3), half: 10 }; // 옆 시점 동안 해 그림자 틀: 원점 ±9 → (0,0,3) ±10 — 머리(z 4.5~11)·머리 그림자·더미 그림자를 모두 덮음(three.js 그림자 행렬로 확인)
+const SV_TONE = { g: 0x37d067, r: 0xff4a4a, y: 0xf2c21e, w: 0x9aa0a6 };
+function svRig() { if (!sv.rig) sv.rig = new Head.SceneProps(scene); return sv.rig; }
+function svSceneI() { const I = sweep.input?.gd && myTurn.on ? sweep.input : null; return I && I.scene && I.s != null && (I.stage === 'angle' || I.stage === 'breath') ? I : null; }
+function svReset() {
+  sv.w = 0; sv.goal = 0; sv.w0 = 0; sv.fire = null; sv.lockAt = null; sv.st = null; sv.face = null; sv.dipK = 0; sv.dipGoal = 0;
+  sv.rig?.hide(); svSun(false);
+  if (camera && camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
+}
+// 프레임 앞(게임 카메라 계산 전): 지난 프레임 옆 시점이 덮어쓴 자리를 게임 카메라 자리로(다른 코드가 그 사이 카메라를 옮겼으면 — snapCam — 그대로 둠)
+function svRestore() {
+  if (sv.set) { if (camera.position.equals(sv.set)) camera.position.copy(sv.saved); sv.set = null; }
+  if (camera.fov !== baseFov) { camera.fov = baseFov; camera.updateProjectionMatrix(); }
+}
+function svFrame(now) {
+  const live = state === 'match' && !!table && sweepOn();
+  if (!live) { if (sv.w > 0 || sv.fire || sv.sun) svReset(); return; }
+  const I = svSceneI(), F = sv.fire;
+  // 장면에서 쏜 숨: 물리 쓸기(tUp + θ/80 °/s, 물리 초)가 끝나고 hold 뒤 넘김 · 숨이 먼저 끝나거나(볼 = 쓸기 없음 포함) cap 이 지나도 넘김
+  if (F && F.handAt == null) {
+    const c = F.ctl, S = c.state;
+    if (F.doneAt == null && c.upAt != null && S.t >= c.tUp + (c.th > 0 ? c.th / Sweep.GC.w : 0)) F.doneAt = now;
+    if ((F.doneAt != null && now - F.doneAt >= SC.SV.hand.hold) || (!sweep.clock && now - F.at > 250) || now - F.at > SC.SV.hand.cap) F.handAt = now;
+  }
+  const goal = I || (F && F.handAt == null) ? 1 : 0;
+  if (goal !== sv.goal) { sv.goal = goal; sv.w0 = sv.w; sv.t0 = now; sv.dur = goal ? SC.SV.trans : F?.handAt != null ? SC.SV.hand.trans : SC.SV.trans; }
+  sv.w = reducedMotion ? goal : sv.w0 + (goal - sv.w0) * SC.easeIO((now - sv.t0) / sv.dur);
+  if (!goal && sv.w < 1e-4) { sv.w = 0; if (F?.handAt != null) sv.fire = null; }
+  svCamera(now);
+  svSun(sv.w > 0);
+  svProps(now, I, sv.fire);
+}
+// 카메라: 게임 카메라(그 프레임 값)와 옆 시점을 (목표점·방위·고도·거리·시야각)으로 섞음. 톡 = 짧게 다가갔다 돌아옴 + 흔들림
+// 더미 가운데: 숨 동안은 숨 시작 때(SweepCtl c) — 딱지가 날아가면 지금 가운데가 움직여 카메라·머리가 따라 흔들렸다
+function svPc() { return sv.fire && !svSceneI() ? sv.fire.ctl.c : table.pileCenter(); }
+function svCamera(now) {
+  if (sv.w <= 0) return;
+  const pc = svPc(), f = new THREE.Vector3();
+  camera.getWorldDirection(f);
+  const G = SC.poseOfCam(camera.position, f, baseFov, { x: pc.x, y: 0.5 * swVisFn()(table.columnTop()), z: pc.z });
+  const P = SC.sidePose(pc);
+  const pu = sv.lockAt != null && !reducedMotion ? (now - sv.lockAt) / SC.SV.punch.ms : -1;
+  if (pu >= 0 && pu < 1) P.r *= 1 - SC.SV.punch.k * Math.sin(Math.PI * pu) * (1 - 0.3 * pu);
+  const M = SC.mixPose(G, P, sv.w, SC.wr(sv.w), SC.wa(sv.w)), c = SC.camOfPose(M);
+  sv.saved = camera.position.clone();
+  camera.position.set(c.pos.x, c.pos.y, c.pos.z);
+  if (sv.lockAt != null && !reducedMotion && now - sv.lockAt < SC.SV.shakeMs) { const k = 0.03 * (1 - (now - sv.lockAt) / SC.SV.shakeMs); camera.position.x += (Math.random() - 0.5) * k; camera.position.y += (Math.random() - 0.5) * k; }
+  camera.lookAt(c.target.x, c.target.y, c.target.z);
+  if (Math.abs(camera.fov - M.fov) > 1e-6) { camera.fov = M.fov; camera.updateProjectionMatrix(); }
+  camera.updateMatrixWorld(true); // lookAt 뒤 행렬을 바로 — 2D 투영(swProj: 영점 점·'딱!'·배치 틀)이 이 프레임 카메라를 쓰게(시제품 교훈)
+  sv.set = camera.position.clone();
+}
+// 해 그림자 틀: 옆 시점 동안만 머리까지(해 방향 그대로 → 더미 그림자 모양 그대로, 텍셀 0.0088 → 0.0098 u)
+function svSun(on) {
+  if (!sunLight || on === sv.sun) return;
+  if (!sv.sunBase) sv.sunBase = sunLight.position.clone();
+  sv.sun = on;
+  const d = on ? SV_SUN.shift : new THREE.Vector3(), h = on ? SV_SUN.half : 9, sc = sunLight.shadow.camera;
+  sunLight.position.copy(sv.sunBase).add(d); sunLight.target.position.copy(d); sunLight.target.updateMatrixWorld();
+  sc.left = -h; sc.right = h; sc.top = h; sc.bottom = -h; sc.updateProjectionMatrix();
+}
+// 3D 소품: 머리 자세(② = 영점 α0 + 눈금 θ · ③ = 잠근 θ, 꾹 = 영점으로 · 숨 = 물리 α·yHit) · 그늘 · 리본 · 색 띠 · 닿는 곳 빛 · 옆 벽
+function svProps(now, I, F) {
+  if (sv.w <= 0 || (!I && !F)) { sv.rig?.hide(); sv.st = null; sv.face = null; return; }
+  const R = svRig();
+  R.begin();
+  R.setWall(true);
+  // 종이 대응: 숨 동안·뒤는 숨 시작 때 얼린 표(swVisFreeze) — 숨이 끝나 흩어진 더미의 지금 표로 바뀌면 고개가 툭 내려갔다
+  const Vf = !I && sweep.visFrz?.top > 0 ? sweep.visFrz : null, V = Vf ? (y) => swVisFrozen(Vf, y) : swVisFn();
+  const pc = svPc(), top = F && !I ? F.ctl.top0 : table.columnTop(), vtop = V(top), Rp = I ? I.Rp : F.rp;
+  let sc, tone = null, op = 1, flash = 0, mode;
+  if (I) {
+    mode = I.stage;
+    sv.dipGoal = I.stage === 'breath' && I.pull ? 1 : 0;
+    const dd = (now - (sv.dipT || now)) / SC.SV.dip; sv.dipT = now;
+    sv.dipK = clamp(sv.dipK + (sv.dipGoal ? 1 : -1) * (reducedMotion ? 1 : dd), 0, 1);
+    const thL = I.stage === 'angle' ? gdThLive(I, now) ?? 0 : I.th ?? 0;
+    const thV = I.stage === 'breath' ? thL * (1 - SC.ease(sv.dipK)) : thL;
+    sc = SC.sceneAt(Sweep.a0Of(I.s, top) + thV, pc, { V, vtop });
+    tone = Sweep.gdTone(Sweep.gdZone('th', thL, sweep.N, swGdMode()));
+    op = SC.ease((sv.w - 0.55) / 0.45) * (I.stage === 'breath' ? 0.62 * (1 - SC.ease(sv.dipK)) : 1);
+    flash = sv.lockAt != null ? clamp(1 - (now - sv.lockAt) / 300, 0, 1) : 0;
+  } else {
+    mode = 'blow';
+    const S = F.ctl.state;
+    // 첫 물리 스텝 전(prog 아직 안 불림 — state 는 α 0 초기값)은 영점 자세 α0 그대로(숨은 α0 에서 출발)
+    sc = F.ctl.calls > 0 ? SC.sceneAt(S.alpha / D2R, pc, { V, vtop }, { o: S.o, yHit: S.yHit }) : SC.sceneAt(F.ctl.a0, pc, { V, vtop });
+  }
+  // 머리: 들어올 땐 처음부터(카메라가 머리 속이면 앞면만 그려 안쪽이 안 보임) · 넘길 땐 카메라가 머리로 돌아오기 전에 사라짐
+  const hop = F?.handAt != null && !I ? SC.ease((sv.w - 0.3) / 0.4) : SC.ease(sv.w / 0.18);
+  const hv = R.setHead(sc, hop, camera) || 0; // 실제 머리 불투명도(카메라가 머리 가까이면 0 — head.js)
+  R.setShade(sc, hv);
+  const zBack = pc.z - Rp - 0.5;
+  const pts = SC.ribbonPts({ lips: sc.lips, aim: sc.aim, hitV: sc.hitV, over: sc.over, zf: sc.zf, vtop, zBack, x: pc.x });
+  if (I) {
+    const col = SV_TONE[tone] ?? SV_TONE.r, y0 = V(Sweep.hOfS(I.s, top)), y1 = Math.min(sc.hitV, vtop + 0.015);
+    R.setRibbon(pts, 0.1, sc.over ? 0.75 : 0.55, col, 0.95 * op, now, camera, { flash });
+    R.setSleeve(pc, Rp + 0.04, y0, Math.max(y0 + 0.002, y1), vtop, sc.over, col, op, flash, now);
+    R.setGlow(sc.over ? { x: pc.x, y: vtop + 0.05, z: sc.zf - 0.1 } : { x: pc.x, y: sc.hitV, z: sc.zf + 0.12 }, (sc.over ? 1.1 : 0.9) * (1 + 0.5 * flash), col, (sc.over ? 0.55 : 0.75) * op);
+  } else {
+    // 숨: 바람(흰 하늘색) — 세기 = 숨 봉투 × min(q, 1), 넘길 때 같이 옅어짐
+    const S = F.ctl.state, k = clamp(S.env * Math.min(1, F.q), 0, 1) * hop * (sweep.clock ? 1 : 0.4);
+    R.setRibbon(pts, 0.12, sc.over ? 0.85 : 0.65, 0xcfeaff, 0.25 + 0.65 * k, now, camera, { white: 0.45, flash: sweep.openAt ? clamp(1 - (now - sweep.openAt) / 280, 0, 1) : 0 });
+    R.setGlow(sc.over ? { x: pc.x, y: vtop + 0.05, z: sc.zf - 0.1 } : { x: pc.x, y: sc.hitV, z: sc.zf + 0.12 }, 1.1, 0xe2f6ff, 0.6 * k);
+  }
+  R.end();
+  // 화면 틀(배치 게이트 · 숨 게이지 자리): 머리 중 책상 위 부분(턱 아래 ~ 정수리 · 경계 상자) 투영 → 화면 안으로 자름
+  sv.face = null;
+  if (R.head && R.headGrp.visible) {
+    const [A, B] = SC.HEAD.box; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const x of [A[0], B[0]]) for (const y of [SC.HEAD.chin[1] - 0.05, B[1]]) for (const z of [A[2], B[2]]) {
+      const p = SC.headPt([x, y, z], sc.phi, SC.SV.head.H, sc.pos), [u, v] = swProj(p.x, Math.max(0, p.y), p.z);
+      x0 = Math.min(x0, u); x1 = Math.max(x1, u); y0 = Math.min(y0, v); y1 = Math.max(y1, v);
+    }
+    const W = window.innerWidth, H = window.innerHeight, cx0 = clamp(x0, 0, W), cx1 = clamp(x1, 0, W), cy0 = clamp(y0, 0, H), cy1 = clamp(y1, 0, H);
+    if (cx1 - cx0 > 4 && cy1 - cy0 > 4) sv.face = { x: Math.round(cx0), y: Math.round(cy0), w: Math.round(cx1 - cx0), h: Math.round(cy1 - cy0) };
+  }
+  sv.st = { mode, phi: +(sc.phi / D2R).toFixed(2), lips: [sc.lips.x, sc.lips.y, sc.lips.z].map((v) => +v.toFixed(3)), aim: +sc.aim.toFixed(3), hitV: +sc.hitV.toFixed(3), over: sc.over, tone, dip: +sv.dipK.toFixed(2), contact: [sc.contact.x, sc.contact.y, sc.contact.z].map((v) => +v.toFixed(3)) };
+}
+// 2D(#breath): 주황 영점 점(① 과 같은 그림) · '딱!'(잠금 뒤 1.1 s — ③ 앞부분까지) + 코치 숨 판정 말
+function svDraw2d(ctx, now, I) {
+  const pc = table.pileCenter(), top = table.columnTop(), V = swVisFn(), R = I.Rp, W = window.innerWidth;
+  const [dx, dy] = swProj(pc.x, V(Sweep.hOfS(I.s, top)), pc.z + R + 0.045);
+  ctx.globalAlpha = 0.4 + 0.6 * sv.w;
+  ctx.fillStyle = '#2a1a12'; ctx.beginPath(); ctx.arc(dx, dy, 9.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(dx, dy, 7.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ff8a1f'; ctx.beginPath(); ctx.arc(dx, dy, 5.5, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+  sweep.gdDot = { x: Math.round(dx), y: Math.round(dy), dir: 0, tag: null };
+  if (sv.lockAt == null) return;
+  const u = (now - sv.lockAt) / 1000;
+  if (u < 0 || u >= 1.1) return;
+  const good = sv.lockTone === 'g', col = good ? '#37d067' : '#ff4a4a';
+  const sc = u < 0.12 ? 0.4 + 0.85 * (u / 0.12) : u < 0.24 ? 1.25 - 0.25 * ((u - 0.12) / 0.12) : 1;
+  const al = u < 0.8 ? 1 : 1 - (u - 0.8) / 0.3;
+  const lp = sv.st ? swProj(sv.st.lips[0], sv.st.lips[1], sv.st.lips[2]) : [dx + 120, dy - 40], [tx0, ty0] = swProj(pc.x, V(top) + 0.2, pc.z + 1.6);
+  const x = clamp(0.62 * tx0 + 0.38 * lp[0], 84, W - 84), y = Math.max(160, Math.min(ty0, lp[1]) - 104 - 14 * u); // 더미 쪽 위(얼굴을 안 가림)
+  ctx.save(); ctx.globalAlpha = al;
+  if (u < 0.35) { ctx.strokeStyle = '#fff6d8'; ctx.lineWidth = 5; ctx.lineCap = 'round'; const rr = 40 + 120 * u; for (let i = 0; i < 10; i++) { const a = (i / 10) * Math.PI * 2 + 0.3; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * rr * 0.75, y + Math.sin(a) * rr * 0.75); ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); ctx.stroke(); } }
+  ctx.translate(x, y);
+  if (I.judge?.key && I.judge.at === sv.lockAt) { // 코치 숨: '딱!' 아래 작은 판정 말(스트라이크! · 볼!)
+    ctx.font = '700 22px "Jua", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 6; ctx.strokeStyle = '#2a1a12';
+    ctx.fillStyle = good ? '#bff0c8' : '#ffb0a8'; ctx.strokeText(t(I.judge.key), 0, 52); ctx.fillText(t(I.judge.key), 0, 52);
+  }
+  ctx.scale(sc, sc); ctx.rotate(-0.08);
+  ctx.font = '400 64px "Black Han Sans", "Jua", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = '#2a1a12'; ctx.strokeText(t('swTak'), 0, 0);
+  ctx.fillStyle = col; ctx.fillText(t('swTak'), 0, 0);
+  ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.strokeText(t('swTak'), -1, -2);
+  ctx.restore();
+}
+// 시험용 상태(tools/sweepplay.mjs (12h))
+function svState() {
+  const now = performance.now();
+  return {
+    w: +sv.w.toFixed(3), goal: sv.goal, head: { ...Head.headState }, headVis: !!sv.rig?.headGrp.visible, shade: !!sv.rig?.contact.visible, ribbon: !!sv.rig?.ribbon.visible, sleeve: !!sv.rig?.sleeve.visible,
+    tak: sv.lockAt != null && now - sv.lockAt < 1100, takTone: sv.lockTone, fire: sv.fire ? { done: sv.fire.doneAt != null, hand: sv.fire.handAt != null } : null,
+    sun: sv.sun, castShadow: !!sv.rig?.head?.mesh.castShadow, fov: camera ? +camera.fov.toFixed(2) : null, face: sv.face, st: sv.st,
+  };
 }
 
 // 주입 훅 한 숨(엄지 대신 측정 일정, sweep.js planShot·flickShot·zeroShot 과 같은 순서): A { q, A, w, t0, D }(A·D 에 'top') · { kind: 'puck', q }
@@ -5578,6 +5785,7 @@ async function sweepResult(raw, res, seed, my) {
       redo: I?.gd ? { ...I.redo } : null, cancels: I?.cancels ?? 0, sysCancels: I?.sysCancels ?? 0, waitTaps: I?.waitTaps ?? 0,
       coachBeats: I?.gd ? { ...I.coach } : null, // 박자별 코치(첫 3숨 · 지난 숨 빨강·회색 박자 다음 한 숨) — coach 는 '첫 3숨' 만
       guide: I?.gd ? I.bandWhy || 'off' : null, // ① 색 띠: 'tut'(첫 3숨) · 'always'(⚙ 가이드 띠 늘) · 'off'(평상시 = 흰 고리 + 영점 점만)
+      ang: I?.gd ? (I.scene ? 'scene' : 'fan') : null, // ② 각도 화면: 'scene'(옆 시점 · 머리 · 리본, 기본) · 'fan'(옛 부채꼴, ⚙ 비교)
     });
   }
   last.chip = sweepChip(raw, last, sum);
@@ -5587,7 +5795,7 @@ async function sweepResult(raw, res, seed, my) {
     ? { g: 'D', s: last.s, th: +last.th.toFixed(2), q: last.q, power: last.power, blast: +last.blast.toFixed(4), T: last.T, tapMsS: last.tapS?.tapMs ?? null, tapSrcS: last.tapS?.src ?? null, evLagMsS: last.tapS?.evLagMs ?? null,
       tapMsT: last.tapT?.tapMs ?? null, tapSrcT: last.tapT?.src ?? null, evLagMsT: last.tapT?.evLagMs ?? null, lag: SWM_LAG, frameMs: last.tapS?.frameMs ?? null,
       zoneS: last.zoneS, zoneTh: last.zoneTh, zoneQ: last.zoneQ, pullPx: last.pullPx, pullMaxPx: last.pullMaxPx, a0: last.a0, D: last.D, tUp: last.tUp, cueT: last.cueT, tTop: last.tTop,
-      flips: res.flips, outs: res.outs, hang: res.hang, ring: last.ring, mode: last.mode, guide: last.guide, chip: last.chip, coach: last.coach, coachBeats: last.coachBeats, redo: last.redo, cancels: last.cancels, sysCancels: last.sysCancels, waitTaps: last.waitTaps, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
+      flips: res.flips, outs: res.outs, hang: res.hang, ring: last.ring, mode: last.mode, guide: last.guide, ang: last.ang, chip: last.chip, coach: last.coach, coachBeats: last.coachBeats, redo: last.redo, cancels: last.cancels, sysCancels: last.sysCancels, waitTaps: last.waitTaps, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
     : gcShot
     ? { g: 'C', s: last.s, meter: last.meter, T: last.T, tapMs: last.tapMs, tapSrc: last.tapSrc, evLagMs: last.evLagMs, lag: last.lag, frameMs: last.frameMs, inBand: last.inBand, edgePx: last.edgePx, q: last.q, th: +last.th.toFixed(2), a0: last.a0, D: last.D, tUp: last.tUp, cueT: last.cueT, ttUp: last.ttUp, tTop: last.tTop, flips: res.flips, outs: res.outs, chip: last.chip, chip2: last.chip2, coach: last.coach, n: sum.n, seed, pullPx: I?.pullPx ?? null, pushPx: I?.pushPx ?? null, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
     : gbShot
@@ -6010,8 +6218,9 @@ function sweepDraw(now) {
       sweep.ribbon.visible = true;
       sweep.snd?.set(S.env, top0 > 0 ? S.yHit / top0 : 0, q);
     }
+    if (sv.w > 0.3) { m.visible = false; if (sweep.ribbon) sweep.ribbon.visible = false; } // D ② 장면 옆 시점: 바람은 보이는 머리 입술에서(head.js 리본) — 물리 입 원뿔·자국은 앞 시점에서만
     // 헛바람(자국이 꼭대기 위): 위로 흐르는 줄(2D)
-    if (over && blowing) {
+    if (over && blowing && sv.w <= 0.3) {
       const cv = $('#breath'), c2 = cv.getContext('2d'), dpr = cv._dpr || 1;
       const p = new THREE.Vector3(cx, vy, zf).project(camera);
       const px = (p.x * 0.5 + 0.5) * window.innerWidth, py = (-p.y * 0.5 + 0.5) * window.innerHeight;
@@ -6349,7 +6558,7 @@ function drawSideBase(c, w, h, X, Y, s, pc, top0, V) {
 function drawSweepSide(on) {
   const cv = $('#swSide');
   if (!cv) return;
-  if (!on || !$('#swZero').hidden || (sweep.input?.gd && myTurn.on)) { if (!cv.hidden) cv.hidden = true; return; } // D: 숨 전 세 박자는 실제 더미 위에서만(옆모습 창은 숨 동안·카드에서)
+  if (!on || !$('#swZero').hidden || (sweep.input?.gd && myTurn.on) || sv.w > 0) { if (!cv.hidden) cv.hidden = true; return; } // D ② 장면 옆 시점(쓸기 동안 포함)은 장면 자체가 옆모습 // D: 숨 전 세 박자는 실제 더미 위에서만(옆모습 창은 숨 동안·카드에서)
   if (cv.hidden) cv.hidden = false;
   const dpr = Math.min(2, window.devicePixelRatio || 1), w = cv.clientWidth || 180, h = cv.clientHeight || 103;
   if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
@@ -6558,7 +6767,9 @@ function coreSection() {
       + (g === 'D' ? `<div class="exp-btns"><span class="exp-lab">${t('coreGdQ')}</span>${btn('core-q0', t('coreGdQ0'), +feel.gdQ === 0)}${btn('core-q1', t('coreGdQ1'), +feel.gdQ === 1)}`
         + `<span class="exp-lab">${t('coreGdOut')}</span>${btn('core-o0', t('coreGdOut0'), +feel.gdOut === 0)}${btn('core-o1', t('coreGdOut1'), +feel.gdOut === 1)}</div>`
         // D 만: ① 가이드 띠(처음만 기본 = 첫 3숨 튜토리얼 · 늘 = 앞으로 올 가이드 아이템 자리)
-        + `<div class="exp-btns"><span class="exp-lab">${t('coreGdGuide')}</span>${btn('core-gg0', t('coreGdGuide0'), +feel.gdGuide === 0)}${btn('core-gg1', t('coreGdGuide1'), +feel.gdGuide === 1)}</div>` : '')
+        + `<div class="exp-btns"><span class="exp-lab">${t('coreGdGuide')}</span>${btn('core-gg0', t('coreGdGuide0'), +feel.gdGuide === 0)}${btn('core-gg1', t('coreGdGuide1'), +feel.gdGuide === 1)}`
+        // D 만: ② 각도 화면(장면 기본 = 옆 시점 · 머리 · 리본 · 색 띠 | 부채꼴 = 옛 2D 부채꼴, 비교용)
+        + `<span class="exp-lab">${t('coreGdAng')}</span>${btn('core-a0', t('coreGdAng0'), +feel.gdAng === 0)}${btn('core-a1', t('coreGdAng1'), +feel.gdAng === 1)}</div>` : '')
       // 쓸기 기록 복사(예전 결과 카드 단추 — 카드는 한 길만, 리서치 08 A3): 이번 실행 기록이 없으면 '조건이 안 됨'(회색). 깃발과 상관없이(#p40 주소로 연 판도 기록됨)
       + `<div class="exp-btns"><button type="button" class="exp-sw" id="core-copy"${window.__puffSweep.log.length ? '' : ' disabled'}>${t('swCopy')} <b>${fmt(t('coreCopyN'), { k: window.__puffSweep.log.length })}</b></button></div>`
       + `<p class="exp-how">${t('coreNote')}<br>${t('coreGNote')}</p>`;
@@ -6571,6 +6782,7 @@ function coreSection() {
       wrap.querySelector('#core-q' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdQ = i; render(); });
       wrap.querySelector('#core-o' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdOut = i; render(); });
       wrap.querySelector('#core-gg' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdGuide = i; render(); });
+      wrap.querySelector('#core-a' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdAng = i; render(); });
     }
     for (const n of [40, 30]) wrap.querySelector('#core-p' + n).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); closeTune(false); goHome(); startPractice(n, 0); });
   };
