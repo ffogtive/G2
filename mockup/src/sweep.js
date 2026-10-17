@@ -643,7 +643,8 @@ export function flickShot(Table, { N, seed, q, ts = null, flickNow = null, cards
 // Node·게임 공용: 문법 C 한 샷 — 영점 s · 숨 q · 쓸기 각 θ → 놓기 → 자동 쓸기(위 절반 10° + 0.15 s) → 판정. 게임 주입 훅({ kind: 'gc', s, q, th })과 같은 호출 순서
 //   (flickShot 과 같은 순서: Table(seed·7907 + N) → addPile → settle 600 → SweepCtl 'zero' → blowProg → step → after → stepJudge). tools/sweepgc.mjs gcShot 기둥 줄과 비트 동일
 //   a0 = 영점 자세 직접(°, Node 대조용 — sweepgc 'a0' 줄) · tUp = 쓸기 시작 고정(화면 초, 대조용 — 없으면 자동)
-export function zeroShot(Table, { N, seed, s = null, q, th, cards, a0 = null, tUp = null }) {
+//   judge 'circle'(기본 = 분필 원 · 측정 원자료와 같은 판정) | 'desk'(책상 밖 OUT — 문법 D 와 같은 judgeDesk, 같은 월드를 다시 판정할 뿐 물리는 같다)
+export function zeroShot(Table, { N, seed, s = null, q, th, cards, a0 = null, tUp = null, judge = 'circle' }) {
   const t = new Table(practiceTableSeed(N, seed), { lift: 519.59 });
   t.addPile(cards || Array.from({ length: N }, (_, i) => i));
   t.settle(600);
@@ -654,12 +655,115 @@ export function zeroShot(Table, { N, seed, s = null, q, th, cards, a0 = null, tU
   const j = { n: 0, quiet: 0 };
   let steps = 0;
   do { t.step(); ctl.after(t); steps++; } while (!t.stepJudge(j));
-  const R = t.judgeResult();
+  const R = judge === 'desk' ? judgeDesk(t) : t.judgeResult();
   const flips = R.flipped.length, outs = R.outs.length;
   const sum = ctl.summary(t, flips, outs);
   const r = ctl.rec;
   return {
     table: t, ctl, D: ctl.D, a0: ctl.a0, steps, flips, outs, hash: poseHash(t), tUp: ctl.tUp, cueT: r.cueT, ttUp: r.ttUp, tTop: r.tTop,
     maxTT: +r.maxTT.toFixed(1), maxTB: +r.maxTB.toFixed(1), yHit0: r.yHit0, floorHit: ctl.floorHit, chip: sum.chip, chip2: sum.chip2, top,
+  };
+}
+
+// ───────────── 문법 D '세 박자' (쓸기 연습판 기본 · 2026-10-17 재윤님 아이폰 C 손맛 + PO 개정) ─────────────
+// 🧭 가설(미검증 · 손): C 가 어려웠던 까닭은 한 엄지 2축(당김 = 숨 · 밀기 = 각)과 2D 그림 창이다 → 박자 셋으로 나누고 실제 3D 더미 위에서 안내한다.
+//   ① 영점 = 더미 위를 오르내리는 고리 톡(C 영점 눈금 meterAt('s') 그대로) ② 각도 = 부채꼴 바늘 0° → 45° → 0° 톡(때 맞춤 · 가벼운 실력 + 운)
+//   ③ 숨 = 유일한 끌기(아래로 당긴 만큼 q 0.6 → 1.25 · 놓으면 퍼—). 발사 뒤는 C 와 같은 SweepCtl 'zero'(자동 쓸기 · 새 힘 0).
+// 🧭 가설 2(물리, 확인됨 — 스크래치 시드 40장 401~412 · 30장 601~612, 2,832샷, 책상 판정): 각도는 '쓸었나'만 가른다. 바람 닿는 점이 쓸기 8~9° 만에
+//   꼭대기를 넘어 θ 15~60° 결과가 같다(위 경계 없음) → 각도를 끌기로 줘도 실력 깊이가 없다. 숨은 양쪽 과녁(40장 q 0.6 → 최고의 47~81% · 0.8~1.15 고원 ·
+//   1.2 → 72% · 1.25 → 6%)이고 고원 시작이 더미마다 다르다(30장 0.7 · 40장 0.8) → 숨 = 실력(끌기), 각도 = 때 맞춤 게이지(PO 2026-10-17).
+// 판정 = 책상 밖 OUT(재윤님 '흰 원 테두리는 없애고 책상 밖으로 떨어지는 것만 아웃'): DESK · deskOut · judgeDesk 를 게임·Node 가 같이 쓴다(떨어짐 · 판 옆으로 내려감 · 중심이 판 밖).
+//   중심이 책상 밖에 걸친 장도 OUT(진짜라면 떨어진다 — 돌풍 1.2 한 숨 평균 40장 3.3장 · 30장 2.4장, 그 밖에선 거의 없음). 물리(sim.js)는 그대로.
+// 숫자는 잠정(스크래치 시드). 보류 시드 확인 · 칩 근거 측정은 다음 조각(docs/design/core-sweep.md §4.1 D).
+// DESK = 책상 판(sim.js DESK_HX · DESK_HZ · 판 두께 절반 0.5 — 이 파일은 sim.js 를 import 하지 않는다, sweepgame ctl 이 대조)
+// 🧭 가설 수정(2026-10-17, 확인됨 Node 40장 시드 401): 스크래치 측정의 '책상 윗면 아래(y < −딱지 두께 0.11)' 문턱은 40장 맨 아래 장이 무게로 책상에
+//   묻힌 것(y −0.111)을 OUT 으로 셌다(숨 전부터 OUT 1장). 떨어진 장은 판 옆으로 내려가므로 문턱 = 판 두께 절반(y < −0.5 — 판 속에는 있을 수 없는 높이)
+export const DESK = { hx: 11, hz: 8, drop: 0.5 };
+export function deskOut(d) {
+  if (d.off) return true;
+  const p = d.body.translation();
+  return p.y < -DESK.drop || Math.abs(p.x) > DESK.hx || Math.abs(p.z) > DESK.hz;
+}
+// 판정(table.judgeResult 의 책상 판): 책상 위에서 그림이 위 = 뒤집힘 · 책상 밖(떨어짐 · 걸침) = OUT · hang = 떨어지지 않고 중심만 밖에 걸친 장 수
+export function judgeDesk(t) {
+  const L = t.liveDiscs(), outs = L.filter(deskOut);
+  return { flipped: L.filter((d) => t.faceUp(d) > 0.2 && !deskOut(d)), outs, hang: outs.filter((d) => !d.off).length };
+}
+export const GD = {
+  // ① 영점 s(C 와 같은 곡선 0.4 ~ 1): 초록 [lo, hi] 장수별(40장 0.40~0.45 = 아래 노랑 · 30장은 0.40 까지 초록) · 위 노랑 ~ red · 빨강 ≥ red
+  s: { min: 0.4, max: 1, green: { 40: [0.45, 0.65], 30: [0.4, 0.65] }, red: 0.75 },
+  // ② 각도 θ(°): 0 ~ 45 · 볼 < 10 · 아슬 10~15 · 스트라이크 ≥ 15(위 끝 없음 — 물리에 위쪽 손해가 없다, 가설 2)
+  th: { max: 45, ball: 10, near: 15 },
+  // ③ 숨 q: 0.6 ~ 1.25 · 회색(약함) < weak · 노랑(조금 약함) weak ~ green · 초록 green ~ red · 빨강(돌풍) ≥ red. q > 1 = 물리 세기 1 + 돌풍 (q − 1)/0.4(≤ 1.4, rules.js 꼴)
+  q: { min: 0.6, max: 1.25, weak: { 40: 0.7, 30: 0.65 }, green: { 40: 0.8, 30: 0.7 }, red: 1.175 },
+  blastSpan: 0.4, blastMax: 1.4,
+  pullPx: 0.36, tapPx: 8, relMs: 60, // 당김 0.36 × 짧은 변(390 px 폰 = 140 px) = q 끝 1.25 · 8 px 미만 당김 = 취소 · 놓기 직전 60 ms 안 가장 깊은 당김
+  dom: { s: 0.55, q: 0.9, th: 40 }, // 지배 칸(C 와 같음)
+  peak: { 40: 36, 30: 27 }, good: 0.85, // 칩 '좋아요' = 뒤집힘 ≥ 0.85 × 책상 판정 지배 칸 평균(스크래치: 40장 36.1 · 30장 27.0)
+};
+const gdN = (n) => (n >= 35 ? 40 : 30); // 장수별 값은 30·40장만 잼 → 가까운 쪽
+// 왔다 갔다 눈금(벽시계 ms): 's' = C 영점 눈금 그대로(꼭대기 출발) · 'th' = 0° 출발 → 45° → 0° 삼각파(같은 준비 delayMs · 같은 왕복 T)
+export function gdMeterAt(knob, ms, T = GC.meter.T) {
+  if (knob === 's') return meterAt('s', ms, T);
+  if (knob !== 'th') throw new Error('gdMeterAt: s · th 만 — ' + knob);
+  const u = Math.max(0, ms - GC.meter.delayMs), ph = (u / T) % 1;
+  return GD.th.max * (ph < 0.5 ? 2 * ph : 2 - 2 * ph);
+}
+// 당김(px, 누른 곳에서 아래로) → 숨 q. 짧은 변 기준(390 px 폰 = 140 px 에 1.25)
+export const qOfPull = (px, minDim) => GD.q.min + (GD.q.max - GD.q.min) * Math.min(1, Math.max(0, px / (GD.pullPx * minDim)));
+export const pullOfQ = (q, minDim) => ((q - GD.q.min) / (GD.q.max - GD.q.min)) * GD.pullPx * minDim; // 그림용 거꾸로
+export const gdPower = (q) => Math.min(q, 1); // 물리 세기(SweepCtl q = blowProg power) — 1 넘는 숨은 돌풍으로
+export const gdBlast = (q) => (q > 1 ? Math.min(GD.blastMax, (q - 1) / GD.blastSpan) : 0);
+// 돌풍: blowProg 숨 객체에 P.blast(sim.js applyWind 가 P.blast || 0 을 읽음). q ≤ 1 이면 아무것도 안 함(= 문법 C 비트 그대로)
+export function gdArm(P, q) { const b = gdBlast(q); if (b > 0) P.blast = b; return P; }
+// 박자 칸: 's' → low | green | high | red · 'th' → ball | near | strike · 'q' → weak | soft | green | red (띠·게이지·부채꼴·카드 점·칩이 모두 이것을 쓴다)
+export function gdZone(knob, v, n = 40) {
+  const k = gdN(n);
+  if (knob === 's') { const [lo, hi] = GD.s.green[k]; return v >= GD.s.red ? 'red' : v > hi ? 'high' : v >= lo ? 'green' : 'low'; }
+  if (knob === 'th') return v < GD.th.ball ? 'ball' : v < GD.th.near ? 'near' : 'strike';
+  if (knob === 'q') return v >= GD.q.red ? 'red' : v >= GD.q.green[k] ? 'green' : v >= GD.q.weak[k] ? 'soft' : 'weak';
+  throw new Error('gdZone: ' + knob);
+}
+// 칸 → 색 갈래: g 초록 · y 노랑 · r 빨강(높은 영점 · 볼 · 돌풍) · w 회색(약한 숨)
+export const gdTone = (z) => (z === 'green' || z === 'strike' ? 'g' : z === 'red' || z === 'ball' ? 'r' : z === 'weak' ? 'w' : 'y');
+export const gdPeakRef = (n) => GD.peak[n] ?? 0.9 * n;
+// 원인 칩(잠정 — 근거 측정은 다음 조각): 결과 먼저(좋아요) → 가장 나쁜 박자 하나. 빨강(돌풍 · 높은 영점) → 약한 숨 → 볼 → 노랑(영점 높음/낮음 · 조금 약함 · 아슬)
+//   → 셋 다 초록인데 덜 넘겼으면 mixed('같은 걸로 한 번 더' — 같은 칸 안 시드 흩어짐). '각도 큼' 칩은 없다(가설 2)
+export function gdChip({ n, s, q, th, flip }) {
+  if (flip >= GD.good * gdPeakRef(n)) return 'good';
+  const zs = gdZone('s', s, n), zq = gdZone('q', q, n), zt = gdZone('th', th, n);
+  if (zq === 'red') return 'qGust';
+  if (zs === 'red') return 'zHigh';
+  if (zq === 'weak') return 'qWeak';
+  if (zt === 'ball') return 'thBall';
+  if (zs === 'high') return 'zHigh';
+  if (zs === 'low') return 'zLow';
+  if (zq === 'soft') return 'qWeak';
+  if (zt === 'near') return 'thNear';
+  return 'mixed';
+}
+// 쓸기 화살표 끝(그림 전용): 꼭대기까지는 정직한 기하 hitC(α0 + θ) · 꼭대기를 넘은 뒤(바람이 더미를 넘어감)는 0.3 × 높이에 눌러 그림
+export function gdTipH(th, s, top) {
+  const a0 = a0Of(s, top), thTop = Math.max(0, alphaTop(top) - a0);
+  if (th <= thTop) return hitC(a0 + th);
+  return top + (0.3 * top * (th - thTop)) / Math.max(1e-6, GD.th.max - thTop);
+}
+// Node·게임 공용: 문법 D 한 샷 — 영점 s · 각도 θ · 숨 q(≤ 1.25) → SweepCtl 'zero'(q = gdPower) + 돌풍(gdArm) → 판정(기본 책상).
+//   q ≤ 1 이면 zeroShot(s, q, θ) 와 같은 호출 순서·같은 비트(sweepgame ctl 이 해시로 대조). 게임 주입 훅 { kind: 'gd', s, q, th } 와 같은 순서
+export function gdShot(Table, { N, seed, s, q, th, cards, judge = 'desk' }) {
+  const t = new Table(practiceTableSeed(N, seed), { lift: 519.59 });
+  t.addPile(cards || Array.from({ length: N }, (_, i) => i));
+  t.settle(600);
+  const top = t.columnTop(), power = gdPower(q);
+  const ctl = new SweepCtl(t, { mode: 'zero', s, q: power, th });
+  ctl.attach(gdArm(t.blowProg({ prog: ctl.prog, power, dur: ctl.durCap }), q));
+  const j = { n: 0, quiet: 0 };
+  let steps = 0;
+  do { t.step(); ctl.after(t); steps++; } while (!t.stepJudge(j));
+  const R = judge === 'desk' ? judgeDesk(t) : t.judgeResult();
+  const flips = R.flipped.length, outs = R.outs.length, n = t.liveDiscs().length, r = ctl.rec;
+  return {
+    table: t, ctl, D: ctl.D, a0: ctl.a0, steps, flips, outs, hang: R.hang ?? null, hash: poseHash(t), tUp: ctl.tUp, cueT: r.cueT, tTop: r.tTop, top,
+    q, power, blast: gdBlast(q), judge, chip: gdChip({ n, s, q, th, flip: flips }),
   };
 }
