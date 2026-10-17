@@ -77,9 +77,11 @@ profile.cue.relapse = Object.assign({ breath: 0, height: 0, side: 0 }, profile.c
 // swm = C 의 왔다 갔다 눈금(0 영점 기본 | 1 각도 | 2 세기 | 3 끔 = 세 손잡이 모두 끌기) · swmT = 눈금 왕복 초(1.6 느림 | 1.2 보통 기본 | 1.0 빠름)
 // gdQ · gdOut = D 비교 토글(2026-10-17, 솔로 연습판 D 만 · 재윤님 아이폰 한 번에 고르기): gdQ '숨 난이도' 0 보통(기본) | 1 어려움(돌풍 (q − 1)/0.25)
 //   · gdOut '아웃 범위' 0 책상(기본) | 1 반지름 5(책상 밖 또는 반지름 5 밖 = OUT, 판에 점선 원) — 칸·칩·peak = sweep.js GD_COMBO(측정)
-const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0, swg: 0, swm: 0, swmT: 1.2, gdQ: 0, gdOut: 0 };
+// gdGuide = D ① 더미 위 색 띠(초록·노랑·빨강)를 언제 보이나(재윤님 2026-10-17 '색깔 가이드는 아이템을 쓰거나 초반에 튜토리얼용으로 제공하고 평상시는 스킵'):
+//   0 처음만(기본 — 이번 실행 첫 3숨 = 코치 숨에만) | 1 늘(앞으로 올 '가이드 아이템' 자리) — 그림만, 물리·판정·칸·칩 무변화
+const TUNE_DEFAULTS = { pull: 0.42, wind: 1, slow: 0.3, aiSkill: 1, overShake: 1, guide: 0, strainMs: Rules.STRAIN_MS, cues: 1, fpv: 1, beat: 1, jetLag: 0, airFx: 0, hsCut: 0, airLog: 0, core: 0, swg: 0, swm: 0, swmT: 1.2, gdQ: 0, gdOut: 0, gdGuide: 0 };
 const EXP_KEYS = new Set(['jetLag', 'airFx', 'hsCut', 'airLog']);
-const SWITCH_KEYS = new Set([...EXP_KEYS, 'core', 'swg', 'swm', 'swmT', 'gdQ', 'gdOut']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
+const SWITCH_KEYS = new Set([...EXP_KEYS, 'core', 'swg', 'swm', 'swmT', 'gdQ', 'gdOut', 'gdGuide']); // 슬라이더가 아니라 ⚙ 맨 위 스위치로 바꾸는 값(openTune 슬라이더 목록에서 뺀다 — TUNE_RANGE 에 없음)
 const TUNE_RANGE = { pull: [0.25, 0.7, 0.01], wind: [0.6, 1.6, 0.05], slow: [0.12, 1, 0.02], aiSkill: [0.3, 2, 0.05], overShake: [0, 2, 0.1], guide: [0, 1, 1], strainMs: [800, 2400, 50], cues: [0, 1, 1], fpv: [0, 1, 1], beat: [0, 2, 1] };
 // 9차: 콩닥 숨 1(차분)을 기본으로(재윤님 '1 차분이 지금보다 괜찮다') — 저장된 튜닝값도 한 번 옮긴다
 if ((profile.settings.feelV || 0) < 9) { profile.settings.feel = { ...(profile.settings.feel || {}), beat: 1 }; profile.settings.feelV = 9; Store.save(profile); }
@@ -107,6 +109,7 @@ function expSanitize() { // 저장값·주소·옛 빌드 값이 무엇이든 �
   feel.swm = [0, 1, 2, 3].includes(+feel.swm) ? +feel.swm : 0; // C 눈금 0 영점 · 1 각도 · 2 세기 · 3 끔
   feel.swmT = SWM_TS.includes(+feel.swmT) ? +feel.swmT : 1.2; // 눈금 왕복 초
   feel.gdQ = expBit(feel.gdQ); feel.gdOut = expBit(feel.gdOut); // D 비교 토글 0/1 만
+  feel.gdGuide = expBit(feel.gdGuide); // D 가이드 띠 0 처음만 / 1 늘
 }
 const SWM_TS = [1.6, 1.2, 1.0];
 {
@@ -128,6 +131,9 @@ const SWM_TS = [1.6, 1.2, 1.0];
   if (gq === 'normal') feel.gdQ = 0; else if (gq === 'hard') feel.gdQ = 1; else if (gq != null) console.warn('[쓸기] gdq 값 무시(normal · hard 만 받음):', gq);
   const go = param('gdout');
   if (go === 'desk') feel.gdOut = 0; else if (go === 'r5') feel.gdOut = 1; else if (go != null) console.warn('[쓸기] gdout 값 무시(desk · r5 만 받음):', go);
+  // D 가이드 띠: ?gdguide=first|always (이번 실행에만, ⚙ 완료를 누르면 저장)
+  const gg = param('gdguide');
+  if (gg === 'first') feel.gdGuide = 0; else if (gg === 'always') feel.gdGuide = 1; else if (gg != null) console.warn('[쓸기] gdguide 값 무시(first · always 만 받음):', gg);
   expSanitize();
 }
 // 9차 물안경(재윤님: '초록 가이드는 아이템을 쓰면 보이게'): 이번 숨에 초록 구간이 보이는 아이템. 평생 첫 3숨은 무료(튜토리얼)
@@ -2411,7 +2417,7 @@ function expReadout() {
 window.__puffExp = () => {
   const A = airShot, el = $('#expLog');
   return {
-    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core, swg: feel.swg, gdQ: feel.gdQ, gdOut: feel.gdOut }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
+    feel: { jetLag: feel.jetLag, airFx: feel.airFx, hsCut: feel.hsCut, airLog: feel.airLog, core: feel.core, swg: feel.swg, gdQ: feel.gdQ, gdOut: feel.gdOut, gdGuide: feel.gdGuide }, lagNow: expLag(), hist: expHist.slice(), readout: el && !el.hidden ? el.textContent : null,
     breathAir: !!breath.air, rings: ringLive,
     sweep: { core: feel.core, on: sweepOn(), clock: sweep.clock, input: !!sweep.input, shot: !!sweep.shot, shots: window.__puffSweep.shots, ribbon: !!sweep.ribbon?.visible }, // 쓸기 흔적(대결 중엔 모두 꺼져 있어야 — pvp-check)
     last: A && { seq: A.seq, who: A.who, lag: A.lag, air: A.air, cut: !!A.cut, hs: A.hs, hsImpact: A.hsImpact ?? null, arrPhys: A.arrPhys ?? null, hitPhys: A.hitPhys ?? null, movePhys: A.movePhys ?? null, moveWall: A.moveWall ?? null,
@@ -4962,9 +4968,12 @@ function playerSweepShotD() {
     myTurn.on = true; myTurn.t0 = performance.now(); myTurn.pressed = false;
     puffer.mode = 'idle'; puffer.p = 0; puffer.who = 'me'; puffer.strain = 0; puffer.full = false;
     const coach = sweep.totalBy.D < SW_COACH, ag = sweep.gdAgain || {};
+    // ① 색 띠(가이드): 이번 실행 첫 3숨(튜토리얼) 또는 ⚙ '가이드 띠: 늘'(앞으로 올 가이드 아이템 자리)만 — 평상시는 흰 고리 + 주황 영점 점만(재윤님 2026-10-17)
+    //   지난 숨 빨강·회색 박자 다음 한 숨(ag.s)은 판정 말만 다시 — 띠·◀·초록 박자음은 안 켬(띠 = 가이드)
+    const bandWhy = coach ? 'tut' : +feel.gdGuide === 1 ? 'always' : null;
     let settled = false;
     const I = {
-      gd: true, stage: 'zero', stageAt: 0, T: Math.round((SWM_TS.includes(+feel.swmT) ? +feel.swmT : 1.2) * 1000),
+      gd: true, stage: 'zero', bands: !!bandWhy, bandWhy, stageAt: 0, T: Math.round((SWM_TS.includes(+feel.swmT) ? +feel.swmT : 1.2) * 1000),
       // 코치(띠 또렷 · 판정 말 · 박자음 · ③ 손가락 시범): 이번 실행 첫 3숨 · 지난 숨에서 빨강·회색이었던 박자만 다음 한 숨
       coach: { s: coach || !!ag.s, th: coach || !!ag.th, q: coach || !!ag.q },
       s: null, th: null, q: null, meterT0: 0, locked: null, tapS: null, tapT: null, nudgeAt: 0, waitStage: null, judge: null,
@@ -5018,7 +5027,7 @@ function playerSweepShotD() {
       inhStop(); puffer.mode = 'idle'; puffer.p = 0; puffer.strain = 0;
       I.Rp = gdRp();
       I.meterT0 = now; I.nudgeAt = now + Sweep.GC.meter.delayMs + SW_TAP_NUDGE_MS;
-      hint('swHintD1');
+      hint(I.bands ? 'swHintD1g' : 'swHintD1');
       myTurn.pressed = false; myTurn.t0 = now;
     };
     // ── ② 각도(영점 유지) ──
@@ -5084,8 +5093,8 @@ function playerSweepShotD() {
         if (I.locked != null) { if (now - I.locked >= SW_D_HOLD_MS) (I.stage === 'zero' ? enterAngle : enterBreath)(now); }
         else {
           sweep.nudge = now >= I.nudgeAt;
-          // 코치 박자음: 눈금이 초록 칸 가운데를 지날 때(소리만, 진동 없음)
-          if (I.coach[I.stage === 'zero' ? 's' : 'th'] && now >= I.meterT0 + Sweep.GC.meter.delayMs) {
+          // 코치 박자음: 눈금이 초록 칸에 들 때(소리만, 진동 없음) — ① 은 색 띠가 보일 때만
+          if (I.coach[I.stage === 'zero' ? 's' : 'th'] && (I.stage !== 'zero' || I.bands) && now >= I.meterT0 + Sweep.GC.meter.delayMs) { // ① 초록 박자음 = 띠와 같이(가이드)
             const knob = I.stage === 'zero' ? 's' : 'th', v = knob === 's' ? gdSLive(I, now) : gdThLive(I, now), z = Sweep.gdZone(knob, v, sweep.N, gdm);
             if (Sweep.gdTone(z) === 'g' && I.beatTone !== 'g' && now - I.beatAt > 300) { I.beatAt = now; sfx.tone(1320, 0.03, 'sine', 0.05); }
             I.beatTone = Sweep.gdTone(z);
@@ -5164,6 +5173,9 @@ function sweepStateD() {
     T: I.T, meterT0: I.meterT0, locked: I.locked, coach: { ...I.coach }, again: { zero: !$('#swZeroAgain').hidden, angle: !$('#swAngleAgain').hidden },
     zeroBig: !$('#swZero').hidden, side: !$('#swSide').hidden, redo: { ...I.redo }, cancels: I.cancels, sysCancels: I.sysCancels, waitTaps: I.waitTaps, rects: sweep.gdRects || null, pile: sweep.gdPile || null, Rp: I.Rp,
     hint: $('#hint').hidden ? null : $('#hintText').textContent,
+    // ① 가이드 띠: 이 숨의 띠 여부·까닭 · 지금 보이는 띠 메시 수(초록·노랑·빨강 + 초록 위아래 흰 테두리) · 주황 영점 점 · 작은 이름표 · 튜토리얼/가이드 표
+    bands: I.bands, bandWhy: I.bandWhy, bandMeshes: sweep.gd?.root.visible ? [...Object.values(sweep.gd.bands), ...sweep.gd.edges].filter((m) => m.visible).length : 0,
+    dot: sweep.gdDot || null, guideTag: sweep.gdGuideTag || null,
   };
 }
 // D 시점: 더미 전체가 화면 가로의 80%(가로 화면 34%) 안 · 낮게 내려다봄(12° · 가로 화면 22°) · 더미 가운데 = 화면 위에서 52%(가로 56%)
@@ -5212,7 +5224,7 @@ function sweepGdMeshes(I, now = performance.now()) {
     ring.add(band, rimT, rimB, glow);
     ring.renderOrder = 9;
     const bands = { g: new THREE.Mesh(cyl(1), mat(0x2fbf5b, 0.3)), y1: new THREE.Mesh(cyl(1), mat(0xf2c21e, 0.3, gdStripeTex('y'))), y2: new THREE.Mesh(cyl(1), mat(0xf2c21e, 0.3, gdStripeTex('y'))), r: new THREE.Mesh(cyl(1), mat(0xe04545, 0.3, gdStripeTex('r'))) };
-    const edges = [new THREE.Mesh(cyl(0.012), mat(0xffffff, 0.9)), new THREE.Mesh(cyl(0.012), mat(0xffffff, 0.9))]; // 초록 띠 위·아래 흰 테두리(늘 보임)
+    const edges = [new THREE.Mesh(cyl(0.012), mat(0xffffff, 0.9)), new THREE.Mesh(cyl(0.012), mat(0xffffff, 0.9))]; // 초록 띠 위·아래 흰 테두리(띠와 같이)
     for (const m of [...Object.values(bands), ...edges]) { m.renderOrder = 8; root.add(m); }
     root.add(ring);
     scene.add(root);
@@ -5224,16 +5236,17 @@ function sweepGdMeshes(I, now = performance.now()) {
   const zero = I.stage === 'zero', k = sweep.N >= 35 ? 40 : 30, [lo, hi] = GD.s.green[k];
   const segs = { y1: lo > GD.s.min ? [GD.s.min, lo] : null, g: [lo, hi], y2: [hi, GD.s.red], r: [GD.s.red, GD.s.max] };
   const op = I.coach.s ? 0.34 : 0.15;
+  const showB = zero && !!I.bands; // 색 띠·흰 테두리 = 튜토리얼(첫 3숨)·가이드 띠 늘 때만 — 평상시는 흰 고리만
   for (const [key, m] of Object.entries(G.bands)) {
     const sg = segs[key];
-    m.visible = zero && !!sg;
+    m.visible = showB && !!sg;
     if (!m.visible) continue;
     const y0 = yOf(sg[0]), y1 = yOf(sg[1]), hh = Math.max(0.002, y1 - y0);
     m.position.set(pc.x, (y0 + y1) / 2, pc.z); m.scale.set(R + 0.02, hh, R + 0.02);
     m.material.opacity = key === 'g' ? op + 0.08 : op;
     if (m.material.map) m.material.map.repeat.set(14, Math.max(1, hh / 0.12));
   }
-  G.edges.forEach((m, i) => { m.visible = zero; if (zero) { m.position.set(pc.x, yOf(i ? hi : lo), pc.z); m.scale.set(R + 0.024, 1, R + 0.024); } });
+  G.edges.forEach((m, i) => { m.visible = showB; if (showB) { m.position.set(pc.x, yOf(i ? hi : lo), pc.z); m.scale.set(R + 0.024, 1, R + 0.024); } });
   const s = gdSLive(I, now);
   G.ring.visible = s != null;
   if (s == null) return;
@@ -5262,12 +5275,47 @@ function drawSweepD(now, ctx, dpr, I) {
   }
   ctx.save(); ctx.scale(dpr, dpr);
   const blink = 0.5 + 0.5 * Math.sin(now / 120);
-  // ① 코치: 초록 띠 오른쪽에 깜박이는 ◀('여기' 글 대신)
-  if (I.stage === 'zero' && I.coach.s && I.locked == null) {
+  // ① 코치: 초록 띠 오른쪽에 깜박이는 ◀('여기' 글 대신) — 띠가 보일 때만
+  if (I.stage === 'zero' && I.coach.s && I.bands && I.locked == null) {
     const k = sweep.N >= 35 ? 40 : 30, [lo, hi] = GD.s.green[k], ym = V(Sweep.hOfS((lo + hi) / 2, top));
     const [px, y] = swProj(pc.x + R + 0.12, ym, pc.z), x = Math.min(px, W - 28); // 크게 찍은 더미(D 시점)는 오른쪽 여백이 좁다 → 화면 안으로(띠 끝에 겹쳐도 초록 띠를 가리킴)
     ctx.globalAlpha = 0.45 + 0.55 * blink; ctx.fillStyle = '#2fbf5b'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(x + 4, y); ctx.lineTo(x + 22, y - 11); ctx.lineTo(x + 22, y + 11); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  // ① 영점 점(주황, 고리 앞 가운데) + 움직이는 쪽 ▲▼ + 작은 이름표 '영점 · 바람 시작' — 평상시·튜토리얼 모두(재윤님 시안 S1 2026-10-17)
+  //   · 색 띠가 보이는 숨(튜토리얼 첫 3숨 · 가이드 띠 늘)은 힌트 아래 노란 표로 까닭을 밝힌다
+  sweep.gdDot = null; sweep.gdGuideTag = null;
+  if (I.stage === 'zero') {
+    const s = gdSLive(I, now);
+    if (s != null) {
+      const [dx, dy] = swProj(pc.x, V(Sweep.hOfS(s, top)), pc.z + R + 0.045);
+      const sp = I.locked == null ? gdSLive(I, now - 32) : s, dir = s > sp + 1e-6 ? 1 : s < sp - 1e-6 ? -1 : 0;
+      const fk = I.locked != null ? clamp(1 - (now - I.locked) / 250, 0, 1) : 0;
+      ctx.fillStyle = '#2a1a12'; ctx.beginPath(); ctx.arc(dx, dy, 10.5 + 3 * fk, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(dx, dy, 8.5 + 3 * fk, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = fk > 0 && I.judge ? SW_D_TONE[I.judge.tone] : '#ff8a1f'; ctx.beginPath(); ctx.arc(dx, dy, 6.5 + 3 * fk, 0, Math.PI * 2); ctx.fill();
+      // ▲▼: 고리가 움직이는 쪽을 진하게(멈춤·잠금 = 둘 다 옅게)
+      const tri = (y, up, on) => { ctx.globalAlpha = on ? 1 : 0.45; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2; ctx.beginPath(); const x = dx + 24, h = up ? -7 : 7; ctx.moveTo(x - 7, y - h / 2); ctx.lineTo(x + 7, y - h / 2); ctx.lineTo(x, y + h / 2); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.globalAlpha = 1; };
+      tri(dy - 10, true, dir > 0); tri(dy + 10, false, dir < 0);
+      // 이름표(점 아래, 화면 안으로)
+      ctx.font = '700 14px "Jua", sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+      const tag = t('swGdZeroTag'), tw = ctx.measureText(tag).width + 20, th = 24, tx = clamp(dx, 8 + tw / 2, W - 8 - tw / 2), ty = dy + 22;
+      ctx.fillStyle = '#fff6e0'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(dx - 6, ty); ctx.lineTo(dx, ty - 7); ctx.lineTo(dx + 6, ty); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx - tw / 2, ty, tw, th, 12) : ctx.rect(tx - tw / 2, ty, tw, th); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a1a12'; ctx.fillText(tag, tx, ty + th / 2 + 1);
+      sweep.gdDot = { x: Math.round(dx), y: Math.round(dy), dir, tag: { x: tx - tw / 2, y: ty, w: tw, h: th } };
+    }
+    if (I.bands && I.locked == null) {
+      const tag = t(I.bandWhy === 'tut' ? 'swGdTagTut' : 'swGdTagAlways'), hb = rects.hint;
+      ctx.font = '700 13px "Jua", sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+      const tw = ctx.measureText(tag).width + 24, th = 24, tx = W / 2, ty = hb ? hb.y + hb.h + 8 : H * 0.2;
+      ctx.fillStyle = '#ffd84a'; ctx.strokeStyle = '#2a1a12'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(tx - tw / 2, ty, tw, th, 12) : ctx.rect(tx - tw / 2, ty, tw, th); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2a1a12'; ctx.fillText(tag, tx, ty + th / 2 + 1);
+      sweep.gdGuideTag = tag;
+    }
+    ctx.textAlign = 'start';
   }
   // ② 부채꼴(영점에 붙음) + 쓸기 화살표
   if ((I.stage === 'angle' || I.stage === 'breath') && I.s != null) {
@@ -5526,6 +5574,7 @@ async function sweepResult(raw, res, seed, my) {
       zoneS: zs, zoneTh: zt, zoneQ: zq, T: I?.gd ? I.T : null, tapS: I?.tapS ?? null, tapT: I?.tapT ?? null, pullPx: I?.pullPx ?? null, pullMaxPx: I?.pullMaxPx ?? null,
       redo: I?.gd ? { ...I.redo } : null, cancels: I?.cancels ?? 0, sysCancels: I?.sysCancels ?? 0, waitTaps: I?.waitTaps ?? 0,
       coachBeats: I?.gd ? { ...I.coach } : null, // 박자별 코치(첫 3숨 · 지난 숨 빨강·회색 박자 다음 한 숨) — coach 는 '첫 3숨' 만
+      guide: I?.gd ? I.bandWhy || 'off' : null, // ① 색 띠: 'tut'(첫 3숨) · 'always'(⚙ 가이드 띠 늘) · 'off'(평상시 = 흰 고리 + 영점 점만)
     });
   }
   last.chip = sweepChip(raw, last, sum);
@@ -5535,7 +5584,7 @@ async function sweepResult(raw, res, seed, my) {
     ? { g: 'D', s: last.s, th: +last.th.toFixed(2), q: last.q, power: last.power, blast: +last.blast.toFixed(4), T: last.T, tapMsS: last.tapS?.tapMs ?? null, tapSrcS: last.tapS?.src ?? null, evLagMsS: last.tapS?.evLagMs ?? null,
       tapMsT: last.tapT?.tapMs ?? null, tapSrcT: last.tapT?.src ?? null, evLagMsT: last.tapT?.evLagMs ?? null, lag: SWM_LAG, frameMs: last.tapS?.frameMs ?? null,
       zoneS: last.zoneS, zoneTh: last.zoneTh, zoneQ: last.zoneQ, pullPx: last.pullPx, pullMaxPx: last.pullMaxPx, a0: last.a0, D: last.D, tUp: last.tUp, cueT: last.cueT, tTop: last.tTop,
-      flips: res.flips, outs: res.outs, hang: res.hang, ring: last.ring, mode: last.mode, chip: last.chip, coach: last.coach, coachBeats: last.coachBeats, redo: last.redo, cancels: last.cancels, sysCancels: last.sysCancels, waitTaps: last.waitTaps, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
+      flips: res.flips, outs: res.outs, hang: res.hang, ring: last.ring, mode: last.mode, guide: last.guide, chip: last.chip, coach: last.coach, coachBeats: last.coachBeats, redo: last.redo, cancels: last.cancels, sysCancels: last.sysCancels, waitTaps: last.waitTaps, n: sum.n, seed, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
     : gcShot
     ? { g: 'C', s: last.s, meter: last.meter, T: last.T, tapMs: last.tapMs, tapSrc: last.tapSrc, evLagMs: last.evLagMs, lag: last.lag, frameMs: last.frameMs, inBand: last.inBand, edgePx: last.edgePx, q: last.q, th: +last.th.toFixed(2), a0: last.a0, D: last.D, tUp: last.tUp, cueT: last.cueT, ttUp: last.ttUp, tTop: last.tTop, flips: res.flips, outs: res.outs, chip: last.chip, chip2: last.chip2, coach: last.coach, n: sum.n, seed, pullPx: I?.pullPx ?? null, pushPx: I?.pushPx ?? null, frameAvg: last.frame.avg, frameP95: last.frame.p95 }
     : gbShot
@@ -5707,7 +5756,7 @@ function showSweepCard(raw, last, sum) {
     $('#swNew').onclick = () => { sfx.pop(); done('new'); };
     $('#swHome').onclick = () => { sfx.pop(); done('home'); };
     $('#swCopy').onclick = async () => {
-      const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, chipsTest: true, gdMode: Sweep.gdKey(swGdModeFeel()), log: window.__puffSweep.log }); // chipsTest = 원인 칩은 시험(검증 전) — 화면 딱지 대신 · gdMode = 지금 ⚙ 조합(줄마다 mode = 그 숨의 조합)
+      const txt = JSON.stringify({ v: 1, at: new Date().toISOString(), ua: navigator.userAgent, app: !!window.__puffApp, chipsTest: true, gdMode: Sweep.gdKey(swGdModeFeel()), gdGuide: +feel.gdGuide === 1 ? 'always' : 'first', log: window.__puffSweep.log }); // chipsTest = 원인 칩은 시험(검증 전) — 화면 딱지 대신 · gdMode = 지금 ⚙ 조합(줄마다 mode = 그 숨의 조합) · gdGuide = ⚙ 가이드 띠(줄마다 guide = 그 숨의 띠)
       try { await navigator.clipboard.writeText(txt); toast(t('swCopied')); } catch (e) { console.log('[쓸기 기록]', txt); toast(t('copyManual')); }
     };
   });
@@ -6431,7 +6480,9 @@ function coreSection() {
       + (g === 'C' || g === 'D' ? `<div class="exp-btns"><span class="exp-lab">${t('coreSpeed')}</span>${SWM_TS.map((v, i) => btn('core-t' + i, t(['coreT0', 'coreT1', 'coreT2'][i]), +feel.swmT === v)).join('')}</div>` : '')
       // D 만: 비교 토글 '숨 난이도'(보통 기본 · 어려움 = 돌풍 일찍·세게) · '아웃 범위'(책상 기본 · 반지름 5 = 넓은 점선 원 밖도 OUT)
       + (g === 'D' ? `<div class="exp-btns"><span class="exp-lab">${t('coreGdQ')}</span>${btn('core-q0', t('coreGdQ0'), +feel.gdQ === 0)}${btn('core-q1', t('coreGdQ1'), +feel.gdQ === 1)}`
-        + `<span class="exp-lab">${t('coreGdOut')}</span>${btn('core-o0', t('coreGdOut0'), +feel.gdOut === 0)}${btn('core-o1', t('coreGdOut1'), +feel.gdOut === 1)}</div>` : '')
+        + `<span class="exp-lab">${t('coreGdOut')}</span>${btn('core-o0', t('coreGdOut0'), +feel.gdOut === 0)}${btn('core-o1', t('coreGdOut1'), +feel.gdOut === 1)}</div>`
+        // D 만: ① 가이드 띠(처음만 기본 = 첫 3숨 튜토리얼 · 늘 = 앞으로 올 가이드 아이템 자리)
+        + `<div class="exp-btns"><span class="exp-lab">${t('coreGdGuide')}</span>${btn('core-gg0', t('coreGdGuide0'), +feel.gdGuide === 0)}${btn('core-gg1', t('coreGdGuide1'), +feel.gdGuide === 1)}</div>` : '')
       + `<p class="exp-how">${t('coreNote')}<br>${t('coreGNote')}</p>`;
     wrap.querySelector('#core-sw').addEventListener('click', () => { sfx.pop(); feel.core = feel.core >= 0.5 ? 0 : 1; $('#sweepBtn').hidden = feel.core < 0.5; render(); });
     for (const [id, v] of [['core-gd', 0], ['core-gc', 3], ['core-gb', 2], ['core-ga', 1]]) wrap.querySelector('#' + id).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.swg = v; render(); });
@@ -6440,6 +6491,7 @@ function coreSection() {
     if (g === 'D') for (let i = 0; i < 2; i++) {
       wrap.querySelector('#core-q' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdQ = i; render(); });
       wrap.querySelector('#core-o' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdOut = i; render(); });
+      wrap.querySelector('#core-gg' + i).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); feel.gdGuide = i; render(); });
     }
     for (const n of [40, 30]) wrap.querySelector('#core-p' + n).addEventListener('click', () => { if (feel.core < 0.5) return; sfx.pop(); closeTune(false); goHome(); startPractice(n, 0); });
   };

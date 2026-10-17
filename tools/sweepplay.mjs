@@ -42,6 +42,9 @@
 //      (e) 비교 토글(⚙ '숨 난이도' 보통|어려움 × '아웃 범위' 책상|반지름 5 — D 만): 새 프로필 = 보통·책상 · ⚙ 두 줄은 D 에서만(C 면 없음) · 누르면 feel · 완료 = 저장 → 다시 열어도 그대로
 //          · 주소 ?gdq=normal&gdout=desk 가 저장값을 이김 · 조합마다 페이지 하나(?gdq=…&gdout=…) 주입 1칸 = Node gdShot(mode)(sweepgame ref gdm):
 //          뒤집힘·밖·걸침·원 밖·스텝·칩·해시 · 기록 줄 mode · 카드 조합 글 · 넓은 점선 원은 반지름 5 일 때만 보임(옛 분필 원은 늘 숨김)
+//      (f) ① 가이드 띠(⚙ '가이드 띠: 처음만|늘' · ?gdguide=always — 재윤님 2026-10-17 '색깔 가이드는 아이템·튜토리얼 때만, 평상시 스킵'): 새 프로필 = 처음만 · ⚙ D 줄 · 저장 · 주소
+//          · 첫 3숨 = 색 띠 메시 6(초록·노랑 둘·빨강 + 흰 테두리 둘) · 노란 '튜토리얼' 표 · 힌트 '바람 시작 높이 · 초록에서 톡' · 기록 줄 guide 'tut'
+//          · 넷째 숨(평상시) = 띠 메시 0 · 표 없음 · 주황 영점 점 · 힌트 '① 바람 시작 높이에서 톡' · guide 'off' · '늘' 이면 넷째 숨도 띠 · guide 'always'
 //  (1)·(11) 은 ?swg=c 로 C 를 연다(기본이 D 로 바뀜). C·B·A 는 분필 원 판정 그대로(비교용 — 측정·칩 기준이 원)
 // 쓰기: npm run build && PW=$(npm root -g)/playwright node tools/sweepplay.mjs   (약 5~7분, 소프트웨어 렌더)
 import { createRequire } from 'node:module';
@@ -1089,6 +1092,59 @@ console.log("(12e) 문법 D 비교 토글(⚙ 숨 난이도 × 아웃 범위): �
     await P.until(() => window.__puffSweep.state().state === 'match' && window.__puffSweep.state().chalk === true, null, 60000);
     const s = await st(P.page);
     ok('레벨 1(?gdout=r5): 분필 원 보임 · 넓은 원 숨김 · 책상 판정 아님', s.chalk === true && s.ring === false && s.desk === false, JSON.stringify({ chalk: s.chalk, ring: s.ring, desk: s.desk }));
+    allErrs.push(...P.errs);
+    await P.ctx.close();
+  }
+}
+
+// ── (12f) 문법 D ① 가이드 띠 ──
+console.log("(12f) 문법 D ① 가이드 띠(⚙ 처음만|늘): 설정·저장·주소 · 첫 3숨 = 색 띠 · 넷째 숨 = 띠 메시 0(흰 고리 + 영점 점) · '늘' = 넷째 숨도 띠 · 힌트 글 · 기록 줄 guide");
+{
+  {
+    const P = await open('core=sweep');
+    const { page, run } = P;
+    const tb = () => page.evaluate(() => ({ g: [0, 1].map((i) => document.querySelector('#core-gg' + i)?.getAttribute('aria-pressed') ?? null), f: window.__puffExp().feel.gdGuide }));
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const b0 = await tb();
+    await page.$eval('#core-gg1', (e) => e.click()); await run(32);
+    const b1 = await tb();
+    await page.$eval('#core-gc', (e) => e.click()); await run(32);
+    const inC = await page.evaluate(() => !!document.querySelector('#core-gg0'));
+    await page.$eval('#core-gd', (e) => e.click()); await run(32);
+    await page.$eval('#tuneClose', (e) => e.click()); await run(64);
+    await page.reload();
+    await P.until(() => window.__puffBooted);
+    await page.$eval('#tuneBtn', (e) => e.click()); await run(64);
+    const b2 = await tb();
+    await P.ctx.close(); allErrs.push(...P.errs);
+    const Q = await open('core=sweep&gdguide=always'), q1 = await Q.page.evaluate(() => window.__puffExp().feel.gdGuide); allErrs.push(...Q.errs); await Q.ctx.close();
+    const R = await open('core=sweep&gdguide=bogus'), q2 = await R.page.evaluate(() => window.__puffExp().feel.gdGuide); allErrs.push(...R.errs.filter((e) => !/gdguide 값 무시/.test(e))); await R.ctx.close();
+    ok("가이드 띠 설정: 새 프로필 = 처음만(0) · ⚙ D 줄 '늘' 누름 → 1 · C 에선 줄 없음 · 완료 → 다시 열어도 1(저장) · ?gdguide=always = 1 · 모르는 값 무시(0)",
+      b0.g.join() === 'true,false' && b0.f === 0 && b1.g.join() === 'false,true' && b1.f === 1 && inC === false && b2.f === 1 && b2.g.join() === 'false,true' && q1 === 1 && q2 === 0,
+      JSON.stringify({ b0, b1, inC, b2, q1, q2 }));
+  }
+  for (const [q, name] of [['', '처음만(기본)'], ['gdguide=always', '늘']]) {
+    const P = await open('core=sweep' + (q ? '&' + q : ''), '#p40');
+    const rows = [];
+    for (let i = 0; i < 4; i++) {
+      if (i) await P.page.$eval('#swSame', (e) => e.click());
+      await waitTurn(P);
+      await P.run(600); // 준비 400 ms 뒤 — 고리가 움직이는 중
+      const d = (await st(P.page))?.d;
+      await P.page.evaluate(() => { window.__sweepPlan = { kind: 'gd', s: 0.55, q: 0.9, th: 30 }; });
+      const fired = await P.page.evaluate(() => window.__sweepFire());
+      const done = await waitCard(P);
+      const log = await P.page.evaluate(() => window.__puffSweep.log[0]); // 기록은 최신이 맨 앞(unshift)
+      rows.push({ i, bands: d?.bands, why: d?.bandWhy, meshes: d?.bandMeshes, dot: !!d?.dot, tag: d?.guideTag ?? null, hint: d?.hint ?? null, fired, done, guide: log?.guide });
+    }
+    const always = !!q;
+    const tut = rows.slice(0, 3), r4 = rows[3];
+    const tutOk = tut.every((r) => r.bands === true && r.why === 'tut' && r.meshes === 6 && r.dot && r.tag === '튜토리얼 · 처음 3숨만 색 띠' && r.hint === '① 바람 시작 높이 · 초록에서 톡' && r.guide === 'tut' && r.fired && r.done);
+    const r4Ok = always
+      ? r4.bands === true && r4.why === 'always' && r4.meshes === 6 && r4.dot && r4.tag === '가이드 띠 · 늘 보임' && r4.hint === '① 바람 시작 높이 · 초록에서 톡' && r4.guide === 'always'
+      : r4.bands === false && r4.why === null && r4.meshes === 0 && r4.dot && r4.tag === null && r4.hint === '① 바람 시작 높이에서 톡' && r4.guide === 'off';
+    ok(`가이드 띠 ${name}: 첫 3숨(튜토리얼) = 띠 메시 6 · 노란 표 · 영점 점 · 기록 guide 'tut' · 넷째 숨 = ${always ? "띠 메시 6 · '가이드 띠 · 늘 보임' · guide 'always'" : "띠 메시 0 · 노란 표 없음 · 영점 점 · '① 바람 시작 높이에서 톡' · guide 'off'"}`,
+      tutOk && r4Ok && r4.fired && r4.done, JSON.stringify(rows.map((r) => [r.i, r.why, r.meshes, r.dot, r.tag, r.hint, r.guide])));
     allErrs.push(...P.errs);
     await P.ctx.close();
   }
