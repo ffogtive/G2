@@ -1,0 +1,3 @@
+[{"name": "R21-2x-f480-i8", "cfg": {"engine": "rapier", "substeps": 2, "iterations": 8, "rapier": {"naturalFrequency": 480}}},
+ {"name": "J-b0.4-4x", "cfg": {"engine": "jolt", "substeps": 4, "joltPreset": "fair", "jolt": {"baumgarte": 0.4, "velocitySteps": 10, "positionSteps": 4}}},
+ {"name": "J-b0.4-4x-rsleep", "cfg": {"engine": "jolt", "substeps": 4, "joltPreset": "fair", "jolt": {"baumgarte": 0.4, "velocitySteps": 10, "positionSteps": 4}, "sleep": {"pointVelocity": 0.4, "time": 2.0}}}]

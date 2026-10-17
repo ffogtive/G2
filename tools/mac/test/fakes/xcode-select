@@ -1,0 +1,7 @@
+#!/bin/sh
+# 가짜 xcode-select -p. FAKE_XCODE_SELECT=clt 이면 Command Line Tools 만 고른 맥, none 이면 아무것도 없음
+case "${FAKE_XCODE_SELECT:-xcode}" in
+  clt) echo /Library/Developer/CommandLineTools ;;
+  none) echo "xcode-select: error: unable to get active developer directory, use \`sudo xcode-select --switch path/to/Xcode.app\` to set one (or see \`man xcode-select\`)" >&2; exit 2 ;;
+  *) echo /Applications/Xcode.app/Contents/Developer ;;
+esac

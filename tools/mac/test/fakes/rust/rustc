@@ -1,0 +1,7 @@
+#!/bin/sh
+# 가짜 rustc: --print sysroot / -vV (맥 arm64 호스트)
+case "$*" in
+  "--print sysroot") echo "$HOME/.rustup/toolchains/stable-aarch64-apple-darwin" ;;
+  -vV) printf 'rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\nhost: aarch64-apple-darwin\nrelease: 1.90.0\nLLVM version: 20.1.8\n' ;;
+  *) echo "rustc(가짜): $*" >&2; exit 1 ;;
+esac

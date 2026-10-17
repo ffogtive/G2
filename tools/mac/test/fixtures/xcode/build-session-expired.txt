@@ -1,0 +1,12 @@
+Prepare packages
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+
+@HOME@/G2/app/ios/Runner.xcodeproj: error: Your session has expired. Please log in. (in target 'Runner' from project 'Runner')
+@HOME@/G2/app/ios/Runner.xcodeproj: error: No profiles for 'com.ffogtive.puff' were found: Xcode couldn't find any iOS App Development provisioning profiles matching 'com.ffogtive.puff'. (in target 'Runner' from project 'Runner')
+note: Using new build system
+note: Planning
+note: Constructing build description
+warning: Run script build phase 'Run Script' will be run during every build — design in progress (in target 'Runner' from project 'Runner')
+** BUILD FAILED **

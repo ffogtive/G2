@@ -7,7 +7,9 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "dev": "node tools/build.mjs --watch",
-    "spike": "node tools/physics-spike.mjs"
+    "spike": "node tools/physics-spike.mjs",
+    "app:www": "npm run build && node tools/app-www.mjs",
+    "app:run": "npm run app:www && cd app && flutter run --release"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "0.12.0",

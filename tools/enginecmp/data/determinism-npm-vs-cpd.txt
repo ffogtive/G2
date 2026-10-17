@@ -1,0 +1,7 @@
+== npm jolt-physics 1.1.0 (CPD 꺼짐) vs 네이티브 CPD, 기본 JOLT_FAIR 1x, n30 h0.11 s1, 매 스텝 해시
+{"who":"jolt-wasm(js)","final":"e4e7c8fb","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":2.479,"sleeping":0,"off":0}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"94ea3224","sameAsFamilyFirst":false,"firstDiffStep":26,"msPerStep":0.1843,"sleeping":0,"off":0}
+{"who":"qemu-aarch64-static:build/jolt-zig-arm64/joltbench","cpd":true,"final":"94ea3224","sameAsFamilyFirst":false,"firstDiffStep":26,"msPerStep":6.2285,"sleeping":0,"of
+== CPD 자체 빌드 같은 판
+{"who":"jolt-wasm(js)","final":"94ea3224","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":2.203,"sleeping":0,"off":0}
+{"who":"build/jolt-gcc-avx2/joltbench","cpd":true,"final":"94ea3224","sameAsFamilyFirst":true,"firstDiffStep":null,"msPerStep":0.1909,"sleeping":0,"off":0}

@@ -1,0 +1,3 @@
+@HOME@/G2/app/ios/Runner.xcodeproj: error: Failed Registering Bundle Identifier: The app identifier "com.ffogtive.puff" cannot be registered to your development team because it is not available. Change your bundle identifier to a unique string to try again. (in target 'Runner' from project 'Runner')
+@HOME@/G2/app/ios/Runner.xcodeproj: error: No profiles for 'com.ffogtive.puff' were found: Xcode couldn't find any iOS App Development provisioning profiles matching 'com.ffogtive.puff'. (in target 'Runner' from project 'Runner')
+** BUILD FAILED **

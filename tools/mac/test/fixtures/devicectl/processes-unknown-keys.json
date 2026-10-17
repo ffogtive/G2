@@ -1,0 +1,28 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "info",
+      "processes",
+      "--json-output",
+      "/tmp/out.json"
+    ],
+    "commandType" : "devicectl.device.info.processes",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 9,
+    "outcome" : "success",
+    "version" : "477.29"
+  },
+  "result" : {
+    "deviceIdentifier" : "@CD@",
+    "procs" : [
+      {
+        "path" : "/private/var/containers/Bundle/Application/5E7D3A21-7C4B-4F2E-9D61-0B8A2C4E6F13/Runner.app/Runner",
+        "pid" : 4242
+      }
+    ]
+  }
+}

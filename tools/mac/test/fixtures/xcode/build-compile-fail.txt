@@ -1,0 +1,7 @@
+SwiftCompile normal arm64 Compiling\ AppDelegate.swift @HOME@/G2/app/ios/Runner/AppDelegate.swift (in target 'Runner' from project 'Runner')
+@HOME@/G2/app/ios/Runner/AppDelegate.swift:12:5: error: cannot find 'GeneratedPluginRegistrant' in scope
+    GeneratedPluginRegistrant.register(with: self)
+    ^~~~~~~~~~~~~~~~~~~~~~~~~
+@HOME@/G2/app/ios/Runner/AppDelegate.swift:20:7: note: the haptics design in this file may be a catalog in progress (not a sign in or log in problem)
+
+** BUILD FAILED **

@@ -1,0 +1,32 @@
+[package]
+name = "puff_v2"
+version = "0.1.0"
+edition = "2021"
+description = "PUFF! 물리 v2 — 3D 제트 스파이크 엔진 (설계서 docs/design/v2-physics-gameplay.md §4·§7.2, 백로그 #1)"
+publish = false
+license = "UNLICENSED"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+# 기존 puff_sim 과 같은 엔진·같은 결정성 계약: enhanced-determinism(libm 강제 + 스칼라 코어 + IndexMap)
+rapier3d = { version = "=0.36.0", features = ["enhanced-determinism"] }
+# 공력 초월함수는 전부 순수 Rust libm (설계서 §4.9: libm = "=0.2.16")
+libm = "=0.2.16"
+
+[[bin]]
+name = "puff_v2"
+path = "src/bin/puff_v2.rs"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "thin"
+debug = false
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

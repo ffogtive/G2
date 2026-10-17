@@ -1,0 +1,82 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "list",
+      "devices",
+      "--json-output",
+      "/tmp/out.json"
+    ],
+    "commandType" : "devicectl.list.devices",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 2,
+    "outcome" : "success",
+    "version" : "397.24"
+  },
+  "result" : {
+    "devices" : [
+      {
+        "capabilities" : [
+          {
+            "featureIdentifier" : "com.apple.coredevice.feature.installapp",
+            "name" : "Install Application"
+          },
+          {
+            "featureIdentifier" : "com.apple.coredevice.feature.launchapplication",
+            "name" : "Launch Application"
+          }
+        ],
+        "connectionProperties" : {
+          "authenticationType" : "manualPairing",
+          "isMobileDeviceOnly" : false,
+          "lastConnectionDate" : "2026-10-13T09:12:44.123Z",
+          "pairingState" : "paired",
+          "potentialHostnames" : [
+            "00008110-000A1B2C3D4E5F60.coredevice.local",
+            "8A3B1C2D-0F1E-4D5C-9B8A-7F6E5D4C3B2A.coredevice.local"
+          ],
+          "transportType" : "wired",
+          "tunnelState" : "disconnected",
+          "tunnelTransportProtocol" : "tcp"
+        },
+        "deviceProperties" : {
+          "bootedFromSnapshot" : true,
+          "bootedSnapshotName" : "com.apple.os.update-0123ABCD",
+          "ddiServicesAvailable" : false,
+          "developerModeStatus" : "enabled",
+          "hasInternalOSBuild" : false,
+          "name" : "Tester’s iPhone",
+          "osBuildUpdate" : "23G80",
+          "osVersionNumber" : "16.7.10",
+          "rootFileSystemIsWritable" : false
+        },
+        "hardwareProperties" : {
+          "cpuType" : {
+            "name" : "arm64e",
+            "subType" : 2,
+            "type" : 16777228
+          },
+          "deviceType" : "iPhone",
+          "ecid" : 1234567890123456,
+          "hardwareModel" : "D83AP",
+          "internalStorageCapacity" : 128000000000,
+          "isProductionFused" : true,
+          "marketingName" : "iPhone XS",
+          "platform" : "iOS",
+          "productType" : "iPhone11,2",
+          "reality" : "physical",
+          "serialNumber" : "F2LXY0ZZZZ01",
+          "supportedDeviceFamilies" : [
+            1
+          ],
+          "thinningProductType" : "iPhone11,2",
+          "udid" : "00008110-000A1B2C3D4E5F60"
+        },
+        "identifier" : "8A3B1C2D-0F1E-4D5C-9B8A-7F6E5D4C3B2A",
+        "visibilityClass" : "default"
+      }
+    ]
+  }
+}

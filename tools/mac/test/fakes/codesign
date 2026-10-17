@@ -1,0 +1,10 @@
+#!/bin/sh
+# 가짜 codesign --verify --deep --strict <앱>: 가짜 xcodebuild 가 '서명'한 앱(embedded.mobileprovision)만 통과. FAKE_CODESIGN=bad 면 실패
+echo "codesign $*" >>"${FAKE_LOG:-/dev/null}"
+for app; do :; done
+[ -f "$app/Info.plist" ] && [ -f "$app/embedded.mobileprovision" ] || { echo "$app: code object is not signed at all"; exit 1; }
+if [ "${FAKE_CODESIGN:-ok}" != ok ]; then
+  echo "$app: invalid signature (code or signature have been modified)"
+  echo "In architecture: arm64"
+  exit 1
+fi

@@ -7,6 +7,9 @@
 //       LAYERS='top,3rd,mid,bottom'   노리는 딱지(그 딱지 중심 높이): 맨 위 / 위에서 3장째 / 가운데 / 맨 아래
 //       DIRS='-z'                     부는 방향. 기본 = 게임 방향(−z). '-z,+z' = 같은 더미를 앞·뒤에서 한 번씩(짝 비교)
 //       TUNE_JSON='{"scoopGap":0}'    sim TUNE 덮어쓰기(튜닝 실험) / JSON=out.json 결과 저장 / IDENT=1 기울기 안 넘김(기존 호출)
+//   8차: PITCHES 에 'tbl0.5' 처럼 쓰면 그 칸은 '책상 퍼올림' blow({ tableScoop: { s: 0.5 } }) (층은 무시, 진짜 입은 책상 위 — sim.blowTable).
+//        기울기 칸(jetPitch)은 8차부터 차폐를 딱지만으로 계산(책상 밑 가상 입이 차폐를 끄던 문제 수정)하고, 틈 0 테두리엔 파고듦 없음(scoopFlushWedge).
+//        → 7차 커밋 때의 기울기 칸 숫자와 다르다. 전체 비교·합격 판정은 tools/scoopmap.mjs
 // 지표: flip = 원 안에서 뒤집힌 장수 평균, sd = 판마다 흔들림(표준편차), zero = 꽝(0장) 비율, out = 분필 원 밖 장수,
 //       apex = 뒤집힌 딱지의 무게중심이 시작보다 가장 높이 솟은 높이(딱지 반지름 단위, 제자리에서 세워 넘기면 ≈1)
 //       fly = 뒤집힌 딱지가 착지까지 간 수평 거리(시작 대비, 반지름 단위)
@@ -25,7 +28,8 @@ const OV = process.env.TUNE_JSON ? JSON.parse(process.env.TUNE_JSON) : {};
 const IDENT = !!process.env.IDENT;
 const LEVEL = -0.1; // 지금 게임(main.js shotGeometry / sim.blow 기본값)의 입: 0.1 rad 아래로
 const pitchRad = (p) => (p === 'level' ? LEVEL : (+p * Math.PI) / 180);
-const pitchLabel = (p) => (p === 'level' ? 'level' : `${+p > 0 ? '+' : ''}${p}°`);
+const isTable = (p) => String(p).startsWith('tbl');
+const pitchLabel = (p) => (p === 'level' ? 'level' : isTable(p) ? `책상 s${String(p).slice(3)}` : `${+p > 0 ? '+' : ''}${p}°`);
 const DIRV = { '-z': { x: 0, z: -1 }, '+z': { x: 0, z: 1 }, '+x': { x: 1, z: 0 }, '-x': { x: -1, z: 0 } };
 function mul(seed) { let a = seed >>> 0; return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function layerIndex(L, n) {
@@ -51,7 +55,12 @@ function shot(n, s, L, ratio, pitch, dirKey) {
   const back = Math.sqrt(1 - sh.lat * sh.lat);
   const aim = { x: c.x - D.x * back + side.x * sh.lat, y: sh.h, z: c.z - D.z * back + side.z * sh.lat };
   const args = { aim, dir: D, power: sh.power, blast: sh.blast || 0 };
-  if (!IDENT) args.jetPitch = pitchRad(pitch);
+  if (isTable(pitch)) {
+    // 책상 퍼올림: 발치(곡면 위 c − D·√(1−lat²) + side·lat, 책상 높이)에서 입 쪽으로 s 떨어진 책상 점 F 를 누름
+    const sv = +String(pitch).slice(3);
+    args.aim = { x: aim.x - D.x * sv, y: 0, z: aim.z - D.z * sv };
+    args.tableScoop = { s: sv };
+  } else if (!IDENT) args.jetPitch = pitchRad(pitch);
   const y0 = new Map(), p0 = new Map(), maxY = new Map();
   for (const d of t.liveDiscs()) { const p = d.body.translation(); y0.set(d.id, p.y); p0.set(d.id, { x: p.x, z: p.z }); maxY.set(d.id, p.y); }
   t.blow(args);

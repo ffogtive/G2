@@ -1,0 +1,184 @@
+#!/usr/bin/python3 -I
+# 가짜 xcrun: --sdk iphoneos --show-sdk-path · --find devicectl · devicectl {list devices, device install app,
+# device process launch, device info processes}. 기기 목록 = fixtures/devicectl/devices-$FAKE_DEVICES.json
+# (x16-one = Xcode 16 꼴, x27-one/x27-flat = Xcode 27 'properties' 꼴 — 미검증 가정, two, devmode-off, unpaired, unavailable, old-ios, empty).
+# --device 값은 그 목록의 UDID·CoreDevice 식별자·이름이어야 한다(아니면 진짜처럼 실패). 설치한 번들은 $FAKE_STATE 에 남는다.
+# 시나리오: FAKE_IOS_SDK=missing · FAKE_INSTALL=ok|fail(잠김)|gone|noprofile_generic|locked_once · FAKE_LAUNCH=ok|untrusted|locked|locked_once
+#           (locked_once = 처음 한 번만 잠김 → 잠금을 풀고 Enter 뒤 다시 하면 된다. 표시 파일은 $FAKE_STATE 에)
+#           FAKE_RUNNING=yes|no|other|fail|nokeys
+import json, os, plistlib, sys
+
+K = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FX = os.path.join(K, "fixtures", "devicectl")
+E = os.environ
+args = sys.argv[1:]
+with open(E.get("FAKE_LOG", os.devnull), "a") as f:
+    f.write("xcrun " + " ".join(args) + "\n")
+STATE = E.get("FAKE_STATE", "")
+
+
+def opt(name):
+    return args[args.index(name) + 1] if name in args and args.index(name) + 1 < len(args) else None
+
+
+def write_json(obj):
+    out = opt("--json-output")
+    if out:
+        with open(out, "w") as f:
+            json.dump(obj, f, indent=2, ensure_ascii=False, separators=(",", " : "))
+
+
+def positionals(seq):
+    """옵션과 그 값을 뺀 나머지 (devicectl 의 값 받는 옵션: --device/-d, --json-output, …)"""
+    out, skip = [], False
+    for a in seq:
+        if skip:
+            skip = False
+        elif a in ("--device", "-d", "--json-output", "--environment-variables", "--payload-url", "--timeout"):
+            skip = True
+        elif not a.startswith("-"):
+            out.append(a)
+    return out
+
+
+def fixture(name, cd=""):
+    with open(os.path.join(FX, name)) as f:
+        return json.loads(f.read().replace("@CD@", cd))
+
+
+def first_time(tag):
+    """locked_once 용: 이 시나리오에서 처음 불렸으면 참(표시 파일을 남긴다)"""
+    if not STATE:
+        return True
+    mark = os.path.join(STATE, "once-" + tag)
+    if os.path.exists(mark):
+        return False
+    open(mark, "w").close()
+    return True
+
+
+def fail(msg, code=1, domain="com.apple.dt.CoreDeviceError", ecode=1):
+    # 진짜 devicectl: 실패해도 --json-output 에 error 를 쓴다
+    write_json({"error": {"code": ecode, "domain": domain, "userInfo": {"NSLocalizedDescription": {"string": msg}}},
+                "info": {"arguments": ["devicectl"] + args, "outcome": "failed", "jsonVersion": 2}})
+    print("ERROR: " + msg)
+    sys.exit(code)
+
+
+if args[:3] == ["--sdk", "iphoneos", "--show-sdk-path"]:
+    if E.get("FAKE_IOS_SDK") == "missing":
+        sys.stderr.write('xcrun: error: SDK "iphoneos" cannot be located\n')
+        sys.exit(1)
+    print("/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS27.0.sdk")
+    sys.exit(0)
+if args[:2] == ["--find", "devicectl"]:
+    print("/Applications/Xcode.app/Contents/Developer/usr/bin/devicectl")
+    sys.exit(0)
+if not args or args[0] != "devicectl":
+    sys.stderr.write("xcrun(가짜): 모르는 호출 %s\n" % " ".join(args))
+    sys.exit(1)
+
+devfile = "devices-%s.json" % E.get("FAKE_DEVICES", "x16-one")
+devices = fixture(devfile)["result"]["devices"]
+
+
+def walk(o):
+    if isinstance(o, dict):
+        yield o
+        for v in o.values():
+            for x in walk(v):
+                yield x
+    elif isinstance(o, list):
+        for v in o:
+            for x in walk(v):
+                yield x
+
+
+def resolve(dev):
+    """--device 값 → CoreDevice 식별자 (UDID·식별자·이름 허용, 진짜 devicectl 처럼)"""
+    for d in devices:
+        names = {d.get("identifier")}
+        for o in walk(d):
+            for k in ("udid", "name", "ecid", "serialNumber"):
+                if k in o and not isinstance(o[k], (dict, list)):
+                    names.add(str(o[k]))
+        if dev in names:
+            return d["identifier"]
+    return None
+
+
+sub = args[1:]
+if sub[:2] == ["list", "devices"]:
+    write_json(fixture(devfile))
+    print("Name                  Hostname                                   Identifier                             State                Model")
+    print("-" * 20)
+    for d in devices:
+        print("(가짜) %s" % d.get("identifier"))
+    sys.exit(0)
+
+dev = opt("--device")
+cd = resolve(dev) if dev else None
+if sub[:1] == ["device"] and cd is None:
+    fail("The specified device was not found. (%s)" % ("기기 지정 없음" if not dev else "목록에 없는 값"), ecode=1000)
+
+if sub[:3] == ["device", "install", "app"]:
+    app = positionals(sub[3:])
+    if not app or not os.path.isfile(os.path.join(app[0], "Info.plist")):
+        fail("The item at %s is not a valid bundle." % (app[0] if app else "?"))
+    with open(os.path.join(app[0], "Info.plist"), "rb") as f:
+        bundle = plistlib.load(f)["CFBundleIdentifier"]
+    mode = E.get("FAKE_INSTALL", "ok")
+    last = ""
+    if STATE and os.path.exists(os.path.join(STATE, "last-dest")):
+        last = open(os.path.join(STATE, "last-dest")).read().strip()
+    if mode == "noprofile_generic" and last.startswith("generic/"):
+        fail("Failed to install the app on the device. (0xe8008015) A valid provisioning profile for this executable was not found.",
+             domain="com.apple.dt.MobileDeviceErrorDomain", ecode=-402620395)
+    if mode == "gone":
+        fail("Unable to connect to the device. The device may be disconnected, locked, or not trusted.", ecode=4)
+    if mode == "locked_once" and not first_time("install"):
+        mode = "ok"
+    if mode not in ("ok", "noprofile_generic"):
+        fail("The device is locked. (0xe800000b) Unlock the device and try again.", domain="com.apple.dt.MobileDeviceErrorDomain",
+             ecode=-402653173)
+    if STATE:
+        with open(os.path.join(STATE, "installed"), "a") as f:
+            f.write(bundle + "\n")
+    write_json(fixture("install.json", cd))
+    print("App installed:\n• bundleID: %s" % bundle)
+    sys.exit(0)
+
+if sub[:3] == ["device", "process", "launch"]:
+    bundle = (positionals(sub[3:]) or [""])[0]
+    installed = []
+    if STATE and os.path.exists(os.path.join(STATE, "installed")):
+        installed = open(os.path.join(STATE, "installed")).read().split()
+    if STATE and bundle not in installed:
+        fail('The request to open "%s" failed. Application info provider (FBSApplicationLibrary) returned nil for "%s"' % (bundle, bundle),
+             domain="FBSOpenApplicationServiceErrorDomain", ecode=4)
+    mode = E.get("FAKE_LAUNCH", "ok")
+    if mode == "untrusted":
+        fail('The request to open "%s" failed. The application could not be launched because it has an invalid code signature, '
+             "inadequate entitlements or its profile has not been explicitly trusted by the user." % bundle,
+             domain="FBSOpenApplicationServiceErrorDomain", ecode=1)
+    if mode == "locked_once":
+        mode = "locked" if first_time("launch") else "ok"
+    if mode == "locked":
+        fail('The request to open "%s" failed. Unable to launch %s because the device was not, or could not be, unlocked.' % (bundle, bundle),
+             domain="FBSOpenApplicationServiceErrorDomain", ecode=7)
+    write_json(fixture("launch.json", cd))
+    print("Launched application with %s bundle identifier." % bundle)
+    sys.exit(0)
+
+if sub[:3] == ["device", "info", "processes"]:
+    mode = E.get("FAKE_RUNNING", "yes")
+    if mode == "fail":
+        fail("Failed to load the process list: the tunnel connection is not available.", ecode=3)
+    name = {"yes": "processes-running.json", "no": "processes-stopped.json", "other": "processes-other-runner.json",
+            "nokeys": "processes-unknown-keys.json"}[mode]
+    write_json(fixture(name, cd))
+    print("(가짜) 프로세스 목록")
+    sys.exit(0)
+
+sys.stderr.write("xcrun devicectl(가짜): 모르는 호출 %s\n" % " ".join(sub))
+sys.exit(64)

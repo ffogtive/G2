@@ -1,0 +1,8 @@
+PhaseScriptExecution Run\ Script @DERIVED@/Build/Intermediates.noindex/Runner.build/Release-iphoneos/Runner.build/Script-9740EEB61CF901F6004384FC.sh (in target 'Runner' from project 'Runner')
+    cd @HOME@/G2/app/ios
+    /bin/sh -c @DERIVED@/Build/Intermediates.noindex/Runner.build/Release-iphoneos/Runner.build/Script-9740EEB61CF901F6004384FC.sh
+Target release_unpack_ios failed: Exception: Failed to codesign @HOME@/G2/app/build/ios/Release-iphoneos/Flutter.framework/Flutter with identity 0123456789ABCDEF0123456789ABCDEF01234567.
+Failed to package @HOME@/G2/app.
+Command PhaseScriptExecution failed with a nonzero exit code
+
+** BUILD FAILED **

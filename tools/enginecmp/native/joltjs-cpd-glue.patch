@@ -1,0 +1,13 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -216,6 +216,10 @@
+ endif()
+ 
+ # Add double precision define
++# (enginecmp 패치) CROSS_PLATFORM_DETERMINISTIC 이면 바인딩(glue)도 같은 define 으로 — 없으면 런타임 "Mismatching define" abort
++if (CROSS_PLATFORM_DETERMINISTIC)
++	set(EMCC_GLUE_ARGS ${EMCC_GLUE_ARGS} -DJPH_CROSS_PLATFORM_DETERMINISTIC -ffp-contract=off)
++endif()
+ if (DOUBLE_PRECISION)
+ 	set(EMCC_GLUE_ARGS ${EMCC_GLUE_ARGS} -DJPH_DOUBLE_PRECISION)
+ endif()

@@ -65,13 +65,42 @@ export const TUNE = {
   // 튜닝·실측: tools/pitchmap.mjs (재윤님 숨 3단 0.7/0.9/1.1 × 층 × 기울기). 위험-보상 사다리: 위(안전·작게) ↔ 수평 ↔ 퍼올림(정확한 숨이면 크게·포물선, 세면 원 밖)
   pitch0: 0.1,
   tiltSpread: 1, // 비스듬한 제트는 원기둥 옆면에 세로로 길게 닿음(원뿔이 저절로 더 많은 층을 덮음) → 같은 숨이 퍼진 만큼 세기 × cos(tilt). 0 이면 공짜 이득(+30° 가운데 4.8→7.3장)
-  scoopGap: 0.065, // 위로 부는 바람이 붙어 있는 테두리 밑에도 파고듦: 틈 += scoopGap·up·세기² (압력 ∝ 세기² → 약한 숨은 못 파고듦)
+  scoopGap: 0.3, // 위로 부는 바람이 테두리 밑 '진짜 틈'(오버행)으로 더 파고듦: 틈 += scoopGap·up·세기²·under (압력 ∝ 세기²). 8차: 0.065 → 0.3 = 상한(더해지는 틈 ≈ 0.08~0.1 ≤ 실측 오버행 틈 중앙값 0.08~0.12)
   scoopLift: 0, // 위로 향한 운동량이 테두리를 더 들기: 들기 × (1 + scoopLift·up). 실측: 0.25 만 줘도 약한 숨(0.7배)을 구해 줘서 숨 규칙이 무너짐 → 0, 위 운동량은 scoopRise 로
-  scoopRise: 3, // 파고든 공기(틈 증가분만큼의 들기)가 밑면 전체를 받쳐 중심째 띄움 → 포물선
-  scoopCarry: 0.6, // 그 띄움의 방향: 0 = 수직, 1 = 제트 방향. 0.6 ≈ 앞위 45° → '솟았다가 넘어감'
-  scoopBlast: 10, // 퍼올리며 너무 세게(돌풍) 불면 띄움 × (1 + scoopBlast·blast) → 원 밖으로 날아감 (퍼올림의 대가)
+  scoopRise: 0.25, // 파고든 공기의 들기 중 밑면 중심에 걸리는 몫(0~1, 나머지는 테두리; 합 보존). 오버행 띠(폭 0.07~0.1)는 거의 테두리에서 밀고, 기울어 밑면이 통째로 열려야 중심까지 → 0.25. 7차 3(덧셈) = 운동량 4배라 버림
+  scoopCarry: 0.4, // 그 띄움의 방향: 0 = 수직, 1 = 제트 방향. 8차: 0.6 → 0.4(더 수직, 포물선 시도 — 솟은 높이 차이는 측정 오차 안)
+  scoopBlast: 0, // 돌풍이면 띄움 × (1 + scoopBlast·blast). 8차: 10 → 0 — 넘친 숨은 이미 미는 힘(blastPush, 반사 바람이면 그 위 성분까지)으로 들어가므로 이중 계산
   press: 0.5, // 위에서 내리 부는 바람이 누름: 들기 × (1 − press·down)
   pressBlast: 2.5, // 위에서 내리 불면 넘치는 숨이 더미·책상으로 빠짐: 돌풍 × (1 − pressBlast·down) (위 공략의 장점 = 숨이 넘쳐도 덜 날아감)
+  // 8차 '책상 퍼올림' blow({ tableScoop: { s } }) — 진짜 입은 책상 위, 바람은 책상에 맞고 거울 반사돼 더미 발치로 올라감(blowTable).
+  // 위 scoopGap·scoopRise·scoopCarry·scoopBlast(올라가는 바람의 물리)를 함께 쓴다. 측정: tools/scoopmap.mjs
+  scoopMouthY: 0.6, // m: 고개를 책상까지 숙였을 때(볼이 책상에 닿을 듯) 입술 높이 ≈ 1.5cm (1 = 2.5cm, 0.5~1.2 = 1.3~3cm 이 그럴듯). 지금 게임 입은 조준점 위 0.26
+  scoopMouthBack: 2.6, // Lm: 입 ~ 더미 발치 수평 거리 = 지금 게임 입 거리(2.6). θ(s) = atan(m/(Lm − s)) ≈ 13.5°(s 0.1) ~ 22.5°(s 1.15), h = s·tanθ ≈ 0.024 ~ 0.48
+  reflLoss: 0.8, // 책상에 맞고 꺾이며 잃는 세기(마찰·흩어짐). 얕은 각(13.5~22.5°)이면 이론상 앞쪽 몫 (1+cosθ)/2 ≈ 0.96~0.99 → 심사 범위(0.6~0.8)의 위끝
+  reflWiden: 1.3, // 반사 뒤 원뿔의 '수평 옆' 반경 배수(벽면 제트는 옆으로 자유 제트의 수 배 빨리 퍼지고 위아래로는 얇다; 반사 뒤 ≤1.2 거리 → ≈1.3)
+  reflPushUp: 1, // 반사 바람의 위 운동량을 미는 힘에 넣음(1) / 뺌(0, 비교용). 드러난 밑면(오버행, under)에만 — 붙은 테두리의 세로 옆면은 위로 못 밂
+  scoopFlushWedge: 0, // 붙어 있는(틈 0) 테두리 밑으로 파고드는 비율. 0 = 정직(공기 들어갈 자리 없음 → minLift 바닥만), 1 = 7차 시제품
+  scoopAirRef: 0.02, // 진짜 틈이 이만큼이면 파고듦 최대
+  // 9차 '입술 높이'(재윤님: '입술의 y축 위치는 컨트롤 못하나?') blow({ mouthY }) — 진짜 입이 그 높이에 있고 바람은 입 → 조준점으로 곧게.
+  // 위 7·8차 손잡이(scoop*, press*)는 잠든 시제품 전용이라 건드리지 않고, 이 경로는 lip* 를 쓴다(심사 지적 a·b·c 반영판).
+  //  (a) 위로 미는 운동량은 돌풍 배수(1 + blastPush·bl) 없는 미는 힘으로 — 돌풍 배수는 '넘친 숨' 벌칙 장치지 운동량이 아니다
+  //  (b) 파고든 틈(wedge)은 그 테두리의 진짜 공기 틈(air)을 넘지 못한다 — 공기는 있는 틈만 채울 수 있다(최대 '틈 2배')
+  //  (c) 입은 책상 밑에 못 간다: y = max(lipMinY, mouthY)
+  // 튜닝·실측: tools/mouthmap.mjs (장수 × 노리는 층 × 입 높이 × 숨 0.7/0.9/1.1)
+  lipBack: 2.6, // 입 ~ 조준점 수평 거리(지금 게임 입: 축 따라 2.6 = 수평 2.587)
+  lipMinY: 0.15, // 입술이 책상에 닿았을 때 입 높이(≈ 4mm, 1 = 2.5cm). 이 밑으로는 못 내려감
+  lipGap: 0.15, // 위로 오르는 바람이 진짜 틈에 파고드는 양: wedge = min(lipGap·up·세기², air). 범위 0~0.3(7·8차 상한). 0.3 은 약한 숨(0.7)을 14·16장에서 +18~23% 살리고 낮은 입이 위 층까지 이김 → 0.15(mouthmap)
+  lipAirRef: 0.02, // 드러난 밑면 비율(under) = min(1, air/lipAirRef) — 위 운동량이 받칠 수 있는 정도
+  lipRise: 0.25, // 파고든 공기의 들기 중 밑면 중심에 걸리는 몫(합 보존)
+  lipCarry: 0.4, // 그 띄움의 방향: 0 = 수직, 1 = 제트 방향
+  lipPushUp: 1, // 제트의 위 운동량(sin 기울기 성분)을 드러난 밑면이 받음(1) / 안 받음(0)
+  lipPress: 0.5, // 위에서 내리 부는 바람이 누름: 들기 × (1 − lipPress·down)
+  lipPressBlast: 1.1, // 내리 불면 넘친 숨이 더미·책상으로 빠짐: 돌풍 × (1 − lipPressBlast·down). 마찰 근거: 수평 몫 cosφ − μ·sinφ (μ 0.75) 를 지금 입(φ −0.1) 대비로 → down 0.34 에서 ×0.63 ≈ 1 − 1.1·0.34
+  // 비스듬히 벽(더미 앞면)에 맞은 제트는 벽을 따라 갈라진다: 위로 (1 + sinφ)/2, 아래로 (1 − sinφ)/2 (경사 충돌 제트, 벽 방향 운동량 보존 — 총량은 그대로).
+  // 지금 물리는 φ0 = −pitch0 에서 맞춰졌으므로 그 대비 배수: 축보다 위 테두리 × (1+sinφ)/(1+sinφ0), 아래 × (1−sinφ)/(1−sinφ0), 경계는 tanh(세로 거리/lipSplitW).
+  // 오르는 공기(wedge)도 정체점 위쪽(벽 흐름이 위로 가는 곳)에서만. 0 = 끔(대칭 원뿔), 1 = 고전 갈림비
+  lipSplit: 1,
+  lipSplitW: 0.1, // 정체점 위·아래가 갈리는 세로 폭. 갈림은 '나누는 유선' 한 줄이라 좁게(딱지 1~2장 간격). 0.2·0.3 은 20장에서 낮은 입이 위 층까지 이겨 정답이 하나로 쏠림(mouthmap 8시드)
 };
 
 export async function initPhysics() {
@@ -89,6 +118,39 @@ export function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+// ── PvP 턴 기록용 (P0, docs/design/items-pvp.md §2.1 일관성 방식) ─────────────
+// 아래 셋(턴별 시드·스텝 판정·새 월드)은 새 함수일 뿐, 기존 Table 경로(addPile·blow·step·runUntilSettled)는 한 줄도 안 바뀐다 → 솔로 비트 동일.
+// 32비트 해시(FNV-1a + murmur3 fmix). Node·브라우저 모두 같은 정수 연산이라 같은 값
+function fmix32(h) {
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b);
+  h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+export function hash32(str, seed = 0x811c9dc5) {
+  let h = seed >>> 0;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return fmix32(h);
+}
+// 턴별 시드: puffSeed = H(seed, g, turn, seat), stackSeed = H(seed, g, turn, 'stack'), beatSeed = H(seed, g, turn, seat, 'beat')
+export function turnSeed(seed, ...parts) { return hash32([seed >>> 0, ...parts].join('|')); }
+export function turnSeeds(seed, g, turn, seat) {
+  return { puff: turnSeed(seed, g, turn, seat), stack: turnSeed(seed, g, turn, 'stack'), beat: turnSeed(seed, g, turn, seat, 'beat') };
+}
+
+// 스텝 기준 멈춤 판정(stepJudge). 게임 watchSim 은 '12프레임 조용하면' 판정 → 60Hz 폰(프레임당 2스텝)과 120Hz 폰(1스텝)이
+// 다른 순간에 판정한다. 같은 조건(0.6초 뒤 · 느림 0.08 · 2.5초 뒤엔 0.5 · 상한 5초)을 '물리 스텝 수'로 옮긴 것. dt = 1/120 기준 스텝 수.
+// 조용함 24스텝 = 0.2초 = 60Hz 12프레임. 지금은 PvP(turn.js)만 쓴다. 솔로 watchSim·봇 runUntilSettled 는 그대로(솔로 불변 원칙)
+export const JUDGE = { minSteps: 72, lateSteps: 300, quietSteps: 24, maxSteps: 600, eps: 0.08, lateEps: 0.5 };
+
+// 같은 엔진·같은 규칙인지: TUNE + JUDGE + Rapier 버전. (sim.js 코드 자체의 변경은 빌드가 소스 해시를 더해야 잡힌다 — P0.5)
+export function simVersion() {
+  return hash32(JSON.stringify(TUNE) + JSON.stringify(JUDGE) + (RAPIER.version?.() ?? '?')).toString(16).padStart(8, '0');
+}
+
+// 광선 필터: 동적 몸체(딱지)만. (Rapier 0.12 JS 의 QueryFilterFlags 값은 WASM 쪽과 어긋나 EXCLUDE_FIXED(1)가 책상을 못 거른다 → 술어로)
+const discOnly = (c) => c.parent()?.isDynamic();
 
 function gauss(rng) {
   let u = 0, v = 0;
@@ -141,6 +203,7 @@ export class Table {
     this.discs = []; // {id, body, collider, cardId, owner:null}
     this.puff = null;
     this.time = 0;
+    this.air = null; // 실험 jetLag 숨의 도달 정보(렌더러용, 읽기만). 아래 armJetLag 참고
   }
 
   // 딱지 더미 만들기. mode 'column' = 손으로 가지런히 쌓은 원기둥(기본, 원작 룰), 'heap' = 흩어진 무더기
@@ -270,7 +333,18 @@ export class Table {
   //         jetPitch: 7차 실험 인자. 위로 퍼올려 부는 각(라디안, + = 입이 조준점 아래, − = 위, 지금 게임 = −0.1).
   //                   넘기면 pitch 를 대신하고 기울기가 힘에 들어간다(TUNE 7차 항목). 안 넘기면 기존과 비트 동일
   //                   주의: 입은 축을 따라 dist 뒤에 둔다 → 낮은 층을 크게 퍼올리면 입 자리가 책상 밑(가상 축). 화면에 그릴 땐 따로 맞출 것
-  blow({ aim, dir, power, dist = 2.6, pitch = 0.1, origin, blast = 0, jetPitch }) {
+  //         tableScoop: 8차 '책상 퍼올림' { s } — 아래 blowTable 참고. 넘기면 aim = 누른 책상 점 F
+  //         mouthY: 9차 '입술 높이'. 진짜 입의 높이(절대 y). 아래 blowLip 참고. 안 넘기면 기존과 비트 동일
+  //         jetLag: 실험 '바람 도달 시간'(화면 s/u, 06 §8.10 · BLOCKERS G12 — 판정 통과·물리 채택 아님). 아래 armJetLag 참고.
+  //                 TUNE 에 없는 숨 하나짜리 인자 → simVersion·PvP 해시와 무관. 솔로 시험 토글만 넘긴다(turn.js ShotRun 은 금지 단언)
+  //                 안 넘기거나 0 이면 기존과 비트 동일(node tools/jetlagcheck.mjs · sweepmap verify)
+  blow({ aim, dir, power, dist = 2.6, pitch = 0.1, origin, blast = 0, jetPitch, tableScoop, mouthY, jetLag }) {
+    this.air = null;
+    if (Number.isFinite(mouthY)) return this.blowLip({ aim, dir, power, blast, mouthY, jetLag });
+    if (tableScoop) {
+      if (jetLag != null && jetLag !== 0) throw new Error('jetLag: blowTable(반사 바람) 미지원 — 축 거리가 반사 경로 길이가 아님');
+      return this.blowTable({ F: aim, dir, power, blast, ...tableScoop });
+    }
     const tilted = Number.isFinite(jetPitch);
     if (tilted) pitch = -jetPitch;
     const tilt = tilted ? this.T.pitch0 - pitch : 0; // 지금 입 각도 대비 위(+)/아래(−) 기울기
@@ -283,8 +357,123 @@ export class Table {
     const d = { x: dx * cp, y: -sp, z: dz * cp };
     const o = origin ?? { x: aim.x - d.x * dist, y: aim.y - d.y * dist, z: aim.z - d.z * dist };
     this.puff = { o, d, power, t: 0, jit: new Map(), blast, up, down, spreadK };
+    if (tilted) this.puff.discOnly = true; // 가상 입(책상 밑일 수 있음) → 차폐는 딱지만
     // 딱지별 변동 계수(같은 입력도 결과가 조금씩 다름 → 물리의 가변 보상)
     for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
+    if (jetLag != null && jetLag !== 0) this.armJetLag(jetLag); // 없음·0 = 끔(비트 동일), NaN·음수·범위 밖 = throw
+  }
+
+  // ── 실험 '바람 도달 시간' jetLag (06 §8.1·§8.10, BLOCKERS G12): 연구 사본 tools/coresweep/simsweep.js 상수 자세 경로를 그대로 옮김 ──
+  // 뜻: 지금 딱지에 닿는 공기는 '그 딱지까지 제트 축 거리 a × jetLag' 전에 입에서 나온 공기다. 입 자리·방향은 숨 내내 같으니 늦는 것은 세기뿐:
+  //   te = t − max(0, a)·jetLag (a = 숨 자세 기준 제트 축 위 딱지 '중심'까지 거리, 매 스텝 지금 중심으로 잼 = simsweep 그대로)
+  //   te < 0 → 그 딱지는 건너뜀(아직 공기 없음, 0 충격도 안 줌) · 0 ≤ te < puffDuration → v1 봉투 sin(π·te/puffDuration) · 그 뒤 → 0
+  //   숨은 puffDuration + 12·jetLag 까지 이어진다(축 거리 12 u 의 마지막 공기까지)
+  // 사전 등록 판정 통과(보류 시드 473~496, E 24.7 → 6.8 ms) · 물리 채택 아님 — 재윤님이 손맛을 보고 정한다.
+  // 알려진 모델 결함(고치지 않음 = 고치려면 새 사전 등록): a 를 매 스텝 지금 중심으로 재서, 밀려 멀어지는 딱지가 숨 봉투를 늘려 받는다
+  //   → 돌풍 1.2 에서 원 밖이 약 +3~4%p(06 §8.10 검토 진단). 초록 숨은 차이 없음.
+  // 게임 기하(입 거리 고정)에서는 도달이 늘 약 83 ms(물리) = '+9스텝 상수 지연'과 같다.
+  // this.air = 렌더러용 도달 정보(읽기만, 물리에 안 씀): o·d = 제트 축, at = 딱지별 처음 도달 예상 시각(숨 시작 때 중심 기준),
+  //   aMin·aMax = 축 거리 범위, arrivedT = 처음 어떤 딱지에 공기가 닿은 스텝의 숨 시각(P.t, 그 스텝 끝 = arrivedT + dt), 아직이면 null
+  armJetLag(jetLag) {
+    if (!(jetLag > 0 && jetLag <= 0.05)) throw new RangeError('jetLag: 0 < jetLag ≤ 0.05 (화면 s/u)');
+    const P = this.puff;
+    if (!P || P.refl || P.prog) throw new Error('jetLag: 상수 자세 숨(blow 기본·blowLip)에만');
+    P.lag = jetLag;
+    const at = new Map();
+    let aMin = Infinity, aMax = -Infinity;
+    for (const d of this.liveDiscs()) {
+      if (d.off) continue;
+      const c = d.body.translation();
+      const a = Math.max(0, (c.x - P.o.x) * P.d.x + (c.y - P.o.y) * P.d.y + (c.z - P.o.z) * P.d.z);
+      at.set(d.id, a * jetLag);
+      aMin = Math.min(aMin, a); aMax = Math.max(aMax, a);
+    }
+    this.air = { lag: jetLag, o: { ...P.o }, d: { ...P.d }, at, aMin, aMax, arrivedT: null };
+  }
+
+  // 8차 '책상 퍼올림'(재윤님: '밑에서 입을 퍼올려서 넘기면 잘 넘어가거든 포물선으로').
+  // 플레이어는 더미 발치 바로 앞 책상(발치에서 부는 방향 반대로 s, 0 < s ≲ 1.15)을 누른다. 바람이 거기 책상에 맞고 꺾여 더미 발치로 올라간다.
+  //  - 진짜 입 M: 책상 위 높이 m(scoopMouthY), 발치에서 수평 Lm(scoopMouthBack) 뒤 — 고개를 책상까지 숙인 자세
+  //  - M → F(책상, y = 0) 로 내려가다 거울 반사: 올라가는 각 θ(s) = atan(m / (Lm − s)), 더미 면에 닿는 높이 h = s·tanθ
+  //  - 힘 계산은 거울 입 M' = (M.x, −m, M.z) 에서 나온 곧은 제트로(거리 감쇠 = 실제 경로 길이), 세기 × reflLoss, 원뿔 × reflWiden
+  //  - 차폐는 진짜 경로(M → F, F → 테두리)로, 딱지만 가린다(책상 통과 안 함)
+  // F: 누른 책상 점(y 무시). 반환: 기하 { F, M, th, h } (렌더러·측정 도구용)
+  blowTable({ F, dir, power, blast = 0, s, m = this.T.scoopMouthY, Lm = this.T.scoopMouthBack }) {
+    this.air = null;
+    const len = Math.hypot(dir.x, dir.z) || 1;
+    const ux = dir.x / len, uz = dir.z / len;
+    const run = Math.max(0.3, Lm - s); // 입 → F 수평 거리
+    const th = Math.atan2(m, run);
+    const ct = Math.cos(th), st = Math.sin(th);
+    const Fp = { x: F.x, y: 0, z: F.z };
+    const M = { x: F.x - ux * run, y: m, z: F.z - uz * run };
+    const o = { x: M.x, y: -m, z: M.z };
+    const d = { x: ux * ct, y: st, z: uz * ct };
+    const refl = { F: Fp, M, ux, uz, th, h: s * Math.tan(th) };
+    // up = 반사 바람이 실제로 올라가는 기울기(sinθ). 비스듬히 원기둥 면에 닿는 퍼짐(tiltSpread)도 같은 θ
+    this.puff = { o, d, power, t: 0, jit: new Map(), blast, up: st, down: 0, spreadK: 1 - this.T.tiltSpread * (1 - ct), discOnly: true, refl };
+    for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
+    return refl;
+  }
+
+  // 9차 '입술 높이'(재윤님: '밑에서 입을 퍼올려서 넘기면 잘 넘어가거든 포물선으로' → '입술의 y축 위치는 컨트롤 못하나?').
+  //  - 진짜 입 M: 높이 y = max(lipMinY, mouthY), 조준점에서 부는 방향 반대로 수평 lipBack. 책상 밑 가상 입은 없다(심사 c)
+  //  - 제트 축 = M → 조준점. 기울기 φ 는 기하에서 나온다(+ = 위로 퍼올림). 힘의 기울기 항은 지금 게임 입(φ = −pitch0) 대비:
+  //    tilt = φ + pitch0, up/down = sin(tilt) 의 양/음 → 입 높이 = 조준점 + 2.6·tan(0.1) 이면 up = down = 0(지금 물리와 같은 항)
+  //  - 차폐는 딱지만(discOnly), 퍼짐 tiltSpread 유지(기울여 부는 공짜 이득 없음), 오르는 바람 = 진짜 틈(air)에만(심사 a·b, applyWind 의 P.lip 분기)
+  // 반환: 기하 { M, phi, tilt, up, down } (렌더러·측정 도구용)
+  blowLip({ aim, dir, power, blast = 0, mouthY, jetLag }) {
+    const T = this.T;
+    const len = Math.hypot(dir.x, dir.z) || 1;
+    const ux = dir.x / len, uz = dir.z / len;
+    const my = Math.max(T.lipMinY, mouthY);
+    const o = { x: aim.x - ux * T.lipBack, y: my, z: aim.z - uz * T.lipBack };
+    const vx = aim.x - o.x, vy = aim.y - my, vz = aim.z - o.z;
+    const L = Math.hypot(vx, vy, vz);
+    const d = { x: vx / L, y: vy / L, z: vz / L };
+    const phi = Math.atan2(vy, T.lipBack);
+    const tilt = phi + T.pitch0;
+    const up = Math.max(0, Math.sin(tilt)), down = Math.max(0, -Math.sin(tilt));
+    const spreadK = 1 - T.tiltSpread * (1 - Math.cos(tilt));
+    if (down > 0) blast *= Math.max(0, 1 - T.lipPressBlast * down);
+    const sp = Math.sin(phi), s0 = -Math.sin(T.pitch0);
+    const splitU = (1 + sp) / (1 + s0), splitD = (1 - sp) / (1 - s0); // 벽 따라 위·아래로 가는 몫(지금 입 대비)
+    this.air = null;
+    this.puff = { o, d, power, t: 0, jit: new Map(), blast, up, down, spreadK, discOnly: true, lip: true, splitU, splitD };
+    for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
+    if (jetLag != null && jetLag !== 0) this.armJetLag(jetLag); // 없음·0 = 끔(비트 동일), NaN·음수·범위 밖 = throw
+    return { M: o, phi, tilt, up, down };
+  }
+
+  // ── 고개 쓸기(푸어억) 숨: 시간에 따라 입 위치·제트 기울기가 바뀐다. 힘 식은 9차 입술 경로(blowLip) 그대로 (docs/design/core-sweep.md §2) ──
+  // tools/coresweep/simsweep.js 의 blowProg·jetPose 를 글자 그대로 옮김(trace 인자만 뺌, 렌더러용 this.air 는 비움). node tools/sweepgame.mjs parity 로 비트 대조.
+  // prog(t) → { o: 입 위치, phi: 제트 위 기울기(rad, + = 위), ux, uz: 수평 방향, env: 숨 봉투 0..1 }. applyWind 가 물리 스텝마다 정확히 한 번 부른다.
+  // dur = 숨 길이(화면 초). 숨 도중 P.dur 를 줄여도 된다(엄지 떼기 = 숨 끝, mockup/src/sweep.js SweepCtl).
+  // 실험 jetLag 는 받지 않는다(armJetLag 가 P.prog 를 거부). 솔로 '쓸기 연습판' 전용 — PvP ShotRun 은 단언으로 막는다(turn.js)
+  blowProg({ prog, power, dur }) {
+    this.air = null;
+    this.puff = { o: { x: 0, y: 0, z: 0 }, d: { x: 0, y: 0, z: -1 }, power, t: 0, jit: new Map(), blast: 0, up: 0, down: 0, spreadK: 1, discOnly: true, lip: true, splitU: 1, splitD: 1, prog, dur };
+    for (const disc of this.liveDiscs()) this.puff.jit.set(disc.id, 1 + gauss(this.rng) * this.T.jitter);
+    return this.puff;
+  }
+  jetPose(P, g) {
+    const T = this.T;
+    const c = Math.cos(g.phi), s = Math.sin(g.phi);
+    P.o = g.o; P.d = { x: g.ux * c, y: s, z: g.uz * c };
+    const tilt = g.phi + T.pitch0;
+    P.up = Math.max(0, Math.sin(tilt)); P.down = Math.max(0, -Math.sin(tilt));
+    P.spreadK = 1 - T.tiltSpread * (1 - Math.cos(tilt));
+    const s0 = -Math.sin(T.pitch0);
+    P.splitU = (1 + s) / (1 + s0); P.splitD = (1 - s) / (1 - s0);
+  }
+
+  // from → to 사이(끝에서 stop 만큼 덜)에 다른 딱지가 있나 (책상·자기 자신 제외)
+  discBlocks(from, to, stop, d, b) {
+    const vx = to.x - from.x, vy = to.y - from.y, vz = to.z - from.z;
+    const L = Math.hypot(vx, vy, vz);
+    if (L <= stop) return false;
+    const ray = new RAPIER.Ray(from, { x: vx / L, y: vy / L, z: vz / L });
+    return !!this.world.castRay(ray, L - stop, true, undefined, undefined, d.collider, b, discOnly);
   }
 
   // 퍼프 1스텝 동안 각 딱지가 받는 바람 (진단용으로 per-disc 강도도 반환)
@@ -292,12 +481,25 @@ export class Table {
     const P = this.puff;
     if (!P) return null;
     const T = this.T;
-    const env = Math.sin(Math.min(1, P.t / T.puffDuration) * Math.PI); // 0→1→0
+    let env; // 쓸기 숨(blowProg)이면 이 스텝의 자세·봉투를 prog 에서, 아니면 v1 봉투 0→1→0 (식 그대로)
+    if (P.prog) { const g = P.prog(P.t); this.jetPose(P, g); env = g.env; } else env = Math.sin(Math.min(1, P.t / T.puffDuration) * Math.PI);
+    // 실험 jetLag(위 armJetLag): 숨 하나짜리 P.lag. 없거나 0 이면 아래 분기를 전부 건너뜀(비트 동일). simsweep.js 상수 자세 경로와 같은 식·같은 순서
+    const lag = P.lag > 0 ? P.lag : 0;
+    const o0 = lag ? { ...P.o } : null, d0 = lag ? { ...P.d } : null;
+    const R = P.refl; // 8차 책상 퍼올림(반사 바람). 없으면 아래는 기존 경로 그대로
+    if (lag && R) throw new Error('jetLag: blowTable(반사 바람) 미지원 — 축 거리가 반사 경로 길이가 아님');
     const hits = [];
     for (const d of this.liveDiscs()) {
       const b = d.body;
       const c = b.translation();
       const nrm = rotate(b.rotation(), { x: 0, y: 1, z: 0 });
+      if (lag) {
+        const aC = (c.x - o0.x) * d0.x + (c.y - o0.y) * d0.y + (c.z - o0.z) * d0.z; // 지금 자세 기준 딱지 중심 축 거리
+        const te = P.t - Math.max(0, aC) * lag;
+        if (te < 0) continue; // 아직 공기가 안 닿음
+        env = te < T.puffDuration ? Math.sin(Math.min(1, te / T.puffDuration) * Math.PI) : 0; // 상수 자세: v1 봉투를 그 딱지의 도달 시각으로 옮김
+        if (this.air && this.air.arrivedT === null) this.air.arrivedT = P.t; // 렌더러용(읽기만): 처음 공기가 닿은 스텝
+      }
       // 입 쪽으로 가장 가까운 가장자리 점: (O - c)를 원판 평면에 투영
       let vx = P.o.x - c.x, vy = P.o.y - c.y, vz = P.o.z - c.z;
       const dn = vx * nrm.x + vy * nrm.y + vz * nrm.z;
@@ -332,22 +534,62 @@ export class Table {
       const rx = e.x - P.o.x, ry = e.y - P.o.y, rz = e.z - P.o.z;
       const a = rx * P.d.x + ry * P.d.y + rz * P.d.z;
       if (a <= 0.05) continue;
+      // 책상 퍼올림: 반사점 F 보다 입 쪽에 있는 딱지는 올라가는 바람 밖(내려오는 바람은 위에서 누를 뿐)
+      if (R && (e.x - R.F.x) * R.ux + (e.z - R.F.z) * R.uz < 0) continue;
       const lx = rx - a * P.d.x, ly = ry - a * P.d.y, lz = rz - a * P.d.z;
-      const lat = Math.hypot(lx, ly * 1.6, lz);
+      let lat;
+      if (R) {
+        // 책상에 부딪혀 꺾인 바람(벽면 제트)은 옆(수평)으로 빨리 퍼지고 위아래로는 얇다 → 수평 옆 성분만 reflWiden 배 넓게
+        const lp = -lx * R.uz + lz * R.ux;
+        lat = Math.hypot(lp / T.reflWiden, lx + lp * R.uz, ly * 1.6, lz - lp * R.ux);
+      } else lat = Math.hypot(lx, ly * 1.6, lz);
       const rj = T.jetR0 + a * T.jetSpread;
       const cone = Math.exp(-((lat / rj) ** 2));
       if (cone < 0.02) continue;
       let s = P.power * Math.exp(-a / T.jetFalloff) * cone * env * (P.jit.get(d.id) ?? 1) * P.spreadK;
-      // 차폐: 입 → 가장자리 사이에 다른 딱지가 있으면 약해짐
-      const ray = new RAPIER.Ray(P.o, { x: rx / Math.hypot(rx, ry, rz), y: ry / Math.hypot(rx, ry, rz), z: rz / Math.hypot(rx, ry, rz) });
-      const hit = this.world.castRay(ray, Math.hypot(rx, ry, rz) - 0.08, true, undefined, undefined, d.collider, b);
-      if (hit && hit.collider.parent()?.isDynamic()) s *= T.shield;
+      let above = 1; // 9차: 정체점 위쪽 정도(0~1). 기본 경로는 안 씀
+      if (P.lip && T.lipSplit) {
+        above = (1 + Math.tanh(ly / T.lipSplitW)) / 2;
+        s *= 1 + T.lipSplit * (P.splitD + (P.splitU - P.splitD) * above - 1);
+        above = 1 - T.lipSplit + T.lipSplit * above;
+      }
+      if (R) {
+        // 반사 손실 + 책상 속에 묻힌 테두리(쌓인 무게로 맨 아래 장이 책상에 파묻힘 — 기존 물리의 침투)는 책상 위 바람이 못 닿음
+        s *= T.reflLoss * Math.min(1, Math.max(0, (e.y + DISC_H / 2) / DISC_H));
+        if (s <= 0) continue;
+        // 차폐(진짜 경로): 입 → F(내려오는 바람) 와 F → 테두리(올라가는 바람). 책상은 반사면이므로 딱지만 가린다
+        if (this.discBlocks(R.M, R.F, 0.02, d, b) || this.discBlocks(R.F, e, 0.08, d, b)) s *= T.shield;
+      } else {
+        // 차폐: 입 → 가장자리 사이에 다른 딱지가 있으면 약해짐.
+        // 8차: 7차 기울기 실험(P.discOnly)은 입이 책상 밑 가상 축이라 첫 충돌이 책상 → 차폐가 꺼졌다 → 딱지만 가리게.
+        // 기본 경로는 그대로(책상 포함, 첫 충돌이 딱지일 때만 가림). 기본 경로도 책상을 지나는 광선이 있다:
+        // 6장 이상 더미의 맨 아래 장은 무게로 책상에 파묻혀(중심 y −0.01~−0.06) 테두리가 책상면 아래 → 전역으로 바꾸면 399 중 63 사례가 달라짐
+        const ray = new RAPIER.Ray(P.o, { x: rx / Math.hypot(rx, ry, rz), y: ry / Math.hypot(rx, ry, rz), z: rz / Math.hypot(rx, ry, rz) });
+        const hit = this.world.castRay(ray, Math.hypot(rx, ry, rz) - 0.08, true, undefined, undefined, d.collider, b, P.discOnly ? discOnly : undefined);
+        if (hit && hit.collider.parent()?.isDynamic()) s *= T.shield;
+      }
       // 가장자리 밑 틈: 공기가 들어갈 여지(오버행일수록 크게 뜸)
       const down = new RAPIER.Ray({ x: e.x, y: e.y - 0.01, z: e.z }, { x: 0, y: -1, z: 0 });
       const g = this.world.castRay(down, 2, true, undefined, undefined, d.collider, b);
       const gap = g ? g.toi : 2;
-      // 퍼올림(7차): 아래에서 올라오는 바람은 붙어 있는 테두리 밑에도 파고든다(∝ 세기²). up = 0 이면 + 0 → 그대로
-      const wedge = T.scoopGap * P.up * P.power * P.power;
+      // 퍼올림(7차): 아래에서 올라오는 바람은 테두리 밑 틈으로 더 잘 파고든다(∝ 세기²). up = 0 이면 + 0 → 그대로
+      // 8차: 틈이 0(아래 장·책상에 납작하게 붙음)이면 공기가 들어갈 자리가 없다 → scoopFlushWedge(0) 만큼만. 진짜 틈 = gap − (H/2 − 0.01)
+      const L9 = P.lip; // 9차 입술 높이 경로(blowLip). 아니면 아래 기존 식 그대로
+      let wedge;
+      let under = 1; // 올라가는 바람이 받칠 수 있는 '드러난 밑면' 비율(오버행). 붙은 테두리는 세로 옆면뿐 → 위 운동량이 미끄러져 지나감
+      if (L9) {
+        // 진짜 공기 틈만: air = 테두리 밑면 ~ 그 밑(딱지·책상) 거리. 파고든 양은 그 틈을 넘지 못함(심사 b)
+        const air = Math.max(0, gap - (DISC_H / 2 - 0.01));
+        under = Math.min(1, air / T.lipAirRef);
+        wedge = Math.min(T.lipGap * P.up * P.power * P.power * above, air);
+      } else {
+        wedge = T.scoopGap * P.up * P.power * P.power;
+        if (wedge > 0 && T.scoopFlushWedge < 1) {
+          const air = Math.max(0, gap - (DISC_H / 2 - 0.01));
+          under = T.scoopFlushWedge + (1 - T.scoopFlushWedge) * Math.min(1, air / T.scoopAirRef);
+          wedge *= under;
+        }
+      }
       let liftF = Math.min(1.35, Math.max(T.minLift, (gap + wedge) / T.gapRef));
       const liftW = wedge > 0 ? liftF - Math.min(1.35, Math.max(T.minLift, gap / T.gapRef)) : 0; // 파고든 공기로 늘어난 들기
       if (T.loneLift && this.isLone(d, c, nrm)) liftF = Math.max(liftF, T.loneLift * (0.45 + 0.55 * sinT));
@@ -358,10 +600,14 @@ export class Table {
       const bl = P.blast || 0;
       const cosT = Math.sqrt(1 - sinT * sinT);
       // 기울기(7차): 위에서 내리 불면 눌림(press). 기울기 0 이면 ×1 → 그대로
-      const liftB = T.lift * liftF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT)) * (1 - T.press * P.down);
-      const liftK = liftB * (1 + T.scoopLift * P.up);
-      // 퍼올림 띄움: 파고든 공기만큼 밑면 전체를 받쳐 중심째 앞위로 → 포물선. 돌풍이면 훨씬 세게(원 밖으로)
-      const riseK = liftW > 0 ? (liftB / liftF) * liftW * T.scoopRise * (1 + T.scoopBlast * bl) : 0;
+      // 8차: 파고든 공기의 들기(liftW)를 테두리와 밑면 중심으로 '나눈다'(합 보존, 증폭 없음) — 중심 몫 = min(1, scoopRise).
+      // (7차 시제품은 테두리에 liftW 전부 + 중심에 3·liftW 를 더 얹어 운동량을 4배로 부풀렸다.) liftW = 0(기본 경로)이면 rimF = liftF 그대로
+      const riseShare = Math.min(1, L9 ? T.lipRise : T.scoopRise);
+      const rimF = liftW > 0 ? liftF - riseShare * liftW : liftF;
+      const liftB = T.lift * rimF * k * (1 - T.blastLift * Math.min(1, bl)) * (1 - T.sideLiftLoss * (1 - cosT)) * (1 - (L9 ? T.lipPress : T.press) * P.down);
+      const liftK = L9 ? liftB : liftB * (1 + T.scoopLift * P.up);
+      // 퍼올림 띄움: 파고든 공기만큼 밑면 전체를 받쳐 중심째 앞위로 → 포물선. 돌풍이면 훨씬 세게(원 밖으로) — 9차 경로는 돌풍 배수 없음
+      const riseK = liftW > 0 ? (liftB / rimF) * liftW * riseShare * (L9 ? 1 : 1 + T.scoopBlast * bl) : 0;
       const pushK = T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k * (1 + T.blastPush * bl);
       // 미는 방향: 진행 방향 ↔ 맞은 면 안쪽(−rh) 사이. 정면이면 그대로, 옆을 맞으면 반대쪽 대각선으로 꺾임
       let fx = P.d.x, fz = P.d.z;
@@ -371,9 +617,15 @@ export class Table {
         const fl = Math.hypot(fx, fz) || 1; const dl = Math.hypot(P.d.x, P.d.z) || 1;
         fx *= dl / fl; fz *= dl / fl;
       }
-      b.applyImpulseAtPoint({ x: fx * pushK, y: liftK, z: fz * pushK }, e, true);
+      // 반사 바람은 위로 올라가는 운동량을 갖고 온다: 그 위 성분은 드러난 밑면(오버행)이 있을 때만 받침(under). 수평 샷의 아래 성분은 기존대로 무시
+      // 9차: 오르는 제트의 위 운동량도 드러난 밑면만 받는다. 세기는 돌풍 배수 없는 미는 힘(심사 a)
+      let liftY;
+      if (L9) liftY = liftK + T.push * Math.pow(pw, T.pushExp) / Math.max(pw, 0.05) * k * Math.max(0, P.d.y) * T.lipPushUp * under;
+      else liftY = R ? liftK + pushK * Math.max(0, P.d.y) * T.reflPushUp * under : liftK;
+      b.applyImpulseAtPoint({ x: fx * pushK, y: liftY, z: fz * pushK }, e, true);
       if (riseK > 0) {
-        const cx = P.d.x * T.scoopCarry, cy = 1 - T.scoopCarry + P.d.y * T.scoopCarry, cz = P.d.z * T.scoopCarry;
+        const carry = L9 ? T.lipCarry : T.scoopCarry;
+        const cx = P.d.x * carry, cy = 1 - carry + P.d.y * carry, cz = P.d.z * carry;
         const cl = Math.hypot(cx, cy, cz) || 1;
         b.applyImpulse({ x: (riseK * cx) / cl, y: (riseK * cy) / cl, z: (riseK * cz) / cl }, true);
       }
@@ -388,7 +640,8 @@ export class Table {
       hits.push({ id: d.id, s, gap, liftF, e, dir: { x: fx, y: P.d.y, z: fz } });
     }
     P.t += T.dt;
-    if (P.t >= T.puffDuration) this.puff = null;
+    // 지연이면 마지막 공기(축 거리 12 u)까지 기다림. 쓸기 숨은 P.dur(고전 경로엔 P.dur 가 없어 같은 값과 비교 → 비트 동일). prog + lag 는 armJetLag 가 막음
+    if (P.t >= (lag ? T.puffDuration + lag * 12 : (P.dur ?? T.puffDuration))) this.puff = null;
     return hits;
   }
 
@@ -451,5 +704,35 @@ export class Table {
       const q = d.body.rotation();
       return { id: d.id, p: { x: p.x, y: p.y, z: p.z }, q: { x: q.x, y: q.y, z: q.z, w: q.w } };
     });
+  }
+
+  // ── PvP (P0) ──
+  // 턴마다 새 월드: 남은 딱지(판 id = pot 순서, 오름차순)로 stackSeed 더미를 새로 쌓고 가라앉힌다.
+  // 식은 월드에 다시 쌓은 자세를 꽂으면 30스텝 안에 최대 0.043 움직이고 속도가 0.21까지 튄다(§2.0) → 턴 상태 = (liveIds, stackSeed) 20B 로 끝.
+  // d.pid = 판 id (코덱·판정 결과가 쓰는 번호). cardOf(pid) = 그림 카드 id(화면용, 없으면 pid). heavy = 테이프 딱지 pid 집합
+  static fromTurnState(liveIds, stackSeed, { cardOf, heavy, tune } = {}) {
+    const t = new Table(stackSeed >>> 0, tune);
+    const ids = [...liveIds];
+    const hv = new Set();
+    if (heavy) ids.forEach((pid, i) => { if (heavy.has(pid)) hv.add(i); });
+    t.addPile(ids.map((pid) => (cardOf ? cardOf(pid) : pid)), { heavy: hv });
+    t.discs.forEach((d, i) => { d.pid = ids[i]; });
+    t.settle();
+    return t;
+  }
+
+  // 스텝 판정: 매 step() 뒤에 한 번 부른다. j = { n: 0, quiet: 0 } (판정마다 새로). 판정 순간이면 true
+  stepJudge(j) {
+    j.n++;
+    const ms = this.maxSpeed();
+    const ok = !this.puff && j.n > JUDGE.minSteps && (ms < JUDGE.eps || (j.n > JUDGE.lateSteps && ms < JUDGE.lateEps));
+    j.quiet = ok ? j.quiet + 1 : 0;
+    return j.quiet > JUDGE.quietSteps || j.n >= JUDGE.maxSteps;
+  }
+
+  // 판정 결과(main.js simulate 와 같은 규칙): 원 안에서 그림이 위 = 뒤집힘, 원 밖(책상 밖 포함) = 무효
+  judgeResult() {
+    const live = this.liveDiscs();
+    return { flipped: live.filter((d) => this.faceUp(d) > 0.2 && this.inCircle(d)), outs: live.filter((d) => !this.inCircle(d)) };
   }
 }

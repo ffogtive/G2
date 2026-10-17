@@ -1,0 +1,10 @@
+Prepare packages
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+
+@HOME@/G2/app/ios/Runner.xcodeproj: error: No Account for Team "@TEAM@". Add a new account in Accounts settings or verify that your accounts have valid credentials. (in target 'Runner' from project 'Runner')
+    Signing Identity:     "Apple Development: Test Person (ZZZZZZZZZZ)"
+@HOME@/G2/app/ios/Runner.xcodeproj: error: Provisioning profile "iOS Team Provisioning Profile: com.ffogtive.puff" doesn't include the currently selected device "@NAME@" (identifier @UDID@). (in target 'Runner' from project 'Runner')
+note: account tester@example.com — team @TEAM@ (@HOME@/Library/Developer/Xcode/UserData/Provisioning Profiles)
+** BUILD FAILED **

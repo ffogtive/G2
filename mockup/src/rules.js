@@ -144,3 +144,51 @@ export function beatStep(st, dtMs, holdMs, fullness, tier, rng) {
   const w = beatWave(st.ph);
   return b.A * (1 + 0.5 * g) * boost * (w > 0 ? w * (1 + b.f * st.u) : w);
 }
+
+// ── 입술 높이 (9차, 재윤님: '입술의 y축 위치는 컨트롤 못하나?') ──
+// 물리가 구분하는 자세는 둘(tools/mouthmap.mjs 16시드): 눈높이 = 지금 입(조준 높이를 따라감, sim 기본 경로·비트 동일) / 책상 = 입술을 책상에 댐.
+// 책상 입은 8장↑ 가운데 층을 ×1.2~3.3 넘기지만(퍼올림), 맨 위를 노리면 손해(14장 ×0.67) → 정답 하나가 아니다.
+export const LIP_BACK = 2.6; // 입 ~ 조준점 수평 거리(sim TUNE.lipBack 과 같음)
+export const LIP_MIN = 0.15; // 책상에 댄 입술 높이(sim TUNE.lipMinY)
+export const LOW_POSE_MIN_N = 6; // 6장 미만은 퍼올릴 각이 없다(6장 더미 높이 0.36 vs 입 0.15)
+export const mouthYFor = (pose) => (pose === 'low' ? LIP_MIN : null); // null = mouthY 를 아예 넘기지 않음(눈높이)
+
+// ── 숨 풍선 (재윤님 §10-3 '오케이' 2026-10-15 · docs/design/core-sweep.md §6.3 · §9 3번) ──
+// 🧭 가설(미검증, 장난감 DP 근거뿐 → 레벨 봇 §9 6번에서 다시 맞춘다): 풍선이 3판 내내 이어지고 차례마다 +1 이면 판마다 첫 큰 숨도
+//   풍선에 묶이고, 푸어억에만 붙는 세기 웃돈 때문에 '짧고 센 고정 숨'이 공짜가 아니다.
+//   틀렸다는 신호: `econ.mjs gate` 네 판정(섞기 이득·퍽 등장·세기 값·묶임) 중 하나라도 실패.
+// 기준 구현 = tools/coresweep/econ.mjs 의 cost()·solve() 'new' 규칙(1,6,0,0.5,2@6,1,3). tools/balloon-check.mjs 가 비트 대조한다.
+// **아직 게임(main.js)·PvP(turn.js)·봇에 연결하지 않는다** — §9 4번(`?core=sweep` 깃발 뒤)에서 잇는다. 레벨 1~10 은 풍선 없음(해금 L11).
+// D = 실제로 분 길이(화면 초) = '푸' 시작부터 엄지를 떼고 0.04 s 잦아들 때까지. q = 당김(0~1, 1 = 끝까지).
+// 상태는 0.1칸 정수(t = 칸 × 10)로 들고 간다 — econ solve 와 같은 정수화라 더하고 빼도 부동소수 찌꺼기가 없다.
+export const BALLOON = Object.freeze({
+  max: 6, // 풍선 칸. 경기 시작에 가득
+  regen: 1, // 내 차례(숨 한 번)마다 +칸, 상한 max
+  rounds: 3, // 경기 판 수. 판이 바뀌어도 다시 차지 않는다(새 경기에서만 balloonInit)
+  puck: 0.5, // 퍽 칸 — 세기와 무관(퍽 세기의 대가는 원 밖 날림뿐)
+  base: 1, // 푸어억 기본 칸
+  perSec: 6, // 푸어억 분 길이(화면 초)당 칸
+  tax: 2, // 세기 웃돈: tax × ((q − taxFrom)₊ / taxSpan)² — 푸어억에만, 끝까지 당기면 +2칸
+  taxFrom: 0.8,
+  taxSpan: 0.2,
+});
+const tenths = (x) => Math.round(x * 10);
+// 한 숨의 비용(칸, 0.1 반올림). kind 'puck' | 'pueok'
+export function balloonCost({ kind, q, D }) {
+  if (kind === 'puck') return Math.round(BALLOON.puck * 10) / 10;
+  if (kind !== 'pueok') throw new Error(`balloonCost: kind '${kind}'`);
+  const tax = BALLOON.tax * Math.max(0, (q - BALLOON.taxFrom) / BALLOON.taxSpan) ** 2;
+  return Math.round((BALLOON.base + BALLOON.perSec * D + tax) * 10) / 10;
+}
+export const balloonInit = () => ({ t: tenths(BALLOON.max) });
+export const balloonCells = (s) => s.t / 10;
+export const balloonCanPay = (s, cost) => tenths(cost) <= s.t;
+// 내 차례 +regen(상한 max). balloonStep 이 숨 한 번마다 부른다. 지금 게임에는 쉬기 몸짓(숨 없이 차례만 넘기기)이 없다 —
+// econ DP 의 '쉼'(REST=1, 측정용)을 흉내 낼 때와, 게임에 쉬기 몸짓이 생기면 그때만 따로 부른다. 취소(콜록 등)는 차례를 쓰지 않으므로 부르지 않는다
+export const balloonRefill = (s) => ({ t: Math.min(tenths(BALLOON.max), s.t + tenths(BALLOON.regen)) });
+// 숨 한 번: 비용을 빼고 차례 +regen. 모자라면 null(그 숨은 못 쉰다). = econ solve 의 min(BAL, b − c + REG)
+export function balloonStep(s, cost) {
+  const c = tenths(cost);
+  if (c > s.t) return null;
+  return balloonRefill({ t: s.t - c });
+}

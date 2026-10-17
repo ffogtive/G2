@@ -4,3 +4,8 @@ node_modules/
 /tmp/
 tools/scratch/
 mockup/assets/sfx/candidates/
+app/assets/www/
+docs/app/deploy-receipts/
+__pycache__/
+# tools/mac/ios_run.sh 실행 기록·DerivedData·잠금 (맥에서 생김)
+.local/

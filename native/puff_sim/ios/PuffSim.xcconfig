@@ -1,0 +1,13 @@
+// PuffSim.xcconfig — Runner 에 Rust 딱지 물리(정적 라이브러리)를 링크하는 설정. 손으로 켜지 않는다:
+//   native/puff_sim/scripts/build-ios.sh 가 라이브러리를 만든 뒤 dist/ios/link.xcconfig 를 쓰고(만든 SDK 의 PUFF_SIM_LDFLAGS + 이 파일),
+//   app/ios/Flutter/Debug.xcconfig · Release.xcconfig(Profile 도 이것)의 '#include? ".../dist/ios/link.xcconfig"' 가 그걸 읽는다.
+//   build-ios.sh 를 안 돌렸으면(또는 --off) 아무 일도 없다 → 앱은 예전 그대로 빌드되고, 네이티브 데모는 녹화 재생으로 돈다.
+//
+// 왜 -force_load: dart:ffi 는 DynamicLibrary.process() 로 실행 파일 안의 심볼을 '이름으로' 찾는다.
+//   Swift/ObjC 가 puff_* 를 직접 부르지 않으니 링커가 .a 를 통째로 건너뛴다 → 강제로 전부 싣는다.
+// 왜 STRIP_STYLE = non-global: Release(·Profile) 기본(all)은 전역 심볼까지 지워 dlsym 이 못 찾는다(Flutter FFI 문서와 같음).
+// 왜 OTHER_LDFLAGS 를 [sdk=…] 조건으로 안 나누나: 조건부 값의 $(inherited) 는 같은 층의 무조건 값을 못 물려받아
+//   다른 링크 플래그를 지울 수 있다 → 우리 변수(PUFF_SIM_LDFLAGS)만 SDK 별로 나누고 OTHER_LDFLAGS 는 한 줄로 덧붙인다.
+PUFF_SIM_ROOT = $(PROJECT_DIR)/../../native/puff_sim
+OTHER_LDFLAGS = $(inherited) $(PUFF_SIM_LDFLAGS)
+STRIP_STYLE = non-global

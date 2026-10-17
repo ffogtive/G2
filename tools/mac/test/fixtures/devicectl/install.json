@@ -1,0 +1,32 @@
+{
+  "info" : {
+    "arguments" : [
+      "devicectl",
+      "device",
+      "install",
+      "app",
+      "--json-output",
+      "/tmp/out.json"
+    ],
+    "commandType" : "devicectl.device.install.app",
+    "environment" : {
+      "TERM" : "xterm-256color"
+    },
+    "jsonVersion" : 2,
+    "outcome" : "success",
+    "version" : "397.24"
+  },
+  "result" : {
+    "deviceIdentifier" : "@CD@",
+    "installedApplications" : [
+      {
+        "bundleID" : "com.ffogtive.puff",
+        "databaseSequenceNumber" : 2412,
+        "databaseUUID" : "7D0A2E52-63B1-4C1F-8E7A-0C9F1B2D3E4F",
+        "installationURL" : "file:///private/var/containers/Bundle/Application/5E7D3A21-7C4B-4F2E-9D61-0B8A2C4E6F13/Runner.app/",
+        "launchServicesIdentifier" : "unknown",
+        "options" : {}
+      }
+    ]
+  }
+}

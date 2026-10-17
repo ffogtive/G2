@@ -1,0 +1,25 @@
+#!/bin/bash
+# 가짜 cargo: `cargo rustc --release --lib --target <t> --crate-type staticlib` → target/<t>/release/libpuff_sim.a (진짜 ar 묶음).
+# FAKE_RUST=fail 이면 컴파일 오류.
+echo "cargo $*" >>"${FAKE_LOG:-/dev/null}"
+[ -f Cargo.toml ] || { echo "error: could not find \`Cargo.toml\` in \`$PWD\` or any parent directory" >&2; exit 101; }
+t="" prev=""
+for a; do
+  [ "$prev" = --target ] && t=$a
+  prev=$a
+done
+echo "   Compiling puff_sim v0.1.0 ($PWD)" >&2
+if [ "${FAKE_RUST:-ok}" = fail ]; then
+  echo "error[E0463]: can't find crate for \`core\`" >&2
+  echo "  = note: the \`$t\` target may not be installed" >&2
+  exit 101
+fi
+d="target/$t/release"
+mkdir -p "$d"
+w=$(mktemp -d)
+printf 'fake object %s\n' "$t" >"$w/puff_sim-0001.o"
+printf 'fake builtins\n' >"$w/compiler_builtins-0002.o"
+rm -f "$d/libpuff_sim.a"
+(cd "$w" && /usr/bin/ar rcs "$OLDPWD/$d/libpuff_sim.a" puff_sim-0001.o compiler_builtins-0002.o)
+rm -rf "$w"
+echo "    Finished \`release\` profile [optimized] target(s) in 0.42s" >&2
